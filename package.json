@@ -1,0 +1,35 @@
+{
+  "name": "taiwan-mandarin",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "node scripts/build-strokes.ts && vite build",
+    "preview": "vite preview",
+    "strokes": "node scripts/build-strokes.ts",
+    "icons": "pwa-assets-generator",
+    "test": "vitest run",
+    "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@tsconfig/svelte": "^5.0.8",
+    "@types/node": "^24.19.2",
+    "@vite-pwa/assets-generator": "^2.0.0",
+    "hanzi-writer-data": "^2.0.1",
+    "prettier": "^3.9.10",
+    "prettier-plugin-svelte": "^4.1.1",
+    "svelte": "^5.57.2",
+    "svelte-check": "^4.7.7",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.4",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "hanzi-writer": "^3.7.3",
+    "ts-fsrs": "^5.4.2"
+  }
+}
