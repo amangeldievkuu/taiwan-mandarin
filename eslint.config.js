@@ -5,7 +5,7 @@ import ts from 'typescript-eslint';
 
 export default ts.config(
   {
-    ignores: ['**/dist/', '**/node_modules/', '**/dev-dist/', 'apps/web/src/lib/strokes.json'],
+    ignores: ['**/dist/', '**/node_modules/', '**/dev-dist/', 'apps/api/src/generated/'],
   },
   js.configs.recommended,
   ...ts.configs.strict,

@@ -15,9 +15,10 @@
   import Seal from './ui/Seal.svelte';
   import { router } from './lib/router.svelte';
   import { store } from './lib/store.svelte';
+  import { account } from './lib/sync.svelte';
 
   onMount(() => {
-    void store.init();
+    void store.init().then(() => account.init());
     return store.watchVisibility();
   });
 

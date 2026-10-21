@@ -21,6 +21,17 @@ export interface Daily {
   reviewCount: number;
 }
 
+export interface SyncState {
+  /** Server cursor from the last sync. */
+  cursor: number;
+  /** Client time of the last successful push: cards changed after it are sent next time. */
+  pushedAt: number;
+  settingsUpdatedAt: number;
+  deckUpdatedAt: number;
+  /** Personal FSRS weights from the server. */
+  fsrsWeights?: number[];
+}
+
 export interface Snapshot {
   version: 2;
   settings: Settings;
@@ -29,6 +40,7 @@ export interface Snapshot {
   deck: { id: string; level?: Level; addedAt: number }[];
   daily: Daily;
   updatedAt: number;
+  sync?: SyncState;
 }
 
 /** One answer to one card. Mirrors ts-fsrs's ReviewLog plus what sync and stats need. */
@@ -61,6 +73,8 @@ export interface StorageAdapter {
   addReview(review: ReviewRecord): Promise<void>;
   /** Reviews at or after `since` (epoch ms), oldest first. */
   reviews(since?: number): Promise<ReviewRecord[]>;
+  /** Marks reviews as stored on the server. */
+  markSynced(ids: readonly string[]): Promise<void>;
   clear(): Promise<void>;
 }
 
@@ -163,6 +177,23 @@ export class IndexedDbAdapter implements StorageAdapter {
     );
   }
 
+  async markSynced(ids: readonly string[]): Promise<void> {
+    const db = await this.open();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction('reviews', 'readwrite');
+      const store = tx.objectStore('reviews');
+      for (const id of ids) {
+        const request = store.get(id);
+        request.onsuccess = () => {
+          const review = request.result as ReviewRecord | undefined;
+          if (review?.pending) store.put({ ...review, pending: false });
+        };
+      }
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
   async clear(): Promise<void> {
     await this.run('kv', 'readwrite', (s) => s.delete(KEY));
     await this.run('reviews', 'readwrite', (s) => s.clear());
@@ -208,6 +239,15 @@ export class LocalStorageAdapter implements StorageAdapter {
     return (this.read<ReviewRecord[]>(REVIEWS_KEY) ?? []).filter((r) => r.review >= since);
   }
 
+  async markSynced(ids: readonly string[]): Promise<void> {
+    const done = new Set(ids);
+    const all = this.read<ReviewRecord[]>(REVIEWS_KEY) ?? [];
+    this.write(
+      REVIEWS_KEY,
+      all.map((r) => (done.has(r.id) ? { ...r, pending: false } : r)),
+    );
+  }
+
   async clear(): Promise<void> {
     try {
       localStorage.removeItem(KEY);
@@ -239,5 +279,6 @@ export class BrowserStorage implements StorageAdapter {
   save = (snapshot: Snapshot) => this.attempt((a) => a.save(snapshot));
   addReview = (review: ReviewRecord) => this.attempt((a) => a.addReview(review));
   reviews = (since?: number) => this.attempt((a) => a.reviews(since));
+  markSynced = (ids: readonly string[]) => this.attempt((a) => a.markSynced(ids));
   clear = () => this.attempt((a) => a.clear());
 }

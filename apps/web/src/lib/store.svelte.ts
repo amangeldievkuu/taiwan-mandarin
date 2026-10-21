@@ -26,6 +26,7 @@ import {
   type ReviewRecord,
   type Snapshot,
   type StorageAdapter,
+  type SyncState,
 } from './storage';
 
 export interface SessionStats {
@@ -73,6 +74,9 @@ class Store {
   daily = $state<Daily>(freshDaily());
   /** Bumped after every review, so stats reload. */
   reviewRevision = $state(0);
+  syncState = $state<SyncState>({ cursor: 0, pushedAt: 0, settingsUpdatedAt: 0, deckUpdatedAt: 0 });
+  /** Called after any change worth syncing (set by the account module). */
+  onLocalChange: (() => void) | null = null;
 
   /** Word ids still to study this session; the head is the current card. */
   queue = $state<string[]>([]);
@@ -119,15 +123,20 @@ class Store {
         this.cards = snapshot.cards;
         this.deck = snapshot.deck ?? [];
         this.daily = snapshot.daily ?? freshDaily();
+        if (snapshot.sync) this.syncState = snapshot.sync;
         if (stored.version !== 2) await this.flush();
       }
-      configureScheduler({ retention: this.settings.retention });
+      this.configureFsrs();
       await this.fillMissingLevels();
       await this.startSession();
       this.ready = true;
     } catch (e) {
       this.error = e instanceof Error ? e.message : String(e);
     }
+  }
+
+  private configureFsrs(): void {
+    configureScheduler({ retention: this.settings.retention, w: this.syncState.fsrsWeights });
   }
 
   /** Migrated cards don't know their level yet; find it once so later loads are direct. */
@@ -195,13 +204,15 @@ class Store {
   addToDeck(word: Pick<Word, 'id' | 'level'>): void {
     if (this.cards[word.id] || this.inDeck(word.id)) return;
     this.deck = [...this.deck, { id: word.id, level: word.level, addedAt: Date.now() }];
-    this.persist();
+    this.syncState.deckUpdatedAt = Date.now();
+    this.changed();
     if (!this.revealed) void this.refreshQueue();
   }
 
   removeFromDeck(id: string): void {
     this.deck = this.deck.filter((d) => d.id !== id);
-    this.persist();
+    this.syncState.deckUpdatedAt = Date.now();
+    this.changed();
   }
 
   setSuspended(id: string, suspended: boolean): void {
@@ -209,7 +220,7 @@ class Store {
     if (!record) return;
     record.suspended = suspended || undefined;
     record.updatedAt = Date.now();
-    this.persist();
+    this.changed();
     if (!this.revealed) void this.refreshQueue();
   }
 
@@ -241,7 +252,10 @@ class Store {
       updatedAt: now,
       level: content.word(id)?.level ?? this.cards[id]?.level,
     };
-    if (isNew) this.deck = this.deck.filter((d) => d.id !== id);
+    if (isNew && this.inDeck(id)) {
+      this.deck = this.deck.filter((d) => d.id !== id);
+      this.syncState.deckUpdatedAt = now;
+    }
     const review: ReviewRecord = {
       id: uuid(),
       wordId: id,
@@ -268,7 +282,7 @@ class Store {
     if (!requeue) this.finished++;
     this.queue = advanceQueue(this.queue, requeue);
     this.hideAnswer();
-    this.persist();
+    this.changed();
   }
 
   reviews(since?: number): Promise<ReviewRecord[]> {
@@ -277,8 +291,9 @@ class Store {
 
   async updateSettings(patch: Partial<Settings>): Promise<void> {
     this.settings = { ...this.settings, ...patch };
-    if (patch.retention !== undefined) configureScheduler({ retention: this.settings.retention });
-    this.persist();
+    this.syncState.settingsUpdatedAt = Date.now();
+    if (patch.retention !== undefined) this.configureFsrs();
+    this.changed();
     if ((patch.newPerDay !== undefined || patch.levels !== undefined) && !this.revealed) {
       await this.refreshQueue();
     }
@@ -287,10 +302,65 @@ class Store {
   async resetProgress(): Promise<void> {
     this.cards = {};
     this.deck = [];
+    this.syncState = { cursor: 0, pushedAt: 0, settingsUpdatedAt: 0, deckUpdatedAt: 0 };
     this.daily = freshDaily();
     await this.storage.clear();
     await this.startSession();
     await this.flush();
+    this.reviewRevision++;
+  }
+
+  /** Save, and let sync know something changed. */
+  private changed(): void {
+    this.persist();
+    this.onLocalChange?.();
+  }
+
+  // ---- Sync (see sync.svelte.ts) ----
+
+  /** Local changes since the last push. */
+  async pendingChanges(): Promise<{
+    cards: [string, CardRecord][];
+    reviews: ReviewRecord[];
+    startedAt: number;
+  }> {
+    const startedAt = Date.now();
+    const cards = Object.entries($state.snapshot(this.cards) as Record<string, CardRecord>).filter(
+      ([, r]) => r.updatedAt > this.syncState.pushedAt,
+    );
+    const reviews = (await this.storage.reviews(0)).filter((r) => r.pending);
+    return { cards, reviews, startedAt };
+  }
+
+  /** Applies the server's answer: newer cards, settings and deck, personal FSRS weights. */
+  async applyRemote(remote: {
+    cursor: number;
+    cards: [string, CardRecord][];
+    settings?: { value: Settings; updatedAt: number };
+    deck?: { entries: Snapshot['deck']; updatedAt: number };
+    fsrsWeights?: number[];
+    acceptedReviews: string[];
+    pushedAt: number;
+  }): Promise<void> {
+    for (const [id, record] of remote.cards) {
+      const local = this.cards[id];
+      if (!local || local.updatedAt <= record.updatedAt) this.cards[id] = record;
+    }
+    if (remote.settings && remote.settings.updatedAt > this.syncState.settingsUpdatedAt) {
+      this.settings = { ...DEFAULT_SETTINGS, ...remote.settings.value };
+      this.syncState.settingsUpdatedAt = remote.settings.updatedAt;
+    }
+    if (remote.deck && remote.deck.updatedAt > this.syncState.deckUpdatedAt) {
+      this.deck = remote.deck.entries;
+      this.syncState.deckUpdatedAt = remote.deck.updatedAt;
+    }
+    this.syncState.cursor = remote.cursor;
+    this.syncState.pushedAt = remote.pushedAt;
+    if (remote.fsrsWeights) this.syncState.fsrsWeights = remote.fsrsWeights;
+    this.configureFsrs();
+    await this.storage.markSynced(remote.acceptedReviews);
+    await this.flush();
+    if (!this.revealed) await this.refreshQueue();
     this.reviewRevision++;
   }
 
@@ -311,6 +381,7 @@ class Store {
         deck: $state.snapshot(this.deck),
         daily: $state.snapshot(this.daily),
         updatedAt: Date.now(),
+        sync: $state.snapshot(this.syncState),
       })
       .catch(() => {});
   }

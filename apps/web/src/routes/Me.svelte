@@ -1,6 +1,7 @@
 <script lang="ts">
   import { LEVEL_IDS, LEVELS, type Level } from '@taiwan-mandarin/shared';
   import Segmented from '../components/Segmented.svelte';
+  import AccountPanel from '../ui/AccountPanel.svelte';
   import ReviewChart from '../ui/ReviewChart.svelte';
   import Seal from '../ui/Seal.svelte';
   import { content } from '../lib/content.svelte';
@@ -79,6 +80,9 @@
       </li>
     {/each}
   </ul>
+
+  <h2 class="section-title">Account & sync <span class="zh" lang="zh-Hant-TW">帳號</span></h2>
+  <AccountPanel />
 
   <h2 class="section-title">Settings <span class="zh" lang="zh-Hant-TW">設定</span></h2>
   <div class="settings sheet">

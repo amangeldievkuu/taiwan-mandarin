@@ -20,6 +20,7 @@
     "build": "npm run build -w @taiwan-mandarin/api -w @taiwan-mandarin/web",
     "pretest": "npm run build:shared && npm run content:ensure",
     "test": "npm run test -w @taiwan-mandarin/shared -w @taiwan-mandarin/content -w @taiwan-mandarin/web && npm run guard:taiwan",
+    "test:api": "npm run build:shared && npm run db:up && npm run test -w @taiwan-mandarin/api",
     "guard:taiwan": "node --conditions=source scripts/check-taiwan-standard.ts",
     "precheck": "npm run build:shared",
     "check": "npm run check --workspaces --if-present && tsc -p tsconfig.json",

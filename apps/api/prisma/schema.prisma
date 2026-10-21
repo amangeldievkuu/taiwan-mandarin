@@ -1,0 +1,156 @@
+// User data only. Words, dictionary and readers are served from the generated content files
+// (see src/content), so the database holds what belongs to learners.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                String   @id @default(uuid()) @db.Uuid
+  email             String   @unique
+  passwordHash      String
+  displayName       String?
+  createdAt         DateTime @default(now())
+  /// Settings JSON (shared SettingsSchema) and its client timestamp, merged last-write-wins.
+  settings          Json?
+  settingsUpdatedAt BigInt   @default(0)
+  /// The learner's own deck: [{ id, level, addedAt }].
+  deck              Json     @default("[]")
+  deckUpdatedAt     BigInt   @default(0)
+  /// Personal FSRS weights fitted to this user's review history.
+  fsrsWeights       Float[]
+  fsrsTrainedAt     DateTime?
+  /// Reviews used for the last fit.
+  fsrsReviewCount   Int      @default(0)
+
+  cards         Card[]
+  reviews       ReviewLog[]
+  refreshTokens RefreshToken[]
+  apiKeys       ApiKey[]
+  conversations Conversation[]
+  aiUsage       AiUsage[]
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// SHA-256 of the token; the token itself is only ever in the httpOnly cookie.
+  tokenHash String    @unique
+  /// Rotation chain: reusing a revoked token revokes the whole family.
+  family    String    @db.Uuid
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  userAgent String?
+
+  @@index([userId])
+  @@index([family])
+}
+
+/// Personal access token for the public API ("tm_…").
+model ApiKey {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  prefix     String
+  keyHash    String    @unique
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+
+  @@index([userId])
+}
+
+/// FSRS card state per user and word.
+model Card {
+  userId          String    @db.Uuid
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wordId          String
+  level           String?
+  suspended       Boolean   @default(false)
+  due             DateTime
+  stability       Float
+  difficulty      Float
+  elapsedDays     Int
+  scheduledDays   Int
+  learningSteps   Int       @default(0)
+  reps            Int
+  lapses          Int
+  state           Int
+  lastReview      DateTime?
+  /// Client epoch ms of the last change (last-write-wins).
+  updatedAt       BigInt
+  /// When the server last stored it (sync cursor).
+  serverUpdatedAt DateTime  @updatedAt
+
+  @@id([userId, wordId])
+  @@index([userId, serverUpdatedAt])
+}
+
+/// Every answer, append-only. Feeds stats and the FSRS optimizer.
+model ReviewLog {
+  /// Client-generated UUID, so retries never duplicate a review.
+  id            String   @id @db.Uuid
+  userId        String   @db.Uuid
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wordId        String
+  rating        Int
+  /// Card state before the review.
+  state         Int
+  reviewedAt    DateTime
+  due           DateTime
+  stability     Float
+  difficulty    Float
+  elapsedDays   Int
+  scheduledDays Int
+  durationMs    Int
+  createdAt     DateTime @default(now())
+
+  @@index([userId, reviewedAt])
+  @@index([userId, wordId, reviewedAt])
+}
+
+model Conversation {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenario  String
+  level     String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+
+  @@index([userId, updatedAt])
+}
+
+model Message {
+  id             String       @id @default(uuid()) @db.Uuid
+  conversationId String       @db.Uuid
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String
+  content        String
+  /// Feedback on the learner's message, or new words in the assistant's.
+  meta           Json?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+/// AI and speech requests per user per day, for quotas.
+model AiUsage {
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  day    String
+  kind   String
+  count  Int    @default(0)
+
+  @@id([userId, day, kind])
+}

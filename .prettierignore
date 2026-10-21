@@ -2,3 +2,6 @@ dist
 dev-dist
 node_modules
 package-lock.json
+apps/api/src/generated
+apps/web/public/content
+apps/web/public/dict

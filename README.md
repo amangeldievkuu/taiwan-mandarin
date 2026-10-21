@@ -39,6 +39,35 @@ npm run content    # re-download the sources and rebuild the app content
 
 Web-only: `npm run icons -w @taiwan-mandarin/web` regenerates the PWA icons from `public/icon.svg`.
 
+## API and sync
+
+The web app works fully offline without an account. Signing in (Me › Account) syncs progress
+between devices.
+
+- **Accounts.** Passwords use argon2id. Access is a 15-minute JWT held in memory. A rotating
+  refresh token sits in an httpOnly cookie, and reusing a rotated token revokes the whole chain.
+- **Same origin.** The web app calls the API under `/api` (Vite proxies it in development), so
+  the cookie stays first-party. That matters for Safari on iPhone and iPad.
+- **Sync** (`POST /v1/sync`): cards merge last-write-wins per word, review logs are append-only
+  and keyed by client UUIDs, and deck and settings are whole-value last-write-wins. It runs on
+  start, when the app becomes visible, 5 s after changes, and on sign-in. The first sign-in on a
+  device merges its local progress into the account.
+- **Personal FSRS.** Review logs live in PostgreSQL. The fsrs-rs optimizer
+  (`@open-spaced-repetition/binding`) fits each learner's weights nightly, once they have 400
+  new reviews, or on demand from Me. Clients receive the weights on their next sync.
+- **Public API.** Swagger is at `/docs` (`/api/docs` through the web app). Content routes are
+  open: `/v1/levels`, `/v1/words`, `/v1/dict/:q`, `/v1/segment`, `/v1/readers`. Personal routes
+  (`/v1/me/stats`, `/cards`, `/reviews`, `POST /v1/me/deck/:wordId`) accept a personal access
+  token (`tm_…`) created in Me › API access. Tokens can't manage other tokens.
+- **Content.** The API serves words and the dictionary from the same generated files as the
+  web app, held in memory. The database holds only learner data.
+
+```sh
+npm run db:up                                  # PostgreSQL in Docker (POSTGRES_PORT in .env)
+npm run db:migrate -w @taiwan-mandarin/api     # apply migrations
+npm run test:api                               # API end-to-end tests (separate *_test database)
+```
+
 ## Content
 
 `npm run content` downloads the sources into `data/raw/` (gitignored) and writes

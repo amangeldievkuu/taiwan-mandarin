@@ -5,14 +5,19 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
       "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./taiwan-standard": {
-      "types": "./src/taiwan-standard/index.ts",
       "source": "./src/taiwan-standard/index.ts",
+      "types": "./dist/taiwan-standard/index.d.ts",
       "default": "./dist/taiwan-standard/index.js"
+    },
+    "./api": {
+      "source": "./src/api/index.ts",
+      "types": "./dist/api/index.d.ts",
+      "default": "./dist/api/index.js"
     }
   },
   "scripts": {
@@ -22,6 +27,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "opencc-js": "^1.4.2"
+    "opencc-js": "^1.4.2",
+    "zod": "^4.6.7"
   }
 }

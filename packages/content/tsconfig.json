@@ -1,12 +1,22 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["ES2023"],
-    "types": ["node"],
+    "lib": [
+      "ES2023"
+    ],
+    "types": [
+      "node"
+    ],
     "rootDir": ".",
     "outDir": "dist",
     "allowImportingTsExtensions": true,
-    "rewriteRelativeImportExtensions": true
+    "rewriteRelativeImportExtensions": true,
+    "customConditions": [
+      "source"
+    ]
   },
-  "include": ["src", "vitest.config.ts"]
+  "include": [
+    "src",
+    "vitest.config.ts"
+  ]
 }

@@ -12,6 +12,7 @@ import {
 } from 'ts-fsrs';
 
 export { Rating, State };
+export { dayKey } from '@taiwan-mandarin/shared';
 export type { Card, Grade };
 
 export const GRADES: Grade[] = [Rating.Again, Rating.Hard, Rating.Good, Rating.Easy];
@@ -119,12 +120,4 @@ export function advanceQueue(queue: readonly string[], requeue: boolean): string
   if (!requeue || head === undefined) return rest;
   const at = Math.min(REQUEUE_OFFSET, rest.length);
   return [...rest.slice(0, at), head, ...rest.slice(at)];
-}
-
-/** Local calendar day, "2026-10-21". */
-export function dayKey(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
 }

@@ -1,20 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { cardCounts, dailyReviews, retention, streaks } from './stats';
-import type { ReviewRecord } from './storage';
-import { createEmptyCard } from 'ts-fsrs';
+import { cardCounts, dailyReviews, retention, streaks, type ReviewLike } from './stats.ts';
 
-const at = (day: string, rating = 3, state = 2): ReviewRecord => ({
-  id: `${day}-${rating}-${Math.random()}`,
-  wordId: 'x',
+const at = (day: string, rating = 3, state = 2): ReviewLike => ({
   rating,
   state,
   review: new Date(`${day}T10:00:00`).getTime(),
-  due: 0,
-  stability: 1,
-  difficulty: 5,
-  elapsedDays: 0,
-  scheduledDays: 0,
-  durationMs: 1000,
 });
 const now = new Date('2026-10-21T18:00:00');
 
@@ -78,12 +68,12 @@ describe('retention', () => {
 
 describe('cardCounts', () => {
   it('counts learned, mature and suspended cards', () => {
-    const card = createEmptyCard(now);
+    const card = { stability: 0 };
     expect(
       cardCounts({
-        a: { card, updatedAt: 0 },
-        b: { card: { ...card, stability: 30 }, updatedAt: 0 },
-        c: { card, updatedAt: 0, suspended: true },
+        a: { card },
+        b: { card: { stability: 30 } },
+        c: { card, suspended: true },
       }),
     ).toEqual({ learned: 3, mature: 1, suspended: 1 });
   });

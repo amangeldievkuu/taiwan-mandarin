@@ -9,6 +9,17 @@ export default defineConfig({
   // Use @taiwan-mandarin/shared from source (its "source" export), so edits hot-reload without a build.
   resolve: { conditions: ['source', ...defaultClientConditions] },
   ssr: { resolve: { conditions: ['source', ...defaultServerConditions] } },
+  // The API is same-origin under /api, as in production (so the refresh cookie stays first-party).
+  server: {
+    proxy: {
+      '/api': { target: 'http://localhost:3000', rewrite: (path) => path.replace(/^\/api/, '') },
+    },
+  },
+  preview: {
+    proxy: {
+      '/api': { target: 'http://localhost:3000', rewrite: (path) => path.replace(/^\/api/, '') },
+    },
+  },
   plugins: [
     svelte(),
     VitePWA({
