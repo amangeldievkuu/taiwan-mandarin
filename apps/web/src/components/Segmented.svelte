@@ -4,6 +4,8 @@
     label: string;
     /** Optional font-family for the label (used to preview Kai / Sans). */
     font?: string;
+    /** Language of the label, e.g. "zh-Hant-TW" for Chinese labels. */
+    lang?: string;
   }
 
   interface Props {
@@ -24,6 +26,7 @@
       aria-checked={option.value === value}
       class:active={option.value === value}
       style:font-family={option.font}
+      lang={option.lang}
       onclick={() => onchange(option.value)}
     >
       {option.label}

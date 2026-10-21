@@ -34,7 +34,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'favicon.ico', 'apple-touch-icon-180x180.png'],
       manifest: {
-        name: '台灣華語',
+        name: '臺灣華語',
         short_name: '華語',
         description:
           'Taiwan Mandarin flashcards: Traditional characters, Zhuyin, spaced repetition.',

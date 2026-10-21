@@ -19,6 +19,8 @@
   $effect(() => {
     const root = document.documentElement;
     root.dataset.glyph = store.settings.glyphStyle;
+    // Page language follows the meaning language; Chinese text is tagged zh-Hant-TW itself.
+    root.lang = store.settings.meaning;
     // Study sits on plain white; lists use the grouped gray like iOS.
     root.dataset.surface = store.tab === 'study' ? 'plain' : 'grouped';
   });

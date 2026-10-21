@@ -70,8 +70,8 @@
       label="Character style"
       value={settings.glyphStyle}
       options={[
-        { value: 'kai', label: '楷書 Kai', font: 'var(--font-kai)' },
-        { value: 'sans', label: '黑體 Sans', font: 'var(--font-ui)' },
+        { value: 'kai', label: '楷書 Kai', font: 'var(--font-kai)', lang: 'zh-Hant-TW' },
+        { value: 'sans', label: '黑體 Sans', font: 'var(--font-ui)', lang: 'zh-Hant-TW' },
       ]}
       onchange={(glyphStyle: GlyphStyle) => store.updateSettings({ glyphStyle })}
     />

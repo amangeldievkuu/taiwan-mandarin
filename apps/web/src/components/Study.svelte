@@ -2,6 +2,7 @@
   import { canSpeak, speak } from '../lib/speech';
   import { formatInterval, GRADES, Rating, type Grade } from '../lib/srs';
   import { store } from '../lib/store.svelte';
+  import TaiwanNote from './TaiwanNote.svelte';
   import WordGlyphs, { fitSize } from './WordGlyphs.svelte';
 
   const GRADE_INFO: Record<Grade, { label: string; color: string; key: string }> = {
@@ -80,9 +81,7 @@
       {#if store.revealed}
         <div class="answer">
           <p class="meaning">{word[settings.meaning]}</p>
-          {#if word.tw}
-            <p class="note"><span class="badge-tw">台灣</span>{word.tw[settings.meaning]}</p>
-          {/if}
+          <TaiwanNote {word} lang={settings.meaning} />
           {#if canSpeak}
             <button
               type="button"
@@ -249,26 +248,6 @@
     font-size: 22px;
     font-weight: 500;
     line-height: 1.3;
-  }
-
-  .note {
-    display: flex;
-    gap: 8px;
-    align-items: baseline;
-    margin: 0;
-    padding: 10px 14px;
-    border-radius: var(--radius);
-    background: var(--grouped);
-    font-size: 15px;
-    line-height: 1.4;
-    color: var(--text-2);
-    text-align: left;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .note {
-      background: var(--cell);
-    }
   }
 
   .audio {

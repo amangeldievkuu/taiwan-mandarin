@@ -25,6 +25,10 @@ export interface Word {
   topic: TopicId;
   /** Note about Taiwan usage; marks the word as Taiwan-specific. */
   tw?: Note;
+  /** Mainland equivalent (in Traditional characters), shown only as a labeled note. */
+  mainland?: string;
+  /** Reading not yet confirmed against the MOE 《重編國語辭典修訂本》. */
+  readingUnverified?: boolean;
 }
 
 export interface Topic {

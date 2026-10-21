@@ -8,6 +8,11 @@
       "types": "./src/index.ts",
       "source": "./src/index.ts",
       "default": "./dist/index.js"
+    },
+    "./taiwan-standard": {
+      "types": "./src/taiwan-standard/index.ts",
+      "source": "./src/taiwan-standard/index.ts",
+      "default": "./dist/taiwan-standard/index.js"
     }
   },
   "scripts": {
@@ -15,5 +20,8 @@
     "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "opencc-js": "^1.4.2"
   }
 }

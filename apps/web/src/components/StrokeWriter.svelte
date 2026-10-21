@@ -1,16 +1,25 @@
 <script lang="ts" module>
   import type { CharacterJson } from 'hanzi-writer';
 
+  /** `tw` is true only when the order is verified against the Taiwan MOE standard. */
+  type StrokeData = CharacterJson & { tw: boolean };
+
   // Bundled at build time (scripts/build-strokes.ts); loaded lazily as its own chunk.
-  let strokes: Promise<Record<string, CharacterJson>> | undefined;
+  let strokes: Promise<Record<string, StrokeData>> | undefined;
   const loadStrokes = () =>
     (strokes ??= import('../lib/strokes.json').then(
-      (m) => m.default as unknown as Record<string, CharacterJson>,
+      (m) => m.default as unknown as Record<string, StrokeData>,
     ));
 </script>
 
 <script lang="ts">
   import HanziWriter from 'hanzi-writer';
+  import { store } from '../lib/store.svelte';
+
+  const UNVERIFIED_HINT = {
+    ky: 'Сызыктардын тартиби PRC маалыматынан алынган жана Тайвандын стандарты менен текшериле элек.',
+    en: 'Stroke order comes from PRC data and has not been checked against the Taiwan MOE standard.',
+  };
 
   interface Props {
     char: string;
@@ -24,6 +33,7 @@
   let mode = $state<'idle' | 'animating' | 'quiz' | 'done'>('idle');
   let status = $state('');
   let missing = $state(false);
+  let verified = $state<boolean | null>(null);
   let scheme = $state(0);
 
   function cssVar(name: string): string {
@@ -35,6 +45,7 @@
     void scheme;
     const current = char;
     missing = false;
+    verified = null;
     mode = 'idle';
     status = '';
     // The target is an empty element owned by hanzi-writer, not by Svelte.
@@ -54,7 +65,12 @@
       delayBetweenStrokes: 220,
       drawingWidth: 18,
       charDataLoader: (c, onLoad, onError) => {
-        loadStrokes().then((data) => (data[c] ? onLoad(data[c]) : onError()), onError);
+        loadStrokes().then((data) => {
+          const entry = data[c];
+          if (!entry) return onError();
+          verified = entry.tw;
+          onLoad(entry);
+        }, onError);
       },
       onLoadCharDataError: () => (missing = true),
     });
@@ -108,9 +124,15 @@
     </svg>
     <div class="target" bind:this={target} aria-label="Stroke order for {char}" role="img"></div>
     {#if missing}
-      <p class="missing">No stroke data for {char}</p>
+      <p class="missing">No stroke data for <span lang="zh-Hant-TW">{char}</span></p>
     {/if}
   </div>
+
+  {#if verified === false}
+    <p class="unverified" lang="zh-Hant-TW" title={UNVERIFIED_HINT[store.settings.meaning]}>
+      筆順可能與臺灣標準不同
+    </p>
+  {/if}
 
   <p class="status" aria-live="polite">{status}</p>
 
@@ -174,6 +196,16 @@
     margin: 0;
     font-size: 15px;
     color: var(--text-2);
+  }
+
+  .unverified {
+    margin: 10px 0 0;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--hard);
+    background: color-mix(in srgb, var(--hard) 12%, transparent);
   }
 
   .status {

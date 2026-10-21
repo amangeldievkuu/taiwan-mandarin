@@ -1,4 +1,5 @@
-// Starter vocabulary with Taiwan words and Taiwan (教育部 / everyday) readings.
+// Starter vocabulary: Taiwan words, Traditional characters (zh-Hant-TW) and readings from the
+// MOE 《重編國語辭典修訂本》, checked against moedict.tw (see README).
 // pinyin: numbered, one syllable per character, citation tones, 5 = neutral.
 
 import type { Note, Topic, TopicId, Word } from './types.ts';
@@ -8,17 +9,35 @@ export const TOPICS: Topic[] = [
   { id: 'people', zh: '人', en: 'People', ky: 'Адамдар' },
   { id: 'numbers', zh: '數字', en: 'Numbers', ky: 'Сандар' },
   { id: 'food', zh: '吃喝', en: 'Food & drink', ky: 'Тамак-аш жана суусундук' },
-  { id: 'taiwan', zh: '台灣生活', en: 'Life in Taiwan', ky: 'Тайвандагы жашоо' },
+  { id: 'taiwan', zh: '臺灣生活', en: 'Life in Taiwan', ky: 'Тайвандагы жашоо' },
   { id: 'time', zh: '時間', en: 'Time', ky: 'Убакыт' },
   { id: 'actions', zh: '動作', en: 'Actions', ky: 'Аракеттер' },
   { id: 'describing', zh: '形容', en: 'Describing', ky: 'Сыпаттоо' },
   { id: 'questions', zh: '問題', en: 'Questions', ky: 'Суроолор' },
 ];
 
-type Row = [id: string, hanzi: string, pinyin: string, en: string, ky: string, tw?: Note];
+type Extra = Pick<Word, 'mainland' | 'readingUnverified'>;
+type Row = [
+  id: string,
+  hanzi: string,
+  pinyin: string,
+  en: string,
+  ky: string,
+  tw?: Note,
+  extra?: Extra,
+];
 
 const rows = (topic: TopicId, list: Row[]): Word[] =>
-  list.map(([id, hanzi, pinyin, en, ky, tw]) => ({ id, hanzi, pinyin, en, ky, topic, tw }));
+  list.map(([id, hanzi, pinyin, en, ky, tw, extra]) => ({
+    id,
+    hanzi,
+    pinyin,
+    en,
+    ky,
+    topic,
+    tw,
+    ...extra,
+  }));
 
 // prettier-ignore
 export const VOCAB: Word[] = [
@@ -36,7 +55,7 @@ export const VOCAB: Word[] = [
       en: '不 is read bú before a 4th tone. Taiwan keeps the full tone on 氣.',
       ky: '不 4-тондун алдында bú болуп окулат. Тайванда 氣 толук тону менен айтылат.',
     }],
-    ['dui-bu-qi', '對不起', 'dui4 bu4 qi3', 'sorry', 'кечиресиз'],
+    ['dui-bu-qi', '對不起', 'dui4 bu5 qi3', 'sorry', 'кечиресиз'],
     ['mei-guan-xi', '沒關係', 'mei2 guan1 xi5', "it's okay, never mind", 'эчтеке эмес'],
     ['bu-hao-yi-si', '不好意思', 'bu4 hao3 yi4 si5', 'excuse me, sorry (light)', 'кечиресиз, ыңгайсыз болду', {
       en: 'Very common in Taiwan: small apologies, getting attention, declining politely.',
@@ -108,51 +127,54 @@ export const VOCAB: Word[] = [
     ['e', '餓', 'e4', 'hungry', 'ачка'],
   ]),
   ...rows('taiwan', [
-    ['tai-wan', '台灣', 'tai2 wan1', 'Taiwan', 'Тайвань', {
-      en: '台 is the common everyday form of 臺.',
-      ky: '台 — 臺 белгисинин күнүмдүк жөнөкөй түрү.',
+    ['tai-wan', '臺灣', 'tai2 wan1', 'Taiwan', 'Тайвань', {
+      en: '臺 is the standard form, used in official names. 台 (台灣) is the common everyday form.',
+      ky: '臺 — стандарттык түрү, расмий аталыштарда колдонулат. 台 (台灣) — күнүмдүк жазылышы.',
     }],
-    ['tai-bei', '台北', 'tai2 bei3', 'Taipei', 'Тайбэй'],
+    ['tai-bei', '臺北', 'tai2 bei3', 'Taipei', 'Тайбэй', {
+      en: 'Official form 臺北; everyday writing often uses 台北.',
+      ky: 'Расмий түрү 臺北; күнүмдүк жазууда көбүнчө 台北.',
+    }],
     ['jie-yun', '捷運', 'jie2 yun4', 'MRT, metro', 'метро', {
-      en: 'Taiwan says 捷運. Mainland China says 地鐵.',
-      ky: 'Тайванда 捷運 дешет, Кытайда 地鐵.',
-    }],
+      en: 'Short for 大眾捷運系統: the MRT in Taipei, Kaohsiung and Taoyuan.',
+      ky: '大眾捷運系統 сөзүнүн кыскартылышы: Тайбэй, Гаосюн жана Таоюандагы метро.',
+    }, { mainland: '地鐵' }],
     ['gong-che', '公車', 'gong1 che1', 'bus', 'автобус', {
-      en: 'Mainland China says 公交車.',
-      ky: 'Кытайда 公交車 дешет.',
-    }],
+      en: 'City buses. Pay with 悠遊卡 or cash.',
+      ky: 'Шаардык автобус. 悠遊卡 же накталай акча менен төлөйсүң.',
+    }, { mainland: '公交車' }],
     ['ji-che', '機車', 'ji1 che1', 'scooter, motorbike', 'скутер, мотоцикл', {
       en: 'Scooters are everywhere in Taiwan. As slang, 機車 also means "annoying".',
       ky: 'Тайванда скутер бардык жерде. Жаргондо 機車 «жаман мүнөз, кыжырдантат» дегенди да билдирет.',
-    }],
+    }, { mainland: '摩托車' }],
     ['jiao-ta-che', '腳踏車', 'jiao3 ta4 che1', 'bicycle', 'велосипед', {
-      en: 'Mainland China says 自行車.',
-      ky: 'Кытайда 自行車 дешет.',
-    }],
+      en: 'Also called 單車. Rent one with YouBike.',
+      ky: '單車 деп да айтылат. YouBike аркылуу ижарага алса болот.',
+    }, { mainland: '自行車' }],
     ['gao-tie', '高鐵', 'gao1 tie3', 'high-speed rail', 'ылдам поезд', {
       en: 'Taiwan High Speed Rail (THSR), Taipei–Kaohsiung in about 90 minutes.',
       ky: 'Тайвандын ылдам темир жолу: Тайбэй–Гаосюн болжол менен 90 мүнөт.',
     }],
     ['huo-che-zhan', '火車站', 'huo3 che1 zhan4', 'train station', 'темир жол бекети'],
     ['ji-cheng-che', '計程車', 'ji4 cheng2 che1', 'taxi', 'такси', {
-      en: 'Mainland China says 出租車.',
-      ky: 'Кытайда 出租車 дешет.',
-    }],
+      en: 'Yellow taxis. Wave one down or book one in an app.',
+      ky: 'Сары такси. Кол көтөрүп токтотсоң же колдонмо аркылуу чакырсаң болот.',
+    }, { mainland: '出租車' }],
     ['you-you-ka', '悠遊卡', 'you1 you2 ka3', 'EasyCard (transit card)', 'EasyCard (транспорт картасы)', {
       en: 'Taipei transit card. Also pays at convenience stores.',
       ky: 'Тайбэйдин транспорт картасы. Дүкөндөрдө да төлөсө болот.',
     }],
     ['bian-li-shang-dian', '便利商店', 'bian4 li4 shang1 dian4', 'convenience store', '24 сааттык дүкөн', {
-      en: '7-Eleven, FamilyMart… on every corner. Mainland China says 便利店.',
-      ky: '7-Eleven, FamilyMart… ар бир бурчта. Кытайда 便利店 дешет.',
-    }],
+      en: '7-Eleven, FamilyMart… on every corner. You can also pay bills and pick up parcels there.',
+      ky: '7-Eleven, FamilyMart… ар бир бурчта. Ал жерден эсеп төлөп, посылка да алса болот.',
+    }, { mainland: '便利店' }],
     ['ye-shi', '夜市', 'ye4 shi4', 'night market', 'түнкү базар', {
       en: 'Street food and shopping at night, a core part of Taiwan life.',
       ky: 'Түнкү көчө тамагы жана соода. Тайвандагы жашоонун негизги бөлүгү.',
     }],
     ['le-se', '垃圾', 'le4 se4', 'garbage', 'таштанды', {
-      en: 'Taiwan reading is lè sè. Mainland China reads lā jī.',
-      ky: 'Тайванда lè sè болуп окулат, Кытайда lā jī.',
+      en: 'Taiwan reading lè sè (MOE dictionary). Mainland: lā jī.',
+      ky: 'Тайванча окулушу lè sè (Билим берүү министрлигинин сөздүгү). Материкте: lā jī.',
     }],
     ['le-se-che', '垃圾車', 'le4 se4 che1', 'garbage truck', 'таштанды машинасы', {
       en: 'Plays music (often Für Elise). You bring your trash out to meet it.',
@@ -160,13 +182,13 @@ export const VOCAB: Word[] = [
     }],
     ['shou-ji', '手機', 'shou3 ji1', 'mobile phone', 'уюлдук телефон'],
     ['wang-lu', '網路', 'wang3 lu4', 'internet', 'интернет', {
-      en: 'Mainland China says 網絡 (wǎngluò).',
-      ky: 'Кытайда 網絡 (wǎngluò) дешет.',
-    }],
+      en: 'The Taiwan word. 上網 means to go online.',
+      ky: 'Тайванча айтылышы. 上網 — интернетке кирүү.',
+    }, { mainland: '網絡' }],
     ['leng-qi', '冷氣', 'leng3 qi4', 'air conditioning', 'кондиционер', {
-      en: 'Mainland China says 空調.',
-      ky: 'Кытайда 空調 дешет.',
-    }],
+      en: 'On everywhere in summer. 開冷氣 means to turn on the AC.',
+      ky: 'Жайында бардык жерде күйүп турат. 開冷氣 — кондиционерди күйгүзүү.',
+    }, { mainland: '空調' }],
     ['ce-suo', '廁所', 'ce4 suo3', 'toilet, restroom', 'даараткана'],
   ]),
   ...rows('time', [
@@ -175,16 +197,16 @@ export const VOCAB: Word[] = [
     ['zuo-tian', '昨天', 'zuo2 tian1', 'yesterday', 'кечээ'],
     ['xian-zai', '現在', 'xian4 zai4', 'now', 'азыр'],
     ['xing-qi', '星期', 'xing1 qi2', 'week', 'апта', {
-      en: 'Taiwan reads 期 as qí. Mainland China reads qī.',
-      ky: 'Тайванда 期 qí болуп окулат, Кытайда qī.',
+      en: 'Taiwan reads 期 as qí (MOE dictionary). Mainland: qī.',
+      ky: 'Тайванда 期 qí болуп окулат (Билим берүү министрлигинин сөздүгү). Материкте: qī.',
     }],
     ['xing-qi-yi', '星期一', 'xing1 qi2 yi1', 'Monday', 'дүйшөмбү'],
     ['xing-qi-tian', '星期天', 'xing1 qi2 tian1', 'Sunday', 'жекшемби', {
       en: '星期日 is also common in Taiwan, especially in writing.',
       ky: 'Тайванда 星期日 да көп колдонулат, айрыкча жазууда.',
     }],
-    ['zao-shang', '早上', 'zao3 shang4', 'morning', 'эртең менен'],
-    ['wan-shang', '晚上', 'wan3 shang4', 'evening', 'кечинде'],
+    ['zao-shang', '早上', 'zao3 shang5', 'morning', 'эртең менен'],
+    ['wan-shang', '晚上', 'wan3 shang5', 'evening', 'кечинде'],
     ['dian', '點', 'dian3', "o'clock", 'саат (убакыт)'],
     ['shi-hou', '時候', 'shi2 hou4', 'time, moment', 'убак, маал'],
     ['nian', '年', 'nian2', 'year', 'жыл'],
@@ -219,8 +241,8 @@ export const VOCAB: Word[] = [
     ['re', '熱', 're4', 'hot', 'ысык'],
     ['leng', '冷', 'leng3', 'cold', 'суук'],
     ['gui', '貴', 'gui4', 'expensive', 'кымбат'],
-    ['pian-yi', '便宜', 'pian2 yi2', 'cheap', 'арзан'],
-    ['piao-liang', '漂亮', 'piao4 liang4', 'pretty, beautiful', 'сулуу, кооз'],
+    ['pian-yi', '便宜', 'pian2 yi5', 'cheap', 'арзан'],
+    ['piao-liang', '漂亮', 'piao4 liang5', 'pretty, beautiful', 'сулуу, кооз'],
     ['ke-ai', '可愛', 'ke3 ai4', 'cute', 'сүйкүмдүү'],
     ['lei', '累', 'lei4', 'tired', 'чарчаган'],
     ['mang', '忙', 'mang2', 'busy', 'бош эмес'],
@@ -234,7 +256,7 @@ export const VOCAB: Word[] = [
     ['na-li', '哪裡', 'na3 li3', 'where', 'кайда', {
       en: 'Taiwan uses 哪裡. 哪兒 sounds northern.',
       ky: 'Тайванда 哪裡 дешет. 哪兒 түндүк кытайча угулат.',
-    }],
+    }, { readingUnverified: true }],
     ['shen-me-shi-hou', '什麼時候', 'shen2 me5 shi2 hou4', 'when', 'качан'],
     ['wei-shen-me', '為什麼', 'wei4 shen2 me5', 'why', 'эмне үчүн'],
     ['zen-me', '怎麼', 'zen3 me5', 'how', 'кантип'],

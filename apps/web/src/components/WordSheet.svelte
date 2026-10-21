@@ -4,6 +4,7 @@
   import { store } from '../lib/store.svelte';
   import { TOPICS, type Word } from '@taiwan-mandarin/shared';
   import StrokeWriter from './StrokeWriter.svelte';
+  import TaiwanNote from './TaiwanNote.svelte';
   import WordGlyphs, { fitSize } from './WordGlyphs.svelte';
 
   interface Props {
@@ -47,7 +48,9 @@
     <div class="sheet">
       <div class="top">
         <div class="grabber" aria-hidden="true"></div>
-        <span class="topic">{topic?.zh} · {topic?.[settings.meaning]}</span>
+        <span class="topic">
+          <span lang="zh-Hant-TW">{topic?.zh}</span> · {topic?.[settings.meaning]}
+        </span>
         <button type="button" class="close" onclick={onclose}>Done</button>
       </div>
 
@@ -77,8 +80,10 @@
         <p class="secondary">{word[other]}</p>
       </div>
 
-      {#if word.tw}
-        <p class="note"><span class="badge-tw">台灣</span>{word.tw[settings.meaning]}</p>
+      {#if word.tw || word.mainland}
+        <div class="note">
+          <TaiwanNote {word} lang={settings.meaning} />
+        </div>
       {/if}
 
       <p class="status">{status}</p>
@@ -91,6 +96,7 @@
               type="button"
               role="tab"
               class="hanzi"
+              lang="zh-Hant-TW"
               aria-selected={i === charIndex}
               class:active={i === charIndex}
               onclick={() => (charIndex = i)}
@@ -246,20 +252,12 @@
   }
 
   .note {
-    display: flex;
-    gap: 8px;
-    align-items: baseline;
     margin: 0 0 12px;
-    padding: 10px 14px;
-    border-radius: var(--radius);
-    background: var(--grouped);
-    font-size: 15px;
-    color: var(--text-2);
   }
 
   @media (prefers-color-scheme: dark) {
     .note {
-      background: #2c2c2e;
+      --note-bg: #2c2c2e;
     }
   }
 

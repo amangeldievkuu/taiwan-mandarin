@@ -91,7 +91,7 @@
               <span class="meaning">{entry.word[settings.meaning]}</span>
               <span class="phonetic" lang="zh-Hant-TW">{phonetic(entry)}</span>
             </span>
-            {#if entry.word.tw}<span class="badge-tw">台灣</span>{/if}
+            {#if entry.word.tw}<span class="badge-tw" lang="zh-Hant-TW">臺灣</span>{/if}
             <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M9.5 6l6 6-6 6" />
             </svg>

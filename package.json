@@ -18,9 +18,10 @@
     "prebuild": "npm run build:shared",
     "build": "npm run build -w @taiwan-mandarin/api -w @taiwan-mandarin/web",
     "pretest": "npm run build:shared",
-    "test": "npm run test -w @taiwan-mandarin/shared -w @taiwan-mandarin/web",
+    "test": "npm run test -w @taiwan-mandarin/shared -w @taiwan-mandarin/web && npm run guard:taiwan",
+    "guard:taiwan": "node --conditions=source scripts/check-taiwan-standard.ts",
     "precheck": "npm run build:shared",
-    "check": "npm run check --workspaces --if-present",
+    "check": "npm run check --workspaces --if-present && tsc -p tsconfig.json",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

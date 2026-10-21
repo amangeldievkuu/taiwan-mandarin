@@ -1,0 +1,5 @@
+{
+  "$comment": "Taiwan MOE stroke order for characters whose order in hanzi-writer-data (Make Me a Hanzi, PRC order) is verified or corrected. Every character NOT listed here is treated as 'prc-unverified' and shows the badge 筆順可能與臺灣標準不同. Only add an entry after checking the character on the source site; never invent stroke data. status 'same-as-prc': verified identical to the bundled order (no data needed). status 'tw': corrected order, with 'strokes' and 'medians' in hanzi-writer format (same length, one item per stroke, in Taiwan order).",
+  "source": "教育部《常用國字標準字體筆順學習網》 https://stroke-order.learningweb.moe.edu.tw/",
+  "characters": {}
+}
