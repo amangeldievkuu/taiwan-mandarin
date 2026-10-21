@@ -13,7 +13,15 @@ import { zodTextFormat } from 'openai/helpers/zod';
 import { LEVELS, type ContentManifest, type Level, type Word } from '@taiwan-mandarin/shared';
 import { checkText } from '@taiwan-mandarin/shared/taiwan-standard';
 import { z } from 'zod';
-import { DATA, OUT } from './paths.ts';
+import { DATA, OUT, ROOT } from './paths.ts';
+
+// Same key as the API: take OPENAI_API_KEY / OPENAI_MODEL from apps/api/.env unless already set.
+const apiEnv = join(ROOT, 'apps/api/.env');
+if (!process.env['OPENAI_API_KEY'] && existsSync(apiEnv)) process.loadEnvFile(apiEnv);
+if (!process.env['OPENAI_API_KEY']) {
+  console.error('Set OPENAI_API_KEY (in apps/api/.env or the environment).');
+  process.exit(1);
+}
 
 const { values: args } = parseArgs({
   options: {
