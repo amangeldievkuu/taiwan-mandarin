@@ -88,7 +88,10 @@
 
   {#if reader}
     <header class="head">
-      <p class="eyebrow">{level?.en} · {level?.cefr}</p>
+      <p class="eyebrow">
+        {level?.en} · {level?.cefr}
+        {#if reader.draft}· <span class="draft">Draft, not yet reviewed</span>{/if}
+      </p>
       <h1 class="r-title hanzi" lang="zh-Hant-TW">{reader.title}</h1>
       <p class="r-sub">{reader.titleEn}</p>
       <div class="toolbar">
@@ -106,7 +109,10 @@
             {playing !== null ? 'Stop' : 'Listen'}
           </button>
         {/if}
-        <span class="legend"><span class="sample new"></span> new to you</span>
+        <span class="legend">
+          <span class="sample new"></span> new to you
+          <span class="sample glossed">字</span> above this level
+        </span>
       </div>
     </header>
 
@@ -204,6 +210,17 @@
     width: 18px;
     height: 0;
     border-bottom: 2px dotted var(--seal);
+  }
+
+  .draft {
+    color: var(--ochre);
+  }
+
+  .sample.glossed {
+    width: auto;
+    border: 0;
+    font-family: var(--font-kai);
+    color: var(--indigo);
   }
 
   .text {

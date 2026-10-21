@@ -1,0 +1,25 @@
+{
+  "id": "typhoon-day",
+  "level": "L1",
+  "topic": "nature",
+  "title": "颱風天",
+  "titleEn": "Typhoon day",
+  "summary": "Wind, rain and the famous \"typhoon day off\".",
+  "draft": true,
+  "paragraphs": [
+    "夏天的時候，臺灣常常有颱風。",
+    "颱風來的時候，風很大，雨也很大。",
+    "如果颱風太大，政府會放「颱風假」，學生不用上課，很多人也不用上班。",
+    "颱風假的前一天，大家會去超市買水、泡麵和麵包。",
+    "有的人在家看電視，有的人在家睡覺。",
+    "雖然放假很開心，可是颱風也很危險，大家最好不要出門。"
+  ],
+  "translation": [
+    "In summer, Taiwan often has typhoons.",
+    "When a typhoon comes, the wind is strong and the rain is heavy.",
+    "If the typhoon is too strong, the government announces a \"typhoon day off\": students have no classes and many people don't have to work.",
+    "The day before, everyone goes to the supermarket to buy water, instant noodles and bread.",
+    "Some people watch TV at home; some sleep.",
+    "A day off is nice, but typhoons are dangerous, so it's best not to go out."
+  ]
+}

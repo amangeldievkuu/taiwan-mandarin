@@ -1,0 +1,19 @@
+{
+  "id": "my-morning",
+  "level": "N1",
+  "topic": "daily",
+  "title": "我的早上",
+  "titleEn": "My morning",
+  "summary": "A student in Taipei starts the day.",
+  "draft": true,
+  "paragraphs": [
+    "早上七點，我起床。我喝一杯咖啡，吃一個麵包。",
+    "我家在臺北。我坐捷運去學校。",
+    "我是學生。我很喜歡我的學校，也喜歡我的老師。"
+  ],
+  "translation": [
+    "At seven in the morning I get up. I drink a cup of coffee and eat a piece of bread.",
+    "My home is in Taipei. I take the MRT to school.",
+    "I am a student. I really like my school, and I like my teacher too."
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "food-delivery",
+  "level": "L5",
+  "topic": "work",
+  "title": "外送平臺",
+  "titleEn": "Delivery apps",
+  "summary": "Convenience for customers, and hard questions about the riders.",
+  "draft": true,
+  "paragraphs": [
+    "在臺北的街頭，穿著亮色制服、背著大型保溫箱的外送員隨處可見。",
+    "外送平臺的興起，大大改變了臺灣人的飲食習慣，只要動動手指，熱騰騰的餐點就能送到家門口。",
+    "對消費者而言，外送節省了時間；對餐廳來說，則多了一條銷售管道。",
+    "然而，外送員的勞動條件卻引起不少爭議。由於他們多半被視為承攬人員而非員工，往往缺乏完整的勞健保與職災保障。",
+    "此外，為了多接幾單，有些外送員在路上搶快，也增加了交通事故的風險。",
+    "如何在便利與公平之間取得平衡，成為政府與平臺業者必須正視的問題。"
+  ],
+  "translation": [
+    "On Taipei's streets, delivery riders in bright uniforms carrying big insulated boxes are everywhere.",
+    "The rise of delivery platforms has greatly changed how Taiwanese eat: with a tap of a finger, a hot meal arrives at the door.",
+    "For consumers delivery saves time; for restaurants it adds a sales channel.",
+    "The riders' working conditions, however, are controversial. Because most are treated as contractors rather than employees, they often lack full labor and health insurance and protection against workplace injury.",
+    "In addition, some riders rush on the road to take more orders, which raises the risk of accidents.",
+    "How to balance convenience and fairness has become a problem that the government and the platforms must face."
+  ],
+  "glossary": {
+    "承攬人員": "contractor (not an employee)",
+    "勞健保": "labor and national health insurance",
+    "職災": "occupational injury"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "hiking-elephant-mountain",
+  "level": "N2",
+  "topic": "leisure",
+  "title": "週末去爬山",
+  "titleEn": "A weekend hike",
+  "summary": "Climbing Elephant Mountain for a view of Taipei 101.",
+  "draft": true,
+  "paragraphs": [
+    "這個週末天氣很好，我和朋友去爬象山。",
+    "象山不太高，可是有很多樓梯，我們爬了半個小時。",
+    "到了山上，我們可以看到臺北一〇一。",
+    "風景很漂亮，我們拍了很多照片。",
+    "下山以後，我們去吃牛肉麵，又累又開心。"
+  ],
+  "translation": [
+    "The weather was great this weekend, so my friend and I went hiking on Elephant Mountain.",
+    "Elephant Mountain isn't very high, but there are a lot of stairs. We climbed for half an hour.",
+    "At the top we could see Taipei 101.",
+    "The view was beautiful, and we took lots of photos.",
+    "After coming down we went for beef noodles, tired but happy."
+  ],
+  "glossary": {
+    "象山": "Elephant Mountain, a hill in Taipei's Xinyi District",
+    "臺北一〇一": "Taipei 101 (skyscraper)"
+  }
+}

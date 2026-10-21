@@ -1,0 +1,25 @@
+{
+  "id": "low-birth-rate",
+  "level": "L5",
+  "topic": "society",
+  "title": "少子化",
+  "titleEn": "Fewer children",
+  "summary": "Why Taiwan has one of the world's lowest birth rates, and what it means.",
+  "draft": true,
+  "paragraphs": [
+    "近年來，臺灣的出生率持續下降，已經成為全世界生育率最低的地區之一。",
+    "造成少子化的原因很多，包括房價高漲、工時過長、育兒成本高，以及年輕人對婚姻觀念的改變。",
+    "少子化帶來的影響相當深遠：學校招不到學生而被迫合併或關閉，勞動人口減少，社會的扶養負擔也愈來愈重。",
+    "為了因應這個問題，政府推出了育兒津貼、延長育嬰假等措施，希望減輕家庭的經濟壓力。",
+    "然而，不少專家指出，單靠補助難以扭轉趨勢，更重要的是打造友善育兒的職場與社會環境。",
+    "這不僅是家庭的選擇，更是整個社會必須共同面對的課題。"
+  ],
+  "translation": [
+    "In recent years Taiwan's birth rate has kept falling, making it one of the places with the lowest fertility in the world.",
+    "There are many causes: soaring housing prices, long working hours, the high cost of raising children and young people's changing views of marriage.",
+    "The effects are far-reaching: schools that can't recruit students are forced to merge or close, the workforce shrinks, and society's burden of support grows heavier.",
+    "In response, the government introduced childcare allowances and longer parental leave, hoping to ease families' financial pressure.",
+    "Many experts point out, however, that subsidies alone can hardly reverse the trend; what matters more is building workplaces and a society that support raising children.",
+    "This is not only a family's choice but an issue the whole society must face together."
+  ]
+}

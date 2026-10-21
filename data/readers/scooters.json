@@ -1,0 +1,28 @@
+{
+  "id": "scooters",
+  "level": "L2",
+  "topic": "travel",
+  "title": "騎機車",
+  "titleEn": "Riding a scooter",
+  "summary": "The \"scooter sea\", helmets and the two-stage left turn.",
+  "draft": true,
+  "paragraphs": [
+    "在臺灣的大街小巷，到處都可以看到機車。",
+    "因為機車便宜、方便，又容易停車，很多上班族和學生都騎機車。",
+    "上下班的時間，十字路口常常停滿了機車，好像一片「機車海」。",
+    "騎機車一定要戴安全帽，也要注意兩段式左轉的規定。",
+    "下雨的時候，大家會穿上雨衣，繼續騎車出門。",
+    "雖然機車很方便，但是空氣汙染和交通安全也是大家關心的問題。"
+  ],
+  "translation": [
+    "On the streets and alleys of Taiwan, you can see scooters everywhere.",
+    "Scooters are cheap, convenient and easy to park, so many office workers and students ride them.",
+    "At rush hour, intersections are packed with scooters, like a \"sea of scooters\".",
+    "You must wear a helmet, and watch out for the two-stage left turn rule.",
+    "When it rains, everyone puts on a raincoat and keeps riding.",
+    "Scooters are convenient, but air pollution and road safety are also issues people care about."
+  ],
+  "glossary": {
+    "兩段式左轉": "two-stage left turn (scooters wait in a box to turn left)"
+  }
+}

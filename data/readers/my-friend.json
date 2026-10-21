@@ -1,0 +1,24 @@
+{
+  "id": "my-friend",
+  "level": "N1",
+  "topic": "social",
+  "title": "我的朋友",
+  "titleEn": "My friend",
+  "summary": "Meet Xiaoming, who loves tea and Taiwanese food.",
+  "draft": true,
+  "paragraphs": [
+    "這是我的朋友小明。他是臺灣人。",
+    "小明二十歲。他很高，也很好看。",
+    "他喜歡喝茶，不喜歡喝咖啡。",
+    "我們常常一起吃晚飯。小明說：「臺灣的東西很好吃！」"
+  ],
+  "translation": [
+    "This is my friend Xiaoming. He is Taiwanese.",
+    "Xiaoming is twenty. He is tall and good-looking.",
+    "He likes drinking tea, not coffee.",
+    "We often have dinner together. Xiaoming says, \"Taiwanese food is delicious!\""
+  ],
+  "glossary": {
+    "小明": "Xiaoming (a name)"
+  }
+}

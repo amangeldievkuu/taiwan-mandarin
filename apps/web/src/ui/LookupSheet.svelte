@@ -143,8 +143,9 @@
   }
 
   @media (min-width: 700px) {
+    /* A floating panel: the text behind stays tappable, so the next word replaces this one. */
     .scrim {
-      background: transparent;
+      display: none;
     }
 
     .panel {

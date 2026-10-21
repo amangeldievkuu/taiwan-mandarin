@@ -1,0 +1,28 @@
+{
+  "id": "high-speed-rail",
+  "level": "L3",
+  "topic": "travel",
+  "title": "坐高鐵回家",
+  "titleEn": "Taking the HSR home",
+  "summary": "The Lunar New Year rush to buy tickets south.",
+  "draft": true,
+  "paragraphs": [
+    "過年的時候，很多人要回南部老家，所以高鐵的票常常很快就賣完了。",
+    "今年我提早兩個星期在網路上訂票，總算買到了除夕前一天的車票。",
+    "從臺北到高雄，坐高鐵只要一個半小時左右，比開車快多了。",
+    "車廂裡又安靜又乾淨，我一邊吃便當，一邊看窗外的田野。",
+    "到了左營站，爸爸已經在出口等我了。",
+    "雖然票價不便宜，可是能節省很多時間，我覺得很值得。"
+  ],
+  "translation": [
+    "At Lunar New Year many people go back to their hometowns in the south, so high-speed rail tickets often sell out fast.",
+    "This year I booked online two weeks early and finally got a ticket for the day before New Year's Eve.",
+    "Taipei to Kaohsiung takes only about an hour and a half by HSR, much faster than driving.",
+    "The car was quiet and clean. I ate a bento while watching the fields outside.",
+    "When I got to Zuoying Station, Dad was already waiting at the exit.",
+    "Tickets aren't cheap, but it saves so much time that I think it's worth it."
+  ],
+  "glossary": {
+    "左營站": "Zuoying Station (Kaohsiung's HSR station)"
+  }
+}

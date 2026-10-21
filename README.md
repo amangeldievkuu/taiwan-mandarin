@@ -71,6 +71,15 @@ How the path is built (`packages/content/src/lexicon.ts`):
 - **Glosses.** CC-CEDICT senses for the same headword and reading, shortened for flashcards. The
   full entry stays in the dictionary.
 
+**Graded readers** live in `data/readers/<id>.json`. There are 24 texts, 3 per level, about Taiwan
+life. They were written with Claude and carry `"draft": true` (shown as "Draft") until a person
+has reviewed them. The build:
+
+- splits each text into words with readings;
+- links the words to the path;
+- glosses every word above the reader's level (from the reader's `glossary`, else the study gloss);
+- reports those words in `data/generated/reader-hard-words.tsv`.
+
 Generated content isn't committed. The NAER list is marked 版權所有, and the TOCFL list states no
 license. Both are downloaded from their official sites at build time, and attributed in the app's
 About section and in `NOTICE`.

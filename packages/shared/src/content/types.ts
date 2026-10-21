@@ -151,6 +151,8 @@ export interface ReaderSource {
   translation: string[];
   /** Glosses for words above the reader's level, by written form. */
   glossary?: Record<string, string>;
+  /** Written with AI and not yet reviewed by a person. */
+  draft?: boolean;
 }
 
 export interface ReaderToken {
@@ -162,7 +164,7 @@ export interface ReaderToken {
   w?: string;
   /** Level of that word. */
   l?: Level;
-  /** Gloss from the reader's glossary (words above its level). */
+  /** Gloss for a word above the reader's level (from its glossary, else the study gloss). */
   g?: string;
 }
 
@@ -172,6 +174,8 @@ export interface Reader extends Omit<ReaderSource, 'paragraphs' | 'glossary'> {
   wordCount: number;
   /** Chinese characters, for reading-time estimates. */
   charCount: number;
+  /** Share of word tokens above the reader's level (0–1); they carry an automatic gloss. */
+  hard: number;
 }
 
 /**

@@ -1,0 +1,31 @@
+{
+  "id": "indigenous-cultures",
+  "level": "L5",
+  "topic": "culture",
+  "title": "原住民族文化",
+  "titleEn": "Indigenous cultures",
+  "summary": "Sixteen peoples, their festivals, and the revival of their languages.",
+  "draft": true,
+  "paragraphs": [
+    "臺灣目前有十六個政府認定的原住民族，每個族群都有自己的語言、傳統與祭典。",
+    "例如，阿美族的豐年祭是感謝祖靈、慶祝豐收的重要儀式，而達悟族則以傳統的拼板舟聞名。",
+    "過去，在同化政策的影響下，許多原住民語言面臨消失的危機。",
+    "近幾十年來，隨著社會對多元文化的重視，原住民族的權利逐漸受到保障，族語教育也開始在學校推動。",
+    "越來越多年輕人回到部落，透過音樂、藝術與觀光，重新認識並傳承自己的文化。",
+    "認識原住民族的歷史，是了解臺灣這片土地不可或缺的一部分。"
+  ],
+  "translation": [
+    "Taiwan currently has sixteen officially recognized Indigenous peoples, each with its own language, traditions and ceremonies.",
+    "For example, the Amis harvest festival is an important rite thanking ancestral spirits and celebrating the harvest, while the Tao are known for their traditional plank boats.",
+    "In the past, under assimilation policies, many Indigenous languages faced extinction.",
+    "In recent decades, as society has come to value multiculturalism, Indigenous rights have gradually been protected, and Indigenous language education has begun in schools.",
+    "More and more young people return to their villages, rediscovering and passing on their culture through music, art and tourism.",
+    "Knowing Indigenous history is an essential part of understanding this land."
+  ],
+  "glossary": {
+    "阿美族": "the Amis people",
+    "達悟族": "the Tao (Yami) people",
+    "豐年祭": "harvest festival",
+    "拼板舟": "plank boat (Tao canoe)"
+  }
+}

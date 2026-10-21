@@ -36,9 +36,10 @@ export const ALLOWLIST: readonly AllowEntry[] = [
  * Everyday words that OpenCC's Taiwan phrase table ("twp") rewrites into software terminology.
  * They are standard in Taiwan in their general sense, so the guard never flags them:
  * 消息 news (→ 訊息), 打開 open (→ 開啟), 高級 high-end (→ 高階), 支持 support (→ 支援),
- * 項目 item (→ 專案), 程序 procedure (→ 程式), 社區 community (→ 社群), 念 read aloud (→ 唸)…
+ * 項目 item (→ 專案), 程序 procedure (→ 程式), 社區 community (→ 社群), 分區 district (→ 分割槽).
+ * 念/唸 and 了解/瞭解 are both standard (TOCFL lists 念, 了解 first).
  */
 export const OPENCC_OVERREACH: readonly string[] = [
   '消息', '打開', '高級', '低級', '支持', '項目', '程序', '設置', '保存', '社區', '類型', '數據',
-  '信號', '通信', '窗口', '連接', '循環', '局部', '聲明', '干擾', '念', '注意', '准', '斗',
+  '信號', '通信', '窗口', '連接', '循環', '局部', '聲明', '干擾', '念', '注意', '准', '斗', '分區', '了解',
 ]; // prettier-ignore

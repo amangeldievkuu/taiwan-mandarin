@@ -1,0 +1,32 @@
+{
+  "id": "jiufen",
+  "level": "L6",
+  "topic": "culture",
+  "title": "九份的山城記憶",
+  "titleEn": "Jiufen, the mountain town",
+  "summary": "Gold, decline, a film, and the price of tourism.",
+  "draft": true,
+  "paragraphs": [
+    "位於新北市瑞芳區的九份，曾因金礦開採而盛極一時，街上酒家林立，被稱為「小上海」、「小香港」。",
+    "隨著礦脈枯竭，九份於一九七〇年代逐漸沒落，人口大量外移，山城一度陷入沉寂。",
+    "直到電影《悲情城市》在此取景，九份才重新受到世人矚目，搖身一變成為熱門的觀光景點。",
+    "如今，蜿蜒的豎崎路兩旁茶樓錯落，入夜後紅燈籠高掛，吸引無數遊客駐足。",
+    "然而，觀光人潮也帶來了交通壅塞、商業化與居民生活品質下降等問題。",
+    "在發展觀光與保存地方特色之間，九份仍在尋找屬於自己的答案。"
+  ],
+  "translation": [
+    "Jiufen, in New Taipei's Ruifang District, once boomed thanks to gold mining. Its streets were lined with wine houses, and it was called \"Little Shanghai\" and \"Little Hong Kong\".",
+    "As the veins ran dry, Jiufen declined in the 1970s. Many residents moved away, and the mountain town fell silent for a time.",
+    "Only when the film \"A City of Sadness\" was shot here did Jiufen catch the world's eye again, transforming into a popular tourist spot.",
+    "Today teahouses dot both sides of the winding Shuqi Road, and after dark red lanterns hang high, drawing countless visitors.",
+    "Yet the crowds have also brought traffic jams, commercialization and a lower quality of life for residents.",
+    "Between developing tourism and preserving its character, Jiufen is still looking for its own answer."
+  ],
+  "glossary": {
+    "瑞芳": "Ruifang (a district of New Taipei)",
+    "豎崎路": "Shuqi Road, Jiufen's famous stepped street",
+    "悲情城市": "A City of Sadness (1989 film by Hou Hsiao-hsien)",
+    "小上海": "\"Little Shanghai\"",
+    "小香港": "\"Little Hong Kong\""
+  }
+}

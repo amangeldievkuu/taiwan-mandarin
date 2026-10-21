@@ -1,0 +1,29 @@
+{
+  "id": "bubble-tea",
+  "level": "L3",
+  "topic": "food",
+  "title": "珍珠奶茶的故事",
+  "titleEn": "The story of bubble tea",
+  "summary": "Who invented it, what the pearls are, and how to order.",
+  "draft": true,
+  "paragraphs": [
+    "珍珠奶茶是臺灣最有名的飲料之一，現在在世界各地都買得到。",
+    "關於珍奶是誰發明的，有兩種不同的說法：一家店在臺中，一家店在臺南，雙方還曾經為了這件事打過官司。",
+    "珍珠是用樹薯粉做的，吃起來QQ的，很有嚼勁。",
+    "在臺灣點飲料的時候，店員通常會問你甜度和冰塊，例如「半糖少冰」或「無糖去冰」。",
+    "有些人擔心喝太多含糖飲料對身體不好，所以越來越多人選擇微糖或無糖。",
+    "不管怎麼樣，珍奶已經成為代表臺灣的文化符號。"
+  ],
+  "translation": [
+    "Bubble milk tea is one of Taiwan's most famous drinks, and now you can buy it all over the world.",
+    "There are two stories about who invented it: one shop in Taichung and one in Tainan. The two even went to court over it.",
+    "The pearls are made from tapioca starch; they are bouncy and chewy.",
+    "When you order a drink in Taiwan, the clerk usually asks about sweetness and ice, such as \"half sugar, less ice\" or \"no sugar, no ice\".",
+    "Some people worry that too many sugary drinks are bad for their health, so more and more people choose light sugar or none.",
+    "Either way, bubble tea has become a cultural symbol of Taiwan."
+  ],
+  "glossary": {
+    "樹薯粉": "tapioca starch",
+    "官司": "lawsuit (打官司 to go to court)"
+  }
+}

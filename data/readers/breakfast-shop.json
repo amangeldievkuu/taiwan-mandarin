@@ -1,0 +1,23 @@
+{
+  "id": "breakfast-shop",
+  "level": "L1",
+  "topic": "food",
+  "title": "早餐店",
+  "titleEn": "The breakfast shop",
+  "summary": "Egg crepes, soy milk and a boss who remembers your order.",
+  "draft": true,
+  "paragraphs": [
+    "我家附近有一家早餐店，老闆和老闆娘都很親切。",
+    "每天早上，店裡都有很多學生和上班族。",
+    "我最喜歡點蛋餅和一杯冰豆漿，一共只要五十塊。",
+    "老闆娘記得每個客人喜歡吃什麼，常常問我：「帥哥，今天一樣嗎？」",
+    "在臺灣，很多人不在家吃早餐，因為早餐店又便宜又方便。"
+  ],
+  "translation": [
+    "There is a breakfast shop near my home. The owner and his wife are very friendly.",
+    "Every morning the shop is full of students and office workers.",
+    "My favorite order is an egg crepe and an iced soy milk, only fifty dollars in total.",
+    "The owner's wife remembers what every customer likes and often asks me, \"Handsome, the usual today?\"",
+    "In Taiwan many people don't eat breakfast at home, because breakfast shops are cheap and convenient."
+  ]
+}

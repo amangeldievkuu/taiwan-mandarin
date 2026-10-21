@@ -59,7 +59,12 @@
           <a class="story sheet" href={router.href(`/read/${reader.id}`)} onclick={router.link}>
             <div class="story-top">
               <Seal text={LEVEL_SEAL[reader.level]} size={34} outline />
-              <span class="topic">{TOPIC_BY_ID.get(reader.topic)?.en}</span>
+              <span class="topic">
+                {#if reader.draft}<span class="draft" title="Written with AI, not yet reviewed"
+                    >Draft</span
+                  >{/if}
+                {TOPIC_BY_ID.get(reader.topic)?.en}
+              </span>
             </div>
             <h3 class="story-zh hanzi" lang="zh-Hant-TW">{reader.title}</h3>
             <p class="story-en">{reader.titleEn}</p>
@@ -120,6 +125,18 @@
     font-size: 12px;
     color: var(--ink-3);
     letter-spacing: 0.04em;
+  }
+
+  .draft {
+    margin-right: 6px;
+    padding: 1px 6px;
+    border: 1px solid var(--ochre);
+    border-radius: 4px;
+    color: var(--ochre);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 
   .story-zh {

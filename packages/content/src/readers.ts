@@ -24,6 +24,8 @@ export function readReaders(
   words: readonly Word[],
   shards: readonly DictShard[],
   maxLength: number,
+  /** Called with the words above each reader's level that the reader doesn't gloss itself. */
+  report?: (id: string, above: string[]) => void,
 ): Reader[] {
   if (!existsSync(dir)) return [];
   const byForm = new Map<string, Word>();
@@ -34,8 +36,31 @@ export function readReaders(
     }
   }
   const lookup = (word: string) => shards[dictShardOf(word)]?.[word];
+  const NUMERAL = /^[一二三四五六七八九十百千萬億〇零兩]+$/;
+  /**
+   * Level of a word outside the path (這個, 每天, 越來越): its hardest part, splitting greedily into
+   * path words. Numbers count as easy; a character in no path word counts as beyond Level 6.
+   */
+  const partsLevel = (text: string): number => {
+    if (NUMERAL.test(text)) return 0;
+    const chars = [...text];
+    let hardest = 0;
+    for (let i = 0; i < chars.length;) {
+      let len = Math.min(8, chars.length - i);
+      while (len > 1 && !byForm.has(chars.slice(i, i + len).join(''))) len--;
+      const part = chars.slice(i, i + len).join('');
+      const w = byForm.get(part);
+      hardest = Math.max(
+        hardest,
+        w ? levelIndex(w.level) : NUMERAL.test(part) ? 0 : LEVEL_IDS.length,
+      );
+      i += len;
+    }
+    return hardest;
+  };
 
-  return readdirSync(dir)
+  const problems: string[] = [];
+  const readers = readdirSync(dir)
     .filter((f) => f.endsWith('.json'))
     .sort()
     .map((file) => {
@@ -64,12 +89,23 @@ export function readReaders(
       };
       const seen = new Set<string>();
       let charCount = 0;
+      let wordTokens = 0;
+      const above: string[] = [];
       const paragraphs = source.paragraphs.map((text) =>
         segment(text, lexicon).map((token): ReaderToken => {
           if (!token.han) return { t: token.text };
           charCount += [...token.text].length;
           const word = byForm.get(token.text);
           if (word) seen.add(word.id);
+          wordTokens++;
+          const level = word ? levelIndex(word.level) : partsLevel(token.text);
+          // Words above the reader's level get a gloss: the reader's own, else the study gloss.
+          const autoGloss =
+            level > levelIndex(source.level) && !glossary[token.text]
+              ? (word?.en ?? lookup(token.text)?.[0]?.d.slice(0, 2).join('; '))
+              : undefined;
+          if (level > levelIndex(source.level) && !glossary[token.text]) above.push(token.text);
+          const gloss = glossary[token.text] ?? autoGloss;
           const pinyin =
             word?.pinyin ?? lookup(token.text)?.[0]?.p ?? charByChar(token.text, lookup);
           if (!pinyin) throw new Error(`${file}: no reading for "${token.text}"`);
@@ -77,7 +113,7 @@ export function readReaders(
             t: token.text,
             p: pinyin,
             ...(word ? { w: word.id, l: word.level } : {}),
-            ...(glossary[token.text] ? { g: glossary[token.text] } : {}),
+            ...(gloss ? { g: gloss } : {}),
           };
         }),
       );
@@ -92,9 +128,14 @@ export function readReaders(
         paragraphs,
         wordCount: seen.size,
         charCount,
+        hard: wordTokens ? above.length / wordTokens : 0,
+        ...(source.draft ? { draft: true } : {}),
+        ...(report ? (report(source.id, above), {}) : {}),
       };
     })
     .sort((a, b) => levelIndex(a.level) - levelIndex(b.level) || a.id.localeCompare(b.id));
+  if (problems.length) throw new Error(problems.join('\n'));
+  return readers;
 }
 
 /** Reading for an unknown multi-character token, one character at a time. */

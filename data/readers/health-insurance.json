@@ -1,0 +1,25 @@
+{
+  "id": "health-insurance",
+  "level": "L3",
+  "topic": "public",
+  "title": "健保",
+  "titleEn": "National Health Insurance",
+  "summary": "How Taiwan's health care works, and what people worry about.",
+  "draft": true,
+  "paragraphs": [
+    "臺灣的全民健康保險，簡稱「健保」，從一九九五年開始實施。",
+    "幾乎所有住在臺灣的人都要參加健保，外國人居留滿六個月以後也可以加入。",
+    "看病的時候，只要帶健保卡，掛號費和部分負擔都不高，所以看醫生非常方便。",
+    "很多人感冒、發燒就去附近的診所，不必等很久。",
+    "不過，也有人認為大家太常看病，造成醫療資源的浪費。",
+    "因此，政府一直在討論如何讓健保制度可以長期維持下去。"
+  ],
+  "translation": [
+    "Taiwan's National Health Insurance, \"健保\" for short, started in 1995.",
+    "Almost everyone living in Taiwan must join; foreigners can join after six months of residence.",
+    "To see a doctor you just bring your NHI card. Registration fees and co-payments are low, so seeing a doctor is very convenient.",
+    "Many people go to a nearby clinic for a cold or a fever, without waiting long.",
+    "However, some think people see doctors too often, wasting medical resources.",
+    "So the government keeps discussing how to keep the system sustainable in the long run."
+  ]
+}

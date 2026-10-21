@@ -1,0 +1,25 @@
+{
+  "id": "garbage-truck",
+  "level": "L1",
+  "topic": "daily",
+  "title": "倒垃圾",
+  "titleEn": "Taking out the trash",
+  "summary": "Why Taiwanese neighborhoods gather when the music plays.",
+  "draft": true,
+  "paragraphs": [
+    "在臺灣，倒垃圾是一件很特別的事。",
+    "街上沒有大垃圾桶，大家要等垃圾車來。",
+    "垃圾車來的時候會放音樂，很多人一聽到音樂就知道垃圾車快到了。",
+    "每天晚上，鄰居們都拿著垃圾在路邊等。",
+    "垃圾要分類：一般垃圾、資源回收和廚餘都要分開。",
+    "第一次在臺灣倒垃圾的時候，我覺得很有意思。"
+  ],
+  "translation": [
+    "In Taiwan, taking out the trash is something special.",
+    "There are no big bins on the street; everyone waits for the garbage truck.",
+    "The garbage truck plays music when it comes, so as soon as people hear it they know it's almost here.",
+    "Every evening the neighbors wait by the road holding their trash.",
+    "Trash has to be sorted: general waste, recycling and food scraps all go separately.",
+    "The first time I took out the trash in Taiwan, I found it really interesting."
+  ]
+}

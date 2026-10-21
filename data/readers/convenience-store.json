@@ -1,0 +1,23 @@
+{
+  "id": "convenience-store",
+  "level": "N2",
+  "topic": "shopping",
+  "title": "便利商店",
+  "titleEn": "The convenience store",
+  "summary": "Open all night, and you can do almost anything there.",
+  "draft": true,
+  "paragraphs": [
+    "在臺灣，到處都有便利商店。",
+    "便利商店二十四小時都開，非常方便。",
+    "你可以在那裡買飯糰、咖啡和報紙，也可以繳電話費、寄包裹。",
+    "晚上肚子餓的時候，我常常去便利商店買一碗泡麵。",
+    "店員都很親切，看到客人會說：「歡迎光臨！」"
+  ],
+  "translation": [
+    "In Taiwan there are convenience stores everywhere.",
+    "They are open twenty-four hours, which is very convenient.",
+    "You can buy rice balls, coffee and newspapers there, and also pay your phone bill or send a parcel.",
+    "When I get hungry at night I often go buy a bowl of instant noodles.",
+    "The clerks are friendly. When they see a customer they say, \"Welcome!\""
+  ]
+}

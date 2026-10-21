@@ -1,0 +1,30 @@
+{
+  "id": "temples",
+  "level": "L4",
+  "topic": "culture",
+  "title": "廟宇文化",
+  "titleEn": "Temple culture",
+  "summary": "Mazu, the Earth God, divination blocks and the Dajia pilgrimage.",
+  "draft": true,
+  "paragraphs": [
+    "走在臺灣的街頭，常常可以看到大大小小的廟宇。",
+    "廟裡供奉著各種神明，例如保佑航海平安的媽祖，以及掌管土地的土地公。",
+    "許多人遇到考試、找工作或身體不舒服時，會到廟裡拜拜，祈求神明保佑。",
+    "有些人還會抽籤或擲筊，希望得到神明的指示。",
+    "每年農曆三月，大甲媽祖遶境吸引數十萬信徒一起徒步，成為臺灣最熱鬧的宗教活動之一。",
+    "對很多臺灣人來說，廟不只是信仰的中心，也是社區生活的重要場所。"
+  ],
+  "translation": [
+    "Walking around Taiwan, you often see temples, big and small.",
+    "They honor all kinds of deities, such as Mazu, who protects seafarers, and the Earth God, who looks after the land.",
+    "When facing exams, job hunting or illness, many people go to a temple to pray for the gods' protection.",
+    "Some also draw fortune sticks or throw divination blocks, hoping for guidance from the gods.",
+    "Every third lunar month, the Dajia Mazu pilgrimage draws hundreds of thousands of followers on foot, one of Taiwan's liveliest religious events.",
+    "For many Taiwanese, a temple is not just a center of faith but also an important place in community life."
+  ],
+  "glossary": {
+    "擲筊": "to throw divination blocks",
+    "大甲": "Dajia (a district of Taichung)",
+    "遶境": "(religious) procession around the territory"
+  }
+}

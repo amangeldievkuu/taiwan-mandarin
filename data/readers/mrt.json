@@ -1,0 +1,23 @@
+{
+  "id": "mrt",
+  "level": "N2",
+  "topic": "travel",
+  "title": "坐捷運",
+  "titleEn": "Taking the MRT",
+  "summary": "Getting around Taipei, and the rules on the train.",
+  "draft": true,
+  "paragraphs": [
+    "臺北的捷運很方便，也很乾淨。",
+    "我每天坐捷運上班，從家裡到公司只要二十分鐘。",
+    "在捷運上，不可以吃東西，也不可以喝飲料。",
+    "很多人在車上看手機，有的人在睡覺。",
+    "我喜歡用悠遊卡，因為很快，也可以在便利商店買東西。"
+  ],
+  "translation": [
+    "The Taipei MRT is convenient and clean.",
+    "I take the MRT to work every day. From home to the office takes only twenty minutes.",
+    "On the MRT you can't eat or drink.",
+    "Many people look at their phones on the train; some are sleeping.",
+    "I like using an EasyCard because it's fast, and you can also buy things at convenience stores with it."
+  ]
+}

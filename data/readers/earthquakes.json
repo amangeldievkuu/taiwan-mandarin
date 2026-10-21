@@ -1,0 +1,29 @@
+{
+  "id": "earthquakes",
+  "level": "L4",
+  "topic": "safety",
+  "title": "地震",
+  "titleEn": "Earthquakes",
+  "summary": "Living on a plate boundary, from 921 to phone alerts.",
+  "draft": true,
+  "paragraphs": [
+    "臺灣位在兩個板塊的交界處，所以地震十分頻繁，一年可能有上千次。",
+    "大部分的地震很小，人幾乎感覺不到，但偶爾也會發生造成嚴重災害的大地震。",
+    "一九九九年的九二一大地震，讓兩千多人失去了生命，至今仍是許多人心中的傷痛。",
+    "從那次以後，政府提高了建築物的耐震標準，學校也定期舉辦防災演練。",
+    "現在，手機會在地震來臨之前幾秒發出國家級警報，讓大家有時間保護自己。",
+    "地震發生時，最重要的是「趴下、掩護、穩住」，不要急著往外跑。"
+  ],
+  "translation": [
+    "Taiwan sits where two tectonic plates meet, so earthquakes are very frequent, possibly over a thousand a year.",
+    "Most are so small people hardly feel them, but occasionally a big one causes serious damage.",
+    "The 921 earthquake of 1999 killed more than two thousand people and is still a painful memory for many.",
+    "Since then the government has raised building standards for earthquake resistance, and schools hold regular disaster drills.",
+    "Now phones send a national alert a few seconds before an earthquake arrives, giving people time to protect themselves.",
+    "When an earthquake hits, the key is \"drop, cover, hold on\". Don't rush outside."
+  ],
+  "glossary": {
+    "九二一大地震": "the 921 earthquake (21 Sept 1999)",
+    "耐震": "earthquake-resistant"
+  }
+}

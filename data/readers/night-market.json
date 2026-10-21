@@ -1,0 +1,21 @@
+{
+  "id": "night-market",
+  "level": "N1",
+  "topic": "food",
+  "title": "去夜市",
+  "titleEn": "To the night market",
+  "summary": "Bubble tea and fried chicken with Mom.",
+  "draft": true,
+  "paragraphs": [
+    "今天晚上，我和媽媽去夜市。",
+    "夜市的人很多，東西也很多。",
+    "我買了一杯珍珠奶茶，媽媽買了雞排。",
+    "珍奶很好喝，雞排也很好吃。我們都很高興。"
+  ],
+  "translation": [
+    "This evening Mom and I go to the night market.",
+    "There are lots of people at the night market, and lots of things too.",
+    "I bought a bubble milk tea, and Mom bought a fried chicken cutlet.",
+    "The bubble tea is tasty and the chicken is delicious. We are both very happy."
+  ]
+}

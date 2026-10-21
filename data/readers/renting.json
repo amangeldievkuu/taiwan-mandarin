@@ -1,0 +1,25 @@
+{
+  "id": "renting",
+  "level": "L2",
+  "topic": "daily",
+  "title": "租房子",
+  "titleEn": "Renting a room",
+  "summary": "Finding a place near campus as a student.",
+  "draft": true,
+  "paragraphs": [
+    "來臺灣念書以後，我要在學校附近租房子。",
+    "我在網路上找了很多房子，也去看了幾間。",
+    "有的房間很便宜，可是太小了；有的又大又漂亮，可是房租太貴。",
+    "最後，我找到一間雅房，房東人很好，一個月八千塊，水電費另外算。",
+    "雖然要和別人共用浴室，但是離學校很近，走路只要五分鐘。",
+    "搬家那天，室友還請我吃了一頓晚飯。"
+  ],
+  "translation": [
+    "After coming to Taiwan to study, I needed to rent a place near school.",
+    "I looked at lots of places online and went to see a few.",
+    "Some rooms were cheap but too small; some were big and nice but the rent was too high.",
+    "In the end I found a room with a shared bathroom. The landlord is nice: eight thousand a month, utilities extra.",
+    "I have to share the bathroom, but it's close to school, only five minutes on foot.",
+    "On moving day, my roommate even treated me to dinner."
+  ]
+}

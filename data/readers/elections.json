@@ -1,0 +1,28 @@
+{
+  "id": "elections",
+  "level": "L4",
+  "topic": "society",
+  "title": "選舉",
+  "titleEn": "Election day",
+  "summary": "Campaign trucks, going home to vote, and counting night.",
+  "draft": true,
+  "paragraphs": [
+    "在臺灣，每四年會舉行一次總統大選。",
+    "選舉前幾個月，街上到處都是候選人的看板和旗子，宣傳車也會在大街小巷廣播。",
+    "許多年輕人特地從外地回到戶籍地投票，因為臺灣目前還沒有不在籍投票的制度。",
+    "投票當天，選民拿著身分證和印章到投票所，在選票上蓋章。",
+    "晚上開票的時候，大家守在電視機前面，關心最新的票數。",
+    "不管結果如何，和平地完成選舉，正是民主社會的重要價值。"
+  ],
+  "translation": [
+    "In Taiwan, a presidential election is held every four years.",
+    "For months beforehand, candidates' billboards and flags are everywhere, and campaign trucks broadcast through the streets.",
+    "Many young people travel back to where their household is registered to vote, since Taiwan has no absentee voting yet.",
+    "On election day, voters bring their ID card and personal seal to the polling station and stamp the ballot.",
+    "When votes are counted that evening, everyone sits in front of the TV following the latest count.",
+    "Whatever the result, completing an election peacefully is an important value of a democratic society."
+  ],
+  "glossary": {
+    "不在籍投票": "absentee voting"
+  }
+}

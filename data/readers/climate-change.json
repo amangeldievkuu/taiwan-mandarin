@@ -1,0 +1,30 @@
+{
+  "id": "climate-change",
+  "level": "L6",
+  "topic": "nature",
+  "title": "氣候變遷與臺灣",
+  "titleEn": "Climate change and Taiwan",
+  "summary": "Droughts, floods, sinking coasts and the road to net zero.",
+  "draft": true,
+  "paragraphs": [
+    "氣候變遷對臺灣的衝擊已不再是遙遠的預言，而是迫在眉睫的現實。",
+    "近年來，極端降雨與長期乾旱交替出現，二〇二一年更爆發半世紀以來最嚴重的旱災，部分地區被迫實施分區供水。",
+    "由於臺灣地形陡峭、河川短促，雨水往往迅速流入大海，難以有效蓄存，水資源管理因此格外艱鉅。",
+    "另一方面，海平面上升威脅著西南沿海的低窪地區，地層下陷更使當地居民飽受淹水之苦。",
+    "為了因應這些挑戰，政府提出二〇五〇淨零排放路徑，積極發展離岸風電與太陽光電。",
+    "然而，能源轉型牽涉產業結構、土地利用與社會共識，絕非一蹴可幾，仍有賴全民共同參與。"
+  ],
+  "translation": [
+    "The impact of climate change on Taiwan is no longer a distant prophecy but an urgent reality.",
+    "In recent years extreme rainfall and long droughts have alternated; 2021 brought the worst drought in half a century, and some areas had to ration water by district.",
+    "Because Taiwan's terrain is steep and its rivers short, rain quickly flows to the sea and is hard to store, making water management especially difficult.",
+    "Meanwhile, rising seas threaten low-lying areas on the southwest coast, where land subsidence leaves residents suffering repeated flooding.",
+    "To meet these challenges, the government has set out a 2050 net-zero pathway and is actively developing offshore wind and solar power.",
+    "However, the energy transition involves industrial structure, land use and social consensus; it cannot happen overnight and needs everyone's participation."
+  ],
+  "glossary": {
+    "分區供水": "water rationing by district",
+    "淨零排放": "net-zero emissions",
+    "一蹴可幾": "achieved in one step (idiom)"
+  }
+}

@@ -125,8 +125,19 @@ if (issues.length) {
 done();
 
 done = step('readers');
-const readers = readReaders(DATA.readers, words, dictionary.shards, dictionary.maxLength);
-done(`${readers.length} texts`);
+const tooHard: string[] = [];
+const readers = readReaders(
+  DATA.readers,
+  words,
+  dictionary.shards,
+  dictionary.maxLength,
+  (id, above) => {
+    if (above.length) tooHard.push(`${id}\t${[...new Set(above)].join(' ')}`);
+  },
+);
+done(
+  `${readers.length} texts; words above their level (auto-glossed): ${readers.map((r) => `${r.id} ${Math.round(r.hard * 100)}%`).join(', ')}`,
+);
 
 // ---- write ----
 done = step('write');
@@ -185,6 +196,12 @@ writeFileSync(
     .filter((w) => !w.en)
     .map((w) => `${w.id}\t${w.pinyin}\t${w.level}`)
     .join('\n') + '\n',
+);
+writeFileSync(
+  join(ROOT, 'data/generated/reader-hard-words.tsv'),
+  "# Reader words above the reader's level that have no glossary entry\n" +
+    tooHard.join('\n') +
+    '\n',
 );
 writeFileSync(
   join(ROOT, 'data/generated/unreadable.txt'),
