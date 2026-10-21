@@ -95,18 +95,22 @@ const { examples, usable, annotate } = pickExamples(
 // AI-written examples for words Tatoeba doesn't cover. Pinyin is derived like Tatoeba's unless
 // given (needed when the sentence uses a less common reading: 得 děi, 還 huán…).
 const wordIds = new Set(words.map((w) => w.id));
+let skipped = 0;
 for (const ai of readJsonl<{ id: string; zh: string; en: string; pinyin?: string }>(
   DATA.aiExamples,
 )) {
   if (!wordIds.has(ai.id)) throw new Error(`examples-ai: unknown word id ${ai.id}`);
   const pinyin = ai.pinyin ?? annotate(ai.zh);
   const han = [...ai.zh].filter((c) => /\p{Script=Han}/u.test(c)).length;
-  if (!pinyin || pinyin.split(' ').length !== han)
-    throw new Error(`examples-ai: no reading for ${ai.zh}`);
+  if (!pinyin || pinyin.split(' ').length !== han) {
+    skipped++; // a character with no known reading; give it a `pinyin` in the file to keep it
+    continue;
+  }
   const example: Example = { zh: ai.zh, pinyin, en: ai.en, source: 'ai' };
   const list = examples.get(ai.id) ?? [];
   if (list.length < 2 && !list.some((e) => e.zh === ai.zh)) examples.set(ai.id, [...list, example]);
 }
+if (skipped) console.warn(`  ${skipped} AI examples skipped: no reading for some character`);
 for (const w of words) {
   const list = examples.get(w.id);
   if (list?.length) w.examples = list;

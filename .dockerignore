@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/dev-dist
+**/.env
+**/.env.*
+!**/.env.example
+.git
+apps/api/src/generated
+apps/web/public/content
+apps/web/public/dict
+data/raw

@@ -10,6 +10,36 @@ Learn Taiwan Mandarin along Taiwan's official exam path. The app covers TOCFL No
 
 It is an offline-first PWA for phone, iPad and desktop, with an optional sync backend.
 
+| Today                                        | Study (iPad)                                  | Reader (phone, dark)                         |
+| -------------------------------------------- | --------------------------------------------- | -------------------------------------------- |
+| ![Today](docs/screenshots/today-desktop.png) | ![Study](docs/screenshots/study-ipad.png)     | ![Reader](docs/screenshots/reader-phone.png) |
+| **Path**                                     | **Explain a sentence**                        | **Talk**                                     |
+| ![Path](docs/screenshots/path-phone.png)     | ![Explain](docs/screenshots/explain-ipad.png) | ![Talk](docs/screenshots/talk-phone.png)     |
+
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph sources[Official sources, downloaded at build]
+    TOCFL[TOCFL 8000 words] --- NAER[NAER 14,452 words + frequency]
+    CEDICT[CC-CEDICT] --- TATOEBA[Tatoeba]
+  end
+  sources --> PIPE[packages/content<br/>readings, levels, glosses,<br/>examples, readers, guard]
+  PIPE --> FILES[(content/*.json<br/>dict/0..127.json)]
+  FILES --> WEB[apps/web · Svelte PWA<br/>offline-first, IndexedDB]
+  FILES --> API[apps/api · NestJS]
+  WEB <-- "/api (same origin)<br/>sync, auth, AI, speech" --> API
+  API --> PG[(PostgreSQL<br/>cards, review logs,<br/>FSRS weights)]
+  API --> CLAUDE[Claude<br/>explain, talk]
+  API --> WHISPER[Whisper<br/>speech-to-text]
+  SHARED[packages/shared<br/>phonetics, segmentation, guard,<br/>stats, pitch & tones, API contract] -.-> PIPE & WEB & API
+```
+
+On a phone the app has a bottom tab bar. On an iPad it becomes an icon rail with split views (word
+list beside details, the reading text beside the dictionary panel). On a desktop it becomes a
+labelled sidebar with keyboard shortcuts: `Space` reveals, `1`–`4` rate, `r` replays audio, `/`
+opens search, and `g` then `t`/`s`/`p`/`r`/`d`/`m` navigates.
+
 ## Layout
 
 ```
@@ -38,6 +68,27 @@ npm run content    # re-download the sources and rebuild the app content
 ```
 
 Web-only: `npm run icons -w @taiwan-mandarin/web` regenerates the PWA icons from `public/icon.svg`.
+
+### Deploy
+
+```sh
+cp .env.example .env    # set JWT_SECRET (openssl rand -base64 48), WEB_ORIGIN, optional API keys
+docker compose --profile app up -d --build
+```
+
+One image build downloads the sources, builds the content, the API and the PWA. nginx serves the
+app on `WEB_PORT` (8080) and proxies `/api` to the API, so everything is one origin. The API runs
+migrations on start. Put TLS in front, for example a reverse proxy or a tunnel; the PWA, the
+microphone and secure cookies need HTTPS on a real domain. Then open it on the iPhone or iPad and
+choose Share › Add to Home Screen.
+
+CI (`.github/workflows/ci.yml`) runs content build, type checks, lint, all tests (with a
+PostgreSQL service) and the production builds.
+
+**More example sentences.** `npm run examples -w @taiwan-mandarin/content -- --levels L3,L4`
+writes Taiwan-style sentences for words without one, through the Claude Message Batches API. Each
+result is validated (contains the word, passes the guard) and appended to
+`data/generated/examples-ai.jsonl`; then rebuild the content.
 
 ## API and sync
 

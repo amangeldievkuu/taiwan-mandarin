@@ -120,14 +120,22 @@
       {#each reader.paragraphs as paragraph, i (i)}
         <div class="para" class:playing={playing === i}>
           <p>
-            {#each paragraph as token, j (j)}{#if token.p}<button
-                  type="button"
+            <!-- Inline spans (not buttons) so CJK line breaking keeps punctuation with its word. -->
+            {#each paragraph as token, j (j)}{#if token.p}<span
+                  role="button"
+                  tabindex="0"
                   class="tok {tokenState(token)}"
                   class:glossed={!!token.g}
                   onclick={() => open(token)}
+                  onkeydown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      open(token);
+                    }
+                  }}
                   >{#if ruby}{#each annotations(token) as a, k (k)}<ruby
                         >{a.char}<rt>{a.rt}</rt></ruby
-                      >{/each}{:else}{token.t}{/if}</button
+                      >{/each}{:else}{token.t}{/if}</span
                 >{:else}{token.t}{/if}{/each}
           </p>
           <div class="para-tools" lang="en">
@@ -207,6 +215,7 @@
   }
 
   .sample {
+    display: inline-block;
     width: 18px;
     height: 0;
     border-bottom: 2px dotted var(--seal);
@@ -218,8 +227,12 @@
 
   .sample.glossed {
     width: auto;
+    height: auto;
+    margin-left: 10px;
     border: 0;
     font-family: var(--font-kai);
+    font-size: 16px;
+    line-height: 1;
     color: var(--indigo);
   }
 
@@ -251,8 +264,7 @@
   }
 
   .tok {
-    font: inherit;
-    line-height: inherit;
+    cursor: pointer;
     border-radius: 3px;
     transition: background-color var(--dur) var(--ease);
   }

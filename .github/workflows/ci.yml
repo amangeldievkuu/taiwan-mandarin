@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: taiwan
+          POSTGRES_PASSWORD: taiwan
+          POSTGRES_DB: taiwan_mandarin
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U taiwan -d taiwan_mandarin"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://taiwan:taiwan@localhost:5432/taiwan_mandarin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22
+          cache: npm
+      # The word lists, CC-CEDICT and Tatoeba (~30 MB); refreshed weekly.
+      - name: Cache content sources
+        uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: content-sources-${{ hashFiles('packages/content/src/fetch.ts') }}-${{ github.run_id }}
+          restore-keys: content-sources-${{ hashFiles('packages/content/src/fetch.ts') }}-
+      - run: npm ci
+      - run: npm run build:shared
+      - name: Build content
+        run: npm run content
+      - run: npm run check
+      - run: npm run lint
+      - run: npm test
+      - name: API tests
+        run: npm run test -w @taiwan-mandarin/api
+      - name: Build
+        run: npm run build -w @taiwan-mandarin/api -w @taiwan-mandarin/web
