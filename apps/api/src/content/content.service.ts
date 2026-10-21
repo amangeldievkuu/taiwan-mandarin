@@ -74,9 +74,10 @@ export class ContentService implements OnModuleInit {
     return this.words.get(id);
   }
 
-  /** Lowest-level path word written this way. */
-  wordByForm(form: string): Word | undefined {
-    return this.byForm.get(form)?.[0];
+  /** Lowest-level path word written this way; with `pinyin`, the one read that way. */
+  wordByForm(form: string, pinyin?: string): Word | undefined {
+    const words = this.byForm.get(form) ?? [];
+    return pinyin ? words.find((w) => w.pinyin === pinyin) : words[0];
   }
 
   levels() {

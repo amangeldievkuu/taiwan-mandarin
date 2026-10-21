@@ -25,6 +25,11 @@ export const ALLOWLIST: readonly AllowEntry[] = [
     reason: 'The example sentence explains the Taiwan word for this Mainland term.',
   })),
   {
+    term: '台',
+    where: 'apps/api/src/ai/taiwan-style.ts',
+    reason: 'The AI style guide explains that 台 is the everyday form of 臺.',
+  },
+  {
     term: '菜單',
     where: 'vocab:菜單',
     reason:

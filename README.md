@@ -62,6 +62,31 @@ between devices.
 - **Content.** The API serves words and the dictionary from the same generated files as the
   web app, held in memory. The database holds only learner data.
 
+### AI features (sign-in required)
+
+These run on the server with Claude (`ANTHROPIC_API_KEY`, model `ANTHROPIC_MODEL`, default
+`claude-opus-5-5`):
+
+- Structured outputs are validated with zod.
+- The system prompt is cached.
+- Server-side refusal fallback is on (`fallbacks: "default"`).
+- Per-user daily quotas apply (`AI_DAILY_LIMIT`).
+
+**Explain a sentence** (Dictionary › Explain): text or a photo of a sign, menu or message. You
+get a translation, a word-by-word breakdown, grammar and usage notes. Readings are then replaced
+with the path's or dictionary's Taiwan readings. When the model's reading matches none of ours
+(垃圾 lājī), ours wins. Tokens link to the path for one-tap "add to deck".
+
+**Talk** (conversation practice): eight Taiwan situations (night-market stall, bubble tea, MRT,
+7-Eleven, clinic…).
+
+- The partner may only use the learner's vocabulary: synced cards, Novice 1, and the levels below
+  their path.
+- Each reply is split into words and checked. More than two unknown words, or Mainland wording,
+  triggers one rewrite through a mid-conversation system message.
+- Remaining unknown words are returned as "new words" to tap.
+- The learner's messages get a 修正 correction when needed.
+
 ```sh
 npm run db:up                                  # PostgreSQL in Docker (POSTGRES_PORT in .env)
 npm run db:migrate -w @taiwan-mandarin/api     # apply migrations

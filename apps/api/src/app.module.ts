@@ -3,6 +3,11 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AiController } from './ai/ai.controller.js';
+import { ClaudeService } from './ai/claude.service.js';
+import { ExplainService } from './ai/explain.service.js';
+import { QuotaService } from './ai/quota.service.js';
+import { TalkService } from './ai/talk.service.js';
 import { AuthController } from './auth/auth.controller.js';
 import { AuthGuard } from './auth/auth.guard.js';
 import { AuthService } from './auth/auth.service.js';
@@ -26,7 +31,14 @@ const env = loadEnv();
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     ScheduleModule.forRoot(),
   ],
-  controllers: [HealthController, AuthController, SyncController, MeController, PublicController],
+  controllers: [
+    HealthController,
+    AuthController,
+    SyncController,
+    MeController,
+    PublicController,
+    AiController,
+  ],
   providers: [
     { provide: ENV, useValue: env satisfies Env },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
@@ -37,6 +49,10 @@ const env = loadEnv();
     SyncService,
     TokensService,
     FsrsService,
+    ClaudeService,
+    QuotaService,
+    ExplainService,
+    TalkService,
   ],
 })
 export class AppModule {}

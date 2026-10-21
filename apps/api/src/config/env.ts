@@ -15,7 +15,7 @@ const Env = z.object({
   /** Directory with the dictionary shards. */
   DICT_DIR: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
-  ANTHROPIC_MODEL: z.string().default('claude-sonnet-5-5'),
+  ANTHROPIC_MODEL: z.string().default('claude-opus-5-5'),
   OPENAI_API_KEY: z.string().optional(),
   /** AI requests (explain, chat turns) per user per day. */
   AI_DAILY_LIMIT: z.coerce.number().int().default(200),

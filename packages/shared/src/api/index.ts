@@ -155,3 +155,83 @@ export interface StatsDto {
   streak: { current: number; longest: number };
   days: { date: string; total: number; again: number; hard: number; good: number; easy: number }[];
 }
+
+// ---- AI: explain a sentence ----
+
+export const ExplainRequestSchema = z
+  .object({
+    text: z.string().trim().max(1500).optional(),
+    /** A photo of a sign, menu or message: base64 without the data: prefix. */
+    image: z
+      .object({
+        mediaType: z.enum(['image/jpeg', 'image/png', 'image/webp', 'image/gif']),
+        data: z.string().max(7_000_000),
+      })
+      .optional(),
+  })
+  .refine((r) => r.text || r.image, { message: 'Send text or an image' });
+export type ExplainRequest = z.infer<typeof ExplainRequestSchema>;
+
+export interface ExplainToken {
+  text: string;
+  /** Numbered pinyin (Taiwan reading) for Chinese tokens. */
+  pinyin?: string;
+  gloss?: string;
+  pos?: string;
+  note?: string;
+  /** Study-path word, when the token is one. */
+  wordId?: string;
+  level?: string;
+}
+
+export interface ExplainResult {
+  /** The Chinese text explained (transcribed, for an image). */
+  source: string;
+  translation: string;
+  tokens: ExplainToken[];
+  grammar: { pattern: string; explanation: string }[];
+  /** Register, politeness, Taiwan-specific usage, what kind of sign or message it is. */
+  notes: string[];
+  /** Taiwan-standard guard findings in the generated text, if any. */
+  warnings: string[];
+}
+
+// ---- AI: conversation practice ----
+
+export const SCENARIOS = [
+  { id: 'night-market', zh: '夜市點餐', en: 'Ordering at a night-market stall' },
+  { id: 'bubble-tea', zh: '買飲料', en: 'Buying bubble tea' },
+  { id: 'mrt', zh: '問路', en: 'Asking the way at an MRT station' },
+  { id: 'convenience-store', zh: '便利商店', en: 'At the convenience store' },
+  { id: 'classmate', zh: '認識同學', en: 'Meeting a new classmate' },
+  { id: 'clinic', zh: '看醫生', en: 'At the clinic' },
+  { id: 'renting', zh: '租房子', en: 'Viewing a room to rent' },
+  { id: 'free', zh: '自由聊天', en: 'Free conversation' },
+] as const;
+export type ScenarioId = (typeof SCENARIOS)[number]['id'];
+
+export const TalkRequestSchema = z.object({
+  conversationId: z.uuid().optional(),
+  scenario: z.enum(SCENARIOS.map((s) => s.id) as [ScenarioId, ...ScenarioId[]]).default('free'),
+  /** The learner's message; empty to let the partner open the conversation. */
+  message: z.string().trim().max(500).default(''),
+});
+export type TalkRequest = z.input<typeof TalkRequestSchema>;
+
+export interface TalkMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  /** Assistant: English translation. */
+  translation?: string;
+  /** Assistant: words in the reply the learner hasn't studied. */
+  newWords?: { text: string; pinyin?: string; gloss?: string; wordId?: string }[];
+  /** User: a corrected version and why, when the message had mistakes or un-Taiwanese wording. */
+  correction?: { corrected: string; explanation: string } | null;
+}
+
+export interface TalkResponse {
+  conversationId: string;
+  /** The learner's message with its correction (if one was sent) and the partner's reply. */
+  messages: TalkMessage[];
+}
