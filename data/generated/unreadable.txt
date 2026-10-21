@@ -1,0 +1,2 @@
+# List entries whose reading could not be aligned with the characters
+橘子 [jú | ㄐㄩˊ]

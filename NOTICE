@@ -1,0 +1,26 @@
+臺灣華語 — third-party data and fonts
+
+The app's own code is MIT licensed (see LICENSE). The data below keeps its own terms.
+
+TOCFL 《華語八千詞表》 (2024-09 edition)
+  國家華語測驗推動工作委員會 (Steering Committee for the Test Of Proficiency – Huayu, SC-TOP)
+  https://tocfl.edu.tw — downloaded at build time; not redistributed in this repository.
+
+NAER 《臺灣華語文能力基準》三等七級詞語表 (2025-04) and 通用詞頻表
+  國家教育研究院 (National Academy for Educational Research), 華語文語料庫與能力基準整合應用系統
+  https://coct.naer.edu.tw — 版權所有; downloaded at build time; not redistributed here.
+
+CC-CEDICT
+  © MDBG and the CC-CEDICT contributors, https://cc-cedict.org
+  Creative Commons Attribution-ShareAlike 4.0. The generated dictionary shards
+  (apps/web/public/dict) are a derivative work under the same license.
+
+Tatoeba example sentences
+  © Tatoeba contributors, https://tatoeba.org — Creative Commons Attribution 2.0 France.
+  Each example links to its source sentence.
+
+Make Me a Hanzi stroke data (hanzi-writer-data)
+  © Shaunak Kishore and contributors; Arphic Public License (derived from Arphic fonts).
+
+LXGW WenKai TC font
+  © LXGW, SIL Open Font License 1.1 (served by Google Fonts).

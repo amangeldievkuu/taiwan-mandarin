@@ -4,22 +4,31 @@
   /** `tw` is true only when the order is verified against the Taiwan MOE standard. */
   type StrokeData = CharacterJson & { tw: boolean };
 
-  // Bundled at build time (scripts/build-strokes.ts); loaded lazily as its own chunk.
-  let strokes: Promise<Record<string, StrokeData>> | undefined;
-  const loadStrokes = () =>
-    (strokes ??= import('../lib/strokes.json').then(
-      (m) => m.default as unknown as Record<string, StrokeData>,
-    ));
+  // Characters checked against the Taiwan MOE standard (scripts/build-strokes.ts). Everything
+  // else comes from hanzi-writer-data on jsDelivr; the service worker keeps it for offline use.
+  const CDN = 'https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0.1/';
+  let overrides: Promise<Record<string, StrokeData>> | undefined;
+  const loadOverrides = () =>
+    (overrides ??= fetch(`${import.meta.env.BASE_URL}strokes-tw.json`)
+      .then((r): Promise<Record<string, StrokeData>> | Record<string, StrokeData> =>
+        r.ok ? r.json() : {},
+      )
+      .catch((): Record<string, StrokeData> => ({})));
+
+  async function loadChar(char: string): Promise<StrokeData> {
+    const verified = (await loadOverrides())[char];
+    if (verified) return verified;
+    const response = await fetch(`${CDN}${encodeURIComponent(char)}.json`);
+    if (!response.ok) throw new Error(`No stroke data for ${char}`);
+    return { ...((await response.json()) as CharacterJson), tw: false };
+  }
 </script>
 
 <script lang="ts">
   import HanziWriter from 'hanzi-writer';
-  import { store } from '../lib/store.svelte';
 
-  const UNVERIFIED_HINT = {
-    ky: 'Сызыктардын тартиби PRC маалыматынан алынган жана Тайвандын стандарты менен текшериле элек.',
-    en: 'Stroke order comes from PRC data and has not been checked against the Taiwan MOE standard.',
-  };
+  const UNVERIFIED_HINT =
+    'Stroke order comes from PRC data and has not been checked against the Taiwan MOE standard.';
 
   interface Props {
     char: string;
@@ -56,18 +65,16 @@
       height: SIZE,
       padding: 16,
       showOutline: true,
-      strokeColor: cssVar('--text'),
-      outlineColor: cssVar('--outline'),
-      drawingColor: cssVar('--accent'),
-      highlightColor: cssVar('--accent'),
+      strokeColor: cssVar('--ink'),
+      outlineColor: cssVar('--paper-sunken'),
+      drawingColor: cssVar('--seal'),
+      highlightColor: cssVar('--seal'),
       radicalColor: null,
       strokeAnimationSpeed: 1,
       delayBetweenStrokes: 220,
       drawingWidth: 18,
       charDataLoader: (c, onLoad, onError) => {
-        loadStrokes().then((data) => {
-          const entry = data[c];
-          if (!entry) return onError();
+        loadChar(c).then((entry) => {
           verified = entry.tw;
           onLoad(entry);
         }, onError);
@@ -81,11 +88,17 @@
     };
   });
 
+  // Colors come from CSS variables: redraw when the theme (system or in-app) changes.
   $effect(() => {
     const media = matchMedia('(prefers-color-scheme: dark)');
     const onChange = () => scheme++;
     media.addEventListener('change', onChange);
-    return () => media.removeEventListener('change', onChange);
+    const observer = new MutationObserver(onChange);
+    observer.observe(document.documentElement, { attributeFilter: ['data-theme'] });
+    return () => {
+      media.removeEventListener('change', onChange);
+      observer.disconnect();
+    };
   });
 
   function animate() {
@@ -129,9 +142,7 @@
   </div>
 
   {#if verified === false}
-    <p class="unverified" lang="zh-Hant-TW" title={UNVERIFIED_HINT[store.settings.meaning]}>
-      筆順可能與臺灣標準不同
-    </p>
+    <p class="unverified" lang="zh-Hant-TW" title={UNVERIFIED_HINT}>筆順可能與臺灣標準不同</p>
   {/if}
 
   <p class="status" aria-live="polite">{status}</p>

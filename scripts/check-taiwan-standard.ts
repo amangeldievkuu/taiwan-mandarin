@@ -1,10 +1,11 @@
-// Taiwan-standard guard for the whole repo: vocabulary data plus every Chinese string in the UI
-// and API sources. Exits 1 on any Simplified character, Mainland word or Mainland reading.
+// Taiwan-standard guard for the whole repo: the generated study-path content (words, examples,
+// readers) plus every Chinese string in the UI and API sources. Exits 1 on any Simplified
+// character, Mainland word or Mainland reading.
 // Run with: node --conditions=source scripts/check-taiwan-standard.ts
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { TOPICS, VOCAB } from '@taiwan-mandarin/shared';
+import { TOPICS, type ContentManifest, type Reader, type Word } from '@taiwan-mandarin/shared';
 import {
   checkText,
   checkVocab,
@@ -26,9 +27,21 @@ function files(path: string): string[] {
     .map((f) => join(path, f));
 }
 
-const issues: Issue[] = checkVocab(VOCAB, TOPICS);
+const content = join(root, 'apps/web/public/content');
+const json = <T>(file: string) => JSON.parse(readFileSync(join(content, file), 'utf8')) as T;
+const manifest = json<ContentManifest>('manifest.json');
+const words = manifest.levels.flatMap((level) => json<Word[]>(level.file));
+const readers = json<Reader[]>('readers.json');
+
+const issues: Issue[] = checkVocab(words, TOPICS);
+for (const reader of readers) {
+  const where = `reader:${reader.id}`;
+  for (const text of [reader.title, ...reader.paragraphs.map((p) => p.map((t) => t.t).join(''))]) {
+    issues.push(...checkText({ text, where }));
+  }
+}
 let scanned = 0;
-// Vocabulary is checked structurally above, so its labeled Mainland notes are allowed.
+// Words are checked structurally above, so their labeled Mainland notes are allowed.
 for (const file of SOURCES.flatMap(files)) {
   scanned++;
   readFileSync(join(root, file), 'utf8')
@@ -46,4 +59,6 @@ if (issues.length) {
   console.error(`Taiwan-standard guard: ${issues.length} problem(s)\n${formatIssues(issues)}`);
   process.exit(1);
 }
-console.log(`Taiwan-standard guard: ${VOCAB.length} words and ${scanned} source files OK`);
+console.log(
+  `Taiwan-standard guard: ${words.length} words, ${readers.length} readers and ${scanned} source files OK`,
+);

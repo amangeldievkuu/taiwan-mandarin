@@ -1,34 +1,15 @@
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { VitePWA } from 'vite-plugin-pwa';
-import { defaultClientConditions, defaultServerConditions, type Plugin } from 'vite';
+import { defaultClientConditions, defaultServerConditions } from 'vite';
 import { defineConfig } from 'vitest/config';
-import { VOCAB } from '@taiwan-mandarin/shared';
 
-// Every character drawn in the Kai font: vocabulary, Zhuyin (ㄅ–ㄩ, tones) and a few UI labels.
-// Requesting just these from Google Fonts gives one small file that the service worker caches,
-// so the Kai font works fully offline.
-const KAI_TEXT = [
-  ...new Set([
-    ...VOCAB.map((w) => w.hanzi).join(''),
-    ...'今天完成了楷書Kai˙',
-    ...Array.from({ length: 0x3129 - 0x3105 + 1 }, (_, i) => String.fromCodePoint(0x3105 + i)),
-  ]),
-].join('');
-
-const kaiFontSubset = (): Plugin => ({
-  name: 'kai-font-subset',
-  transformIndexHtml: {
-    order: 'pre',
-    handler: (html) => html.replace('__KAI_TEXT__', encodeURIComponent(KAI_TEXT)),
-  },
-});
+const YEAR = 60 * 60 * 24 * 365;
 
 export default defineConfig({
   // Use @taiwan-mandarin/shared from source (its "source" export), so edits hot-reload without a build.
   resolve: { conditions: ['source', ...defaultClientConditions] },
   ssr: { resolve: { conditions: ['source', ...defaultServerConditions] } },
   plugins: [
-    kaiFontSubset(),
     svelte(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -37,11 +18,13 @@ export default defineConfig({
         name: '臺灣華語',
         short_name: '華語',
         description:
-          'Taiwan Mandarin flashcards: Traditional characters, Zhuyin, spaced repetition.',
+          'Learn Taiwan Mandarin: the TOCFL path, Zhuyin, a built-in dictionary, graded reading and spaced repetition.',
         lang: 'zh-Hant-TW',
         display: 'standalone',
-        theme_color: '#FFFFFF',
-        background_color: '#FFFFFF',
+        start_url: '/',
+        theme_color: '#F7F3EC',
+        background_color: '#F7F3EC',
+        categories: ['education'],
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
@@ -55,8 +38,35 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,json}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico}', 'strokes-tw.json'],
+        // Word lists and dictionary shards (~17 MB) are cached on first use, not precached.
+        globIgnores: ['content/**', 'dict/**'],
+        navigateFallbackDenylist: [/^\/api\//, /^\/content\//, /^\/dict\//],
         runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.endsWith('/content/manifest.json'),
+            handler: 'NetworkFirst',
+            options: { cacheName: 'content-manifest', networkTimeoutSeconds: 4 },
+          },
+          {
+            // Versioned by the manifest hash (?v=…), so cached copies never go stale.
+            urlPattern: ({ url }) => /\/(content|dict)\//.test(url.pathname),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'content',
+              expiration: { maxEntries: 400, maxAgeSeconds: YEAR },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+          {
+            urlPattern: ({ url }) => url.origin === 'https://cdn.jsdelivr.net',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'strokes',
+              expiration: { maxEntries: 3000, maxAgeSeconds: YEAR },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com',
             handler: 'StaleWhileRevalidate',
@@ -67,7 +77,7 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: {
               cacheName: 'google-fonts-files',
-              expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              expiration: { maxEntries: 300, maxAgeSeconds: YEAR },
               cacheableResponse: { statuses: [0, 200] },
             },
           },

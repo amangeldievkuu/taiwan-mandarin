@@ -1,13 +1,12 @@
-// Bundles hanzi-writer stroke data for every vocabulary character into src/lib/strokes.json
-// (so stroke order works offline) and draws public/icon.svg from the strokes of 華.
-// Taiwan MOE stroke order comes from data/stroke-order-tw-overrides.json: each character is
-// marked tw: true only when verified there; everything else is PRC order, shown with a badge.
+// Writes public/strokes-tw.json: stroke data for characters verified against the Taiwan MOE
+// standard (data/stroke-order-tw-overrides.json). Every other character is loaded at runtime from
+// hanzi-writer-data on jsDelivr and shown with a "may differ from the Taiwan standard" badge.
+// Also draws public/icon.svg (a vermilion seal with 華) from the strokes of 華.
 // Run with: node --conditions=source scripts/build-strokes.ts
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
-import { VOCAB } from '@taiwan-mandarin/shared';
 
 interface CharData {
   strokes: string[];
@@ -28,46 +27,34 @@ const overrides = (
   }
 ).characters;
 
+const verified: Record<string, CharData & { tw: true }> = {};
 for (const [char, o] of Object.entries(overrides)) {
   if (!o.source) throw new Error(`Override for ${char} needs a source`);
-  if (o.status === 'tw' && (!o.strokes.length || o.strokes.length !== o.medians.length)) {
-    throw new Error(`Override for ${char} needs matching strokes and medians`);
-  }
-}
-
-const chars = [...new Set(VOCAB.flatMap((w) => [...w.hanzi]))].sort();
-const strokes: Record<string, CharData & { tw: boolean }> = {};
-const missing: string[] = [];
-
-for (const char of chars) {
-  const override = overrides[char];
-  const file = join(dataDir, `${char}.json`);
-  if (override?.status === 'tw') {
-    strokes[char] = { strokes: override.strokes, medians: override.medians, tw: true };
-  } else if (existsSync(file)) {
-    const data = JSON.parse(readFileSync(file, 'utf8')) as CharData;
-    strokes[char] = { ...data, tw: override?.status === 'same-as-prc' };
+  if (o.status === 'tw') {
+    if (!o.strokes.length || o.strokes.length !== o.medians.length) {
+      throw new Error(`Override for ${char} needs matching strokes and medians`);
+    }
+    verified[char] = { strokes: o.strokes, medians: o.medians, tw: true };
   } else {
-    missing.push(char);
+    const file = join(dataDir, `${char}.json`);
+    if (!existsSync(file)) throw new Error(`No hanzi-writer data for ${char}`);
+    verified[char] = { ...(JSON.parse(readFileSync(file, 'utf8')) as CharData), tw: true };
   }
 }
-
-writeFileSync(join(root, 'src/lib/strokes.json'), JSON.stringify(strokes));
-const verified = Object.values(strokes).filter((s) => s.tw).length;
+writeFileSync(join(root, 'public/strokes-tw.json'), JSON.stringify(verified));
 console.log(
-  `strokes.json: ${Object.keys(strokes).length}/${chars.length} characters, ` +
-    `${verified} verified Taiwan order`,
+  `strokes-tw.json: ${Object.keys(verified).length} characters verified against the Taiwan standard`,
 );
-if (missing.length) console.warn(`No stroke data for: ${missing.join(' ')}`);
 
-// Icon: white 華 on the accent blue. Stroke data uses a 1024 box with y pointing up.
+// Icon: paper-white 華 on a vermilion seal. Stroke data uses a 1024 box with y pointing up.
 const icon = JSON.parse(readFileSync(join(dataDir, '華.json'), 'utf8')) as CharData;
 const paths = icon.strokes.map((d) => `<path d="${d}"/>`).join('');
 writeFileSync(
   join(root, 'public/icon.svg'),
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-<rect width="512" height="512" rx="112" fill="#0071E3"/>
-<g fill="#FFFFFF" transform="translate(96 96) scale(0.3125) translate(0 900) scale(1 -1)">${paths}</g>
+<rect width="512" height="512" rx="104" fill="#C8102E"/>
+<rect x="34" y="34" width="444" height="444" rx="78" fill="none" stroke="#FFFAF2" stroke-width="14"/>
+<g fill="#FFFAF2" transform="translate(106 106) scale(0.293) translate(0 900) scale(1 -1)">${paths}</g>
 </svg>
 `,
 );

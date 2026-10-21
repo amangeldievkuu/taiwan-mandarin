@@ -25,16 +25,29 @@ if (synth) {
   synth.addEventListener?.('voiceschanged', pickVoice);
 }
 
-export function speak(text: string): void {
-  if (!synth || !canSpeak) return;
-  try {
-    synth.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'zh-TW';
-    utterance.rate = 0.85;
-    if (voice) utterance.voice = voice;
-    synth.speak(utterance);
-  } catch {
-    // Some browsers throw when speech is unavailable; audio is optional.
-  }
+/**
+ * Speaks `text` in Taiwan Mandarin. Resolves true when it finished, false when it was cut off
+ * (another `speak`, `stopSpeaking`) or speech is unavailable.
+ */
+export function speak(text: string, options: { rate?: number } = {}): Promise<boolean> {
+  if (!synth || !canSpeak) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    try {
+      synth.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'zh-TW';
+      utterance.rate = options.rate ?? 0.85;
+      if (voice) utterance.voice = voice;
+      utterance.onend = () => resolve(true);
+      utterance.onerror = () => resolve(false);
+      synth.speak(utterance);
+    } catch {
+      // Some browsers throw when speech is unavailable; audio is optional.
+      resolve(false);
+    }
+  });
+}
+
+export function stopSpeaking(): void {
+  synth?.cancel();
 }

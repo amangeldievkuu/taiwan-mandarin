@@ -21,3 +21,9 @@ npm-debug.log*
 .idea
 .DS_Store
 *.sw?
+
+# Downloaded content sources (npm run content)
+data/raw
+# Generated app content (npm run content); built from the official lists, not redistributed
+apps/web/public/content
+apps/web/public/dict

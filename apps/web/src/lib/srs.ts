@@ -22,7 +22,21 @@ export const LEARN_AHEAD_MS = 20 * 60 * 1000;
 /** How many cards later a requeued card comes back. */
 const REQUEUE_OFFSET = 3;
 
-const scheduler = fsrs(generatorParameters({ enable_fuzz: true }));
+let scheduler = fsrs(generatorParameters({ enable_fuzz: true }));
+
+/**
+ * Target retention and, once the server has fitted them to the learner's review history,
+ * personal FSRS weights.
+ */
+export function configureScheduler(options: { retention: number; w?: readonly number[] }): void {
+  scheduler = fsrs(
+    generatorParameters({
+      enable_fuzz: true,
+      request_retention: options.retention,
+      ...(options.w ? { w: [...options.w] } : {}),
+    }),
+  );
+}
 
 export function newCard(now: Date): Card {
   return createEmptyCard(now);
@@ -65,28 +79,32 @@ function isLearning(card: Card): boolean {
 }
 
 /**
- * Word ids for a session: due cards (oldest first, learning cards slightly ahead of time),
- * then up to `newAllowance` unseen words in vocabulary order.
+ * Word ids for a session: due cards (oldest first, learning cards slightly ahead of time), then up
+ * to `newAllowance` unseen words from `candidates` (in order: the learner's own deck, then the path).
  */
 export function buildQueue(
-  wordIds: readonly string[],
-  cards: Readonly<Record<string, Card | undefined>>,
+  cards: Readonly<Record<string, { card: Card; suspended?: boolean } | undefined>>,
+  candidates: readonly string[],
   now: Date,
   newAllowance: number,
 ): string[] {
   const due: { id: string; due: number }[] = [];
-  const fresh: string[] = [];
-  for (const id of wordIds) {
-    const card = cards[id];
-    if (!card) {
-      fresh.push(id);
-      continue;
-    }
+  for (const [id, record] of Object.entries(cards)) {
+    if (!record || record.suspended) continue;
+    const { card } = record;
     const limit = now.getTime() + (isLearning(card) ? LEARN_AHEAD_MS : 0);
     if (card.due.getTime() <= limit) due.push({ id, due: card.due.getTime() });
   }
   due.sort((a, b) => a.due - b.due);
-  return [...due.map((d) => d.id), ...fresh.slice(0, Math.max(0, newAllowance))];
+  const fresh: string[] = [];
+  const seen = new Set<string>();
+  for (const id of candidates) {
+    if (fresh.length >= newAllowance) break;
+    if (cards[id] || seen.has(id)) continue;
+    seen.add(id);
+    fresh.push(id);
+  }
+  return [...due.map((d) => d.id), ...fresh];
 }
 
 /** Again, or a learning step that falls inside the session window, brings the card back. */

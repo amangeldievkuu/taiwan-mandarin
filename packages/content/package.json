@@ -1,0 +1,22 @@
+{
+  "name": "@taiwan-mandarin/content",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Content pipeline: TOCFL / NAER word lists, CC-CEDICT, Tatoeba \u2192 app content files.",
+  "scripts": {
+    "fetch": "node --conditions=source src/fetch.ts",
+    "build": "node --conditions=source src/build.ts",
+    "ensure": "node --conditions=source src/ensure.ts",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@taiwan-mandarin/shared": "*",
+    "fflate": "^0.8.2",
+    "opencc-js": "^1.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5"
+  }
+}

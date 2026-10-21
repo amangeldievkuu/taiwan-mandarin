@@ -41,7 +41,7 @@
     grid-auto-flow: column;
     gap: 2px;
     padding: 2px;
-    border-radius: 9px;
+    border-radius: 11px;
     background: var(--fill);
   }
 
@@ -57,17 +57,15 @@
       box-shadow var(--dur) var(--ease);
   }
 
-  .active {
-    background: var(--bg);
-    box-shadow:
-      0 0 0 0.5px rgba(0, 0, 0, 0.04),
-      0 2px 6px rgba(0, 0, 0, 0.08);
+  button {
+    color: var(--ink-2);
   }
 
-  @media (prefers-color-scheme: dark) {
-    .active {
-      background: #636366;
-      box-shadow: none;
-    }
+  .active {
+    color: var(--ink);
+    background: var(--paper-raised);
+    box-shadow:
+      0 0 0 1px var(--rule),
+      0 2px 6px rgba(0, 0, 0, 0.08);
   }
 </style>

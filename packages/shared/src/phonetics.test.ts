@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { parseSyllable, plainPinyin, toToneMarked, toZhuyin, zhuyinString } from './phonetics.ts';
+import {
+  fromToneMarked,
+  fromZhuyin,
+  parseSyllable,
+  plainPinyin,
+  syllableToZhuyin,
+  toToneMarked,
+  toZhuyin,
+  zhuyinString,
+} from './phonetics.ts';
 
 describe('toToneMarked', () => {
   it.each([
@@ -99,5 +108,70 @@ describe('plainPinyin', () => {
     expect(plainPinyin('Nǐ hǎo')).toBe('nihao');
     expect(plainPinyin('ni3 hao3')).toBe('nihao');
     expect(plainPinyin('lǜ')).toBe('lu');
+  });
+});
+
+describe('fromToneMarked', () => {
+  it.each([
+    ['nǐ', 'ni3'],
+    ['ma', 'ma5'],
+    ['lǜ', 'lü4'],
+    ['Xiè', 'xie4'],
+    ['hăo', 'hao3'], // breve, as in the TOCFL list
+    ['nĭ', 'ni3'],
+    ['shuí', 'shui2'],
+  ])('%s → %s', (input, expected) => {
+    expect(fromToneMarked(input)).toBe(expected);
+  });
+
+  it('rejects two tone marks', () => {
+    expect(() => fromToneMarked('nǐhǎo')).toThrow();
+  });
+});
+
+describe('fromZhuyin', () => {
+  it.each([
+    ['ㄋㄧˇ', 'ni3'],
+    ['˙ㄇㄚ', 'ma5'],
+    ['ㄇㄚ˙', 'ma5'],
+    ['ㄓ', 'zhi1'],
+    ['ㄙˋ', 'si4'],
+    ['ㄩˊ', 'yu2'],
+    ['ㄐㄩㄝˊ', 'jue2'],
+    ['ㄌㄩˋ', 'lü4'],
+    ['ㄨㄥ', 'weng1'],
+    ['ㄏㄨㄥˊ', 'hong2'],
+    ['ㄑㄩㄥˊ', 'qiong2'],
+    ['ㄉㄧㄡ', 'diu1'],
+    ['ㄍㄨㄟˋ', 'gui4'],
+    ['ㄉㄨㄣˋ', 'dun4'],
+    ['ㄦˋ', 'er4'],
+    ['ㄅㄛ', 'bo1'],
+    ['ㄧㄞˊ', 'yai2'], // 崖, Taiwan reading
+  ])('%s → %s', (input, expected) => {
+    expect(fromZhuyin(input)).toBe(expected);
+  });
+
+  it('round-trips with syllableToZhuyin', () => {
+    const syllables = [
+      'zhuang4',
+      'lüe4',
+      'xiong2',
+      'wen3',
+      'yuan2',
+      'si5',
+      'ri4',
+      'nü3',
+      'er2',
+      'ou1',
+    ];
+    for (const s of syllables) {
+      const { body, tone } = syllableToZhuyin(s);
+      expect(fromZhuyin(body + (tone === '˙' ? '' : tone) + (tone === '˙' ? '˙' : ''))).toBe(s);
+    }
+  });
+
+  it('rejects letters that are not Zhuyin', () => {
+    expect(() => fromZhuyin('abc')).toThrow();
   });
 });

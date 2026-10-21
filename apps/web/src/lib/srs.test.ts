@@ -58,15 +58,23 @@ describe('buildQueue', () => {
 
   it('puts due cards first (oldest first), then new words up to the allowance', () => {
     const cards = {
-      a: card(State.Review, minutes(-60)),
-      b: card(State.Review, minutes(-120)),
-      c: card(State.Review, minutes(60 * 24)), // not due
-      d: card(State.Learning, minutes(5)), // learning, within learn-ahead
+      a: { card: card(State.Review, minutes(-60)) },
+      b: { card: card(State.Review, minutes(-120)) },
+      c: { card: card(State.Review, minutes(60 * 24)) }, // not due
+      d: { card: card(State.Learning, minutes(5)) }, // learning, within learn-ahead
     };
-    const ids = ['a', 'b', 'c', 'd', 'n1', 'n2', 'n3'];
-    expect(buildQueue(ids, cards, now, 2)).toEqual(['b', 'a', 'd', 'n1', 'n2']);
-    expect(buildQueue(ids, cards, now, 0)).toEqual(['b', 'a', 'd']);
-    expect(buildQueue(ids, cards, now, -3)).toEqual(['b', 'a', 'd']);
+    const candidates = ['a', 'n1', 'n1', 'n2', 'n3'];
+    expect(buildQueue(cards, candidates, now, 2)).toEqual(['b', 'a', 'd', 'n1', 'n2']);
+    expect(buildQueue(cards, candidates, now, 0)).toEqual(['b', 'a', 'd']);
+    expect(buildQueue(cards, candidates, now, -3)).toEqual(['b', 'a', 'd']);
+  });
+
+  it('skips suspended cards', () => {
+    const cards = {
+      a: { card: card(State.Review, minutes(-60)), suspended: true },
+      b: { card: card(State.Review, minutes(-60)) },
+    };
+    expect(buildQueue(cards, [], now, 5)).toEqual(['b']);
   });
 });
 

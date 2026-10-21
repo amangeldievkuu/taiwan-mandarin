@@ -5,10 +5,10 @@
 import { Converter } from 'opencc-js/cn2t';
 import { splitSyllables } from '../phonetics.ts';
 import type { Topic, Word } from '../content/types.ts';
-import { ALLOWLIST, type AllowEntry } from './allowlist.ts';
+import { ALLOWLIST, OPENCC_OVERREACH, type AllowEntry } from './allowlist.ts';
 import { MAINLAND_READINGS, MAINLAND_TERMS } from './denylist.ts';
 
-export { ALLOWLIST, MAINLAND_READINGS, MAINLAND_TERMS, type AllowEntry };
+export { ALLOWLIST, MAINLAND_READINGS, MAINLAND_TERMS, OPENCC_OVERREACH, type AllowEntry };
 
 export interface TextEntry {
   text: string;
@@ -39,6 +39,9 @@ function mask(entry: TextEntry, allowlist: readonly AllowEntry[]): string {
       text = text.split(allow.term).join(String.fromCodePoint(0xe000 + i));
     }
   });
+  OPENCC_OVERREACH.forEach((term, i) => {
+    text = text.split(term).join(String.fromCodePoint(0xf000 + i));
+  });
   return text;
 }
 
@@ -65,35 +68,34 @@ export function checkReading(word: Pick<Word, 'id' | 'hanzi' | 'pinyin'>): Issue
   const syllables = splitSyllables(word.pinyin).map((s) => s.toLowerCase().replace(/v|u:/g, 'ü'));
   return [...word.hanzi].flatMap((char, i) => {
     const syllable = syllables[i] ?? '';
-    return MAINLAND_READINGS[char]?.includes(syllable)
+    const taiwan = MAINLAND_READINGS[char]?.[syllable];
+    return taiwan
       ? [
           {
             where: `vocab:${word.id}.pinyin`,
             text: `${word.hanzi} ${word.pinyin}`,
-            problem: `${char} ${syllable} is a Mainland reading`,
+            problem: `${char} ${syllable} is a Mainland reading; Taiwan reads ${taiwan}`,
           },
         ]
       : [];
   });
 }
 
-/** Every Chinese-bearing string in the vocabulary data. */
+/** Every Chinese-bearing string in study-path words. */
 export function vocabTexts(words: readonly Word[], topics: readonly Topic[]): TextEntry[] {
   return [
     ...topics.map((t) => ({ text: t.zh, where: `topic:${t.id}.zh` })),
     ...words.flatMap((w) => [
-      { text: w.hanzi, where: `vocab:${w.id}.hanzi` },
-      { text: w.en, where: `vocab:${w.id}.en` },
-      { text: w.ky, where: `vocab:${w.id}.ky` },
-      ...(w.tw
-        ? [
-            { text: w.tw.en, where: `vocab:${w.id}.tw.en` },
-            { text: w.tw.ky, where: `vocab:${w.id}.tw.ky` },
-          ]
-        : []),
+      // Headwords from the official Taiwan lists (TOCFL, NAER) define the standard; OpenCC's
+      // phrase table would rewrite general words like 支持 or 項目 into IT terms (支援, 專案).
+      ...(w.src === 'curated' ? [{ text: w.hanzi, where: `vocab:${w.id}.hanzi` }] : []),
+      // CC-CEDICT glosses are reference text quoting other forms; only our own glosses are checked.
+      ...(w.glossSource === 'cedict' ? [] : [{ text: w.en, where: `vocab:${w.id}.en` }]),
+      ...(w.tw ? [{ text: w.tw, where: `vocab:${w.id}.tw` }] : []),
       ...(w.mainland
         ? [{ text: w.mainland, where: `vocab:${w.id}.mainland`, mainland: true }]
         : []),
+      ...(w.examples ?? []).map((e, i) => ({ text: e.zh, where: `vocab:${w.id}.examples.${i}` })),
     ]),
   ];
 }

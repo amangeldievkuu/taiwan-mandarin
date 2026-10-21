@@ -35,7 +35,7 @@ const ZHUYIN_FINALS: Record<string, string> = {
   '': '',
   a: 'ㄚ', o: 'ㄛ', e: 'ㄜ', ê: 'ㄝ', ai: 'ㄞ', ei: 'ㄟ', ao: 'ㄠ', ou: 'ㄡ',
   an: 'ㄢ', en: 'ㄣ', ang: 'ㄤ', eng: 'ㄥ', ong: 'ㄨㄥ', er: 'ㄦ',
-  i: 'ㄧ', ia: 'ㄧㄚ', ie: 'ㄧㄝ', iao: 'ㄧㄠ', iou: 'ㄧㄡ', ian: 'ㄧㄢ', in: 'ㄧㄣ',
+  i: 'ㄧ', ia: 'ㄧㄚ', io: 'ㄧㄛ', ie: 'ㄧㄝ', iai: 'ㄧㄞ', iao: 'ㄧㄠ', iou: 'ㄧㄡ', ian: 'ㄧㄢ', in: 'ㄧㄣ',
   iang: 'ㄧㄤ', ing: 'ㄧㄥ', iong: 'ㄩㄥ',
   u: 'ㄨ', ua: 'ㄨㄚ', uo: 'ㄨㄛ', uai: 'ㄨㄞ', uei: 'ㄨㄟ', uan: 'ㄨㄢ', uen: 'ㄨㄣ',
   uang: 'ㄨㄤ', ueng: 'ㄨㄥ',
@@ -44,7 +44,7 @@ const ZHUYIN_FINALS: Record<string, string> = {
 
 /** Syllables written with y/w and no other initial. */
 const Y_W: Record<string, string> = {
-  yi: 'i', ya: 'ia', ye: 'ie', yao: 'iao', you: 'iou', yan: 'ian', yin: 'in',
+  yi: 'i', ya: 'ia', yo: 'io', ye: 'ie', yai: 'iai', yao: 'iao', you: 'iou', yan: 'ian', yin: 'in',
   yang: 'iang', ying: 'ing', yong: 'iong',
   yu: 'ü', yue: 'üe', yuan: 'üan', yun: 'ün',
   wu: 'u', wa: 'ua', wo: 'uo', wai: 'uai', wei: 'uei', wan: 'uan', wen: 'uen',
@@ -149,6 +149,83 @@ export function zhuyinString(pinyin: string): string {
   return toZhuyin(pinyin)
     .map(({ body, tone }) => (tone === '˙' ? tone + body : body + tone))
     .join(' ');
+}
+
+/** Tone-marked vowel → [plain vowel, tone]. Breves (ă ĭ ŏ ŭ, common in word lists) count as 3rd tone. */
+const MARKED_VOWELS: ReadonlyMap<string, readonly [string, Tone]> = new Map([
+  ...Object.entries(TONE_MARKS).flatMap(([vowel, marks]) =>
+    [...marks].map((mark, i) => [mark, [vowel, (i + 1) as Tone]] as const),
+  ),
+  ...[...'ăĕĭŏŭ'].map((mark, i) => [mark, ['aeiou'.charAt(i), 3 as Tone]] as const),
+  ['ɑ', ['a', 5 as Tone]],
+]);
+
+/**
+ * One tone-marked syllable → numbered: "nǐ" → "ni3", "ma" → "ma5", "lǜ" → "lü4".
+ * Unmarked syllables are neutral tone. Throws on more than one tone mark.
+ */
+export function fromToneMarked(syllable: string): string {
+  let tone: Tone = 5;
+  let marks = 0;
+  let letters = '';
+  for (const char of syllable.trim().toLowerCase().normalize('NFC')) {
+    const marked = MARKED_VOWELS.get(char);
+    if (marked) {
+      letters += marked[0];
+      if (marked[1] !== 5) {
+        tone = marked[1];
+        marks++;
+      }
+    } else letters += char;
+  }
+  if (marks > 1) throw new Error(`More than one tone mark in "${syllable}"`);
+  return letters.replace(/v|u:/g, 'ü') + tone;
+}
+
+const PINYIN_INITIAL = new Map(Object.entries(ZHUYIN_INITIALS).map(([py, zy]) => [zy, py]));
+const PINYIN_FINAL = new Map(
+  Object.entries(ZHUYIN_FINALS)
+    .filter(([py]) => py !== 'ong') // ㄨㄥ is "ong" after an initial, "weng" alone
+    .map(([py, zy]) => [zy, py]),
+);
+const W_Y = new Map(Object.entries(Y_W).map(([spelling, final]) => [final, spelling]));
+
+/**
+ * One Zhuyin syllable → numbered pinyin: "ㄋㄧˇ" → "ni3", "˙ㄇㄚ" → "ma5", "ㄓ" → "zhi1".
+ * The neutral-tone dot may come first (as printed) or last.
+ */
+export function fromZhuyin(syllable: string): string {
+  let text = syllable.trim();
+  let tone: Tone = 1;
+  if (text.startsWith('˙') || text.endsWith('˙')) {
+    tone = 5;
+    text = text.replace('˙', '');
+  } else {
+    const index = ZHUYIN_TONES.indexOf(text.slice(-1));
+    if (index > 0) {
+      tone = (index + 1) as Tone;
+      text = text.slice(0, -1);
+    }
+  }
+  const first = text.charAt(0);
+  const initial = PINYIN_INITIAL.get(first) ?? '';
+  const rest = initial ? text.slice(1) : text;
+  let final = PINYIN_FINAL.get(rest);
+  if (final === undefined) throw new Error(`Invalid Zhuyin syllable "${syllable}"`);
+  if (!initial && !rest) throw new Error(`Invalid Zhuyin syllable "${syllable}"`);
+
+  let spelling: string;
+  if (!initial) spelling = W_Y.get(final) ?? final;
+  else {
+    if (final === 'ueng') final = 'ong';
+    if (final === '' && APICAL.has(initial)) final = 'i';
+    else if (final === 'iou') final = 'iu';
+    else if (final === 'uei') final = 'ui';
+    else if (final === 'uen') final = 'un';
+    if ('jqx'.includes(initial)) final = final.replace('ü', 'u');
+    spelling = initial + final;
+  }
+  return spelling + tone;
 }
 
 /** Lowercase pinyin letters only, for search: "Nǐ hǎo" / "ni3 hao3" → "nihao". */

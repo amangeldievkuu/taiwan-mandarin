@@ -1,0 +1,52 @@
+# TOCFL readings replaced by NAER readings (same syllables, different tones)
+看見: TOCFL kan4 jian5 → NAER kan4 jian4
+部分: TOCFL bu4 fen5 → NAER bu4 fen4
+故事: TOCFL gu4 shi5 → NAER gu4 shi4
+有時候: TOCFL you3 shi2 hou5 → NAER you3 shi2 hou4
+客氣: TOCFL ke4 qi5 → NAER ke4 qi4
+麻煩: TOCFL ma2 fan5 → NAER ma2 fan2
+差不多: TOCFL cha5 bu4 duo1 → NAER cha1 bu4 duo1
+白天: TOCFL bai2 tian5 → NAER bai2 tian1
+熱鬧: TOCFL re4 nao5 → NAER re4 nao4
+底下: TOCFL di3 xia5 → NAER di3 xia4
+豆腐: TOCFL dou4 fu5 → NAER dou4 fu3
+葡萄: TOCFL pu2 tao5 → NAER pu2 tao2
+新鮮: TOCFL xin1 xian5 → NAER xin1 xian1
+多麼: TOCFL duo1 me5 → NAER duo2 me5
+當場: TOCFL dang1 chang3 → NAER dang1 chang2
+功夫: TOCFL gong1 fu5 → NAER gong1 fu1
+姑娘: TOCFL gu1 niang5 → NAER gu1 niang2
+受得了: TOCFL shou4 de5 liao5 → NAER shou4 de5 liao3
+運氣: TOCFL yun4 qi4 → NAER yun4 qi5
+哎呀: TOCFL ai1 ya1 → NAER ai1 ya5
+尺寸: TOCFL chi3 cun4 → NAER chi2 cun5
+待會: TOCFL dai1 hui4 → NAER dai4 hui3
+對付: TOCFL dui4 fu4 → NAER dui4 fu5
+工夫: TOCFL gong1 fu5 → NAER gong1 fu1
+公公: TOCFL gong1 gong1 → NAER gong1 gong5
+劇場: TOCFL ju4 chang3 → NAER ju4 chang2
+立場: TOCFL li4 chang3 → NAER li4 chang2
+農場: TOCFL nong2 chang3 → NAER nong2 chang2
+屁股: TOCFL pi4 gu3 → NAER pi4 gu5
+商場: TOCFL shang1 chang3 → NAER shang1 chang2
+師父: TOCFL shi1 fu4 → NAER shi1 fu5
+尾巴: TOCFL wei3 ba1 → NAER wei3 ba5
+下巴: TOCFL xia4 ba1 → NAER xia4 ba5
+小子: TOCFL xiao3 zi5 → NAER xiao3 zi3
+應付: TOCFL ying4 fu4 → NAER ying1 fu4
+戰場: TOCFL zhan4 chang3 → NAER zhan4 chang2
+場面: TOCFL chang3 mian4 → NAER chang2 mian4
+逮捕: TOCFL dai3 bu3 → NAER dai4 bu3
+登場: TOCFL deng1 chang3 → NAER deng1 chang2
+嘀咕: TOCFL di2 gu1 → NAER di2 gu5
+賭場: TOCFL du3 chang3 → NAER du3 chang2
+傢伙: TOCFL jia1 huo3 → NAER jia1 huo5
+教誨: TOCFL jiao4 hui3 → NAER jiao4 hui4
+結實: TOCFL jie2 shi5 → NAER jie1 shi5
+進場: TOCFL jin4 chang3 → NAER jin4 chang2
+老子: TOCFL lao3 zi5 → NAER lao3 zi3
+囉嗦: TOCFL luo1 suo1 → NAER luo1 suo5
+牧場: TOCFL mu4 chang3 → NAER mu4 chang2
+捧場: TOCFL peng3 chang3 → NAER peng3 chang2
+在場: TOCFL zai4 chang3 → NAER zai4 chang2
+終場: TOCFL zhong1 chang3 → NAER zhong1 chang2

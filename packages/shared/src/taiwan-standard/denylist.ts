@@ -31,18 +31,19 @@ export const MAINLAND_TERMS: Readonly<Record<string, string>> = {
 };
 
 /**
- * Character → Mainland readings (numbered pinyin) that differ from the Taiwan MOE reading.
- * 垃圾 lèsè, 期 qí, 危 wéi, 企 qì, 液 yì, 暫 zhàn, 綜 zòng, 研究 yánjiù, 頭髮 tóufǎ.
+ * Character → Mainland reading → Taiwan MOE reading (numbered pinyin).
+ * 垃圾 lèsè, 期 qí, 危 wéi, 企 qì, 暫 zhàn, 綜 zòng, 研究 yánjiù, 頭髮 tóufǎ.
+ * (液 is not listed: the MOE dictionary gives yì with yè as an alternate reading, and both the
+ * TOCFL and NAER word lists use yè: 液體 yètǐ, 血液 xiěyè.)
  */
-export const MAINLAND_READINGS: Readonly<Record<string, readonly string[]>> = {
-  垃: ['la1'],
-  圾: ['ji1'],
-  期: ['qi1'],
-  危: ['wei1'],
-  企: ['qi3'],
-  液: ['ye4'],
-  暫: ['zan4'],
-  綜: ['zong1'],
-  究: ['jiu1'],
-  髮: ['fa4', 'fa5'],
+export const MAINLAND_READINGS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  垃: { la1: 'le4' },
+  圾: { ji1: 'se4' },
+  期: { qi1: 'qi2' },
+  危: { wei1: 'wei2' },
+  企: { qi3: 'qi4' },
+  暫: { zan4: 'zhan4' },
+  綜: { zong1: 'zong4' },
+  究: { jiu1: 'jiu4' },
+  髮: { fa4: 'fa3', fa5: 'fa3' },
 };

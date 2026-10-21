@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { TOPICS, VOCAB } from '../content/vocab.ts';
+import { CURATED } from '../content/curated.ts';
+import { TOPICS } from '../content/topics.ts';
+import type { Word } from '../content/types.ts';
 import { checkReading, checkText, checkVocab, formatIssues } from './index.ts';
 
 const issues = (text: string, mainland = false) =>
@@ -8,7 +10,7 @@ const issues = (text: string, mainland = false) =>
 describe('checkText', () => {
   it('accepts Taiwan-standard Traditional text', () => {
     expect(issues('捷運')).toEqual([]);
-    expect(issues('Шаардык автобус. 悠遊卡 же накталай акча менен төлөйсүң.')).toEqual([]);
+    expect(issues('City buses. Pay with 悠遊卡 or cash.')).toEqual([]);
     expect(issues('no Chinese at all')).toEqual([]);
   });
 
@@ -38,13 +40,23 @@ describe('checkText', () => {
 
   it('flags 台 unless the location is allowlisted', () => {
     expect(issues('台灣')).toHaveLength(1);
-    expect(checkText({ text: '台 (台灣)', where: 'vocab:tai-wan.tw.en' })).toEqual([]);
+    expect(checkText({ text: '台 (台灣)', where: 'vocab:臺灣.tw' })).toEqual([]);
+  });
+
+  it('ignores everyday words OpenCC turns into software terms', () => {
+    expect(issues('我有一個好消息！')).toEqual([]);
+    expect(issues('請打開窗戶。')).toEqual([]);
+    expect(issues('這是一家高級餐廳。')).toEqual([]);
+    expect(issues('請多加注意。')).toEqual([]);
   });
 });
 
 describe('checkReading', () => {
-  it('rejects Mainland readings', () => {
+  it('rejects Mainland readings and names the Taiwan one', () => {
     expect(checkReading({ id: 'x', hanzi: '垃圾', pinyin: 'la1 ji1' })).toHaveLength(2);
+    expect(checkReading({ id: 'x', hanzi: '星期', pinyin: 'xing1 qi1' })[0]?.problem).toMatch(
+      /qi2/,
+    );
     expect(checkReading({ id: 'x', hanzi: '星期', pinyin: 'xing1 qi1' })).toHaveLength(1);
   });
 
@@ -54,9 +66,18 @@ describe('checkReading', () => {
   });
 });
 
-describe('vocabulary', () => {
-  it('is entirely Taiwan standard', () => {
-    const found = checkVocab(VOCAB, TOPICS);
+describe('curated starter words', () => {
+  it('are entirely Taiwan standard', () => {
+    const words: Word[] = CURATED.map((c) => ({
+      ...c,
+      id: c.hanzi,
+      level: c.level ?? 'N1',
+      src: 'curated',
+      rank: 0,
+      topic: 'core',
+      glossSource: 'curated',
+    }));
+    const found = checkVocab(words, TOPICS);
     expect(found, formatIssues(found)).toEqual([]);
   });
 });

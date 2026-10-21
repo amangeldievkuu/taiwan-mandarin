@@ -11,19 +11,21 @@
   },
   "scripts": {
     "build:shared": "npm run build -w @taiwan-mandarin/shared",
+    "content": "npm run fetch -w @taiwan-mandarin/content && npm run build -w @taiwan-mandarin/content",
     "db:up": "docker compose up -d --wait db",
     "db:down": "docker compose down",
-    "predev": "npm run build:shared && npm run db:up",
+    "predev": "npm run build:shared && npm run content:ensure && npm run db:up",
     "dev": "concurrently -k -n shared,api,web -c blue,magenta,green \"npm:dev -w @taiwan-mandarin/shared\" \"npm:dev -w @taiwan-mandarin/api\" \"npm:dev -w @taiwan-mandarin/web\"",
-    "prebuild": "npm run build:shared",
+    "prebuild": "npm run build:shared && npm run content:ensure",
     "build": "npm run build -w @taiwan-mandarin/api -w @taiwan-mandarin/web",
-    "pretest": "npm run build:shared",
-    "test": "npm run test -w @taiwan-mandarin/shared -w @taiwan-mandarin/web && npm run guard:taiwan",
+    "pretest": "npm run build:shared && npm run content:ensure",
+    "test": "npm run test -w @taiwan-mandarin/shared -w @taiwan-mandarin/content -w @taiwan-mandarin/web && npm run guard:taiwan",
     "guard:taiwan": "node --conditions=source scripts/check-taiwan-standard.ts",
     "precheck": "npm run build:shared",
     "check": "npm run check --workspaces --if-present && tsc -p tsconfig.json",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "content:ensure": "npm run ensure -w @taiwan-mandarin/content"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
