@@ -19,6 +19,9 @@ import { HealthController } from './health/health.controller.js';
 import { MeController } from './me/me.controller.js';
 import { TokensService } from './me/tokens.service.js';
 import { PrismaService } from './prisma/prisma.service.js';
+import { SpeechController } from './speech/speech.controller.js';
+import { SpeechService } from './speech/speech.service.js';
+import { WhisperService } from './speech/whisper.service.js';
 import { SyncController } from './sync/sync.controller.js';
 import { SyncService } from './sync/sync.service.js';
 
@@ -38,6 +41,7 @@ const env = loadEnv();
     MeController,
     PublicController,
     AiController,
+    SpeechController,
   ],
   providers: [
     { provide: ENV, useValue: env satisfies Env },
@@ -53,6 +57,8 @@ const env = loadEnv();
     QuotaService,
     ExplainService,
     TalkService,
+    WhisperService,
+    SpeechService,
   ],
 })
 export class AppModule {}

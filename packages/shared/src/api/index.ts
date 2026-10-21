@@ -235,3 +235,38 @@ export interface TalkResponse {
   /** The learner's message with its correction (if one was sent) and the partner's reply. */
   messages: TalkMessage[];
 }
+
+// ---- Pronunciation check ----
+
+export const PronounceRequestSchema = z.object({
+  /** 16 kHz mono 16-bit PCM WAV, base64; at most about 15 seconds. */
+  audio: z.string().min(100).max(700_000),
+  /** What the learner tried to say, in characters. */
+  target: z.string().trim().min(1).max(60),
+  /** Its numbered pinyin, one syllable per character; looked up when omitted. */
+  pinyin: z.string().max(400).optional(),
+});
+export type PronounceRequest = z.infer<typeof PronounceRequestSchema>;
+
+export interface SyllableResult {
+  char: string;
+  /** Target reading, numbered pinyin (citation tone). */
+  pinyin: string;
+  /** Tone expected in speech, after sandhi (5 = neutral). */
+  expectedTone: number;
+  /** What speech-to-text heard at this position, if anything. */
+  heard?: string;
+  sound: 'ok' | 'wrong' | 'missing';
+  tone: 'ok' | 'wrong' | 'unclear' | 'neutral';
+  heardTone?: number;
+  /** Normalized pitch contour (0–1, five points) for drawing. */
+  contour: number[];
+}
+
+export interface PronounceResult {
+  /** What was heard, in Taiwan characters. */
+  transcript: string;
+  syllables: SyllableResult[];
+  /** 0–100. */
+  score: number;
+}

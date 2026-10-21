@@ -5,3 +5,4 @@ export * from './content/topics.ts';
 export * from './content/curated.ts';
 export * from './segment.ts';
 export * from './stats.ts';
+export * from './pronunciation/index.ts';

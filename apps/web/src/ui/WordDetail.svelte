@@ -142,7 +142,7 @@
   {/if}
 
   <h3 class="section-title">Say it <span class="zh" lang="zh-Hant-TW">發音</span></h3>
-  <Speak target={word.hanzi} />
+  <Speak target={word.hanzi} pinyin={word.pinyin} />
 
   <h3 class="section-title">Characters <span class="zh" lang="zh-Hant-TW">字</span></h3>
   <div class="chars">

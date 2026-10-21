@@ -29,6 +29,9 @@ const toTwChars = Converter({ from: 'cn', to: 'tw' });
 /** Characters plus Taiwan phrasing (網絡→網路, 視頻→影片, …). */
 const toTwPhrases = Converter({ from: 'cn', to: 'twp' });
 
+/** Simplified → Taiwan Traditional characters (e.g. for speech-to-text output). */
+export const toTaiwanCharacters = (text: string): string => toTwChars(text);
+
 const CJK = /[\u3400-\u9fff\uf900-\ufaff]/;
 
 /** Replace allowlisted terms (for this location) with private-use placeholders OpenCC ignores. */

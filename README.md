@@ -87,6 +87,22 @@ with the path's or dictionary's Taiwan readings. When the model's reading matche
 - Remaining unknown words are returned as "new words" to tap.
 - The learner's messages get a 修正 correction when needed.
 
+### Pronunciation check (sign-in required)
+
+Record a word or sentence on its word page. The browser decodes the recording (AAC on Safari,
+Opus on Chrome) to 16 kHz mono WAV, so the server needs no ffmpeg.
+
+- **Syllables.** OpenAI Whisper (`OPENAI_API_KEY`, `whisper-1`, word timestamps, the target as
+  the prompt) transcribes the recording. Its Simplified output is converted to Taiwan characters
+  and aligned with the target by edit distance. Homophones count as correct sounds.
+- **Tones.** `packages/shared/src/pronunciation` (pure TypeScript, tested on synthetic voices) runs
+  a YIN F0 tracker and converts pitch to semitones in the speaker's own range. It then matches
+  each syllable's contour against templates for the four tones.
+- **Sandhi.** Expected tones are computed first (3-3 → 2-3, 不 → bú before a 4th tone, 一 → yí/yì),
+  so correct sandhi is never marked wrong.
+- **Display.** The app draws your pitch curve over the ideal tone shape and says what it heard
+  ("Sounded 4th, needs 3rd"). Tone feedback is labelled approximate.
+
 ```sh
 npm run db:up                                  # PostgreSQL in Docker (POSTGRES_PORT in .env)
 npm run db:migrate -w @taiwan-mandarin/api     # apply migrations
