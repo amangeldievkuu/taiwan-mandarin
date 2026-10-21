@@ -1,5 +1,5 @@
 <script lang="ts" module>
-  import type { Phonetics } from '../lib/storage';
+  import type { Phonetics } from '@taiwan-mandarin/shared';
 
   /** Hanzi size that fits `count` characters (plus their Zhuyin columns) across `available`. */
   export function fitSize(count: number, phonetics: Phonetics, max: number, available: string) {
@@ -9,8 +9,7 @@
 </script>
 
 <script lang="ts">
-  import { toToneMarkedSyllables, toZhuyin } from '../lib/phonetics';
-  import type { Word } from '../lib/vocab';
+  import { toToneMarkedSyllables, toZhuyin, type Word } from '@taiwan-mandarin/shared';
 
   interface Props {
     word: Word;
@@ -23,30 +22,36 @@
 
   let { word, size, phonetics, show = true }: Props = $props();
 
-  const chars = $derived([...word.hanzi]);
-  const zhuyin = $derived(toZhuyin(word.pinyin));
-  const pinyin = $derived(toToneMarkedSyllables(word.pinyin));
+  const units = $derived.by(() => {
+    const zhuyin = toZhuyin(word.pinyin);
+    const pinyin = toToneMarkedSyllables(word.pinyin);
+    return [...word.hanzi].map((char, i) => ({
+      char,
+      zhuyin: zhuyin[i] ?? { body: '', tone: '' },
+      pinyin: pinyin[i] ?? '',
+    }));
+  });
   const withZhuyin = $derived(phonetics !== 'pinyin');
   const withPinyin = $derived(phonetics !== 'zhuyin');
 </script>
 
 <span class="word" style:--size={size} lang="zh-Hant-TW">
-  {#each chars as char, i (i)}
+  {#each units as { char, zhuyin, pinyin }, i (i)}
     <span class="unit">
       <span class="char hanzi">{char}</span>
       {#if withZhuyin}
         <span class="zhuyin hanzi" class:hidden={!show} aria-hidden={!show}>
-          {#if zhuyin[i].tone === '˙'}<span class="neutral">˙</span>{/if}
+          {#if zhuyin.tone === '˙'}<span class="neutral">˙</span>{/if}
           <span class="letters">
-            {#each zhuyin[i].body as letter, j (j)}<span>{letter}</span>{/each}
+            {#each zhuyin.body as letter, j (j)}<span>{letter}</span>{/each}
           </span>
-          {#if zhuyin[i].tone && zhuyin[i].tone !== '˙'}
-            <span class="tone">{zhuyin[i].tone}</span>
+          {#if zhuyin.tone && zhuyin.tone !== '˙'}
+            <span class="tone">{zhuyin.tone}</span>
           {/if}
         </span>
       {/if}
       {#if withPinyin}
-        <span class="pinyin" class:hidden={!show} aria-hidden={!show}>{pinyin[i]}</span>
+        <span class="pinyin" class:hidden={!show} aria-hidden={!show}>{pinyin}</span>
       {/if}
     </span>
   {/each}

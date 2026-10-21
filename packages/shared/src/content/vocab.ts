@@ -1,39 +1,7 @@
 // Starter vocabulary with Taiwan words and Taiwan (教育部 / everyday) readings.
 // pinyin: numbered, one syllable per character, citation tones, 5 = neutral.
 
-export type TopicId =
-  | 'greetings'
-  | 'people'
-  | 'numbers'
-  | 'food'
-  | 'taiwan'
-  | 'time'
-  | 'actions'
-  | 'describing'
-  | 'questions';
-
-export interface Note {
-  en: string;
-  ky: string;
-}
-
-export interface Word {
-  id: string;
-  hanzi: string;
-  pinyin: string;
-  ky: string;
-  en: string;
-  topic: TopicId;
-  /** Note about Taiwan usage; marks the word as Taiwan-specific. */
-  tw?: Note;
-}
-
-export interface Topic {
-  id: TopicId;
-  zh: string;
-  en: string;
-  ky: string;
-}
+import type { Note, Topic, TopicId, Word } from './types.ts';
 
 export const TOPICS: Topic[] = [
   { id: 'greetings', zh: '問候', en: 'Greetings', ky: 'Саламдашуу' },

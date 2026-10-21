@@ -64,8 +64,8 @@ export function parseSyllable(input: string): Syllable {
   const raw = input.trim().toLowerCase().replace(/u:/g, 'ü').replace(/v/g, 'ü');
   const match = /^([a-zêü]+)([1-5])$/.exec(raw);
   if (!match) throw new Error(`Invalid pinyin syllable "${input}": expected letters + tone 1–5`);
-  const letters = match[1];
-  const tone = Number(match[2]) as Tone;
+  const [, letters = '', digit] = match;
+  const tone = Number(digit) as Tone;
 
   const initial = INITIALS.find((i) => letters.startsWith(i) && letters.length > i.length) ?? '';
   let rest = letters.slice(initial.length);
@@ -110,14 +110,15 @@ function markSyllable({ spelling, tone }: Syllable): string {
   else {
     index = -1;
     for (let i = spelling.length - 1; i >= 0; i--) {
-      if ('iouü'.includes(spelling[i])) {
+      if ('iouü'.includes(spelling.charAt(i))) {
         index = i;
         break;
       }
     }
   }
   if (index < 0) return spelling;
-  const marked = TONE_MARKS[spelling[index]][tone - 1];
+  const vowel = spelling.charAt(index);
+  const marked = TONE_MARKS[vowel]?.charAt(tone - 1) ?? vowel;
   return spelling.slice(0, index) + marked + spelling.slice(index + 1);
 }
 
@@ -134,8 +135,8 @@ export function toToneMarked(pinyin: string): string {
 export function syllableToZhuyin(syllable: string): ZhuyinSyllable {
   const { initial, final, tone } = parseSyllable(syllable);
   // b/p/m/f + o is ㄛ directly; every other final maps from the table.
-  const body = (ZHUYIN_INITIALS[initial] ?? '') + ZHUYIN_FINALS[final];
-  return { body, tone: ZHUYIN_TONES[tone - 1] };
+  const body = (ZHUYIN_INITIALS[initial] ?? '') + (ZHUYIN_FINALS[final] ?? '');
+  return { body, tone: ZHUYIN_TONES[tone - 1] ?? '' };
 }
 
 /** "ni3 hao3" → [{ body: "ㄋㄧ", tone: "ˇ" }, { body: "ㄏㄠ", tone: "ˇ" }] */

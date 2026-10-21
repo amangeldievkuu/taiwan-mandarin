@@ -1,18 +1,8 @@
 // Persistence behind a small interface so a server sync (e.g. NestJS) can be added later
 // as another StorageAdapter without touching the store or UI.
 
+import type { Settings } from '@taiwan-mandarin/shared';
 import { TypeConvert, type Card } from 'ts-fsrs';
-
-export type Phonetics = 'zhuyin' | 'pinyin' | 'both';
-export type MeaningLang = 'ky' | 'en';
-export type GlyphStyle = 'kai' | 'sans';
-
-export interface Settings {
-  phonetics: Phonetics;
-  meaning: MeaningLang;
-  glyphStyle: GlyphStyle;
-  newPerDay: number;
-}
 
 export interface CardRecord {
   card: Card;

@@ -1,4 +1,5 @@
 dist
+dev-dist
 node_modules
-src/lib/strokes.json
 package-lock.json
+apps/web/src/lib/strokes.json

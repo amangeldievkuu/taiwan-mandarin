@@ -1,11 +1,16 @@
 <script lang="ts">
   import { store } from '../lib/store.svelte';
-  import type { GlyphStyle, MeaningLang, Phonetics } from '../lib/storage';
-  import { VOCAB, WORD_BY_ID } from '../lib/vocab';
+  import {
+    VOCAB,
+    WORD_BY_ID,
+    type GlyphStyle,
+    type MeaningLang,
+    type Phonetics,
+  } from '@taiwan-mandarin/shared';
   import Segmented from './Segmented.svelte';
   import WordGlyphs from './WordGlyphs.svelte';
 
-  const sample = WORD_BY_ID.get('ni-hao')!;
+  const sample = WORD_BY_ID.get('ni-hao');
   const settings = $derived(store.settings);
   const studied = $derived(Object.keys(store.cards).length);
 
@@ -30,7 +35,9 @@
   <h2 class="group-header">Phonetics</h2>
   <div class="group card">
     <div class="preview">
-      <WordGlyphs word={sample} size="56px" phonetics={settings.phonetics} />
+      {#if sample}
+        <WordGlyphs word={sample} size="56px" phonetics={settings.phonetics} />
+      {/if}
     </div>
     <Segmented
       label="Phonetics"

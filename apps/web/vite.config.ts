@@ -1,8 +1,8 @@
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { VitePWA } from 'vite-plugin-pwa';
-import type { Plugin } from 'vite';
+import { defaultClientConditions, defaultServerConditions, type Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
-import { VOCAB } from './src/lib/vocab.ts';
+import { VOCAB } from '@taiwan-mandarin/shared';
 
 // Every character drawn in the Kai font: vocabulary, Zhuyin (ㄅ–ㄩ, tones) and a few UI labels.
 // Requesting just these from Google Fonts gives one small file that the service worker caches,
@@ -24,6 +24,9 @@ const kaiFontSubset = (): Plugin => ({
 });
 
 export default defineConfig({
+  // Use @taiwan-mandarin/shared from source (its "source" export), so edits hot-reload without a build.
+  resolve: { conditions: ['source', ...defaultClientConditions] },
+  ssr: { resolve: { conditions: ['source', ...defaultServerConditions] } },
   plugins: [
     kaiFontSubset(),
     svelte(),

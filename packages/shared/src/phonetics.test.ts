@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseSyllable, plainPinyin, toToneMarked, toZhuyin, zhuyinString } from './phonetics';
+import { parseSyllable, plainPinyin, toToneMarked, toZhuyin, zhuyinString } from './phonetics.ts';
 
 describe('toToneMarked', () => {
   it.each([

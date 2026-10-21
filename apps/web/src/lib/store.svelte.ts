@@ -13,14 +13,8 @@ import {
   type Card,
   type Grade,
 } from './srs';
-import {
-  BrowserStorage,
-  type CardRecord,
-  type Daily,
-  type Settings,
-  type StorageAdapter,
-} from './storage';
-import { VOCAB, WORD_BY_ID, type Word } from './vocab';
+import { VOCAB, WORD_BY_ID, type Settings, type Word } from '@taiwan-mandarin/shared';
+import { BrowserStorage, type CardRecord, type Daily, type StorageAdapter } from './storage';
 
 export type Tab = 'study' | 'words' | 'settings';
 

@@ -5,7 +5,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
-import { VOCAB } from '../src/lib/vocab.ts';
+import { VOCAB } from '@taiwan-mandarin/shared';
 
 interface CharData {
   strokes: string[];

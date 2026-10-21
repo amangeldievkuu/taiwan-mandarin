@@ -2,7 +2,7 @@
   import { canSpeak, speak } from '../lib/speech';
   import { formatInterval } from '../lib/srs';
   import { store } from '../lib/store.svelte';
-  import { TOPICS, type Word } from '../lib/vocab';
+  import { TOPICS, type Word } from '@taiwan-mandarin/shared';
   import StrokeWriter from './StrokeWriter.svelte';
   import WordGlyphs, { fitSize } from './WordGlyphs.svelte';
 
@@ -100,7 +100,7 @@
           {/each}
         </div>
       {/if}
-      <StrokeWriter char={chars[charIndex] ?? chars[0]} />
+      <StrokeWriter char={chars[charIndex] ?? chars[0] ?? ''} />
     </div>
   {/if}
 </dialog>

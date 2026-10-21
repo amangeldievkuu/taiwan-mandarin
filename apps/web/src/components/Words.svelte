@@ -1,7 +1,13 @@
 <script lang="ts">
-  import { plainPinyin, toToneMarked, zhuyinString } from '../lib/phonetics';
+  import {
+    plainPinyin,
+    toToneMarked,
+    TOPICS,
+    VOCAB,
+    zhuyinString,
+    type Word,
+  } from '@taiwan-mandarin/shared';
   import { store } from '../lib/store.svelte';
-  import { TOPICS, VOCAB, type Word } from '../lib/vocab';
   import WordSheet from './WordSheet.svelte';
 
   interface Entry {

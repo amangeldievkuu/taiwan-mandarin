@@ -1,35 +1,39 @@
 {
   "name": "taiwan-mandarin",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
   "scripts": {
-    "dev": "vite",
-    "build": "node scripts/build-strokes.ts && vite build",
-    "preview": "vite preview",
-    "strokes": "node scripts/build-strokes.ts",
-    "icons": "pwa-assets-generator",
-    "test": "vitest run",
-    "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
+    "build:shared": "npm run build -w @taiwan-mandarin/shared",
+    "db:up": "docker compose up -d --wait db",
+    "db:down": "docker compose down",
+    "predev": "npm run build:shared && npm run db:up",
+    "dev": "concurrently -k -n shared,api,web -c blue,magenta,green \"npm:dev -w @taiwan-mandarin/shared\" \"npm:dev -w @taiwan-mandarin/api\" \"npm:dev -w @taiwan-mandarin/web\"",
+    "prebuild": "npm run build:shared",
+    "build": "npm run build -w @taiwan-mandarin/api -w @taiwan-mandarin/web",
+    "pretest": "npm run build:shared",
+    "test": "npm run test -w @taiwan-mandarin/shared -w @taiwan-mandarin/web",
+    "precheck": "npm run build:shared",
+    "check": "npm run check --workspaces --if-present",
+    "lint": "eslint .",
     "format": "prettier --write ."
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^7.3.1",
-    "@tsconfig/svelte": "^5.0.8",
-    "@types/node": "^24.19.2",
-    "@vite-pwa/assets-generator": "^2.0.0",
-    "hanzi-writer-data": "^2.0.1",
+    "@eslint/js": "^10.0.1",
+    "concurrently": "^10.0.6",
+    "eslint": "^10.13.0",
+    "eslint-plugin-svelte": "^3.23.1",
+    "globals": "^17.13.0",
     "prettier": "^3.9.10",
     "prettier-plugin-svelte": "^4.1.1",
-    "svelte": "^5.57.2",
-    "svelte-check": "^4.7.7",
     "typescript": "~6.0.3",
-    "vite": "^8.3.4",
-    "vite-plugin-pwa": "^2.0.0",
+    "typescript-eslint": "^8.72.0",
     "vitest": "^5.0.5"
-  },
-  "dependencies": {
-    "hanzi-writer": "^3.7.3",
-    "ts-fsrs": "^5.4.2"
   }
 }

@@ -37,6 +37,8 @@
     missing = false;
     mode = 'idle';
     status = '';
+    // The target is an empty element owned by hanzi-writer, not by Svelte.
+    // eslint-disable-next-line svelte/no-dom-manipulating
     target.replaceChildren();
     const w = HanziWriter.create(target, current, {
       width: SIZE,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { splitSyllables, toZhuyin } from './phonetics';
-import { TOPICS, VOCAB } from './vocab';
+import { splitSyllables, toZhuyin } from '../phonetics.ts';
+import { TOPICS, VOCAB } from './vocab.ts';
 
 describe('vocab', () => {
   it('has unique ids', () => {
