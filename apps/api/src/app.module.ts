@@ -4,7 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AiController } from './ai/ai.controller.js';
-import { ClaudeService } from './ai/claude.service.js';
+import { LlmService } from './ai/llm.service.js';
 import { ExplainService } from './ai/explain.service.js';
 import { QuotaService } from './ai/quota.service.js';
 import { TalkService } from './ai/talk.service.js';
@@ -53,7 +53,7 @@ const env = loadEnv();
     SyncService,
     TokensService,
     FsrsService,
-    ClaudeService,
+    LlmService,
     QuotaService,
     ExplainService,
     TalkService,

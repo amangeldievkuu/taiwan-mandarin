@@ -14,9 +14,10 @@ const Env = z.object({
   CONTENT_DIR: z.string().optional(),
   /** Directory with the dictionary shards. */
   DICT_DIR: z.string().optional(),
-  ANTHROPIC_API_KEY: z.string().optional(),
-  ANTHROPIC_MODEL: z.string().default('claude-opus-5-5'),
+  /** Whisper (pronunciation) and the language model (explain, conversation). */
   OPENAI_API_KEY: z.string().optional(),
+  /** Model for explain and conversation; must support structured outputs and reasoning effort. */
+  OPENAI_MODEL: z.string().default('gpt-5'),
   /** AI requests (explain, chat turns) per user per day. */
   AI_DAILY_LIMIT: z.coerce.number().int().default(200),
   /** Pronunciation checks per user per day. */

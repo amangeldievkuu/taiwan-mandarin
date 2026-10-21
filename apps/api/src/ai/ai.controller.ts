@@ -11,7 +11,7 @@ import {
 import type { z } from 'zod';
 import { AuthGuard, CurrentUser, type AuthUser } from '../auth/auth.guard.js';
 import { ApiZodBody, ZodBody } from '../common/zod.js';
-import { ClaudeService } from './claude.service.js';
+import { LlmService } from './llm.service.js';
 import { ExplainService } from './explain.service.js';
 import { QuotaService } from './quota.service.js';
 import { TalkService } from './talk.service.js';
@@ -22,7 +22,7 @@ import { TalkService } from './talk.service.js';
 @Controller('v1/ai')
 export class AiController {
   constructor(
-    @Inject(ClaudeService) private readonly claude: ClaudeService,
+    @Inject(LlmService) private readonly llm: LlmService,
     @Inject(QuotaService) private readonly quota: QuotaService,
     @Inject(ExplainService) private readonly explainer: ExplainService,
     @Inject(TalkService) private readonly talker: TalkService,
@@ -32,7 +32,7 @@ export class AiController {
   @ApiOperation({ summary: 'Whether AI features are available, and today’s usage' })
   async status(@CurrentUser() user: AuthUser) {
     return {
-      available: this.claude.available,
+      available: this.llm.available,
       used: await this.quota.used(user.id, 'ai'),
       limit: this.quota.limit('ai'),
     };

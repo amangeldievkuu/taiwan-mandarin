@@ -17,7 +17,7 @@ services:
       retries: 10
 
   # The app itself (docker compose --profile app up -d --build). The API refuses to start
-  # without JWT_SECRET in .env; ANTHROPIC_API_KEY and OPENAI_API_KEY are optional.
+  # without JWT_SECRET in .env; OPENAI_API_KEY (AI and pronunciation) is optional.
   api:
     profiles: [app]
     build: { context: ., target: api }
@@ -28,9 +28,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-taiwan}:${POSTGRES_PASSWORD:-taiwan}@db:5432/${POSTGRES_DB:-taiwan_mandarin}
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:8080}
       JWT_SECRET: ${JWT_SECRET:-}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5-5}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5}
 
   web:
     profiles: [app]

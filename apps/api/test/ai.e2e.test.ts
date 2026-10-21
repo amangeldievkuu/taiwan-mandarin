@@ -1,4 +1,4 @@
-// AI routes with Claude replaced by a stub: checks our side (reading enrichment, path links,
+// AI routes with the language model replaced by a stub: checks our side (reading enrichment, path links,
 // vocabulary checks and the rewrite loop, storage, quotas) without calling the API.
 
 import { randomUUID } from 'node:crypto';
@@ -6,7 +6,7 @@ import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { StructuredRequest } from '../src/ai/claude.service.js';
+import type { StructuredRequest } from '../src/ai/llm.service.js';
 
 const calls: StructuredRequest<never>[] = [];
 let replies: unknown[] = [];
@@ -27,9 +27,9 @@ beforeAll(async () => {
   process.env['DATABASE_URL'] = process.env['TEST_DATABASE_URL'] ?? process.env['DATABASE_URL'];
   process.env['NODE_ENV'] = 'test';
   const { AppModule } = await import('../src/app.module.js');
-  const { ClaudeService } = await import('../src/ai/claude.service.js');
+  const { LlmService } = await import('../src/ai/llm.service.js');
   const module = await Test.createTestingModule({ imports: [AppModule] })
-    .overrideProvider(ClaudeService)
+    .overrideProvider(LlmService)
     .useValue(stub)
     .compile();
   app = module.createNestApplication({ logger: false });
@@ -118,7 +118,7 @@ describe('talk', () => {
     expect(res.status).toBe(200);
     expect(calls).toHaveLength(2);
     const rewrite = calls[1]?.messages.at(-1);
-    expect(rewrite?.role).toBe('system');
+    expect(rewrite?.role).toBe('developer');
     const [reply] = res.body.messages;
     expect(reply.content).toBe('你好！你要吃什麼？我們有雞排。');
     expect(reply.newWords.map((w: { text: string }) => w.text)).toContain('雞排');

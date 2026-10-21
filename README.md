@@ -30,8 +30,7 @@ flowchart LR
   FILES --> API[apps/api · NestJS]
   WEB <-- "/api (same origin)<br/>sync, auth, AI, speech" --> API
   API --> PG[(PostgreSQL<br/>cards, review logs,<br/>FSRS weights)]
-  API --> CLAUDE[Claude<br/>explain, talk]
-  API --> WHISPER[Whisper<br/>speech-to-text]
+  API --> OPENAI[OpenAI<br/>explain, talk,<br/>Whisper speech-to-text]
   SHARED[packages/shared<br/>phonetics, segmentation, guard,<br/>stats, pitch & tones, API contract] -.-> PIPE & WEB & API
 ```
 
@@ -86,7 +85,7 @@ CI (`.github/workflows/ci.yml`) runs content build, type checks, lint, all tests
 PostgreSQL service) and the production builds.
 
 **More example sentences.** `npm run examples -w @taiwan-mandarin/content -- --levels L3,L4`
-writes Taiwan-style sentences for words without one, through the Claude Message Batches API. Each
+writes Taiwan-style sentences for words without one, with OpenAI (`OPENAI_API_KEY`). Each
 result is validated (contains the word, passes the guard) and appended to
 `data/generated/examples-ai.jsonl`; then rebuild the content.
 
@@ -115,12 +114,10 @@ between devices.
 
 ### AI features (sign-in required)
 
-These run on the server with Claude (`ANTHROPIC_API_KEY`, model `ANTHROPIC_MODEL`, default
-`claude-opus-5-5`):
+These run on the server with OpenAI (`OPENAI_API_KEY`; model `OPENAI_MODEL`, default `gpt-5`;
+the same key powers Whisper):
 
-- Structured outputs are validated with zod.
-- The system prompt is cached.
-- Server-side refusal fallback is on (`fallbacks: "default"`).
+- Answers use the Responses API with structured outputs, validated against zod schemas.
 - Per-user daily quotas apply (`AI_DAILY_LIMIT`).
 
 **Explain a sentence** (Dictionary › Explain): text or a photo of a sign, menu or message. You
@@ -134,7 +131,7 @@ with the path's or dictionary's Taiwan readings. When the model's reading matche
 - The partner may only use the learner's vocabulary: synced cards, Novice 1, and the levels below
   their path.
 - Each reply is split into words and checked. More than two unknown words, or Mainland wording,
-  triggers one rewrite through a mid-conversation system message.
+  triggers one rewrite through a developer message.
 - Remaining unknown words are returned as "new words" to tap.
 - The learner's messages get a 修正 correction when needed.
 
@@ -193,7 +190,7 @@ How the path is built (`packages/content/src/lexicon.ts`):
   full entry stays in the dictionary.
 
 **Graded readers** live in `data/readers/<id>.json`. There are 24 texts, 3 per level, about Taiwan
-life. They were written with Claude and carry `"draft": true` (shown as "Draft") until a person
+life. They were written with AI and carry `"draft": true` (shown as "Draft") until a person
 has reviewed them. The build:
 
 - splits each text into words with readings;

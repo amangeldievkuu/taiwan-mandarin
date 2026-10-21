@@ -1,5 +1,5 @@
 // "Explain this sentence": a sign, menu or message (text or photo) → translation, a word-by-word
-// breakdown, grammar and usage notes. Claude does the reading and explaining; readings are then
+// breakdown, grammar and usage notes. The model does the reading and explaining; readings are then
 // replaced by the study path's / dictionary's Taiwan readings where we have them, and tokens are
 // linked to the path so the learner can add them with one tap.
 
@@ -7,10 +7,9 @@ import { Inject, Injectable } from '@nestjs/common';
 import { splitSyllables, toZhuyin } from '@taiwan-mandarin/shared';
 import type { ExplainRequest, ExplainResult, ExplainToken } from '@taiwan-mandarin/shared/api';
 import { checkText } from '@taiwan-mandarin/shared/taiwan-standard';
-import type Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { ContentService } from '../content/content.service.js';
-import { ClaudeService } from './claude.service.js';
+import { LlmService, type LlmContent } from './llm.service.js';
 import { PINYIN_FORMAT, TAIWAN_STYLE } from './taiwan-style.js';
 
 const ExplainSchema = z.object({
@@ -47,17 +46,14 @@ const HAN = /\p{Script=Han}/u;
 @Injectable()
 export class ExplainService {
   constructor(
-    @Inject(ClaudeService) private readonly claude: ClaudeService,
+    @Inject(LlmService) private readonly llm: LlmService,
     @Inject(ContentService) private readonly content: ContentService,
   ) {}
 
   async explain(request: ExplainRequest): Promise<ExplainResult> {
-    const content: Anthropic.Beta.BetaContentBlockParam[] = [];
+    const content: LlmContent[] = [];
     if (request.image) {
-      content.push({
-        type: 'image',
-        source: { type: 'base64', media_type: request.image.mediaType, data: request.image.data },
-      });
+      content.push({ type: 'image', mediaType: request.image.mediaType, data: request.image.data });
     }
     content.push({
       type: 'text',
@@ -66,8 +62,9 @@ export class ExplainService {
         : 'Explain the Chinese text in this photo.',
     });
 
-    const answer = await this.claude.structured({
+    const answer = await this.llm.structured({
       schema: ExplainSchema,
+      name: 'explanation',
       system: SYSTEM,
       messages: [{ role: 'user', content }],
       effort: 'medium',

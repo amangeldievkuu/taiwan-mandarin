@@ -13,11 +13,10 @@ import {
   type TalkResponse,
 } from '@taiwan-mandarin/shared/api';
 import { checkText } from '@taiwan-mandarin/shared/taiwan-standard';
-import type Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { ContentService } from '../content/content.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { ClaudeService } from './claude.service.js';
+import { LlmService, type LlmMessage } from './llm.service.js';
 import { TAIWAN_STYLE } from './taiwan-style.js';
 
 const ReplySchema = z.object({
@@ -60,7 +59,7 @@ const MAX_HISTORY = 30;
 export class TalkService {
   constructor(
     @Inject(PrismaService) private readonly db: PrismaService,
-    @Inject(ClaudeService) private readonly claude: ClaudeService,
+    @Inject(LlmService) private readonly llm: LlmService,
     @Inject(ContentService) private readonly content: ContentService,
   ) {}
 
@@ -123,20 +122,21 @@ ${[...vocabulary].join(' ')}`;
     const scenario = (conversation?.scenario as ScenarioId | undefined) ?? request.scenario;
 
     const { words, level } = await this.vocabulary(userId);
-    const history: Anthropic.Beta.BetaMessageParam[] = (conversation?.messages ?? [])
+    const history: LlmMessage[] = (conversation?.messages ?? [])
       .slice(-MAX_HISTORY)
       .map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content }));
     // The API needs a user turn first and last.
     const prompt = request.message || '（請開始對話。）';
-    const messages: Anthropic.Beta.BetaMessageParam[] = [
+    const messages: LlmMessage[] = [
       ...(history[0]?.role === 'assistant' ? [{ role: 'user' as const, content: '（開始）' }] : []),
       ...history,
       { role: 'user', content: prompt },
     ];
     const system = this.system(scenario, words);
 
-    let answer = await this.claude.structured({
+    let answer = await this.llm.structured({
       schema: ReplySchema,
+      name: 'reply',
       system,
       messages,
       effort: 'low',
@@ -144,7 +144,7 @@ ${[...vocabulary].join(' ')}`;
     });
     let check = this.check(answer.reply, words);
     if (check.unknown.length > 2 || check.mainland.length) {
-      // One rewrite, as a mid-conversation system note (keeps the cached prefix intact).
+      // One rewrite, with a developer note after the conversation so far.
       const note = [
         check.unknown.length > 2 &&
           `Your reply used words outside the learner's vocabulary: ${check.unknown.map((u) => u.text).join('、')}. Say it with known words.`,
@@ -152,10 +152,11 @@ ${[...vocabulary].join(' ')}`;
       ]
         .filter(Boolean)
         .join(' ');
-      answer = await this.claude.structured({
+      answer = await this.llm.structured({
         schema: ReplySchema,
+        name: 'reply',
         system,
-        messages: [...messages, { role: 'system', content: `Write your reply again. ${note}` }],
+        messages: [...messages, { role: 'developer', content: `Write your reply again. ${note}` }],
         effort: 'low',
         maxTokens: 4000,
       });

@@ -1,15 +1,15 @@
-// Writes Taiwan-style example sentences for study-path words that have none, with the Claude
-// Message Batches API (asynchronous, half price). Validated results are appended to
-// data/generated/examples-ai.jsonl; rebuild content afterwards (npm run build -w …/content).
+// Writes Taiwan-style example sentences for study-path words that have none, with OpenAI
+// (structured outputs, 50 words per request, a few requests at a time). Validated results are
+// appended to data/generated/examples-ai.jsonl, so an interrupted run just continues next time;
+// rebuild content afterwards (npm run build -w @taiwan-mandarin/content).
 //
-//   ANTHROPIC_API_KEY=… node --conditions=source src/generate-examples.ts --levels L3,L4 --limit 500
-//   … --resume msgbatch_…        (collect a batch that was already submitted)
+//   OPENAI_API_KEY=… npm run examples -w @taiwan-mandarin/content -- --levels L3,L4 --limit 500
 
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
-import Anthropic from '@anthropic-ai/sdk';
-import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
+import OpenAI from 'openai';
+import { zodTextFormat } from 'openai/helpers/zod';
 import { LEVELS, type ContentManifest, type Level, type Word } from '@taiwan-mandarin/shared';
 import { checkText } from '@taiwan-mandarin/shared/taiwan-standard';
 import { z } from 'zod';
@@ -19,12 +19,12 @@ const { values: args } = parseArgs({
   options: {
     levels: { type: 'string', default: 'L3,L4,L5,L6' },
     limit: { type: 'string', default: '1000' },
-    resume: { type: 'string' },
-    model: { type: 'string', default: process.env['ANTHROPIC_MODEL'] ?? 'claude-opus-5-5' },
+    model: { type: 'string', default: process.env['OPENAI_MODEL'] ?? 'gpt-5' },
+    concurrency: { type: 'string', default: '4' },
   },
 });
 
-const BATCH_WORDS = 50;
+const CHUNK = 50;
 const Output = z.object({
   examples: z.array(z.object({ id: z.string(), zh: z.string(), en: z.string() })),
 });
@@ -45,7 +45,7 @@ const done = new Set(
     : [],
 );
 
-function system(level: Level): string {
+function instructions(level: Level): string {
   const info = LEVELS.find((l) => l.id === level);
   return `You write example sentences for learners of Taiwan Mandarin (臺灣華語) at TOCFL ${info?.en} (${info?.cefr}).
 
@@ -57,91 +57,69 @@ function system(level: Level): string {
 Return one example for every id you are given.`;
 }
 
-async function submit(client: Anthropic): Promise<string> {
-  const wanted = (args.levels ?? '').split(',') as Level[];
-  const todo = words
-    .filter((w) => wanted.includes(w.level) && !w.examples?.length && !done.has(w.id))
-    .slice(0, Number(args.limit));
-  if (!todo.length) {
-    console.log('Every word in those levels has an example.');
-    process.exit(0);
-  }
-  const requests: Anthropic.Messages.Batches.BatchCreateParams.Request[] = [];
-  for (const level of wanted) {
-    const group = todo.filter((w) => w.level === level);
-    for (let i = 0; i < group.length; i += BATCH_WORDS) {
-      const chunk = group.slice(i, i + BATCH_WORDS);
-      requests.push({
-        custom_id: `${level}-${i / BATCH_WORDS}`,
-        params: {
-          model: args.model ?? 'claude-opus-5-5',
-          max_tokens: 16_000,
-          system: [{ type: 'text', text: system(level), cache_control: { type: 'ephemeral' } }],
-          messages: [
-            {
-              role: 'user',
-              content: chunk.map((w) => `${w.id} | ${w.hanzi} | ${w.pinyin} | ${w.en}`).join('\n'),
-            },
-          ],
-          output_config: { effort: 'medium', format: zodOutputFormat(Output) },
-        },
-      });
+const wanted = (args.levels ?? '').split(',') as Level[];
+const todo = words
+  .filter((w) => wanted.includes(w.level) && !w.examples?.length && !done.has(w.id))
+  .slice(0, Number(args.limit));
+if (!todo.length) {
+  console.log('Every word in those levels has an example.');
+  process.exit(0);
+}
+const chunks: { level: Level; words: Word[] }[] = [];
+for (const level of wanted) {
+  const group = todo.filter((w) => w.level === level);
+  for (let i = 0; i < group.length; i += CHUNK)
+    chunks.push({ level, words: group.slice(i, i + CHUNK) });
+}
+console.log(`${todo.length} words in ${chunks.length} requests (${args.model})`);
+
+const client = new OpenAI();
+let kept = 0;
+let rejected = 0;
+
+async function run(chunk: (typeof chunks)[number]): Promise<void> {
+  const response = await client.responses.parse({
+    model: args.model ?? 'gpt-5',
+    instructions: instructions(chunk.level),
+    input: chunk.words.map((w) => `${w.id} | ${w.hanzi} | ${w.pinyin} | ${w.en}`).join('\n'),
+    reasoning: { effort: 'medium' },
+    text: { format: zodTextFormat(Output, 'examples') },
+  });
+  for (const example of response.output_parsed?.examples ?? []) {
+    const word = byId.get(example.id);
+    const han = [...example.zh].filter((c) => /\p{Script=Han}/u.test(c)).length;
+    const ok =
+      word &&
+      !done.has(word.id) &&
+      example.zh.includes(word.hanzi) &&
+      han >= 5 &&
+      han <= 30 &&
+      checkText({ text: example.zh, where: `ai-example:${word.id}` }).length === 0;
+    if (!ok) {
+      rejected++;
+      continue;
     }
+    appendFileSync(
+      DATA.aiExamples,
+      JSON.stringify({ id: example.id, zh: example.zh, en: example.en }) + '\n',
+    );
+    done.add(example.id);
+    kept++;
   }
-  const batch = await client.messages.batches.create({ requests });
-  console.log(`Submitted ${batch.id}: ${todo.length} words in ${requests.length} requests.`);
-  console.log(`Resume later with: --resume ${batch.id}`);
-  return batch.id;
+  console.log(`  ${chunk.level}: ${kept} kept, ${rejected} rejected so far`);
 }
 
-async function collect(client: Anthropic, id: string): Promise<void> {
-  for (;;) {
-    const batch = await client.messages.batches.retrieve(id);
-    if (batch.processing_status === 'ended') break;
-    console.log(`… ${batch.request_counts.processing} requests still processing`);
-    await new Promise((resolve) => setTimeout(resolve, 60_000));
-  }
-  let kept = 0;
-  let rejected = 0;
-  for await (const result of await client.messages.batches.results(id)) {
-    if (result.result.type !== 'succeeded') {
-      console.warn(`${result.custom_id}: ${result.result.type}`);
-      continue;
-    }
-    const text = result.result.message.content
-      .flatMap((b) => (b.type === 'text' ? [b.text] : []))
-      .join('');
-    const parsed = Output.safeParse(JSON.parse(text || '{}'));
-    if (!parsed.success) {
-      console.warn(`${result.custom_id}: unexpected output`);
-      continue;
-    }
-    for (const example of parsed.data.examples) {
-      const word = byId.get(example.id);
-      const han = [...example.zh].filter((c) => /\p{Script=Han}/u.test(c)).length;
-      const ok =
-        word &&
-        !done.has(word.id) &&
-        example.zh.includes(word.hanzi) &&
-        han >= 5 &&
-        han <= 30 &&
-        checkText({ text: example.zh, where: `ai-example:${word.id}` }).length === 0;
-      if (!ok) {
-        rejected++;
-        continue;
-      }
-      appendFileSync(
-        DATA.aiExamples,
-        JSON.stringify({ id: example.id, zh: example.zh, en: example.en }) + '\n',
+// A small worker pool.
+const queue = [...chunks];
+await Promise.all(
+  Array.from({ length: Number(args.concurrency) }, async () => {
+    for (let chunk = queue.shift(); chunk; chunk = queue.shift()) {
+      await run(chunk).catch((e: unknown) =>
+        console.warn(`  ${chunk?.level}: ${e instanceof Error ? e.message : e}`),
       );
-      done.add(example.id);
-      kept++;
     }
-  }
-  console.log(
-    `Kept ${kept} examples, rejected ${rejected}. Now rebuild: npm run build -w @taiwan-mandarin/content`,
-  );
-}
-
-const client = new Anthropic();
-await collect(client, args.resume ?? (await submit(client)));
+  }),
+);
+console.log(
+  `Kept ${kept} examples, rejected ${rejected}. Now rebuild: npm run build -w @taiwan-mandarin/content`,
+);
