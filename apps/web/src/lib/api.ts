@@ -8,6 +8,8 @@ const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api';
 const TIMEOUT_MS = 100_000;
 /** A streamed answer that sends nothing for this long has stalled. */
 const STREAM_IDLE_MS = 60_000;
+/** A session check that takes longer than this is treated as offline. */
+const REFRESH_TIMEOUT_MS = 8_000;
 
 export class ApiError extends Error {
   constructor(
@@ -32,16 +34,35 @@ export function onSessionLost(callback: () => void): void {
   onSignedOut = callback;
 }
 
-/** Tries the refresh cookie. Resolves null when not signed in. */
+/**
+ * Tries the refresh cookie. Resolves null when the server says there is no session, and rejects
+ * (an ApiError with status 0) when it can't be asked, so being offline isn't taken for signing out.
+ */
 export function refreshSession(): Promise<AuthResponse | null> {
-  refreshing ??= fetch(`${BASE}/v1/auth/refresh`, { method: 'POST', credentials: 'include' })
-    .then(async (r) => (r.ok ? ((await r.json()) as AuthResponse) : null))
-    .catch(() => null)
-    .then((session) => {
-      accessToken = session?.accessToken ?? null;
-      return session;
-    })
-    .finally(() => (refreshing = null));
+  refreshing ??= (async () => {
+    const timeout = new AbortController();
+    const timer = setTimeout(() => timeout.abort(), REFRESH_TIMEOUT_MS);
+    let response: Response;
+    try {
+      response = await fetch(`${BASE}/v1/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        signal: timeout.signal,
+      });
+    } catch {
+      throw new ApiError(0, "Can't reach the server.");
+    } finally {
+      clearTimeout(timer);
+    }
+    if (response.status === 401) {
+      accessToken = null;
+      return null;
+    }
+    if (!response.ok) throw new ApiError(response.status, "Can't reach the server.");
+    const session = (await response.json()) as AuthResponse;
+    accessToken = session.accessToken;
+    return session;
+  })().finally(() => (refreshing = null));
   return refreshing;
 }
 

@@ -29,9 +29,14 @@
   );
 
   let loading = $state(true);
+  let failed = $state(false);
   $effect(() => {
+    const id = level;
     loading = true;
-    void content.ensureLevels([level]).finally(() => (loading = false));
+    void content.ensureLevels([id]).then(() => {
+      loading = false;
+      failed = !content.isLoaded(id);
+    });
   });
 
   type Status = 'all' | 'new' | 'studying' | 'deck';
@@ -180,6 +185,8 @@
       </div>
       {#if loading && words.length === 0}
         <Loading />
+      {:else if failed && words.length === 0}
+        <p class="empty" role="alert">Couldn't load this. Check your connection and try again.</p>
       {:else if filtered.length === 0}
         <p class="empty"><span class="hanzi" lang="zh-Hant-TW">無</span>No words match.</p>
       {:else}

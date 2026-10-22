@@ -19,27 +19,39 @@
   const isHan = $derived(/\p{Script=Han}/u.test(query));
   const long = $derived(isHan && [...query.trim()].length > 4);
 
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  let failed = $state(false);
   $effect(() => {
     const q = query.trim();
-    clearTimeout(timer);
     if (!q) {
       results = [];
       exact = [];
+      searching = false;
       return;
     }
     searching = true;
-    timer = setTimeout(async () => {
-      const [rows, entries] = await Promise.all([
-        content.search(q),
-        /\p{Script=Han}/u.test(q) && [...q].length <= 8 ? content.lookup(q) : Promise.resolve([]),
-      ]);
-      if (q !== query.trim()) return;
-      results = rows;
-      exact = entries.filter((e) => !e.w);
-      searching = false;
-      router.go(`/dict?q=${encodeURIComponent(q)}`, { replace: true });
+    // Cancelled when the query changes or the page closes, so a late answer can't navigate back.
+    let live = true;
+    const timer = setTimeout(async () => {
+      try {
+        const [rows, entries] = await Promise.all([
+          content.search(q),
+          /\p{Script=Han}/u.test(q) && [...q].length <= 8 ? content.lookup(q) : Promise.resolve([]),
+        ]);
+        if (!live) return;
+        results = rows;
+        exact = entries.filter((e) => !e.w);
+        failed = false;
+        router.go(`/dict?q=${encodeURIComponent(q)}`, { replace: true });
+      } catch {
+        if (live) failed = true;
+      } finally {
+        if (live) searching = false;
+      }
     }, 160);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
   });
 
   $effect(() => {
@@ -100,6 +112,10 @@
       </div>
     {:else if long}
       <!-- A pasted sentence: tap through it above. -->
+    {:else if !searching && failed}
+      <p class="empty" role="alert">
+        Couldn't load the dictionary. Check your connection and try again.
+      </p>
     {:else if !searching && results.length === 0 && exact.length === 0}
       <p class="empty"><span class="hanzi" lang="zh-Hant-TW">無</span>Nothing found.</p>
     {:else}

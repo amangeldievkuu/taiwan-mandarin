@@ -34,7 +34,7 @@
   import { api } from '../lib/api';
   import { content } from '../lib/content.svelte';
   import { lookup } from '../lib/lookup.svelte';
-  import { canSpeak, speak } from '../lib/speech';
+  import { canSpeak, speak, stopSpeaking } from '../lib/speech';
   import { store } from '../lib/store.svelte';
   import { account } from '../lib/sync.svelte';
 
@@ -212,7 +212,11 @@
     }
   }
 
+  // Leaving the page stops the partner mid-sentence too.
+  $effect(() => () => stopSpeaking());
+
   function leave() {
+    stopSpeaking();
     session++;
     open = false;
     sending = false;

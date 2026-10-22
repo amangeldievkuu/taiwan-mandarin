@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { sha256 } from '../src/auth/crypto.js';
 
 let app: INestApplication;
 let http: ReturnType<INestApplication['getHttpServer']>;
@@ -62,6 +63,24 @@ async function signUp() {
   return { email, token: res.body.accessToken as string, cookie: cookie?.split(';')[0] ?? '' };
 }
 
+const refreshCookie = (res: request.Response) =>
+  ([] as string[])
+    .concat(res.headers['set-cookie'] ?? [])
+    .find((c) => c.startsWith('tm_refresh='))
+    ?.split(';')[0] ?? '';
+
+/** A new session (refresh-token family) for an existing account; sign-ups are rate-limited. */
+async function signIn(email: string) {
+  const res = await request(http)
+    .post('/v1/auth/login')
+    .send({ email, password: 'correct horse battery' });
+  expect(res.status).toBe(200);
+  return { token: res.body.accessToken as string, cookie: refreshCookie(res) };
+}
+
+/** An account made by the first auth test, for tests that need another session. */
+let account = '';
+
 describe('auth', () => {
   it('registers, rejects duplicates and wrong passwords', async () => {
     const { email, cookie } = await signUp();
@@ -92,13 +111,39 @@ describe('auth', () => {
   });
 
   it('rotates refresh tokens and revokes the chain on reuse', async () => {
-    const { cookie } = await signUp();
+    const { email, cookie } = await signUp();
+    account = email;
     const first = await request(http).post('/v1/auth/refresh').set('cookie', cookie);
     expect(first.status).toBe(200);
-    const next = ([] as string[]).concat(first.headers['set-cookie'] ?? [])[0]?.split(';')[0] ?? '';
+    const next = refreshCookie(first);
+    // Replayed later than two tabs refreshing together would: the old token was stolen.
+    const { PrismaService } = await import('../src/prisma/prisma.service.js');
+    await app.get(PrismaService).refreshToken.updateMany({
+      where: { tokenHash: sha256(cookie.slice(cookie.indexOf('=') + 1)) },
+      data: { revokedAt: new Date(Date.now() - 60_000) },
+    });
     // The old token again: reuse → the whole chain is revoked, including `next`.
     expect((await request(http).post('/v1/auth/refresh').set('cookie', cookie)).status).toBe(401);
     expect((await request(http).post('/v1/auth/refresh').set('cookie', next)).status).toBe(401);
+  });
+
+  it('keeps the session when two tabs refresh with the same cookie at once', async () => {
+    const { cookie } = await signIn(account);
+    const both = await Promise.all(
+      [1, 2].map(() => request(http).post('/v1/auth/refresh').set('cookie', cookie)),
+    );
+    expect(both.map((r) => r.status)).toEqual([200, 200]);
+    for (const res of both)
+      expect(
+        (await request(http).post('/v1/auth/refresh').set('cookie', refreshCookie(res))).status,
+      ).toBe(200);
+  });
+
+  it('does not bring a logged-out session back', async () => {
+    const { cookie } = await signIn(account);
+    const first = await request(http).post('/v1/auth/refresh').set('cookie', cookie);
+    await request(http).post('/v1/auth/logout').set('cookie', refreshCookie(first)).expect(204);
+    expect((await request(http).post('/v1/auth/refresh').set('cookie', cookie)).status).toBe(401);
   });
 
   it('protects personal routes', async () => {
@@ -138,7 +183,14 @@ describe('sync', () => {
     expect(second.body.cards[0].card.stability).toBe(5);
     expect(second.body.cards[0].updatedAt).toBe(2000);
 
-    // Nothing changed since the cursor → nothing returned.
+    // Nothing changed since the cursor (and its margin) → nothing returned.
+    const { PrismaService } = await import('../src/prisma/prisma.service.js');
+    const db = app.get(PrismaService);
+    const me = await request(http).get('/v1/auth/me').set(auth);
+    await db.card.updateMany({
+      where: { userId: me.body.id },
+      data: { serverUpdatedAt: new Date(Date.now() - 10 * 60_000) },
+    });
     const third = await request(http)
       .post('/v1/sync')
       .set(auth)
@@ -148,6 +200,43 @@ describe('sync', () => {
     const stats = await request(http).get('/v1/me/stats').set(auth);
     expect(stats.body.reviews.total).toBe(1);
     expect(stats.body.cards.learned).toBe(1);
+
+    // An older copy sent after that: the server's newer copy comes back to correct it.
+    const stale = await request(http)
+      .post('/v1/sync')
+      .set(auth)
+      .send({
+        since: third.body.cursor,
+        cards: [{ wordId: '你好', updatedAt: 1500, card: card('2026-10-25T00:00:00.000Z', 1) }],
+        reviews: [],
+      });
+    expect(stale.body.cards).toHaveLength(1);
+    expect(stale.body.cards[0].updatedAt).toBe(2000);
+
+    // A clock far ahead is clamped to about server time, so it can't win every later merge.
+    const ahead = await request(http)
+      .post('/v1/sync')
+      .set(auth)
+      .send({
+        since: 0,
+        cards: [
+          {
+            wordId: '謝謝',
+            updatedAt: Date.now() + 365 * 86_400_000,
+            card: card('2026-11-01T00:00:00.000Z'),
+          },
+        ],
+        reviews: [],
+      });
+    const saved = ahead.body.cards.find((c: { wordId: string }) => c.wordId === '謝謝');
+    expect(saved.updatedAt).toBeLessThanOrEqual(Date.now() + 5 * 60_000);
+
+    // Numbers the database can't store are a 400, not a 500.
+    const huge = await request(http)
+      .post('/v1/sync')
+      .set(auth)
+      .send({ since: 0, cards: [], reviews: [{ ...review('你好'), durationMs: 2 ** 31 }] });
+    expect(huge.status).toBe(400);
   });
 
   it('keeps the newer settings and deck', async () => {
@@ -253,6 +342,29 @@ describe('activity', () => {
   });
 });
 
+describe('reset progress', () => {
+  it('deletes cards and reviews, and the next sync brings nothing back', async () => {
+    const { token } = await signIn(account);
+    const auth = { authorization: `Bearer ${token}` };
+    const pushed = await request(http)
+      .post('/v1/sync')
+      .set(auth)
+      .send({
+        since: 0,
+        cards: [{ wordId: 'w1', updatedAt: Date.now(), card: card(new Date().toISOString()) }],
+        reviews: [review('w1')],
+      });
+    expect(pushed.status).toBe(200);
+    await request(http).delete('/v1/me/progress').set(auth).expect(204);
+    const after = await request(http)
+      .post('/v1/sync')
+      .set(auth)
+      .send({ since: 0, cards: [], reviews: [] });
+    expect(after.body.cards).toEqual([]);
+    expect((await request(http).get('/v1/me/reviews').set(auth)).body).toEqual([]);
+  });
+});
+
 describe('personal access tokens', () => {
   it('reads data but cannot manage tokens', async () => {
     const { token } = await signUp();
@@ -265,6 +377,20 @@ describe('personal access tokens', () => {
     const pat = { authorization: `Bearer ${created.body.token}` };
     expect((await request(http).get('/v1/me/stats').set(pat)).status).toBe(200);
     expect((await request(http).get('/v1/me/tokens').set(pat)).status).toBe(403);
+    // Tokens only reach the read routes and adding to the deck.
+    for (const res of [
+      await request(http).post('/v1/sync').set(pat).send({ since: 0, cards: [], reviews: [] }),
+      await request(http).post('/v1/ai/explain').set(pat).send({ text: '你好' }),
+      await request(http).post('/v1/speech/check').set(pat).send({}),
+      await request(http).post('/v1/me/fsrs/optimize').set(pat).send({}),
+      await request(http).get('/v1/auth/me').set(pat),
+      await request(http).delete('/v1/auth/me').set(pat),
+    ])
+      expect(res.status).toBe(403);
+    expect((await request(http).get('/v1/me/cards').set(pat)).status).toBe(200);
+    expect(
+      (await request(http).get('/v1/auth/me').set('authorization', `Bearer ${token}`)).status,
+    ).toBe(200);
     await request(http)
       .delete(`/v1/me/tokens/${created.body.id}`)
       .set('authorization', `Bearer ${token}`)

@@ -36,6 +36,24 @@ const toDto = (wordId: string, r: CardRecord): CardRecordDto => ({
   },
 });
 
+// The signed-in user, so an offline start stays signed in; the session itself is the cookie.
+const USER_KEY = 'tm-user';
+function remembered(): UserDto | null {
+  try {
+    return JSON.parse(localStorage.getItem(USER_KEY) ?? 'null') as UserDto | null;
+  } catch {
+    return null;
+  }
+}
+function remember(user: UserDto | null): void {
+  try {
+    if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+    else localStorage.removeItem(USER_KEY);
+  } catch {
+    // Private mode or storage blocked: an offline start then shows the sign-in form.
+  }
+}
+
 const fromDto = (dto: CardRecordDto): [string, CardRecord] => [
   dto.wordId,
   {
@@ -57,9 +75,14 @@ class Account {
   private timer: ReturnType<typeof setTimeout> | undefined;
 
   async init(): Promise<void> {
-    onSessionLost(() => (this.user = null));
-    const session = await refreshSession();
-    this.user = session?.user ?? null;
+    onSessionLost(() => this.setUser(null));
+    try {
+      this.setUser((await refreshSession())?.user ?? null);
+    } catch {
+      // Offline, or the server is down: still signed in as last time. The next sync refreshes
+      // the session, and signs out only if the server says it is gone.
+      this.user = remembered();
+    }
     this.checked = true;
     store.onLocalChange = () => this.scheduleSync();
     document.addEventListener('visibilitychange', () => {
@@ -82,15 +105,19 @@ class Account {
   }
 
   async logout(): Promise<void> {
+    // Send what this device has first: the next account signed in here starts from its own data.
+    await this.sync();
     await api('/v1/auth/logout', { method: 'POST', auth: false }).catch(() => undefined);
     setSession(null);
-    this.user = null;
+    this.setUser(null);
   }
 
   async deleteAccount(): Promise<void> {
     await api('/v1/auth/me', { method: 'DELETE' });
     setSession(null);
-    this.user = null;
+    this.setUser(null);
+    // The local copy is kept, and belongs to no account: the next sign-in merges it in.
+    store.forgetAccount();
   }
 
   /** Debounced sync a few seconds after local changes. */
@@ -106,7 +133,7 @@ class Account {
     this.syncing = true;
     this.error = null;
     try {
-      store.useAccount(this.user.id);
+      await store.useAccount(this.user.id);
       const local = await store.pendingChanges();
       const request: SyncRequest = {
         since: store.syncState.cursor,
@@ -141,7 +168,12 @@ class Account {
 
   private signedIn(session: AuthResponse): void {
     setSession(session.accessToken);
-    this.user = session.user;
+    this.setUser(session.user);
+  }
+
+  private setUser(user: UserDto | null): void {
+    this.user = user;
+    remember(user);
   }
 }
 

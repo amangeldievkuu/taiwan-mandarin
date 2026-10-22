@@ -66,16 +66,21 @@ export interface AuthResponse {
 
 // ---- Sync ----
 
+/** Counts stored in 32-bit database columns. */
+const Int32 = z.number().int().min(-2_147_483_648).max(2_147_483_647);
+/** Epoch ms that make a valid Date. */
+const EpochMs = z.number().int().min(0).max(8.64e15);
+
 /** An FSRS card as JSON (ts-fsrs `Card` with ISO dates). */
 export const CardSchema = z.object({
   due: z.iso.datetime(),
   stability: z.number(),
   difficulty: z.number(),
-  elapsed_days: z.number().int(),
-  scheduled_days: z.number().int(),
-  learning_steps: z.number().int().default(0),
-  reps: z.number().int(),
-  lapses: z.number().int(),
+  elapsed_days: Int32,
+  scheduled_days: Int32,
+  learning_steps: Int32.default(0),
+  reps: Int32,
+  lapses: Int32,
   state: z.number().int().min(0).max(3),
   last_review: z.iso.datetime().nullish(),
 });
@@ -96,13 +101,13 @@ export const ReviewSchema = z.object({
   wordId: z.string().min(1).max(64),
   rating: z.number().int().min(1).max(4),
   state: z.number().int().min(0).max(3),
-  review: z.number().int(),
-  due: z.number().int(),
+  review: EpochMs,
+  due: EpochMs,
   stability: z.number(),
   difficulty: z.number(),
-  elapsedDays: z.number().int(),
-  scheduledDays: z.number().int(),
-  durationMs: z.number().int().min(0),
+  elapsedDays: Int32,
+  scheduledDays: Int32,
+  durationMs: Int32.min(0),
 });
 export type ReviewDto = z.infer<typeof ReviewSchema>;
 

@@ -4,7 +4,6 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   HttpCode,
   Inject,
@@ -38,7 +37,7 @@ import {
   type TokenDto,
 } from '@taiwan-mandarin/shared/api';
 import { z } from 'zod';
-import { AuthGuard, CurrentUser, type AuthUser } from '../auth/auth.guard.js';
+import { AuthGuard, CurrentUser, TokenAllowed, type AuthUser } from '../auth/auth.guard.js';
 import { ApiZodBody, ZodBody, ZodPipe } from '../common/zod.js';
 import { ContentService } from '../content/content.service.js';
 import { FsrsService } from '../fsrs/fsrs.service.js';
@@ -65,6 +64,7 @@ export class MeController {
   ) {}
 
   @Get('stats')
+  @TokenAllowed()
   @ApiOperation({ summary: 'Streak, XP, words learned, retention and the last 30 days' })
   @ApiQuery({
     name: 'tz',
@@ -109,6 +109,7 @@ export class MeController {
   }
 
   @Get('cards')
+  @TokenAllowed()
   @ApiOperation({ summary: 'FSRS cards, optionally only due ones or one level' })
   @ApiQuery({ name: 'due', required: false, type: Boolean })
   @ApiQuery({ name: 'level', required: false, enum: LEVEL_IDS })
@@ -132,6 +133,7 @@ export class MeController {
   }
 
   @Get('reviews')
+  @TokenAllowed()
   @ApiOperation({ summary: 'Review log, newest first' })
   @ApiQuery({ name: 'since', required: false, description: 'Epoch ms' })
   @ApiQuery({ name: 'limit', required: false })
@@ -156,6 +158,7 @@ export class MeController {
   }
 
   @Post('deck/:wordId')
+  @TokenAllowed()
   @HttpCode(204)
   @ApiOperation({
     summary: 'Add a word to the learner’s deck (studied before the path’s new words)',
@@ -179,10 +182,31 @@ export class MeController {
     });
   }
 
+  @Delete('progress')
+  @HttpCode(204)
+  @ApiOperation({
+    summary: 'Start over: delete every card, review, the deck and the personal FSRS weights',
+  })
+  async resetProgress(@CurrentUser() user: AuthUser): Promise<void> {
+    await this.db.$transaction([
+      this.db.card.deleteMany({ where: { userId: user.id } }),
+      this.db.reviewLog.deleteMany({ where: { userId: user.id } }),
+      this.db.user.update({
+        where: { id: user.id },
+        data: {
+          deck: [],
+          deckUpdatedAt: BigInt(Date.now()),
+          fsrsWeights: [],
+          fsrsTrainedAt: null,
+          fsrsReviewCount: 0,
+        },
+      }),
+    ]);
+  }
+
   @Get('tokens')
   @ApiOperation({ summary: 'Personal access tokens' })
   listTokens(@CurrentUser() user: AuthUser): Promise<TokenDto[]> {
-    this.sessionOnly(user);
     return this.tokens.list(user.id);
   }
 
@@ -193,7 +217,6 @@ export class MeController {
     @CurrentUser() user: AuthUser,
     @ZodBody(TokenCreateSchema) body: z.infer<typeof TokenCreateSchema>,
   ): Promise<TokenCreatedDto> {
-    this.sessionOnly(user);
     return this.tokens.create(user.id, body.name);
   }
 
@@ -201,7 +224,6 @@ export class MeController {
   @HttpCode(204)
   @ApiOperation({ summary: 'Revoke a personal access token' })
   revokeToken(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<void> {
-    this.sessionOnly(user);
     return this.tokens.revoke(user.id, id);
   }
 
@@ -213,10 +235,5 @@ export class MeController {
     @Body(new ZodPipe(OptimizeSchema)) body: z.infer<typeof OptimizeSchema>,
   ) {
     return this.fsrs.optimize(user.id, body.utcOffsetMinutes);
-  }
-
-  /** Tokens can't mint or list other tokens. */
-  private sessionOnly(user: AuthUser): void {
-    if (user.via !== 'session') throw new ForbiddenException('Sign in to manage tokens');
   }
 }

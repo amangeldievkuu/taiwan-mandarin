@@ -45,6 +45,15 @@ describe('trackPitch', () => {
     const frames = trackPitch(join([voice(0.2, () => 180), silence(0.2)]));
     expect(frames.at(-1)?.f0).toBeNull();
   });
+
+  it('finishes at sample rates too low for a 10 ms hop', () => {
+    expect(
+      trackPitch(
+        voice(0.001, () => 180),
+        { sampleRate: 40 },
+      ),
+    ).toBeInstanceOf(Array);
+  });
 });
 
 describe('judgeTone', () => {

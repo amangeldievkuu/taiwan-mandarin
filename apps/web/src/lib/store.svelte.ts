@@ -39,6 +39,7 @@ import {
   type ActivityState,
 } from './activity';
 import { content } from './content.svelte';
+import { toasts } from './toast.svelte';
 import {
   BrowserStorage,
   migrate,
@@ -319,7 +320,16 @@ class Store {
       durationMs: this.shownAt ? Math.min(now - this.shownAt, 10 * 60_000) : 0,
       pending: true,
     };
-    void this.storage.addReview(review).then(() => this.reviewRevision++);
+    void this.storage
+      .addReview(review)
+      .then(() => this.reviewRevision++)
+      .catch(() =>
+        toasts.show({
+          kind: 'info',
+          title: "Couldn't save that answer",
+          body: 'The browser refused to store it. Check free space on this device.',
+        }),
+      );
     this.activity = countReview(this.activity, review);
 
     this.daily.reviewCount++;
@@ -349,12 +359,25 @@ class Store {
     }
   }
 
+  /** Deletes all progress on this device (the account's copy is deleted first by the caller). */
   async resetProgress(): Promise<void> {
+    await this.clearProgress({
+      cursor: 0,
+      pushedAt: 0,
+      settingsUpdatedAt: 0,
+      deckUpdatedAt: 0,
+      ...(this.syncState.userId ? { userId: this.syncState.userId } : {}),
+    });
+  }
+
+  /** Forgets cards, deck, review log and activity on this device; settings stay. */
+  private async clearProgress(sync: SyncState): Promise<void> {
     this.cards = {};
     this.deck = [];
-    this.syncState = { cursor: 0, pushedAt: 0, settingsUpdatedAt: 0, deckUpdatedAt: 0 };
+    this.syncState = sync;
     this.daily = freshDaily();
     this.activity = emptyActivity();
+    this.configureFsrs();
     await this.storage.clear();
     await this.startSession();
     await this.flush();
@@ -383,13 +406,34 @@ class Store {
     return { cards, reviews, startedAt };
   }
 
-  /** Signed in to another account than at the last sync: download everything for this one. */
-  useAccount(userId: string): void {
+  /**
+   * Signed in to another account than at the last sync. This device's progress is the other
+   * account's (it was sent before signing out), so start over from this account's.
+   */
+  async useAccount(userId: string): Promise<void> {
     if (this.syncState.userId === userId) return;
-    // Before accounts were remembered the cursor belonged to this account already.
-    const switched = this.syncState.userId !== undefined;
-    this.syncState = { ...this.syncState, userId, ...(switched ? { cursor: 0 } : {}) };
-    this.activity = { ...this.activity, remote: {}, cursor: 0, remoteComplete: false };
+    // Before accounts were remembered, or after deleting one, local progress belongs to whoever
+    // signs in next: the first sync merges it into their account.
+    if (this.syncState.userId === undefined) {
+      this.syncState = { ...this.syncState, userId };
+      this.activity = { ...this.activity, remote: {}, cursor: 0, remoteComplete: false };
+      return;
+    }
+    await this.clearProgress({
+      cursor: 0,
+      pushedAt: 0,
+      settingsUpdatedAt: 0,
+      deckUpdatedAt: 0,
+      userId,
+    });
+  }
+
+  /** The account was deleted: keep the local copy, tied to no account. */
+  forgetAccount(): void {
+    const { settingsUpdatedAt, deckUpdatedAt } = this.syncState;
+    this.syncState = { cursor: 0, pushedAt: 0, settingsUpdatedAt, deckUpdatedAt };
+    this.configureFsrs();
+    this.persist();
   }
 
   /** What the next sync asks about activity: every day until we have them all, then changes. */

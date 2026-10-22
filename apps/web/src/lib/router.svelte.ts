@@ -44,7 +44,14 @@ const DEPTH: Record<RouteName, number> = {
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 function parse(url: URL): Route {
-  const path = decodeURIComponent(url.pathname.slice(base.length) || '/');
+  const raw = url.pathname.slice(base.length) || '/';
+  let path: string;
+  try {
+    path = decodeURIComponent(raw);
+  } catch {
+    // A broken escape (/word/%E4) is not a page we have.
+    return { name: 'today', params: {}, query: url.searchParams };
+  }
   for (const [name, pattern] of PATTERNS) {
     const match = pattern.exec(path);
     if (match) return { name, params: { ...match.groups }, query: url.searchParams };

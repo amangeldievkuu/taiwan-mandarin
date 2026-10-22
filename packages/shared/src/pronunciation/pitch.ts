@@ -25,7 +25,8 @@ export interface PitchOptions {
 export function trackPitch(samples: Float32Array, options: PitchOptions = {}): PitchFrame[] {
   const sampleRate = options.sampleRate ?? 16000;
   const window = options.window ?? Math.round(sampleRate * 0.04);
-  const hop = options.hop ?? Math.round(sampleRate * 0.01);
+  // At least one sample, or the frame loop below would never advance.
+  const hop = Math.max(1, options.hop ?? Math.round(sampleRate * 0.01));
   const minLag = Math.floor(sampleRate / (options.maxHz ?? 500));
   const maxLag = Math.ceil(sampleRate / (options.minHz ?? 70));
   const threshold = options.threshold ?? 0.15;

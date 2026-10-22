@@ -16,6 +16,8 @@ RUN npm run build:shared \
  && npm run content \
  && npm run build -w @taiwan-mandarin/api \
  && npm run build -w @taiwan-mandarin/web
+# The API image needs only runtime packages (the prisma CLI, for migrations, is one).
+RUN npm prune --omit=dev
 
 # API: Node, migrations on start. Serves words and the dictionary from the built content.
 FROM node:22.22-bookworm-slim AS api
@@ -31,10 +33,14 @@ COPY --from=build /app/apps/web/public/dict ./apps/web/public/dict
 WORKDIR /app/apps/api
 EXPOSE 3000
 USER node
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
+HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=3 \
+  CMD ["node", "-e", "fetch('http://127.0.0.1:3000/health').then(r => r.json()).then(b => process.exit(b.ok ? 0 : 1), () => process.exit(1))"]
+# exec: node replaces the shell, so it gets SIGTERM from docker stop and shuts down cleanly.
+CMD ["sh", "-c", "npx prisma migrate deploy && exec node dist/main.js"]
 
 # Web: the PWA behind nginx, with /api proxied to the API (same origin, first-party cookie).
 FROM nginx:1.27-alpine AS web
 COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+COPY deploy/security-headers.conf /etc/nginx/security-headers.conf
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html
 EXPOSE 80

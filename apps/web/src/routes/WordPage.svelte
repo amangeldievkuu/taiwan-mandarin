@@ -14,16 +14,30 @@
   let { id }: Props = $props();
   let word = $state<Word | undefined>();
   let missing = $state(false);
+  let failed = $state(false);
 
   $effect(() => {
     const level = store.cards[id]?.level ?? store.deck.find((d) => d.id === id)?.level;
     const found = level
       ? content.ensureLevels([level]).then(() => content.word(id))
       : content.findWord(id);
-    void found.then((w) => {
-      word = w;
-      missing = !w;
-    });
+    // A slower answer for a word we've since left must not replace the current one.
+    let live = true;
+    found.then(
+      (w) => {
+        if (!live) return;
+        word = w;
+        // Its level file didn't load (offline): that's not the same as no such word.
+        missing = !w && (!level || content.isLoaded(level));
+        failed = !w && !missing;
+      },
+      () => {
+        if (live) failed = true;
+      },
+    );
+    return () => {
+      live = false;
+    };
   });
 </script>
 
@@ -41,6 +55,8 @@
     <p class="empty">
       <span class="hanzi" lang="zh-Hant-TW">無</span>This word isn't in the study path.
     </p>
+  {:else if failed}
+    <p class="empty" role="alert">Couldn't load this. Check your connection and try again.</p>
   {:else}
     <Loading />
   {/if}

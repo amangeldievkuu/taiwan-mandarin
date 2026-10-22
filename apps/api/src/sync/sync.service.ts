@@ -2,8 +2,9 @@
 //   cards     last-write-wins on the client's updatedAt (per word);
 //   reviews   append-only, keyed by the client's UUID (retries are harmless);
 //   deck, settings   whole-value last-write-wins.
-// It answers with every card the server has that changed since the client's cursor, and, when asked,
-// practice totals per day in the client's time zone (so every device shows the same streak).
+// It answers with every card the server has that changed since the client's cursor, plus its copy
+// of any card the client sent an older version of, and, when asked, practice totals per day in the
+// client's time zone (so every device shows the same streak).
 
 import { Inject, Injectable } from '@nestjs/common';
 import type { CardRecordDto, SyncRequest, SyncResponse } from '@taiwan-mandarin/shared/api';
@@ -54,6 +55,14 @@ function toRow(userId: string, r: CardRecordDto) {
   };
 }
 
+/** Client clocks may run this far ahead of the server's; later timestamps are clamped. */
+const MAX_CLOCK_AHEAD_MS = 5 * 60_000;
+/**
+ * Re-sent margin before the cursor: a card is stamped when its write is built, so one committed
+ * just after another device's cursor can carry an earlier time. Merging is idempotent.
+ */
+const CURSOR_OVERLAP_MS = 60_000;
+
 @Injectable()
 export class SyncService {
   constructor(
@@ -64,8 +73,13 @@ export class SyncService {
   async sync(userId: string, request: SyncRequest): Promise<SyncResponse> {
     // Cursor first: anything written from here on is newer than what this response returns.
     const cursor = Date.now();
+    // A device whose clock runs ahead would otherwise win every merge for as long as it does.
+    const latest = cursor + MAX_CLOCK_AHEAD_MS;
+    const clamp = (updatedAt: number) => Math.min(updatedAt, latest);
 
-    // Cards: keep the newer side of each.
+    // Cards: keep the newer side of each. Each write is conditional, so a parallel sync from
+    // another device can't replace a newer card with an older one.
+    const lost = new Set<string>();
     if (request.cards.length) {
       const existing = new Map(
         (
@@ -75,18 +89,37 @@ export class SyncService {
           })
         ).map((c) => [c.wordId, Number(c.updatedAt)]),
       );
-      const winners = request.cards.filter((c) => (existing.get(c.wordId) ?? -1) < c.updatedAt);
-      for (let i = 0; i < winners.length; i += 500) {
-        await this.db.$transaction(
-          winners.slice(i, i + 500).map((c) => {
-            const row = toRow(userId, c);
-            return this.db.card.upsert({
-              where: { userId_wordId: { userId, wordId: c.wordId } },
-              create: row,
-              update: row,
-            });
-          }),
+      const rows = request.cards.map((c) => toRow(userId, { ...c, updatedAt: clamp(c.updatedAt) }));
+      for (const row of rows) {
+        const stored = existing.get(row.wordId);
+        if (stored !== undefined && stored >= Number(row.updatedAt)) lost.add(row.wordId);
+      }
+      const fresh = rows.filter((r) => !existing.has(r.wordId));
+      const newer = rows.filter((r) => existing.has(r.wordId) && !lost.has(r.wordId));
+      for (let i = 0; i < fresh.length; i += 1000) {
+        const batch = fresh.slice(i, i + 1000);
+        const created = await this.db.card.createManyAndReturn({
+          data: batch,
+          skipDuplicates: true,
+          select: { wordId: true },
+        });
+        // Created by a parallel sync since we looked: settle these like the existing ones.
+        const made = new Set(created.map((c) => c.wordId));
+        newer.push(...batch.filter((r) => !made.has(r.wordId)));
+      }
+      for (let i = 0; i < newer.length; i += 500) {
+        const batch = newer.slice(i, i + 500);
+        const results = await this.db.$transaction(
+          batch.map((row) =>
+            this.db.card.updateMany({
+              where: { userId, wordId: row.wordId, updatedAt: { lt: row.updatedAt } },
+              data: row,
+            }),
+          ),
         );
+        batch.forEach((row, j) => {
+          if (results[j]?.count === 0) lost.add(row.wordId);
+        });
       }
     }
 
@@ -114,22 +147,33 @@ export class SyncService {
       });
     }
 
-    const user = await this.db.user.findUniqueOrThrow({ where: { id: userId } });
-    const patch: Record<string, unknown> = {};
-    if (request.settings && request.settings.updatedAt > Number(user.settingsUpdatedAt)) {
-      patch['settings'] = request.settings.value;
-      patch['settingsUpdatedAt'] = BigInt(request.settings.updatedAt);
+    // Settings and deck: each replaced only when the incoming one is newer, in the same statement.
+    if (request.settings) {
+      const updatedAt = BigInt(clamp(request.settings.updatedAt));
+      await this.db.user.updateMany({
+        where: { id: userId, settingsUpdatedAt: { lt: updatedAt } },
+        data: { settings: request.settings.value, settingsUpdatedAt: updatedAt },
+      });
     }
-    if (request.deck && request.deck.updatedAt > Number(user.deckUpdatedAt)) {
-      patch['deck'] = request.deck.entries;
-      patch['deckUpdatedAt'] = BigInt(request.deck.updatedAt);
+    if (request.deck) {
+      const updatedAt = BigInt(clamp(request.deck.updatedAt));
+      await this.db.user.updateMany({
+        where: { id: userId, deckUpdatedAt: { lt: updatedAt } },
+        data: { deck: request.deck.entries, deckUpdatedAt: updatedAt },
+      });
     }
-    const saved = Object.keys(patch).length
-      ? await this.db.user.update({ where: { id: userId }, data: patch })
-      : user;
+    const saved = await this.db.user.findUniqueOrThrow({ where: { id: userId } });
 
+    // Changed since the cursor, with a margin for writes that were in flight when it was taken,
+    // and the server's copy of every card the client sent an older version of.
     const changed = await this.db.card.findMany({
-      where: { userId, serverUpdatedAt: { gt: new Date(request.since) } },
+      where: {
+        userId,
+        OR: [
+          { serverUpdatedAt: { gt: new Date(request.since - CURSOR_OVERLAP_MS) } },
+          ...(lost.size ? [{ wordId: { in: [...lost] } }] : []),
+        ],
+      },
     });
 
     const settings = SettingsSchema.safeParse(saved.settings);

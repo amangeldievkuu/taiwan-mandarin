@@ -152,16 +152,22 @@ rmSync(OUT.dict, { recursive: true, force: true });
 mkdirSync(OUT.content, { recursive: true });
 mkdirSync(OUT.dict, { recursive: true });
 const hash = createHash('sha256');
+const files: Record<string, string> = {};
+/** Writes `content/…` or `dict/…` and records its own hash, so clients re-fetch only changes. */
 const write = (path: string, data: unknown) => {
   const json = JSON.stringify(data);
   hash.update(json);
-  writeFileSync(path, json);
+  writeFileSync(
+    join(OUT[path.startsWith('dict/') ? 'dict' : 'content'], path.replace(/^\w+\//, '')),
+    json,
+  );
+  files[path] = createHash('sha256').update(json).digest('hex').slice(0, 12);
 };
 
 const levels: LevelManifest[] = LEVELS.map(({ id }) => {
   const list = words.filter((w) => w.level === id);
   const file = `words-${id}.json`;
-  write(join(OUT.content, file), list);
+  write(`content/${file}`, list);
   return {
     id,
     count: list.length,
@@ -170,13 +176,13 @@ const levels: LevelManifest[] = LEVELS.map(({ id }) => {
     file,
   };
 });
-dictionary.shards.forEach((shard, i) => write(join(OUT.dict, `${i}.json`), shard));
+dictionary.shards.forEach((shard, i) => write(`dict/${i}.json`, shard));
 // Search index for pinyin / English lookups across the whole path: [id, hanzi, toneless pinyin, gloss].
 write(
-  join(OUT.content, 'search.json'),
+  'content/search.json',
   words.map((w) => [w.id, w.hanzi, plainPinyin(w.pinyin), w.en.slice(0, 90)]),
 );
-write(join(OUT.content, 'readers.json'), readers);
+write('content/readers.json', readers);
 
 const manifest: ContentManifest = {
   version: hash.digest('hex').slice(0, 12),
@@ -185,6 +191,7 @@ const manifest: ContentManifest = {
   dictMaxLength: dictionary.maxLength,
   readers: readers.length,
   legacyIds,
+  files,
 };
 writeFileSync(join(OUT.content, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
 

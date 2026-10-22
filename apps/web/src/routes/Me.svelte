@@ -21,6 +21,8 @@
     type DayStats,
   } from '../lib/stats';
   import { store } from '../lib/store.svelte';
+  import { api } from '../lib/api';
+  import { account } from '../lib/sync.svelte';
 
   // Practice per day comes from the store (all devices once synced), not the raw review log.
   const days = $derived<DayStats[]>(dailyFromActivity(store.days, store.today, 30));
@@ -42,6 +44,23 @@
     new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
   let confirmReset = $state(false);
+  let resetting = $state(false);
+  let resetError = $state<string | null>(null);
+
+  /** Signed in, the account's copy goes first, or the next sync would bring everything back. */
+  async function reset() {
+    resetting = true;
+    resetError = null;
+    try {
+      if (account.user) await api('/v1/me/progress', { method: 'DELETE' });
+      await store.resetProgress();
+      confirmReset = false;
+    } catch (e) {
+      resetError = e instanceof Error ? e.message : String(e);
+    } finally {
+      resetting = false;
+    }
+  }
 </script>
 
 <div class="page">
@@ -109,11 +128,11 @@
       </ol>
     {/if}
     <p class="how">
-      <strong>How your plant grows.</strong> Every day you study waters a plum tree (梅, Taiwan's
-      national flower). Miss a day or two and nothing breaks: come back within three days and the crack
-      in its pot is mended with gold (金繼, kintsugi), the most beautiful part of the pot. After a longer
-      break the plant moves here to your garden, gold and all, and a new seed is planted. It becomes a
-      small tree at 7 days, buds at 30 and blooms at 100.
+      <strong>How your plant grows.</strong> Every day you study waters a plum tree (梅, Taiwan's national
+      flower). Miss a day or two and nothing breaks: come back within three days and the crack in its
+      pot is mended with gold (金繼, kintsugi), the most beautiful part of the pot. After a longer break
+      the plant moves here to your garden, gold and all, and a new seed is planted. It becomes a small
+      tree at 7 days, buds at 30 and blooms at 100.
     </p>
   </div>
 
@@ -239,18 +258,18 @@
       ]?.reviews ?? store.daily.reviewCount} reviews
     </p>
     {#if confirmReset}
-      <p class="warn">This deletes all progress and review history on this device.</p>
+      <p class="warn">
+        {account.user
+          ? 'This deletes all progress and review history here and in your account. Other devices keep their copy until you reset them too.'
+          : 'This deletes all progress and review history on this device.'}
+      </p>
+      {#if resetError}<p class="warn" role="alert">{resetError}</p>{/if}
       <div class="buttons">
         <button type="button" class="btn quiet small" onclick={() => (confirmReset = false)}
           >Cancel</button
         >
-        <button
-          type="button"
-          class="btn seal small"
-          onclick={async () => {
-            await store.resetProgress();
-            confirmReset = false;
-          }}>Delete everything</button
+        <button type="button" class="btn seal small" disabled={resetting} onclick={reset}
+          >Delete everything</button
         >
       </div>
     {:else}

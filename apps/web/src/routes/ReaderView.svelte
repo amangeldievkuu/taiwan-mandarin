@@ -21,16 +21,20 @@
   let { id }: Props = $props();
   let reader = $state<Reader | undefined>();
   let missing = $state(false);
+  let failed = $state(false);
   let ruby = $state(false);
   let showTranslation = $state<Record<number, boolean>>({});
   let playing = $state<number | null>(null);
 
   $effect(() => {
-    content.readers().then((all) => {
-      reader = all.find((r) => r.id === id);
-      missing = !reader;
-      if (reader) void content.ensureLevels([reader.level]);
-    });
+    content
+      .readers()
+      .then((all) => {
+        reader = all.find((r) => r.id === id);
+        missing = !reader;
+        if (reader) void content.ensureLevels([reader.level]);
+      })
+      .catch(() => (failed = true));
     return () => stopSpeaking();
   });
 
@@ -164,6 +168,8 @@
     </article>
   {:else if missing}
     <p class="empty">This reader doesn't exist.</p>
+  {:else if failed}
+    <p class="empty" role="alert">Couldn't load this. Check your connection and try again.</p>
   {:else}
     <Loading />
   {/if}

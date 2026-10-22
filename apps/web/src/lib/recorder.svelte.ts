@@ -3,6 +3,8 @@
 
 class Recorder {
   recording = $state(false);
+  /** Waiting for the microphone (the permission prompt may be open). */
+  starting = $state(false);
   error = $state<string | null>(null);
   readonly supported =
     typeof navigator !== 'undefined' &&
@@ -13,19 +15,32 @@ class Recorder {
   private chunks: Blob[] = [];
   private stream: MediaStream | null = null;
   private startedAt = 0;
+  /** Bumped by cancel(), so a start still waiting for the microphone gives it back. */
+  private generation = 0;
 
   async start(): Promise<void> {
+    if (this.starting || this.recording) return;
     this.error = null;
+    this.starting = true;
+    const generation = this.generation;
+    let stream: MediaStream;
     try {
-      this.stream = await navigator.mediaDevices.getUserMedia({
+      stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 },
       });
     } catch {
       this.error = 'Microphone access was blocked. Allow it in your browser settings to record.';
       return;
+    } finally {
+      this.starting = false;
     }
+    if (generation !== this.generation) {
+      stream.getTracks().forEach((t) => t.stop());
+      return;
+    }
+    this.stream = stream;
     this.chunks = [];
-    this.media = new MediaRecorder(this.stream);
+    this.media = new MediaRecorder(stream);
     this.media.ondataavailable = (e) => {
       if (e.data.size) this.chunks.push(e.data);
     };
@@ -40,16 +55,30 @@ class Recorder {
     if (!media) return Promise.resolve(null);
     return new Promise((resolve) => {
       media.onstop = () => {
-        this.stream?.getTracks().forEach((t) => t.stop());
-        this.stream = null;
-        this.media = null;
-        this.recording = false;
+        this.release();
         const durationMs = performance.now() - this.startedAt;
         const blob = new Blob(this.chunks, { type: media.mimeType || 'audio/webm' });
         resolve(blob.size > 0 && durationMs > 250 ? { blob, durationMs } : null);
       };
       media.stop();
     });
+  }
+
+  /** Stops and discards any recording, and gives the microphone back (e.g. leaving the page). */
+  cancel(): void {
+    this.generation++;
+    if (this.media) {
+      this.media.onstop = null;
+      if (this.media.state !== 'inactive') this.media.stop();
+    }
+    this.release();
+  }
+
+  private release(): void {
+    this.stream?.getTracks().forEach((t) => t.stop());
+    this.stream = null;
+    this.media = null;
+    this.recording = false;
   }
 }
 

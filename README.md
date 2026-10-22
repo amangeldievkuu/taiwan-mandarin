@@ -71,15 +71,17 @@ Web-only: `npm run icons -w @taiwan-mandarin/web` regenerates the PWA icons from
 ### Deploy
 
 ```sh
-cp .env.example .env    # set JWT_SECRET (openssl rand -base64 48), WEB_ORIGIN, optional API keys
+cp .env.example .env    # set JWT_SECRET (openssl rand -base64 48), POSTGRES_PASSWORD, WEB_ORIGIN, optional API keys
 docker compose --profile app up -d --build
 ```
 
 One image build downloads the sources, builds the content, the API and the PWA. nginx serves the
 app on `WEB_PORT` (8080) and proxies `/api` to the API, so everything is one origin. The API runs
 migrations on start. Put TLS in front, for example a reverse proxy or a tunnel; the PWA, the
-microphone and secure cookies need HTTPS on a real domain. Then open it on the iPhone or iPad and
-choose Share › Add to Home Screen.
+microphone and secure cookies need HTTPS on a real domain. With such a proxy in front of nginx, set
+`TRUST_PROXY=2` so rate limits see each learner's address rather than the proxy's. PostgreSQL
+listens only on 127.0.0.1; nginx sends security headers (CSP and others) with the app. Then open
+it on the iPhone or iPad and choose Share › Add to Home Screen.
 
 CI (`.github/workflows/ci.yml`) runs content build, type checks, lint, all tests (with a
 PostgreSQL service) and the production builds.
@@ -129,7 +131,8 @@ between devices.
 - **Public API.** Swagger is at `/docs` (`/api/docs` through the web app). Content routes are
   open: `/v1/levels`, `/v1/words`, `/v1/dict/:q`, `/v1/segment`, `/v1/readers`. Personal routes
   (`/v1/me/stats`, `/cards`, `/reviews`, `POST /v1/me/deck/:wordId`) accept a personal access
-  token (`tm_…`) created in Me › API access. Tokens can't manage other tokens.
+  token (`tm_…`) created in Me › API access. Tokens reach only those four routes: they can't
+  sync, use AI or speech, manage tokens or delete the account.
 - **Content.** The API serves words and the dictionary from the same generated files as the
   web app, held in memory. The database holds only learner data.
 

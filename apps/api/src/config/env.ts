@@ -35,6 +35,11 @@ const Env = z.object({
     z.enum(['development', 'production', 'test']).default('development'),
   ),
   PORT: int(3000, 1, 65_535),
+  /**
+   * Proxies in front of the API whose X-Forwarded-For to trust: 1 for the bundled nginx, 2 with
+   * a TLS proxy or tunnel in front of that. Client IPs (rate limits) come from it.
+   */
+  TRUST_PROXY: int(1, 0, 10),
   /** Comma-separated origins allowed to call the API with cookies. */
   WEB_ORIGIN: z.preprocess(blank, z.string().default('http://localhost:5173')),
   DATABASE_URL: z.string().min(1),

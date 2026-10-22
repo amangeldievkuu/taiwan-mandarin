@@ -18,7 +18,12 @@ import {
 
 const base = import.meta.env.BASE_URL;
 
-async function getJson<T>(path: string, version?: string): Promise<T> {
+/**
+ * Fetches a content file, versioned by its own hash when the manifest lists one, so a content
+ * release leaves unchanged files in the offline cache. Older manifests version everything at once.
+ */
+async function getJson<T>(path: string, manifest?: ContentManifest): Promise<T> {
+  const version = manifest && (manifest.files?.[path] ?? manifest.version);
   const response = await fetch(`${base}${path}${version ? `?v=${version}` : ''}`);
   if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
   return (await response.json()) as T;
@@ -39,7 +44,7 @@ class Content {
   private searchPromise: Promise<SearchRow[]> | undefined;
 
   async init(): Promise<ContentManifest> {
-    // Network-first in the service worker; every other file is versioned by the manifest hash.
+    // Network-first in the service worker; every other file is versioned by a content hash.
     this.manifest ??= await getJson<ContentManifest>('content/manifest.json');
     return this.manifest;
   }
@@ -58,8 +63,12 @@ class Content {
     return this.loaded.includes(level);
   }
 
+  /**
+   * Loads the levels' word files. One that fails (offline and never cached) is left out rather
+   * than failing the rest; it is tried again next time.
+   */
   async ensureLevels(levels: Iterable<Level>): Promise<void> {
-    await Promise.all([...new Set(levels)].map((l) => this.loadLevel(l)));
+    await Promise.allSettled([...new Set(levels)].map((l) => this.loadLevel(l)));
   }
 
   private loadLevel(level: Level): Promise<void> {
@@ -69,7 +78,7 @@ class Content {
         const manifest = await this.init();
         const info = manifest.levels.find((l) => l.id === level);
         if (!info) return;
-        const list = await getJson<Word[]>(`content/${info.file}`, manifest.version);
+        const list = await getJson<Word[]>(`content/${info.file}`, manifest);
         for (const w of list) this.words.set(w.id, w);
         this.byLevel.set(level, list);
         this.loaded = [...this.loaded, level];
@@ -94,7 +103,7 @@ class Content {
   private shard(index: number): Promise<DictShard> {
     let promise = this.shards.get(index);
     if (!promise) {
-      promise = this.init().then((m) => getJson<DictShard>(`dict/${index}.json`, m.version));
+      promise = this.init().then((m) => getJson<DictShard>(`dict/${index}.json`, m));
       promise.catch(() => this.shards.delete(index));
       this.shards.set(index, promise);
     }
@@ -129,9 +138,7 @@ class Content {
   async search(query: string, limit = 40): Promise<SearchRow[]> {
     const q = query.trim();
     if (!q) return [];
-    this.searchPromise ??= this.init().then((m) =>
-      getJson<SearchRow[]>('content/search.json', m.version),
-    );
+    this.searchPromise ??= this.init().then((m) => getJson<SearchRow[]>('content/search.json', m));
     this.searchPromise.catch(() => (this.searchPromise = undefined));
     const rows = await this.searchPromise;
     const scored: [number, SearchRow][] = [];
@@ -162,9 +169,7 @@ class Content {
   }
 
   readers(): Promise<Reader[]> {
-    this.readersPromise ??= this.init().then((m) =>
-      getJson<Reader[]>('content/readers.json', m.version),
-    );
+    this.readersPromise ??= this.init().then((m) => getJson<Reader[]>('content/readers.json', m));
     this.readersPromise.catch(() => (this.readersPromise = undefined));
     return this.readersPromise;
   }

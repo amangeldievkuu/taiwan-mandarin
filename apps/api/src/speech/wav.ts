@@ -6,6 +6,9 @@ export interface Pcm {
   sampleRate: number;
 }
 
+/** The only format the web app sends; anything else is refused before any analysis. */
+export const WAV_RATE = 16000;
+
 export function readWav(buffer: Buffer): Pcm {
   if (buffer.toString('ascii', 0, 4) !== 'RIFF' || buffer.toString('ascii', 8, 12) !== 'WAVE') {
     throw new Error('Not a WAV file');
@@ -19,12 +22,14 @@ export function readWav(buffer: Buffer): Pcm {
     const size = buffer.readUInt32LE(offset + 4);
     const body = offset + 8;
     if (id === 'fmt ') {
+      if (size < 16 || body + 16 > buffer.length) throw new Error('Broken WAV header');
       if (buffer.readUInt16LE(body) !== 1) throw new Error('Only PCM WAV is supported');
       channels = buffer.readUInt16LE(body + 2);
       sampleRate = buffer.readUInt32LE(body + 4);
       bits = buffer.readUInt16LE(body + 14);
     } else if (id === 'data') {
-      if (bits !== 16 || !sampleRate) throw new Error('Expected 16-bit PCM');
+      if (bits !== 16 || channels !== 1 || sampleRate !== WAV_RATE)
+        throw new Error(`Expected 16-bit mono PCM at ${WAV_RATE} Hz`);
       const end = Math.min(buffer.length, body + size);
       const frames = Math.floor((end - body) / (2 * channels));
       const samples = new Float32Array(frames);

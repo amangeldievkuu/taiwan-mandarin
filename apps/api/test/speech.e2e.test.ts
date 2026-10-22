@@ -146,4 +146,20 @@ describe('POST /v1/speech/check', () => {
     const res = await check(Buffer.from('x'.repeat(200)).toString('base64'), '你好', 'ni3 hao3');
     expect(res.status).toBe(400);
   });
+
+  it('rejects WAV in any format the app does not send', async () => {
+    const patched = (offset: number, value: number, bytes: 2 | 4) => {
+      const buffer = Buffer.from(wav([rising, low]), 'base64');
+      if (bytes === 2) buffer.writeUInt16LE(value, offset);
+      else buffer.writeUInt32LE(value, offset);
+      return buffer.toString('base64');
+    };
+    transcribed = 0;
+    // A rate this low once made the pitch tracker loop forever.
+    for (const audio of [patched(24, 40, 4), patched(24, 1_000_000, 4), patched(22, 2, 2)]) {
+      const res = await check(audio, '你好', 'ni3 hao3');
+      expect(res.status).toBe(400);
+    }
+    expect(transcribed).toBe(0);
+  });
 });

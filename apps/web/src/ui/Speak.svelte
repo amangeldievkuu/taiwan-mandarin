@@ -61,7 +61,9 @@
     if (audioUrl) void new Audio(audioUrl).play();
   }
 
+  // Leaving the page: give the microphone back and free the recording.
   $effect(() => () => {
+    recorder.cancel();
     if (audioUrl) URL.revokeObjectURL(audioUrl);
   });
 
@@ -100,7 +102,7 @@
       <button
         type="button"
         class="btn small {recorder.recording ? 'seal recording' : 'primary'}"
-        disabled={checking}
+        disabled={checking || recorder.starting}
         onclick={toggle}
       >
         {#if recorder.recording}<Icon name="pause" size={18} /> Stop{:else}<Icon

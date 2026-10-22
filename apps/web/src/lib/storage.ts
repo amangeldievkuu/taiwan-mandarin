@@ -142,25 +142,52 @@ export class IndexedDbAdapter implements StorageAdapter {
           db.createObjectStore('reviews', { keyPath: 'id' }).createIndex('review', 'review');
         }
       };
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        // A newer version of the app is upgrading the database in another tab: step aside rather
+        // than block it, and reopen on next use.
+        db.onversionchange = () => {
+          db.close();
+          this.db = undefined;
+        };
+        // Safari sometimes drops the connection ("Connection to Indexed Database server lost").
+        db.onclose = () => (this.db = undefined);
+        resolve(db);
+      };
+      request.onerror = () => {
+        this.db = undefined;
+        reject(request.error);
+      };
     });
     return this.db;
   }
 
-  private async run<T>(
+  /** Runs `fn` on the database, reopening it once if the connection was closed under us. */
+  private async withDb<T>(fn: (db: IDBDatabase) => Promise<T>): Promise<T> {
+    try {
+      return await fn(await this.open());
+    } catch (e) {
+      if (!(e instanceof DOMException && e.name === 'InvalidStateError')) throw e;
+      this.db = undefined;
+      return fn(await this.open());
+    }
+  }
+
+  private run<T>(
     store: 'kv' | 'reviews',
     mode: IDBTransactionMode,
     op: (s: IDBObjectStore) => IDBRequest<T>,
   ) {
-    const db = await this.open();
-    return new Promise<T>((resolve, reject) => {
-      const tx = db.transaction(store, mode);
-      const request = op(tx.objectStore(store));
-      tx.oncomplete = () => resolve(request.result);
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
+    return this.withDb(
+      (db) =>
+        new Promise<T>((resolve, reject) => {
+          const tx = db.transaction(store, mode);
+          const request = op(tx.objectStore(store));
+          tx.oncomplete = () => resolve(request.result);
+          tx.onerror = () => reject(tx.error);
+          tx.onabort = () => reject(tx.error);
+        }),
+    );
   }
 
   async load(): Promise<StoredSnapshot | null> {
@@ -183,20 +210,23 @@ export class IndexedDbAdapter implements StorageAdapter {
   }
 
   async markSynced(ids: readonly string[]): Promise<void> {
-    const db = await this.open();
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction('reviews', 'readwrite');
-      const store = tx.objectStore('reviews');
-      for (const id of ids) {
-        const request = store.get(id);
-        request.onsuccess = () => {
-          const review = request.result as ReviewRecord | undefined;
-          if (review?.pending) store.put({ ...review, pending: false });
-        };
-      }
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
+    await this.withDb(
+      (db) =>
+        new Promise<void>((resolve, reject) => {
+          const tx = db.transaction('reviews', 'readwrite');
+          const store = tx.objectStore('reviews');
+          for (const id of ids) {
+            const request = store.get(id);
+            request.onsuccess = () => {
+              const review = request.result as ReviewRecord | undefined;
+              if (review?.pending) store.put({ ...review, pending: false });
+            };
+          }
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+          tx.onabort = () => reject(tx.error);
+        }),
+    );
   }
 
   async clear(): Promise<void> {
@@ -269,11 +299,19 @@ export class BrowserStorage implements StorageAdapter {
   private primary: StorageAdapter | null =
     typeof indexedDB === 'undefined' ? null : new IndexedDbAdapter();
 
+  /** IndexedDB has answered once: a later failure is an error, not a browser without it. */
+  private working = false;
+
   private async attempt<T>(fn: (a: StorageAdapter) => Promise<T>): Promise<T> {
     if (this.primary) {
       try {
-        return await fn(this.primary);
-      } catch {
+        const result = await fn(this.primary);
+        this.working = true;
+        return result;
+      } catch (e) {
+        // Switching now would split saved data between two stores, and the next start would
+        // read the older one.
+        if (this.working) throw e;
         this.primary = null; // e.g. private mode without IndexedDB
       }
     }

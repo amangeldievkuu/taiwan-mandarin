@@ -1,6 +1,7 @@
 // Accounts and sessions: argon2id passwords, 15-minute JWT access tokens and rotating refresh
 // tokens (hashed, in an httpOnly cookie). Reusing an already-rotated refresh token revokes the
 // whole chain, which logs out a thief and the victim alike rather than leaving a stolen session.
+// The exception is reuse within a few seconds of rotation, which is two tabs refreshing at once.
 
 import { randomUUID } from 'node:crypto';
 import { ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
@@ -12,6 +13,8 @@ import { randomToken, sha256 } from './crypto.js';
 
 export const ACCESS_TTL_SECONDS = 15 * 60;
 export const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+/** A token replaced this recently may be used once more (two tabs refreshing together). */
+export const REUSE_GRACE_MS = 30_000;
 
 export interface Session extends AuthResponse {
   refreshToken: string;
@@ -67,20 +70,43 @@ export class AuthService {
       where: { tokenHash: sha256(token) },
       include: { user: true },
     });
-    if (!stored) throw new UnauthorizedException('Session expired');
-    if (stored.revokedAt) {
-      await this.db.refreshToken.updateMany({
-        where: { family: stored.family, revokedAt: null },
-        data: { revokedAt: new Date() },
-      });
+    if (!stored || stored.expiresAt < new Date())
       throw new UnauthorizedException('Session expired');
+    if (!stored.revokedAt) {
+      // Revoke and replace in one transaction: a parallel refresh with the same cookie waits on
+      // the row, then finds it revoked and its successor already stored.
+      const next = await this.db.$transaction(async (tx) => {
+        const { count } = await tx.refreshToken.updateMany({
+          where: { id: stored.id, revokedAt: null },
+          data: { revokedAt: new Date() },
+        });
+        return count === 1 ? this.store(tx, stored.userId, stored.family, userAgent) : null;
+      });
+      if (next) return this.session(stored.user, next);
     }
-    if (stored.expiresAt < new Date()) throw new UnauthorizedException('Session expired');
-    await this.db.refreshToken.update({
-      where: { id: stored.id },
+    // Already rotated: by another tab a moment ago (fine), or a replayed stolen token.
+    if (await this.justRotated(stored.id, stored.family)) {
+      return this.session(
+        stored.user,
+        await this.store(this.db, stored.userId, stored.family, userAgent),
+      );
+    }
+    await this.db.refreshToken.updateMany({
+      where: { family: stored.family, revokedAt: null },
       data: { revokedAt: new Date() },
     });
-    return this.issue(stored.user, stored.family, userAgent);
+    throw new UnauthorizedException('Session expired');
+  }
+
+  /**
+   * Whether a token was replaced within the last few seconds, as when two tabs refresh at once.
+   * Rotation leaves a live successor in the family; logging out or a revoked family does not.
+   */
+  private async justRotated(id: string, family: string): Promise<boolean> {
+    const row = await this.db.refreshToken.findUnique({ where: { id } });
+    if (!row?.revokedAt || Date.now() - row.revokedAt.getTime() > REUSE_GRACE_MS) return false;
+    const successor = await this.db.refreshToken.findFirst({ where: { family, revokedAt: null } });
+    return successor !== null;
   }
 
   async logout(token: string | undefined): Promise<void> {
@@ -107,16 +133,33 @@ export class AuthService {
     family: string,
     userAgent?: string,
   ): Promise<Session> {
+    return this.session(user, await this.store(this.db, user.id, family, userAgent));
+  }
+
+  /** Stores a new refresh token in `family` and returns it. */
+  private async store(
+    db: Pick<PrismaService, 'refreshToken'>,
+    userId: string,
+    family: string,
+    userAgent?: string,
+  ): Promise<string> {
     const refreshToken = randomToken();
-    await this.db.refreshToken.create({
+    await db.refreshToken.create({
       data: {
-        userId: user.id,
+        userId,
         tokenHash: sha256(refreshToken),
         family,
         expiresAt: new Date(Date.now() + REFRESH_TTL_MS),
         userAgent: userAgent?.slice(0, 200) ?? null,
       },
     });
+    return refreshToken;
+  }
+
+  private async session(
+    user: { id: string; email: string; displayName: string | null; createdAt: Date },
+    refreshToken: string,
+  ): Promise<Session> {
     const accessToken = await this.jwt.signAsync(
       { sub: user.id },
       { expiresIn: ACCESS_TTL_SECONDS },

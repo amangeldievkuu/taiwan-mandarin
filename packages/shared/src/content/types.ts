@@ -117,6 +117,8 @@ export interface ContentManifest {
   readers: number;
   /** Pre-TOCFL word ids → current ids, for migrating saved progress. */
   legacyIds: Record<string, string>;
+  /** Hash of each file ("content/words-N1.json", "dict/0.json"), to version it on its own. */
+  files?: Record<string, string>;
 }
 
 /** One CC-CEDICT entry in a dictionary shard, with Taiwan readings applied. */
