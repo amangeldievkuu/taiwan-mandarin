@@ -242,6 +242,41 @@ describe('talk', () => {
     expect(saved.body.messages[0].reading.pinyin).toBe(reply.reading.pinyin);
   });
 
+  it('marks a word new only once, and never one the learner wrote', async () => {
+    if (!(await hasContent())) return;
+    calls.length = 0;
+    // 要, 在 and 火車 are Novice 2: new to a Novice 1 learner, but no reason to rewrite.
+    replies = [{ reply: '你好！你要去哪裡？', translation: '…', correction: null }];
+    const opened = await request(http).post('/v1/ai/talk').set(auth()).send({ scenario: 'mrt' });
+    const words = (m: { newWords?: { text: string }[] }) => m.newWords?.map((w) => w.text);
+    expect(words(opened.body.messages[0])).toContain('要');
+
+    replies = [{ reply: '花蓮很好！你要在台北坐火車。', translation: '…', correction: null }];
+    const next = await request(http)
+      .post('/v1/ai/talk')
+      .set(auth())
+      .send({ conversationId: opened.body.conversationId, message: '我想去花蓮' });
+    expect(calls).toHaveLength(2);
+    const fresh = words(next.body.messages[1]);
+    expect(fresh).toEqual(expect.arrayContaining(['在', '火車']));
+    expect(fresh).not.toContain('要');
+    expect(fresh).not.toContain('花蓮');
+
+    // A "correction" that only adds punctuation or changes 台 to 臺 is dropped.
+    replies = [
+      {
+        reply: '好！',
+        translation: 'OK!',
+        correction: { corrected: '不是，我要去臺北。', explanation: 'Added a full stop.' },
+      },
+    ];
+    const same = await request(http)
+      .post('/v1/ai/talk')
+      .set(auth())
+      .send({ conversationId: opened.body.conversationId, message: '不是, 我要去台北' });
+    expect(same.body.messages[0].correction).toBeNull();
+  });
+
   it('accepts the everyday 台 but rewrites Mainland wording in corrections', async () => {
     if (!(await hasContent())) return;
     calls.length = 0;

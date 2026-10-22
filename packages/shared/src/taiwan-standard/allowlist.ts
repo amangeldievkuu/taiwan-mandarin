@@ -29,6 +29,18 @@ export const ALLOWLIST: readonly AllowEntry[] = [
     where: 'apps/api/src/ai/taiwan-style.ts',
     reason: 'The AI style guide explains that 台 is the everyday form of 臺.',
   },
+  {
+    term: '台',
+    // talk.service.ts and its unit test.
+    where: 'apps/api/src/ai/talk.service.',
+    reason:
+      'The conversation partner speaks casually and is told to write 台 (台北, 台鐵); the tests check that 台 and 臺 count as the same.',
+  },
+  {
+    term: '台',
+    where: 'apps/api/src/content/content.service.ts',
+    reason: 'Lookups map the everyday 台 to 臺, so 台北 finds the word 臺北.',
+  },
   ...(['explain', 'talk'] as const).map((where) => ({
     term: '台',
     where,

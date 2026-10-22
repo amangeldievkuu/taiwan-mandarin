@@ -57,11 +57,14 @@ export class ContentService implements OnModuleInit {
       this.byLevel.set(level.id, list);
       for (const w of list) {
         this.words.set(w.id, w);
-        for (const form of [
+        const forms = [
           w.hanzi,
           ...(w.variants ?? []).filter((v) => [...v].length === [...w.hanzi].length),
-        ]) {
-          this.byForm.set(form, [...(this.byForm.get(form) ?? []), w]);
+        ];
+        // 台 is the everyday way to write 臺 (台北), so it finds the word too.
+        for (const form of new Set([...forms, ...forms.map((f) => f.replaceAll('臺', '台'))])) {
+          const listed = this.byForm.get(form) ?? [];
+          if (!listed.includes(w)) this.byForm.set(form, [...listed, w]);
         }
       }
     }

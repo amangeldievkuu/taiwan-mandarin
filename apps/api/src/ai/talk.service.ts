@@ -1,7 +1,8 @@
-// Conversation practice: a Taiwanese conversation partner who speaks only with words the learner
-// knows (their studied cards plus Novice 1), corrects the learner's messages, and sounds like
-// Taiwan. Each reply is checked: words outside the learner's vocabulary or Mainland wording
-// trigger one rewrite; anything still unknown is returned as "new words" for the UI to highlight.
+// Conversation practice: a Taiwanese conversation partner who speaks with words the learner
+// knows (their studied cards plus Novice 1, and Novice 2 so there is enough to talk with),
+// corrects the learner's messages, and sounds like Taiwan. Each reply is checked: more than two
+// words beyond that vocabulary, or Mainland wording, trigger one rewrite; words the learner hasn't
+// met yet in the conversation are returned as "new words" for the UI to highlight.
 
 import { randomUUID } from 'node:crypto';
 import {
@@ -53,7 +54,7 @@ const PARTNERS: Record<ScenarioId, string> = {
     'You run a food stall at Raohe Night Market in Taipei (蚵仔煎, 雞排, 大腸包小腸). The learner is a customer.',
   'bubble-tea':
     'You work at a bubble tea shop. Ask about size, sugar and ice levels like a real clerk.',
-  mrt: 'You are a friendly local at Taipei Main Station. The learner asks how to get somewhere by MRT.',
+  mrt: 'You are a friendly local at Taipei Main Station. The learner asks how to get somewhere: by MRT within Taipei, by train (台鐵 or 高鐵) or bus further away. Tell them which line or train, where to buy a ticket or tap an EasyCard, and roughly how long it takes.',
   'convenience-store':
     'You are a clerk at a 7-Eleven. Offer a bag, ask about the receipt carrier (載具), heating food, paying by EasyCard.',
   classmate:
@@ -70,26 +71,59 @@ const RULES = `You are a conversation partner for someone learning Taiwan Mandar
 
 ${TAIWAN_STYLE}
 
-How to talk:
-- Stay in the scenario given at the end and keep it going: reply in one to three short sentences, and usually end with a question or a natural prompt for the learner.
-- Use only words from the learner's vocabulary below, plus numbers, names and punctuation. If an idea needs a word outside it, say it more simply; bring in at most one or two new words, and only when the scenario needs them. Grammar words (的, 了, 嗎, 呢, 吧, 很, 也, 都, 不, 沒) are fine.
-- If the learner writes English or pinyin, answer in Chinese and gently show how to say it.
-- correction: if the learner's last message has a mistake, sounds unnatural, or uses Mainland wording, give the corrected Taiwan Mandarin version and a short explanation. Otherwise null.
-- If there is no learner message yet, open the conversation as your character would.`;
+How to talk, most important first:
+- Make sense. Play your character like a real Taiwanese person who knows Taiwan well: give real, correct help (how to get somewhere, what things cost, what to order), never pretend not to know something your character would know, and never say something odd just because it is easy to say.
+- Follow the conversation. Remember everything the learner has told you, never ask again what they already answered, and move the scenario forward one step each turn towards its natural end (they get their ticket, their drink, their directions). Never repeat what you already told them unless they ask. When they only agree (好, 對, 是), take the next step instead: ask the next thing your character needs to know (which train, how many tickets, hot or cold), show them where to go, or wrap up.
+- Keep it short: one or two short sentences, with at most one question, usually at the end. This is casual speech, so write 台 (台北, 台灣), not 臺.
+- Use words from the learner's vocabulary below, plus numbers, names and punctuation. When the scenario needs a word they don't know yet (火車, 票, 大杯), use it anyway, at most one or two per reply: the app shows its meaning, and that is how they learn. Never bend what you mean to avoid a word.
+- If the learner's message is unclear, guess what they most likely meant and carry on, or ask one simple question about it. If they write English or pinyin, answer in Chinese and show how to say it.
+- translation: natural English for your reply.
+
+correction (about the learner's last message only):
+- Correct it when it is ungrammatical, means something other than what they clearly meant, uses Mainland wording, or is not how a Taiwanese speaker would say it. That includes answering a yes/no question with 是 or 是的 when Mandarin repeats the verb (你要坐車嗎？ → 要。 你有錢嗎？ → 有。).
+- corrected: the whole message as a Taiwanese speaker would say it, fully correct and natural. It is never limited by the learner's vocabulary.
+- Change only what needs changing. Keep 台 or 臺 as the learner wrote it, and ignore spacing and full-width or half-width punctuation.
+- explanation: one or two short English sentences on what changed and why. Never mention the learner's vocabulary.
+- null when the message is fine, or when the only differences would be the ones you ignore.
+
+If there is no learner message yet, open the conversation as your character would.`;
 
 // Sent after the learner's "（我要走了。）" when they end the conversation.
 const CLOSING = `The learner is ending the conversation now. Say goodbye as your character would, in one short, warm sentence with known words, and do not ask anything. correction: null.`;
 
 const NUMBERS = /^[一二三四五六七八九十百千萬億〇零兩幾]+$/;
+/** Text without spacing, punctuation or the 台/臺 difference, none of which merit a correction. */
+const essence = (text: string) => formalTai(text.replace(/[\s\p{P}]/gu, ''));
+
+/** Whether `reply` mostly says again what `earlier` said: most of its character pairs are in it. */
+export function repeats(reply: string, earlier: string): boolean {
+  const pairs = (text: string) => {
+    const chars = [...essence(text)];
+    return new Set(chars.slice(1).map((c, i) => `${chars[i]}${c}`));
+  };
+  const mine = pairs(reply);
+  // Short replies (好啊！, 謝謝！) are fine to say twice.
+  if (mine.size < 6) return false;
+  const theirs = pairs(earlier);
+  return [...mine].filter((p) => theirs.has(p)).length / mine.size > 0.6;
+}
 const MAX_HISTORY = 30;
 /** Words listed in the prompt; the learner knows more, and the check after the reply uses all. */
 const LISTED_LEVEL_WORDS = 1200;
 const LISTED_STUDIED_WORDS = 800;
 
+/**
+ * Novice 1 alone (178 words, without 要 or 在) is too little to hold a conversation with, so the
+ * partner may always use Novice 2 as well. Those words are still marked new for the learner.
+ */
+const PARTNER_FLOOR: Level = 'N2';
+
 interface Vocabulary {
-  /** Every written form the learner knows, for checking replies. */
+  /** Every written form the learner knows: anything else in a reply is marked new. */
   known: Set<string>;
-  /** The prompt section describing it. */
+  /** What the partner may use without a rewrite: `known` plus the levels up to PARTNER_FLOOR. */
+  allowed: Set<string>;
+  /** The prompt section describing `allowed`. */
   prompt: string;
   level: Level;
 }
@@ -127,21 +161,30 @@ export class TalkService {
     const level = [...selected].sort((a, b) => levelIndex(a) - levelIndex(b))[0] ?? 'N1';
 
     const known = new Set<string>();
+    const allowed = new Set<string>();
+    const isKnownLevel = (id: Level) => id === 'N1' || levelIndex(id) < levelIndex(level);
     const base = this.content
       .levels()
-      .filter((info) => info.id === 'N1' || levelIndex(info.id) < levelIndex(level))
+      .filter((info) => isKnownLevel(info.id) || levelIndex(info.id) <= levelIndex(PARTNER_FLOOR))
       .map((info) => info.id);
     const levelList: string[] = [];
     for (const id of base) {
       const { words, forms } = this.wordsOf(id);
-      for (const form of forms) known.add(form);
+      for (const form of forms) {
+        allowed.add(form);
+        if (isKnownLevel(id)) known.add(form);
+      }
       levelList.push(...words.map((w) => w.hanzi));
     }
     // Studied words in path order, so the prompt stays the same from turn to turn (and cached).
     const studied = cards
       .flatMap((c) => this.content.word(c.wordId) ?? [])
       .sort((a, b) => levelIndex(a.level) - levelIndex(b.level) || a.rank - b.rank);
-    for (const word of studied) for (const form of sameWordForms(word)) known.add(form);
+    for (const word of studied)
+      for (const form of sameWordForms(word)) {
+        known.add(form);
+        allowed.add(form);
+      }
 
     const listed = levelList.slice(0, LISTED_LEVEL_WORDS);
     const listedSet = new Set(listed);
@@ -160,7 +203,7 @@ export class TalkService {
       listed.join(' '),
       ...(extra.length ? ['Words they have studied beyond that:', extra.join(' ')] : []),
     ].join('\n');
-    return { known, prompt, level };
+    return { known, allowed, prompt, level };
   }
 
   async talk(
@@ -182,21 +225,28 @@ export class TalkService {
     if (conversation?.endedAt) throw new ConflictException('This conversation has ended.');
     const scenario = (conversation?.scenario as ScenarioId | undefined) ?? request.scenario;
 
-    const messages = this.turns(
-      [...(conversation?.messages ?? [])].reverse(),
-      request.message || '（請開始對話。）',
-    );
+    const history = [...(conversation?.messages ?? [])].reverse();
+    const messages = this.turns(history, request.message || '（請開始對話。）');
     const system = this.system(scenario, vocabulary);
     const call = (turns: LlmMessage[]) => this.reply(userId, system, turns);
+    const seen = this.seenIn(history, request.message);
+
+    const recent = history
+      .filter((m) => m.role === 'assistant')
+      .slice(-3)
+      .map((m) => m.content);
 
     let answer = await call(messages);
-    let check = this.check(answer, vocabulary.known);
-    if (check.unknown.length > 2 || check.mainland.length) {
+    let check = this.check(answer, vocabulary, seen);
+    const repeated = recent.some((earlier) => repeats(answer.reply, earlier));
+    if (check.beyond.length > 2 || check.mainland.length || repeated) {
       // One rewrite: the model sees its first attempt and what to change about it.
       const note = [
-        check.unknown.length > 2 &&
-          `Your reply used words outside the learner's vocabulary: ${check.unknown.map((u) => u.text).join('、')}. Say it with known words.`,
+        check.beyond.length > 2 &&
+          `Your reply used words outside the learner's vocabulary: ${check.beyond.join('、')}. Keep the words the scenario needs and say the rest with known words.`,
         check.mainland.length && `Use Taiwan wording: ${check.mainland.join('; ')}.`,
+        repeated &&
+          'You already told the learner that. Take the next step of the scenario instead: ask the next thing your character needs to know, show them where to go, or wrap up.',
       ]
         .filter(Boolean)
         .join(' ');
@@ -207,8 +257,11 @@ export class TalkService {
         { role: 'assistant', content: JSON.stringify(answer) },
         { role: 'developer', content: `Write your reply again. ${note}` },
       ]);
-      check = this.check(answer, vocabulary.known);
+      check = this.check(answer, vocabulary, seen);
     }
+    // The model sometimes "corrects" by adding a full stop; that isn't worth flagging.
+    if (answer.correction && essence(answer.correction.corrected) === essence(request.message))
+      answer = { ...answer, correction: null };
 
     // Both messages in one write; the learner's comes first.
     const now = Date.now();
@@ -290,7 +343,11 @@ export class TalkService {
             { role: 'developer', content: CLOSING },
           ],
         );
-        const check = this.check({ ...answer, correction: null }, vocabulary.known);
+        const check = this.check(
+          { ...answer, correction: null },
+          vocabulary,
+          this.seenIn(conversation.messages),
+        );
         closing = {
           id: randomUUID(),
           role: 'assistant',
@@ -404,14 +461,22 @@ export class TalkService {
       : message;
   }
 
-  /** Words in the reply outside the learner's vocabulary, and Mainland wording in the answer. */
-  check(answer: Reply, known: Set<string>) {
+  /**
+   * Words in the reply new to the learner, those beyond what the partner may use, and Mainland
+   * wording in the answer. Words already met in the conversation (`seen`) are neither.
+   */
+  check(answer: Reply, vocabulary: Vocabulary, seen: (text: string) => boolean = () => false) {
     const unknown = new Map<string, NonNullable<TalkMessage['newWords']>[number]>();
-    const isKnown = (text: string) => known.has(text) || known.has(formalTai(text));
-    for (const token of this.content.segment(answer.reply)) {
-      if (!token.han || isKnown(token.text) || NUMBERS.test(token.text)) continue;
+    const beyond = new Set<string>();
+    const has = (words: Set<string>, text: string) =>
+      words.has(text) ||
+      words.has(formalTai(text)) ||
       // A compound of known words (每天, 這個) is fine.
-      if ([...token.text].every((c) => isKnown(c))) continue;
+      [...text].every((c) => words.has(c) || words.has(formalTai(c)));
+    for (const token of this.content.segment(answer.reply)) {
+      if (!token.han || NUMBERS.test(token.text) || seen(token.text)) continue;
+      if (!has(vocabulary.allowed, token.text)) beyond.add(token.text);
+      if (has(vocabulary.known, token.text)) continue;
       unknown.set(token.text, {
         text: token.text,
         ...(token.word
@@ -428,7 +493,19 @@ export class TalkService {
         ? checkText({ text: answer.correction.corrected, where: 'talk:correction' })
         : []),
     ].map((i) => i.problem);
-    return { unknown: [...unknown.values()], mainland };
+    return { unknown: [...unknown.values()], beyond: [...beyond], mainland };
+  }
+
+  /** Words met earlier in a conversation: ones already marked new, and the learner's own. */
+  private seenIn(history: { role: string; content: string; meta: unknown }[], message = '') {
+    const marked = new Set<string>();
+    let typed = message;
+    for (const row of history) {
+      if (row.role === 'user') typed += `\n${row.content}`;
+      else for (const w of (row.meta as Partial<TalkMessage>)?.newWords ?? []) marked.add(w.text);
+    }
+    return (text: string) =>
+      marked.has(text) || typed.includes(text) || formalTai(typed).includes(formalTai(text));
   }
 
   async list(userId: string): Promise<TalkListItem[]> {
