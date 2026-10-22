@@ -9,6 +9,11 @@ COPY packages/content/package.json packages/content/
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 RUN npm ci
+# The FSRS optimizer's WASI build, for CPUs the native one can't run on (no AVX, as in some VMs;
+# apps/api/src/fsrs/binding.ts). npm skips wasm32 packages, so it gets a folder of its own.
+RUN mkdir /fsrs-wasi && cd /fsrs-wasi && npm init -y >/dev/null \
+ && npm install --force --no-audit --no-fund \
+    "@open-spaced-repetition/binding-wasm32-wasi@$(node -p "require('/app/node_modules/@open-spaced-repetition/binding/package.json').version")"
 COPY . .
 # Prisma downloads its migration engine on first use; fetch it now, not at runtime.
 RUN cd apps/api && npx prisma version >/dev/null
@@ -30,6 +35,8 @@ COPY --from=build /app/packages/shared ./packages/shared
 COPY --from=build /app/apps/api ./apps/api
 COPY --from=build /app/apps/web/public/content ./apps/web/public/content
 COPY --from=build /app/apps/web/public/dict ./apps/web/public/dict
+COPY --from=build /fsrs-wasi /opt/fsrs-wasi
+ENV FSRS_WASI_PATH=/opt/fsrs-wasi/node_modules/@open-spaced-repetition/binding-wasm32-wasi
 WORKDIR /app/apps/api
 EXPOSE 3000
 USER node

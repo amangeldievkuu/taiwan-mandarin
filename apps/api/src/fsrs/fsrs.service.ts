@@ -1,15 +1,12 @@
 // Personal FSRS parameters: fit the scheduler's weights to one learner's review history with the
-// fsrs-rs optimizer (WASI build). The web app picks the weights up on its next sync.
+// fsrs-rs optimizer (native, or the WASI build where the CPU can't run it: binding.ts). The web app
+// picks the weights up on its next sync.
 
 import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import {
-  computeParameters,
-  FSRSBindingItem,
-  FSRSBindingReview,
-} from '@open-spaced-repetition/binding';
 import { utcOffsetMinutes } from '@taiwan-mandarin/shared';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { fsrsBinding } from './binding.js';
 import { trainingItems } from './items.js';
 
 /** fsrs-rs needs a few hundred reviews before personal weights beat the defaults. */
@@ -48,6 +45,7 @@ export class FsrsService {
         where: { id: userId },
         data: { fsrsAttemptedCount: reviews.length },
       });
+      const { computeParameters, FSRSBindingItem, FSRSBindingReview } = await fsrsBinding();
       const items = trainingItems(reviews, offsetMinutes).map(
         (steps) => new FSRSBindingItem(steps.map((s) => new FSRSBindingReview(s.rating, s.deltaT))),
       );
