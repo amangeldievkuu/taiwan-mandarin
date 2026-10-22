@@ -48,6 +48,15 @@ function mask(entry: TextEntry, allowlist: readonly AllowEntry[]): string {
   return text;
 }
 
+/** The masked terms back in place, for messages. */
+function unmask(text: string, allowlist: readonly AllowEntry[]): string {
+  return text.replace(/[\ue000-\uf8ff]/gu, (c) => {
+    const code = c.codePointAt(0) ?? 0;
+    const term = code >= 0xf000 ? OPENCC_OVERREACH[code - 0xf000] : allowlist[code - 0xe000]?.term;
+    return term ?? c;
+  });
+}
+
 export function checkText(entry: TextEntry, allowlist = ALLOWLIST): Issue[] {
   if (!CJK.test(entry.text)) return [];
   const text = mask(entry, allowlist);
@@ -56,7 +65,7 @@ export function checkText(entry: TextEntry, allowlist = ALLOWLIST): Issue[] {
     issues.push({ where: entry.where, text: entry.text, problem });
 
   const converted = entry.mainland ? toTwChars(text) : toTwPhrases(text);
-  if (converted !== text) report(`not Taiwan standard, expected "${converted}"`);
+  if (converted !== text) report(`not Taiwan standard, expected "${unmask(converted, allowlist)}"`);
 
   if (!entry.mainland) {
     for (const [term, taiwan] of Object.entries(MAINLAND_TERMS)) {

@@ -9,6 +9,7 @@ import {
   Inject,
   NotFoundException,
   Param,
+  ParseUUIDPipe,
   Post,
   Query,
   UseGuards,
@@ -223,7 +224,10 @@ export class MeController {
   @Delete('tokens/:id')
   @HttpCode(204)
   @ApiOperation({ summary: 'Revoke a personal access token' })
-  revokeToken(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<void> {
+  revokeToken(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
     return this.tokens.revoke(user.id, id);
   }
 

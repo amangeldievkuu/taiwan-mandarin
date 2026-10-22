@@ -86,7 +86,13 @@ export function parsePartialJson(text: string): unknown {
         i++;
         const member = value();
         if (!member) return { value: object, complete: false };
-        object[key.value as string] = member.value;
+        // As JSON.parse does: "__proto__" is an ordinary key, not the object's prototype.
+        Object.defineProperty(object, key.value as string, {
+          value: member.value,
+          enumerable: true,
+          writable: true,
+          configurable: true,
+        });
         if (!member.complete) return { value: object, complete: false };
         skipSpace();
         if (text.charAt(i) === ',') i++;
@@ -118,8 +124,11 @@ export function parsePartialJson(text: string): unknown {
     const number = /^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/.exec(text.slice(i))?.[0];
     if (number) {
       i += number.length;
-      // At the very end the number may still be growing ("12" of "125").
-      return i < text.length ? { value: Number(number), complete: true } : null;
+      // At the very end the number may still be growing ("12" of "125"), and so is one cut off
+      // in its fraction or exponent ("12." of "12.5", "1e" of "1e3").
+      return i < text.length && !/[\d.eE+-]/.test(text.charAt(i))
+        ? { value: Number(number), complete: true }
+        : null;
     }
     for (const [word, literal] of LITERALS) {
       if (text.startsWith(word, i)) {

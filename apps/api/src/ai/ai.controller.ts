@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Inject,
   Param,
+  ParseUUIDPipe,
   Post,
   Res,
   ServiceUnavailableException,
@@ -65,8 +66,8 @@ export class AiController {
     @CurrentUser() user: AuthUser,
     @ZodBody(ExplainRequestSchema) body: ExplainRequest,
   ): Promise<ExplainResult> {
-    await this.quota.consume(user.id, 'ai');
-    return this.explainer.explain(body);
+    this.requireAi();
+    return this.quota.spend(user.id, 'ai', () => this.explainer.explain(body));
   }
 
   @Post('explain/stream')
@@ -82,11 +83,7 @@ export class AiController {
     @Res() res: Response,
   ): Promise<void> {
     // Checked before the stream starts, so these still come back as plain HTTP errors.
-    if (!this.llm.available) {
-      throw new ServiceUnavailableException(
-        'AI features are not set up on this server (OPENAI_API_KEY).',
-      );
-    }
+    this.requireAi();
     await this.quota.consume(user.id, 'ai');
     await writeNdjson(res, (signal) => this.explainer.explainStream(body, signal));
   }
@@ -100,8 +97,8 @@ export class AiController {
     @CurrentUser() user: AuthUser,
     @ZodBody(TalkRequestSchema) body: z.output<typeof TalkRequestSchema>,
   ): Promise<TalkResponse> {
-    await this.quota.consume(user.id, 'ai');
-    return this.talker.talk(user.id, body);
+    this.requireAi();
+    return this.quota.spend(user.id, 'ai', () => this.talker.talk(user.id, body));
   }
 
   @Get('talk')
@@ -112,7 +109,10 @@ export class AiController {
 
   @Get('talk/:id')
   @ApiOperation({ summary: 'A conversation with all its messages (and its summary, once ended)' })
-  conversation(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<TalkConversation> {
+  conversation(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<TalkConversation> {
     return this.talker.messages(user.id, id);
   }
 
@@ -120,7 +120,10 @@ export class AiController {
   @HttpCode(200)
   @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @ApiOperation({ summary: 'End a conversation: a goodbye from the partner, then a summary' })
-  end(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<TalkEndResponse> {
+  end(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<TalkEndResponse> {
     // The goodbye uses one AI message when there is one left today; without it the chat still ends.
     const mayClose = () =>
       this.quota.consume(user.id, 'ai').then(
@@ -137,7 +140,19 @@ export class AiController {
   @Delete('talk/:id')
   @HttpCode(204)
   @ApiOperation({ summary: 'Delete a conversation' })
-  async remove(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<void> {
+  async remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
     await this.talker.remove(user.id, id);
+  }
+
+  /** Before charging the quota: a server without OpenAI answers 503 and keeps the learner's quota. */
+  private requireAi(): void {
+    if (!this.llm.available) {
+      throw new ServiceUnavailableException(
+        'AI features are not set up on this server (OPENAI_API_KEY).',
+      );
+    }
   }
 }

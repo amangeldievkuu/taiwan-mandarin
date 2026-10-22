@@ -5,7 +5,7 @@
 import { z } from 'zod';
 import type { DayActivity } from '../activity.ts';
 import type { Level } from '../content/types.ts';
-import { isTimeZone } from '../days.ts';
+import { canonicalTimeZone, isTimeZone } from '../days.ts';
 
 /** An IANA time zone ("Asia/Taipei"): where the learner's calendar days begin and end. */
 export const TimeZoneSchema = z
@@ -13,7 +13,8 @@ export const TimeZoneSchema = z
   .min(1)
   .max(64)
   .regex(/^[A-Za-z0-9_+\-/]+$/)
-  .refine(isTimeZone, 'Unknown time zone');
+  .refine(isTimeZone, 'Unknown time zone')
+  .transform((zone) => canonicalTimeZone(zone) ?? zone);
 
 export const LevelSchema = z.enum([
   'N1',

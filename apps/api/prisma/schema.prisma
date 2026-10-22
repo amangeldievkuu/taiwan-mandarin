@@ -12,22 +12,26 @@ datasource db {
 }
 
 model User {
-  id                String   @id @default(uuid()) @db.Uuid
-  email             String   @unique
-  passwordHash      String
-  displayName       String?
-  createdAt         DateTime @default(now())
+  id                 String    @id @default(uuid()) @db.Uuid
+  email              String    @unique
+  passwordHash       String
+  displayName        String?
+  createdAt          DateTime  @default(now())
   /// Settings JSON (shared SettingsSchema) and its client timestamp, merged last-write-wins.
-  settings          Json?
-  settingsUpdatedAt BigInt   @default(0)
+  settings           Json?
+  settingsUpdatedAt  BigInt    @default(0)
   /// The learner's own deck: [{ id, level, addedAt }].
-  deck              Json     @default("[]")
-  deckUpdatedAt     BigInt   @default(0)
+  deck               Json      @default("[]")
+  deckUpdatedAt      BigInt    @default(0)
   /// Personal FSRS weights fitted to this user's review history.
-  fsrsWeights       Float[]
-  fsrsTrainedAt     DateTime?
+  fsrsWeights        Float[]
+  fsrsTrainedAt      DateTime?
   /// Reviews used for the last fit.
-  fsrsReviewCount   Int      @default(0)
+  fsrsReviewCount    Int       @default(0)
+  /// Reviews there were at the last fit attempt, successful or not (the nightly job waits for more).
+  fsrsAttemptedCount Int       @default(0)
+  /// IANA time zone the learner last synced from, for day boundaries in server-side jobs.
+  timeZone           String?
 
   cards         Card[]
   reviews       ReviewLog[]

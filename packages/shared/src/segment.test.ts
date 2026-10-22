@@ -39,6 +39,14 @@ describe('segment', () => {
     ]);
   });
 
+  it('splits into single characters while the lexicon is empty', () => {
+    expect(segment('你好嗎', { has: () => false, maxLength: 0 }).map((t) => t.text)).toEqual([
+      '你',
+      '好',
+      '嗎',
+    ]);
+  });
+
   it('marks unknown characters', () => {
     const [token] = segment('鼎', lexicon);
     expect(token).toMatchObject({ text: '鼎', han: true, known: false });

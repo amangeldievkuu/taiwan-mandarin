@@ -9,8 +9,10 @@ export interface Syllable {
   /** Canonical final: y/w spellings expanded, iu→iou, ui→uei, un→uen, u→ü after j/q/x. */
   final: string;
   tone: Tone;
-  /** Surface spelling without tone, e.g. "lü", "you", "jun". */
+  /** Surface spelling without tone, e.g. "lü", "you", "jun", "huar". */
   spelling: string;
+  /** Erhua written onto the syllable (huar, wanr): 兒 merged in, ㄦ after the Zhuyin. */
+  erhua?: boolean;
 }
 
 export interface ZhuyinSyllable {
@@ -53,8 +55,10 @@ const Y_W: Record<string, string> = {
 
 const ZHUYIN_TONES = ['', 'ˊ', 'ˇ', 'ˋ', '˙'];
 
-const TONE_MARKS: Record<string, string> = {
-  a: 'āáǎà', e: 'ēéěè', i: 'īíǐì', o: 'ōóǒò', u: 'ūúǔù', ü: 'ǖǘǚǜ',
+const TONE_MARKS: Record<string, readonly string[]> = {
+  a: [...'āáǎà'], e: [...'ēéěè'], i: [...'īíǐì'], o: [...'ōóǒò'], u: [...'ūúǔù'], ü: [...'ǖǘǚǜ'],
+  // ê has no precomposed 1st and 3rd tone letters, so those take a combining mark.
+  ê: ['ê\u0304', 'ế', 'ê\u030c', 'ề'],
 }; // prettier-ignore
 
 /** Initials after which a bare "i" is the "silent" apical vowel (zhi, si...). */
@@ -64,8 +68,13 @@ export function parseSyllable(input: string): Syllable {
   const raw = input.trim().toLowerCase().replace(/u:/g, 'ü').replace(/v/g, 'ü');
   const match = /^([a-zêü]+)([1-5])$/.exec(raw);
   if (!match) throw new Error(`Invalid pinyin syllable "${input}": expected letters + tone 1–5`);
-  const [, letters = '', digit] = match;
+  const [, written = '', digit] = match;
   const tone = Number(digit) as Tone;
+  // 兒 written apart as a bare "r" (CC-CEDICT's "yi1 kuai4 r5") is the syllable er.
+  if (written === 'r') return { initial: '', final: 'er', tone, spelling: 'r' };
+  // Erhua written onto a syllable (huar4, wanr2, ger4); "er" itself is 二/兒.
+  const erhua = written !== 'er' && written.endsWith('r');
+  const letters = erhua ? written.slice(0, -1) : written;
 
   const initial = INITIALS.find((i) => letters.startsWith(i) && letters.length > i.length) ?? '';
   let rest = letters.slice(initial.length);
@@ -94,8 +103,8 @@ export function parseSyllable(input: string): Syllable {
   }
 
   // Standard spelling writes ü as u after j/q/x/y.
-  const spelling = letters.replace(/^([jqxy])ü/, '$1u');
-  return { initial, final: rest, tone, spelling };
+  const spelling = written.replace(/^([jqxy])ü/, '$1u');
+  return { initial, final: rest, tone, spelling, ...(erhua ? { erhua } : {}) };
 }
 
 export function splitSyllables(pinyin: string): string[] {
@@ -105,7 +114,7 @@ export function splitSyllables(pinyin: string): string[] {
 function markSyllable({ spelling, tone }: Syllable): string {
   if (tone === 5) return spelling;
   let index: number;
-  if (/[ae]/.test(spelling)) index = spelling.search(/[ae]/);
+  if (/[aeê]/.test(spelling)) index = spelling.search(/[aeê]/);
   else if (spelling.includes('ou')) index = spelling.indexOf('o');
   else {
     index = -1;
@@ -118,7 +127,7 @@ function markSyllable({ spelling, tone }: Syllable): string {
   }
   if (index < 0) return spelling;
   const vowel = spelling.charAt(index);
-  const marked = TONE_MARKS[vowel]?.charAt(tone - 1) ?? vowel;
+  const marked = TONE_MARKS[vowel]?.[tone - 1] ?? vowel;
   return spelling.slice(0, index) + marked + spelling.slice(index + 1);
 }
 
@@ -145,9 +154,10 @@ export function pinyinWord(pinyin: string): string {
 }
 
 export function syllableToZhuyin(syllable: string): ZhuyinSyllable {
-  const { initial, final, tone } = parseSyllable(syllable);
+  const { initial, final, tone, erhua } = parseSyllable(syllable);
   // b/p/m/f + o is ㄛ directly; every other final maps from the table.
-  const body = (ZHUYIN_INITIALS[initial] ?? '') + (ZHUYIN_FINALS[final] ?? '');
+  const body =
+    (ZHUYIN_INITIALS[initial] ?? '') + (ZHUYIN_FINALS[final] ?? '') + (erhua ? 'ㄦ' : '');
   return { body, tone: ZHUYIN_TONES[tone - 1] ?? '' };
 }
 
@@ -362,7 +372,7 @@ export function zhuyinSentence(
 /** Tone-marked vowel → [plain vowel, tone]. Breves (ă ĭ ŏ ŭ, common in word lists) count as 3rd tone. */
 const MARKED_VOWELS: ReadonlyMap<string, readonly [string, Tone]> = new Map([
   ...Object.entries(TONE_MARKS).flatMap(([vowel, marks]) =>
-    [...marks].map((mark, i) => [mark, [vowel, (i + 1) as Tone]] as const),
+    marks.map((mark, i) => [mark, [vowel, (i + 1) as Tone]] as const),
   ),
   ...[...'ăĕĭŏŭ'].map((mark, i) => [mark, ['aeiou'.charAt(i), 3 as Tone]] as const),
   ['ɑ', ['a', 5 as Tone]],
@@ -376,7 +386,14 @@ export function fromToneMarked(syllable: string): string {
   let tone: Tone = 5;
   let marks = 0;
   let letters = '';
-  for (const char of syllable.trim().toLowerCase().normalize('NFC')) {
+  // ê with a combining macron or caron is one marked vowel (no precomposed letter exists).
+  const chars =
+    syllable
+      .trim()
+      .toLowerCase()
+      .normalize('NFC')
+      .match(/ê[\u0304\u030c]|./gsu) ?? [];
+  for (const char of chars) {
     const marked = MARKED_VOWELS.get(char);
     if (marked) {
       letters += marked[0];
@@ -400,20 +417,32 @@ const W_Y = new Map(Object.entries(Y_W).map(([spelling, final]) => [final, spell
 
 /**
  * One Zhuyin syllable → numbered pinyin: "ㄋㄧˇ" → "ni3", "˙ㄇㄚ" → "ma5", "ㄓ" → "zhi1".
- * The neutral-tone dot may come first (as printed) or last.
+ * The neutral-tone dot may come first (as printed) or last; a first-tone ˉ is accepted. Erhua
+ * written onto the syllable, before or after the tone ("ㄏㄨㄚˋㄦ", "ㄏㄨㄚㄦˋ"), gives "huar4".
  */
 export function fromZhuyin(syllable: string): string {
   let text = syllable.trim();
+  let erhua = false;
+  if (text.length > 1 && text.endsWith('ㄦ') && !/^[˙ˉˊˇˋ]?ㄦ$/.test(text)) {
+    erhua = true;
+    text = text.slice(0, -1);
+  }
   let tone: Tone = 1;
   if (text.startsWith('˙') || text.endsWith('˙')) {
     tone = 5;
     text = text.replace('˙', '');
+  } else if (text.endsWith('ˉ')) {
+    text = text.slice(0, -1);
   } else {
     const index = ZHUYIN_TONES.indexOf(text.slice(-1));
     if (index > 0) {
       tone = (index + 1) as Tone;
       text = text.slice(0, -1);
     }
+  }
+  if (!erhua && text.length > 1 && text.endsWith('ㄦ')) {
+    erhua = true;
+    text = text.slice(0, -1);
   }
   const first = text.charAt(0);
   const initial = PINYIN_INITIAL.get(first) ?? '';
@@ -433,7 +462,7 @@ export function fromZhuyin(syllable: string): string {
     if ('jqx'.includes(initial)) final = final.replace('ü', 'u');
     spelling = initial + final;
   }
-  return spelling + tone;
+  return spelling + (erhua ? 'r' : '') + tone;
 }
 
 /** Lowercase pinyin letters only, for search: "Nǐ hǎo" / "ni3 hao3" → "nihao". */

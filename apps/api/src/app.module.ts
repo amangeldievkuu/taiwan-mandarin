@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -10,6 +10,7 @@ import { QuotaService } from './ai/quota.service.js';
 import { TalkService } from './ai/talk.service.js';
 import { AuthController } from './auth/auth.controller.js';
 import { AuthGuard } from './auth/auth.guard.js';
+import { PrismaErrorFilter } from './common/prisma-error.filter.js';
 import { AuthService } from './auth/auth.service.js';
 import { ENV, loadEnv, type Env } from './config/env.js';
 import { ContentService } from './content/content.service.js';
@@ -47,6 +48,7 @@ const env = loadEnv();
   providers: [
     { provide: ENV, useValue: env satisfies Env },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_FILTER, useClass: PrismaErrorFilter },
     PrismaService,
     ContentService,
     AuthService,

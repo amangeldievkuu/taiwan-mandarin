@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { dayDiff, dayKeyIn, isTimeZone, shiftDay, weekStart, weekdayOf } from './days.ts';
+import {
+  canonicalTimeZone,
+  dayDiff,
+  dayKeyIn,
+  isTimeZone,
+  shiftDay,
+  utcOffsetMinutes,
+  weekStart,
+  weekdayOf,
+} from './days.ts';
 
 describe('day keys', () => {
   it('shifts across months, years and leap days', () => {
@@ -34,5 +43,15 @@ describe('dayKeyIn', () => {
   it('knows real time zones', () => {
     expect(isTimeZone('Asia/Taipei')).toBe(true);
     expect(isTimeZone('Mars/Base')).toBe(false);
+    expect(canonicalTimeZone('asia/taipei')).toBe('Asia/Taipei');
+    expect(canonicalTimeZone('Mars/Base')).toBeUndefined();
+  });
+
+  it('gives a zone\'s offset from UTC, with daylight saving', () => {
+    expect(utcOffsetMinutes(Date.UTC(2026, 0, 15), 'Asia/Taipei')).toBe(480);
+    expect(utcOffsetMinutes(Date.UTC(2026, 6, 15), 'America/New_York')).toBe(-240);
+    expect(utcOffsetMinutes(Date.UTC(2026, 0, 15), 'America/New_York')).toBe(-300);
+    expect(utcOffsetMinutes(Date.UTC(2026, 0, 15), 'Asia/Kolkata')).toBe(330);
+    expect(utcOffsetMinutes(Date.UTC(2026, 0, 15), 'UTC')).toBe(0);
   });
 });

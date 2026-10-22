@@ -43,14 +43,30 @@ export function dayKeyIn(epochMs: number, timeZone: string): string {
   return `${parts['year']}-${parts['month']}-${parts['day']}`;
 }
 
-/** An IANA time zone this runtime knows ("Asia/Taipei", "UTC"). */
-export function isTimeZone(value: string): boolean {
+/**
+ * The canonical name of an IANA time zone this runtime knows ("asia/taipei" → "Asia/Taipei"), or
+ * undefined. Other systems (PostgreSQL) only match the canonical spelling.
+ */
+export function canonicalTimeZone(value: string): string | undefined {
   try {
-    new Intl.DateTimeFormat('en-US', { timeZone: value });
-    return true;
+    return new Intl.DateTimeFormat('en-US', { timeZone: value }).resolvedOptions().timeZone;
   } catch {
-    return false;
+    return undefined;
   }
+}
+
+/** An IANA time zone this runtime knows ("Asia/Taipei", "UTC"). */
+export const isTimeZone = (value: string): boolean => canonicalTimeZone(value) !== undefined;
+
+/** Minutes `timeZone` is ahead of UTC at `epochMs`: 480 in Taipei, -240 in New York in summer. */
+export function utcOffsetMinutes(epochMs: number, timeZone: string): number {
+  const name =
+    new Intl.DateTimeFormat('en-US', { timeZone, timeZoneName: 'longOffset' })
+      .formatToParts(epochMs)
+      .find((p) => p.type === 'timeZoneName')?.value ?? '';
+  const match = /GMT([+-])(\d{1,2}):?(\d{2})?/.exec(name);
+  if (!match) return 0; // "GMT" itself
+  return (match[1] === '-' ? -1 : 1) * (Number(match[2]) * 60 + Number(match[3] ?? 0));
 }
 
 /** This device's time zone. */

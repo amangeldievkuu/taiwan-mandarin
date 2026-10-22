@@ -36,6 +36,11 @@ export const ALLOWLIST: readonly AllowEntry[] = [
     reason:
       'The conversation partner speaks casually and is told to write 台 (台北, 台鐵); the tests check that 台 and 臺 count as the same.',
   },
+  ...(['裏', '台'] as const).map((term) => ({
+    term,
+    where: 'packages/shared/src/content/types.ts',
+    reason: 'The comment names character variants that count as the same word (裡/裏, 臺/台).',
+  })),
   {
     term: '台',
     where: 'apps/api/src/content/content.service.ts',
@@ -61,8 +66,12 @@ export const ALLOWLIST: readonly AllowEntry[] = [
  * 消息 news (→ 訊息), 打開 open (→ 開啟), 高級 high-end (→ 高階), 支持 support (→ 支援),
  * 項目 item (→ 專案), 程序 procedure (→ 程式), 社區 community (→ 社群), 分區 district (→ 分割槽).
  * 念/唸 and 了解/瞭解 are both standard (TOCFL lists 念, 了解 first).
+ * OpenCC also turns every 准 into 準 and 斗 into 鬥; only the words where Taiwan writes 准 (permit)
+ * or 斗 (a dipper, a measure) are listed, so 標准 and 戰斗 are still caught.
  */
 export const OPENCC_OVERREACH: readonly string[] = [
   '消息', '打開', '高級', '低級', '支持', '項目', '程序', '設置', '保存', '社區', '類型', '數據',
-  '信號', '通信', '窗口', '連接', '循環', '局部', '聲明', '干擾', '念', '注意', '准', '斗', '分區', '了解',
+  '信號', '通信', '窗口', '連接', '循環', '局部', '聲明', '干擾', '念', '注意', '分區', '了解',
+  '不准', '准許', '准予', '獲准', '恩准', '准考證',
+  '斗膽', '車斗', '斗篷', '斗室', '星斗', '泰斗', '菸斗', '煙斗',
 ]; // prettier-ignore

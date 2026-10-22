@@ -14,8 +14,17 @@ import {
 } from '@taiwan-mandarin/shared/taiwan-standard';
 
 const root = join(import.meta.dirname, '..');
-const SOURCES = ['apps/web/src', 'apps/web/index.html', 'apps/web/vite.config.ts', 'apps/api/src'];
+const SOURCES = [
+  'apps/web/src',
+  'apps/web/index.html',
+  'apps/web/vite.config.ts',
+  'apps/api/src',
+  'packages/shared/src',
+];
 const EXTENSIONS = /\.(svelte|ts|html)$/;
+/** The guard itself (its lists and tests are Mainland text by design), and the curated words,
+ * which checkVocab checks field by field below. */
+const SKIP = /^packages\/shared\/src\/(taiwan-standard\/|content\/curated\.ts$)/;
 const CJK_RUN = /[\u3400-\u9fff\uf900-\ufaff]+/g;
 
 function files(path: string): string[] {
@@ -24,7 +33,8 @@ function files(path: string): string[] {
   if (statSync(full).isFile()) return [path];
   return readdirSync(full, { recursive: true, encoding: 'utf8' })
     .filter((f) => EXTENSIONS.test(f))
-    .map((f) => join(path, f));
+    .map((f) => join(path, f))
+    .filter((f) => !SKIP.test(f));
 }
 
 const content = join(root, 'apps/web/public/content');

@@ -17,7 +17,7 @@
   // button), grade it, and it flies off (left for Again, right for Good: the direction tells the
   // grade, every grade gets the same energy and XP) while the next card rises from the stack.
   import { LEVELS, XP } from '@taiwan-mandarin/shared';
-  import { tick } from 'svelte';
+  import { tick, untrack } from 'svelte';
   import HanziText from '../ui/HanziText.svelte';
   import Icon from '../ui/Icon.svelte';
   import Reading from '../ui/Reading.svelte';
@@ -79,12 +79,26 @@
   let glyphs = $state<HTMLElement>();
   let pressed = $state<string | null>(null);
 
-  // A new card is shown: note the time, and in listening mode play it.
+  // A new card is shown: note the time, and in listening mode play it. Only a new card counts:
+  // revealing it or switching modes must not restart the clock.
   $effect(() => {
-    if (!word) return;
-    studied = true;
-    store.markShown();
-    if (mode === 'listen' && !store.revealed) speak(word.hanzi);
+    if (!cardKey || !word) return;
+    const shown = word;
+    untrack(() => {
+      studied = true;
+      store.markShown();
+      if (mode === 'listen' && !store.revealed) speak(shown.hanzi);
+    });
+  });
+
+  // Switching to listening mode on a hidden card plays it.
+  let lastMode = untrack(() => mode);
+  $effect(() => {
+    if (mode === lastMode) return;
+    lastMode = mode;
+    untrack(() => {
+      if (mode === 'listen' && word && !store.revealed) speak(word.hanzi);
+    });
   });
 
   async function reveal() {

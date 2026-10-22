@@ -134,7 +134,9 @@ export function syllableInventory(entries: readonly CedictEntry[]): Set<string> 
   // Taiwan readings CC-CEDICT never uses: 崖 yái, 唷 yō.
   set.add('yai');
   set.add('yo');
-  // Drop what Zhuyin can't spell: erhua "r", interjections "m", "ng", "hm", placeholders "xx".
+  // Drop erhua "r" (兒, not a syllable of its own here) and what Zhuyin can't spell:
+  // interjections "m", "ng", "hm", placeholders "xx".
+  set.delete('r');
   for (const s of set) {
     try {
       parseSyllable(s + '1');

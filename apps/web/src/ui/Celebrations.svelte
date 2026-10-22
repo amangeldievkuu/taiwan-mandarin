@@ -1,8 +1,8 @@
 <script lang="ts">
   // Everything celebratory, mounted once in App: toasts, "+10" floats, petal and gold bursts, and
   // the kintsugi moments: the day practice mends a crack with gold, and a new sprout after a plant
-  // went to the garden. Each moment is celebrated once per device; on the first run, what is already true
-  // is taken as known rather than announced.
+  // went to the garden. Each moment is celebrated once per device; on the first run (until the first
+  // sync has brought in other devices' practice), what is already true is taken as known.
   import { flip } from 'svelte/animate';
   import Confetti from './Confetti.svelte';
   import StreakPlant from './StreakPlant.svelte';
@@ -11,6 +11,7 @@
   import { once, seeded } from '../lib/celebrated';
   import { feedback } from '../lib/feedback.svelte';
   import { store } from '../lib/store.svelte';
+  import { account } from '../lib/sync.svelte';
   import { toasts } from '../lib/toast.svelte';
   import { fade, rise } from '../lib/transitions';
 
@@ -49,7 +50,9 @@
         feedback.play('stamp');
       }
     }
-    seeded();
+    // Signed in, other devices' practice arrives with the first full sync: until then, what shows
+    // up was earned before and is taken as seen, not announced (a new device would toast them all).
+    if (account.checked && (!account.user || store.activity.remoteComplete)) seeded();
   });
 </script>
 

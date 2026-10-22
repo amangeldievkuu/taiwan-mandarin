@@ -5,7 +5,7 @@
 //   "名字(˙ㄗ)"        → 名字 (Zhuyin annotations dropped; the reading column has them)
 //   "bàba/bà", "xiăohái(zi)", "ㄅㄚˋ ˙ㄅㄚ / ㄅㄚˋ"
 
-import { fromZhuyin } from '@taiwan-mandarin/shared';
+import { fromZhuyin, parseSyllable } from '@taiwan-mandarin/shared';
 import { alignPinyin, type PinyinContext } from './pinyin.ts';
 
 export interface Form {
@@ -73,12 +73,13 @@ export function zhuyinVariants(cell: string): string[][] {
           .trim()
           .split(/\s+/)
           .filter(Boolean)
-          .flatMap((syllable) =>
-            // Erhua written onto the syllable: "ㄏㄨㄟˇㄦ" → hui3 + er5
-            syllable.length > 1 && syllable.endsWith('ㄦ')
-              ? [fromZhuyin(syllable.slice(0, -1)), 'er5']
-              : [fromZhuyin(syllable)],
-          );
+          .flatMap((syllable) => {
+            // Erhua written onto the syllable ("ㄏㄨㄟˇㄦ", "ㄏㄨㄟㄦˇ") is its own 兒: hui3 + er5.
+            const numbered = fromZhuyin(syllable);
+            return parseSyllable(numbered).erhua
+              ? [numbered.replace(/r(?=[1-5]$)/, ''), 'er5']
+              : [numbered];
+          });
       } catch {
         return [];
       }

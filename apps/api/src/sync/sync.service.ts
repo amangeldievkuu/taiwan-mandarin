@@ -162,7 +162,14 @@ export class SyncService {
         data: { deck: request.deck.entries, deckUpdatedAt: updatedAt },
       });
     }
-    const saved = await this.db.user.findUniqueOrThrow({ where: { id: userId } });
+    let saved = await this.db.user.findUniqueOrThrow({ where: { id: userId } });
+    // Where the learner is, for server-side jobs that count days (the nightly FSRS fit).
+    if (request.activity && saved.timeZone !== request.activity.timeZone) {
+      saved = await this.db.user.update({
+        where: { id: userId },
+        data: { timeZone: request.activity.timeZone },
+      });
+    }
 
     // Changed since the cursor, with a margin for writes that were in flight when it was taken,
     // and the server's copy of every card the client sent an older version of.

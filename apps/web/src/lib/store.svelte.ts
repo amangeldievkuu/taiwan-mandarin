@@ -124,8 +124,10 @@ class Store {
     }
     return min;
   });
+  /** Now, to the minute, so counts of due cards keep up while the app stays open. */
+  clock = $state(Date.now());
   dueCount = $derived.by(() => {
-    const now = Date.now();
+    const now = this.clock;
     return Object.values(this.cards).filter((r) => !r.suspended && r.card.due.getTime() <= now)
       .length;
   });
@@ -215,18 +217,27 @@ class Store {
   async startSession(): Promise<void> {
     this.finished = 0;
     this.stats = emptyStats();
-    await this.refreshQueue();
+    await this.refreshQueue(true);
   }
 
-  /** Rebuild the queue (e.g. settings changed or the app resumed) while keeping stats. */
-  async refreshQueue(): Promise<void> {
+  /** A new day: today's new-word allowance and the session start over. */
+  private rollDay(): void {
     this.today = dayKey(new Date());
     if (this.daily.date !== this.today) {
       this.daily = freshDaily();
       this.finished = 0;
       this.stats = emptyStats();
     }
+  }
+
+  /**
+   * Rebuild the queue (e.g. settings changed or the app resumed) while keeping stats. Unless
+   * `force`d, an answer revealed while the word lists were loading stays open and the queue as it is.
+   */
+  async refreshQueue(force = false): Promise<void> {
+    this.rollDay();
     const now = new Date();
+    this.clock = now.getTime();
     const dueLevels = Object.values(this.cards)
       .filter((r) => r.card.due.getTime() <= now.getTime() + 60 * 60_000)
       .flatMap((r) => (r.level ? [r.level] : []));
@@ -235,6 +246,7 @@ class Store {
       ...dueLevels,
       ...this.deck.flatMap((d) => (d.level ? [d.level] : [])),
     ]);
+    if (this.revealed && !force) return;
     const allowance = this.settings.newPerDay - this.daily.newCount;
     const queue = buildQueue(this.cards, this.candidates(), now, allowance);
     // Drop anything whose word file failed to load, rather than showing a blank card.
@@ -332,6 +344,8 @@ class Store {
       );
     this.activity = countReview(this.activity, review);
 
+    // Past midnight with the answer open: this answer counts for the new day.
+    this.rollDay();
     this.daily.reviewCount++;
     if (isNew) {
       this.daily.newCount++;
@@ -515,7 +529,8 @@ class Store {
       if (document.visibilityState === 'hidden') {
         if (this.saveTimer) void this.flush();
       } else {
-        this.today = dayKey(new Date());
+        this.clock = Date.now();
+        this.rollDay();
         if (!this.revealed) void this.refreshQueue();
       }
     };
@@ -524,14 +539,18 @@ class Store {
       const now = new Date();
       const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1);
       midnight = setTimeout(() => {
-        this.today = dayKey(new Date());
+        // A new day while the app is open: fresh new-word allowance, and its new words queued.
+        this.rollDay();
+        if (!this.revealed) void this.refreshQueue();
         atMidnight();
       }, next.getTime() - Date.now());
     };
     atMidnight();
+    const minute = setInterval(() => (this.clock = Date.now()), 60_000);
     document.addEventListener('visibilitychange', onChange);
     return () => {
       clearTimeout(midnight);
+      clearInterval(minute);
       document.removeEventListener('visibilitychange', onChange);
     };
   }

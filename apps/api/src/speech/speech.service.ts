@@ -117,9 +117,9 @@ export class SpeechService {
     frames: PitchFrame[] = trackPitch(pcm.samples, { sampleRate: pcm.sampleRate }),
   ): PronounceResult {
     const { chars, pinyin } = this.target(request);
-    const target = chars.join('');
     const syllables = splitSyllables(pinyin);
-    const expected = surfaceTones(target, pinyin);
+    // The text as written, so its punctuation counts as pauses.
+    const expected = surfaceTones(request.target, pinyin);
 
     // What was heard, in Taiwan characters, with a time span per character.
     const heardText = toTaiwanCharacters(transcript.text);

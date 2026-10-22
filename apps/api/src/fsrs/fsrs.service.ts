@@ -8,11 +8,14 @@ import {
   FSRSBindingItem,
   FSRSBindingReview,
 } from '@open-spaced-repetition/binding';
+import { utcOffsetMinutes } from '@taiwan-mandarin/shared';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { trainingItems } from './items.js';
 
 /** fsrs-rs needs a few hundred reviews before personal weights beat the defaults. */
 export const MIN_REVIEWS = 400;
+/** For learners who haven't synced a time zone yet; most learn in Taiwan. */
+const DEFAULT_TIME_ZONE = 'Asia/Taipei';
 
 @Injectable()
 export class FsrsService {
@@ -24,7 +27,7 @@ export class FsrsService {
   /** `timeoutMs` caps training; fsrs-rs returns the best weights found so far. */
   async optimize(
     userId: string,
-    utcOffsetMinutes = 480,
+    offsetMinutes = 480,
     timeoutMs = 30_000,
   ): Promise<{ w: number[]; reviewCount: number; trainedAt: string }> {
     if (this.running.has(userId)) throw new BadRequestException('Already optimizing');
@@ -40,7 +43,12 @@ export class FsrsService {
           `Personal parameters need ${MIN_REVIEWS} reviews; you have ${reviews.length}.`,
         );
       }
-      const items = trainingItems(reviews, utcOffsetMinutes).map(
+      // Recorded first, so a fit that fails waits for more history instead of every night.
+      await this.db.user.update({
+        where: { id: userId },
+        data: { fsrsAttemptedCount: reviews.length },
+      });
+      const items = trainingItems(reviews, offsetMinutes).map(
         (steps) => new FSRSBindingItem(steps.map((s) => new FSRSBindingReview(s.rating, s.deltaT))),
       );
       const w = await computeParameters(items, { enableShortTerm: true, timeout: timeoutMs });
@@ -65,17 +73,28 @@ export class FsrsService {
     }
   }
 
-  /** Nightly: refit learners with at least MIN_REVIEWS new reviews since their last fit. */
-  @Cron('0 4 * * *')
+  /**
+   * Nightly (at 04:00 in Taiwan): refit learners with at least MIN_REVIEWS new reviews since their
+   * last attempt, counting days in each learner's own time zone.
+   */
+  @Cron('0 4 * * *', { timeZone: DEFAULT_TIME_ZONE })
   async nightly(): Promise<void> {
     const counts = await this.db.reviewLog.groupBy({ by: ['userId'], _count: { _all: true } });
+    const users = new Map(
+      (
+        await this.db.user.findMany({
+          where: { id: { in: counts.map((c) => c.userId) } },
+          select: { id: true, fsrsReviewCount: true, fsrsAttemptedCount: true, timeZone: true },
+        })
+      ).map((u) => [u.id, u]),
+    );
     for (const { userId, _count } of counts) {
-      const user = await this.db.user.findUnique({
-        where: { id: userId },
-        select: { fsrsReviewCount: true },
-      });
-      if (!user || _count._all - user.fsrsReviewCount < MIN_REVIEWS) continue;
-      await this.optimize(userId, 480, 300_000).catch(() => undefined);
+      const user = users.get(userId);
+      if (!user) continue;
+      const last = Math.max(user.fsrsReviewCount, user.fsrsAttemptedCount);
+      if (_count._all - last < MIN_REVIEWS) continue;
+      const offset = utcOffsetMinutes(Date.now(), user.timeZone ?? DEFAULT_TIME_ZONE);
+      await this.optimize(userId, offset, 300_000).catch(() => undefined);
     }
   }
 }

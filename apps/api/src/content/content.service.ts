@@ -126,7 +126,7 @@ export class ContentService implements OnModuleInit {
   }
 
   lookup(headword: string): DictEntry[] {
-    return headword ? (this.shard(dictShardOf(headword))[headword] ?? []) : [];
+    return headword ? entriesIn(this.shard(dictShardOf(headword)), headword) : [];
   }
 
   /** Splits Chinese text into dictionary words. */
@@ -174,10 +174,10 @@ export class ContentService implements OnModuleInit {
   lookupAt(text: string, index: number): { word: string; entries: DictEntry[] } {
     const shard = this.shard(dictShardOf(text.slice(index)));
     const word = longestMatchAt(text, index, {
-      has: (w) => w in shard,
+      has: (w) => Object.hasOwn(shard, w),
       maxLength: this.manifest?.dictMaxLength ?? 8,
     });
-    return { word, entries: shard[word] ?? [] };
+    return { word, entries: entriesIn(shard, word) };
   }
 
   allReaders(): Reader[] {
@@ -188,3 +188,7 @@ export class ContentService implements OnModuleInit {
     return this.readers.find((r) => r.id === id);
   }
 }
+
+/** A shard's entries for `word`; never Object.prototype members ("constructor", "toString"). */
+const entriesIn = (shard: DictShard, word: string): DictEntry[] =>
+  Object.hasOwn(shard, word) ? (shard[word] ?? []) : [];

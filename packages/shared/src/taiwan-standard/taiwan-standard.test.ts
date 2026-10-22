@@ -43,6 +43,18 @@ describe('checkText', () => {
     expect(checkText({ text: '台 (台灣)', where: 'vocab:臺灣.tw' })).toEqual([]);
   });
 
+  it('catches Simplified 准 and 斗, but not the words Taiwan writes with them', () => {
+    expect(issues('標准')).toHaveLength(1);
+    expect(issues('戰斗')).toHaveLength(1);
+    expect(issues('這裡不准停車。')).toEqual([]);
+    expect(issues('他斗膽問了一句。')).toEqual([]);
+  });
+
+  it('shows allowlisted words as written in the expected text', () => {
+    const [issue] = checkText({ text: '支持标准', where: 'test' });
+    expect(issue?.problem).toBe('not Taiwan standard, expected "支持標準"');
+  });
+
   it('ignores everyday words OpenCC turns into software terms', () => {
     expect(issues('我有一個好消息！')).toEqual([]);
     expect(issues('請打開窗戶。')).toEqual([]);

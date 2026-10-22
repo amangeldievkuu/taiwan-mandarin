@@ -387,3 +387,29 @@ describe('talk', () => {
     expect(res.status).toBe(403);
   });
 });
+
+describe('quota', () => {
+  const used = async () =>
+    (await request(http).get('/v1/ai/status').set(auth())).body.used as number;
+
+  it('counts answers, but not failed requests or a server without AI', async () => {
+    const before = await used();
+    replies = [new BadGatewayException('upstream down')];
+    const failed = await request(http).post('/v1/ai/explain').set(auth()).send({ text: '你好' });
+    expect(failed.status).toBe(502);
+    expect(await used()).toBe(before);
+
+    stub.available = false;
+    try {
+      const off = await request(http).post('/v1/ai/explain').set(auth()).send({ text: '你好' });
+      expect(off.status).toBe(503);
+    } finally {
+      stub.available = true;
+    }
+    expect(await used()).toBe(before);
+
+    replies = [{ reply: '你好！', translation: 'Hi!', correction: null }];
+    await request(http).post('/v1/ai/talk').set(auth()).send({ scenario: 'mrt' }).expect(200);
+    expect(await used()).toBe(before + 1);
+  });
+});

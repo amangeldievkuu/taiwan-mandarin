@@ -42,7 +42,8 @@ function segmentHan(run: string, offset: number, lexicon: Lexicon): Token[] {
   const next = new Array<number>(n + 1).fill(n);
   count[n] = 0;
   for (let i = n - 1; i >= 0; i--) {
-    for (let len = Math.min(lexicon.maxLength, n - i); len >= 1; len--) {
+    // At least one character at a time, even with an empty lexicon (maxLength 0).
+    for (let len = Math.min(Math.max(1, lexicon.maxLength), n - i); len >= 1; len--) {
       const word = chars.slice(i, i + len).join('');
       const known = lexicon.has(word);
       if (!known && len > 1) continue;

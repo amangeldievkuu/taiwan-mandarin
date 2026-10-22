@@ -93,6 +93,17 @@ describe('surfaceTones', () => {
     ['第一', 'di4 yi1', [4, 1]],
     ['十一月', 'shi2 yi1 yue4', [2, 1, 4]],
     ['謝謝', 'xie4 xie5', [4, 5]],
+    // 一 as the number one keeps yī.
+    ['星期一早上', 'xing1 qi2 yi1 zao3 shang4', [1, 2, 1, 3, 4]],
+    ['一月', 'yi1 yue4', [1, 4]],
+    ['一九九八', 'yi1 jiu3 jiu3 ba1', [1, 2, 3, 1]],
+    ['統一發票', 'tong3 yi1 fa1 piao4', [3, 1, 1, 4]],
+    ['一百', 'yi1 bai3', [4, 3]],
+    ['一百一十', 'yi1 bai3 yi1 shi2', [4, 3, 1, 2]],
+    // Punctuation is a pause: it lines up by characters, and sandhi stops at it.
+    ['好，一個', 'hao3 yi1 ge4', [3, 2, 4]],
+    ['你好，我很好', 'ni3 hao3 wo3 hen3 hao3', [2, 3, 2, 2, 3]],
+    ['十，一個', 'shi2 yi1 ge4', [2, 2, 4]],
   ])('%s %s', (hanzi, pinyin, expected) => {
     expect(surfaceTones(hanzi, pinyin)).toEqual(expected);
   });

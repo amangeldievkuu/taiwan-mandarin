@@ -114,7 +114,7 @@ class Content {
   async lookup(headword: string): Promise<DictEntry[]> {
     if (!headword) return [];
     const shard = await this.shard(dictShardOf(headword));
-    return shard[headword] ?? [];
+    return Object.hasOwn(shard, headword) ? (shard[headword] ?? []) : [];
   }
 
   /**
@@ -125,10 +125,10 @@ class Content {
     const manifest = await this.init();
     const shard = await this.shard(dictShardOf(text.slice(index)));
     const word = longestMatchAt(text, index, {
-      has: (w) => w in shard,
+      has: (w) => Object.hasOwn(shard, w),
       maxLength: manifest.dictMaxLength,
     });
-    return { word, entries: shard[word] ?? [] };
+    return { word, entries: Object.hasOwn(shard, word) ? (shard[word] ?? []) : [] };
   }
 
   /**

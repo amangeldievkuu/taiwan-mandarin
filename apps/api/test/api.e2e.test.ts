@@ -417,6 +417,21 @@ describe('public content API', () => {
     expect(words.body.items[0].hanzi).toBe('捷運');
   });
 
+  it('finds nothing for words that are Object.prototype members', async () => {
+    for (const q of ['constructor', 'toString', '__proto__']) {
+      const res = await request(http).get(`/v1/dict/${q}`);
+      expect(res.status).toBe(200);
+      expect(res.body.entries).toEqual([]);
+    }
+  });
+
+  it('answers a malformed id with 400, not 500', async () => {
+    const { token } = await signIn(account);
+    const auth = { authorization: `Bearer ${token}` };
+    expect((await request(http).get('/v1/ai/talk/not-a-uuid').set(auth)).status).toBe(400);
+    expect((await request(http).delete('/v1/me/tokens/not-a-uuid').set(auth)).status).toBe(400);
+  });
+
   it('segments text', async () => {
     const res = await request(http).post('/v1/segment').send({ text: '我想坐捷運' });
     expect(res.status).toBe(201);

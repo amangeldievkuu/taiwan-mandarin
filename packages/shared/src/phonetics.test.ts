@@ -164,6 +164,22 @@ describe('toZhuyin', () => {
     expect(z('zhong1 deng3')).toBe('ㄓㄨㄥ ㄉㄥˇ');
   });
 
+  it('spells erhua, written apart (r5) or onto the syllable', () => {
+    expect(z('yi1 kuai4 r5')).toBe('ㄧ ㄎㄨㄞˋ ˙ㄦ'); // 一塊兒, as CC-CEDICT writes it
+    expect(z('huar4')).toBe('ㄏㄨㄚㄦˋ');
+    expect(z('ger4')).toBe('ㄍㄜㄦˋ');
+    expect(z('wanr2')).toBe('ㄨㄢㄦˊ');
+    expect(toToneMarked('yi1 dianr3')).toBe('yī diǎnr');
+    expect(toToneMarked('yi1 kuai4 r5')).toBe('yī kuài r');
+  });
+
+  it('marks tones on ê', () => {
+    expect(toToneMarked('ê2')).toBe('ế');
+    expect(toToneMarked('ê4')).toBe('ề');
+    expect(fromToneMarked(toToneMarked('ê1'))).toBe('ê1');
+    expect(fromToneMarked(toToneMarked('ê3'))).toBe('ê3');
+  });
+
   it('uses Taiwan readings', () => {
     expect(z('le4 se4')).toBe('ㄌㄜˋ ㄙㄜˋ'); // 垃圾
     expect(z('shei2')).toBe('ㄕㄟˊ'); // 誰
@@ -200,6 +216,7 @@ describe('fromToneMarked', () => {
     ['hăo', 'hao3'], // breve, as in the TOCFL list
     ['nĭ', 'ni3'],
     ['shuí', 'shui2'],
+    ['huàr', 'huar4'],
   ])('%s → %s', (input, expected) => {
     expect(fromToneMarked(input)).toBe(expected);
   });
@@ -228,6 +245,10 @@ describe('fromZhuyin', () => {
     ['ㄦˋ', 'er4'],
     ['ㄅㄛ', 'bo1'],
     ['ㄧㄞˊ', 'yai2'], // 崖, Taiwan reading
+    ['ㄇㄚˉ', 'ma1'], // explicit first tone
+    ['ㄏㄨㄚˋㄦ', 'huar4'], // erhua after the tone, as printed in Taiwan
+    ['ㄏㄨㄚㄦˋ', 'huar4'],
+    ['˙ㄦ', 'er5'],
   ])('%s → %s', (input, expected) => {
     expect(fromZhuyin(input)).toBe(expected);
   });
