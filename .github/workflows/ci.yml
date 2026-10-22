@@ -22,14 +22,14 @@ jobs:
     env:
       DATABASE_URL: postgresql://taiwan:taiwan@localhost:5432/taiwan_mandarin
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22.22
           cache: npm
       # The word lists, CC-CEDICT and Tatoeba (~30 MB); refreshed weekly.
       - name: Cache content sources
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: data/raw
           key: content-sources-${{ hashFiles('packages/content/src/fetch.ts') }}-${{ github.run_id }}
