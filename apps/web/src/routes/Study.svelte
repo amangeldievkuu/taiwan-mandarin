@@ -13,19 +13,28 @@
 </script>
 
 <script lang="ts">
-  import { LEVELS } from '@taiwan-mandarin/shared';
+  // The study session: one card at a time on a little stack. Reveal it (tap, Space, or the
+  // button), grade it, and it flies off (left for Again, right for Good: the direction tells the
+  // grade, every grade gets the same energy and XP) while the next card rises from the stack.
+  import { LEVELS, XP } from '@taiwan-mandarin/shared';
+  import { tick } from 'svelte';
   import HanziText from '../ui/HanziText.svelte';
   import Icon from '../ui/Icon.svelte';
   import Reading from '../ui/Reading.svelte';
-  import Seal from '../ui/Seal.svelte';
+  import SessionComplete from '../ui/SessionComplete.svelte';
   import Segmented from '../components/Segmented.svelte';
   import TaiwanNote from '../components/TaiwanNote.svelte';
   import WordGlyphs, { fitSize } from '../components/WordGlyphs.svelte';
+  import { celebrate } from '../lib/celebrate.svelte';
+  import { feedback } from '../lib/feedback.svelte';
   import { lookup } from '../lib/lookup.svelte';
+  import { flipFrom } from '../lib/motion';
   import { router } from '../lib/router.svelte';
   import { canSpeak, speak } from '../lib/speech';
-  import { formatInterval, GRADES, Rating, type Grade } from '../lib/srs';
+  import { GRADES, Rating, type Grade } from '../lib/srs';
   import { store } from '../lib/store.svelte';
+  import { toasts } from '../lib/toast.svelte';
+  import { cardIn, cardOut, flipIn } from '../lib/transitions';
 
   const GRADE_INFO: Record<Grade, { label: string; zh: string; color: string; key: string }> = {
     [Rating.Again]: { label: 'Again', zh: '再來', color: 'var(--again)', key: '1' },
@@ -58,18 +67,63 @@
         )
       : '',
   );
+  /** One card per answer, so a card that comes straight back still animates in. */
+  const cardKey = $derived(word ? `${word.id}:${store.stats.reviewed}` : '');
+  const remaining = $derived(store.queue.length);
+
+  /** Which way the card just graded leaves; read when its exit starts. */
+  let exitGrade = $state<Grade>(Rating.Good);
+  /** Cards were studied in this visit (the end screen celebrates only then). */
+  let studied = $state(false);
+  let halfway = false;
+  let glyphs = $state<HTMLElement>();
+  let pressed = $state<string | null>(null);
 
   // A new card is shown: note the time, and in listening mode play it.
   $effect(() => {
     if (!word) return;
+    studied = true;
     store.markShown();
     if (mode === 'listen' && !store.revealed) speak(word.hanzi);
   });
 
-  function reveal() {
+  async function reveal() {
     if (!word || store.revealed) return;
+    // The glyph glides up as the answer opens beneath it, instead of jumping.
+    const before = mode === 'recognize' ? glyphs?.getBoundingClientRect() : undefined;
     store.reveal();
     if (mode !== 'listen') speak(word.hanzi);
+    await tick();
+    if (before && glyphs) flipFrom(glyphs, before);
+  }
+
+  function grade(g: Grade) {
+    if (!store.revealed || !word) return;
+    const from = document
+      .querySelector(`.rate[data-key="${GRADE_INFO[g].key}"]`)
+      ?.getBoundingClientRect();
+    const gained = XP.review + (isNew ? XP.newWord : 0);
+    exitGrade = g;
+    feedback.play('grade');
+    feedback.buzz('light');
+    store.rate(g);
+    if (from) celebrate.float(from, `+${gained}`);
+    const total = store.finished + store.queue.length;
+    if (!halfway && total >= 8 && store.progress >= 0.5 && store.queue.length) {
+      halfway = true;
+      toasts.show(
+        { kind: 'info', title: '一半了！ Halfway there', body: 'Keep going, you are doing great.' },
+        2600,
+      );
+    }
+  }
+
+  /** A key press shows on its button too. */
+  function press(key: string) {
+    pressed = key;
+    setTimeout(() => {
+      if (pressed === key) pressed = null;
+    }, 140);
   }
 
   function onkeydown(event: KeyboardEvent) {
@@ -77,13 +131,17 @@
     if (event.target instanceof HTMLElement && event.target.closest('input, textarea')) return;
     if (!store.revealed && (event.key === ' ' || event.key === 'Enter')) {
       event.preventDefault();
-      reveal();
+      press('show');
+      void reveal();
       return;
     }
     if (event.key === 'r' && word) speak(word.hanzi);
     if (store.revealed) {
-      const grade = GRADES.find((g) => GRADE_INFO[g].key === event.key);
-      if (grade) store.rate(grade);
+      const g = GRADES.find((x) => GRADE_INFO[x].key === event.key);
+      if (g) {
+        press(event.key);
+        grade(g);
+      }
     }
   }
 
@@ -121,9 +179,14 @@
       </span>
     </div>
     {#if word}
-      <span class="left tabular" aria-label="{store.queue.length} cards left"
-        >{store.queue.length}</span
-      >
+      <div class="counters">
+        {#key store.sessionXp}<span
+            class="session-xp"
+            aria-label="{store.sessionXp} XP this session"
+            ><span aria-hidden="true">✦</span> {store.sessionXp}</span
+          >{/key}
+        <span class="left tabular" aria-label="{remaining} cards left">{remaining} left</span>
+      </div>
     {/if}
   </header>
 
@@ -135,150 +198,148 @@
       aria-valuemax={100}
       aria-valuenow={Math.round(store.progress * 100)}
     >
-      <div style:transform="scaleX({store.progress})"></div>
+      <span style:transform="translateX({(store.progress - 1) * 100}%)"></span>
     </div>
 
-    <!-- Tapping the card also reveals; keyboard users get Space/Enter and the button below. -->
-    <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-    <article class="card sheet" class:revealed={store.revealed} onclick={reveal}>
-      <div class="meta">
-        {#if isNew}<span class="new">New</span>{/if}
-        {#if level}<span class="level-tag">{level.en}</span>{/if}
-        {#if word.tw}<span class="badge-tw" lang="zh-Hant-TW">臺灣</span>{/if}
-      </div>
+    <div class="deck" class:stacked={remaining > 1} class:tall={remaining > 2}>
+      {#key cardKey}
+        <!-- Tapping the card also reveals; keyboard users get Space/Enter and the button below. -->
+        <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
+        <article
+          class="card sheet"
+          class:revealed={store.revealed}
+          onclick={reveal}
+          in:cardIn
+          out:cardOut={{ grade: exitGrade }}
+        >
+          <div class="meta">
+            {#if isNew}<span class="new">New</span>{/if}
+            {#if level}<span class="level-tag">{level.en}</span>{/if}
+            {#if word.tw}<span class="badge-tw" lang="zh-Hant-TW">臺灣</span>{/if}
+          </div>
 
-      {#key word.id}
-        <div class="face">
-          {#if mode === 'recall' && !store.revealed}
-            <p class="prompt">{word.en}</p>
-            {#if word.cl}<p class="prompt-sub">
-                measure word <span class="hanzi" lang="zh-Hant-TW">{word.cl}</span>
-              </p>{/if}
-          {:else if mode === 'listen' && !store.revealed}
-            <button
-              type="button"
-              class="listen"
-              aria-label="Play again"
-              onclick={(e) => {
-                e.stopPropagation();
-                speak(word.hanzi);
-              }}
-            >
-              <Icon name="speaker" size={40} />
-            </button>
-            <p class="prompt-sub">Tap to hear it again</p>
-          {:else}
-            <div class="glyphs">
-              <WordGlyphs {word} {size} phonetics={settings.phonetics} show={store.revealed} />
-            </div>
-          {/if}
-        </div>
-      {/key}
-
-      {#if store.revealed}
-        <div class="answer">
-          <p class="meaning">{word.en}</p>
-          {#if word.cl}<p class="cl">
-              Measure word <span class="hanzi" lang="zh-Hant-TW">{word.cl}</span>
-            </p>{/if}
-          <TaiwanNote {word} />
-          {#if example}
-            <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-            <div class="example" onclick={(e) => e.stopPropagation()}>
-              <HanziText text={example.zh} class="example-zh" />
-              <Reading pinyin={example.pinyin} />
-              <p class="example-en">{example.en}</p>
-            </div>
-          {/if}
-          <div class="answer-tools">
-            {#if canSpeak}
+          <div class="face">
+            {#if mode === 'recall' && !store.revealed}
+              <p class="prompt">{word.en}</p>
+              {#if word.cl}<p class="prompt-sub">
+                  measure word <span class="hanzi" lang="zh-Hant-TW">{word.cl}</span>
+                </p>{/if}
+            {:else if mode === 'listen' && !store.revealed}
               <button
                 type="button"
-                class="tool"
-                aria-label="Play pronunciation"
-                aria-keyshortcuts="r"
+                class="listen"
+                aria-label="Play again"
                 onclick={(e) => {
                   e.stopPropagation();
                   speak(word.hanzi);
                 }}
               >
-                <Icon name="speaker" />
+                <Icon name="speaker" size={40} />
               </button>
+              <p class="prompt-sub">Tap to hear it again</p>
+            {:else if mode === 'recognize'}
+              <div class="glyphs" bind:this={glyphs}>
+                <WordGlyphs {word} {size} phonetics={settings.phonetics} show={store.revealed} />
+              </div>
+            {:else}
+              <div class="glyphs" in:flipIn>
+                <WordGlyphs {word} {size} phonetics={settings.phonetics} show={store.revealed} />
+              </div>
             {/if}
-            <a
-              class="tool"
-              href={router.href(`/word/${encodeURIComponent(word.id)}`)}
-              aria-label="Word details"
-              onclick={(e) => {
-                e.stopPropagation();
-                router.link(e);
-              }}
-            >
-              <Icon name="layers" />
-            </a>
           </div>
-        </div>
-      {/if}
-    </article>
+
+          {#if store.revealed}
+            <div class="answer">
+              <p class="meaning enter" style:--i={0}>{word.en}</p>
+              {#if word.cl}<p class="cl enter" style:--i={1}>
+                  Measure word <span class="hanzi" lang="zh-Hant-TW">{word.cl}</span>
+                </p>{/if}
+              <div class="enter" style:--i={1}><TaiwanNote {word} /></div>
+              {#if example}
+                <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+                <div class="example enter" style:--i={2} onclick={(e) => e.stopPropagation()}>
+                  <HanziText text={example.zh} class="example-zh" />
+                  <Reading
+                    pinyin={example.pinyin}
+                    text={example.zh}
+                    wordLengths={example.wordLengths}
+                  />
+                  <p class="example-en">{example.en}</p>
+                </div>
+              {/if}
+              <div class="answer-tools enter" style:--i={3}>
+                {#if canSpeak}
+                  <button
+                    type="button"
+                    class="tool"
+                    aria-label="Play pronunciation"
+                    aria-keyshortcuts="r"
+                    onclick={(e) => {
+                      e.stopPropagation();
+                      speak(word.hanzi);
+                    }}
+                  >
+                    <Icon name="speaker" />
+                  </button>
+                {/if}
+                <a
+                  class="tool"
+                  href={router.href(`/word/${encodeURIComponent(word.id)}`)}
+                  aria-label="Word details"
+                  onclick={(e) => {
+                    e.stopPropagation();
+                    router.link(e);
+                  }}
+                >
+                  <Icon name="layers" />
+                </a>
+              </div>
+            </div>
+          {/if}
+        </article>
+      {/key}
+    </div>
 
     <div class="controls">
       {#if store.revealed && store.intervals}
         <div class="ratings">
-          {#each GRADES as grade (grade)}
+          {#each GRADES as g, i (g)}
             <button
               type="button"
-              class="rate"
-              style:--c={GRADE_INFO[grade].color}
-              aria-keyshortcuts={GRADE_INFO[grade].key}
-              onclick={() => store.rate(grade)}
+              class="rate enter"
+              class:pressed={pressed === GRADE_INFO[g].key}
+              style:--c={GRADE_INFO[g].color}
+              style:--i={i}
+              aria-keyshortcuts={GRADE_INFO[g].key}
+              data-key={GRADE_INFO[g].key}
+              onclick={() => grade(g)}
             >
-              <span class="rate-zh" lang="zh-Hant-TW">{GRADE_INFO[grade].zh}</span>
-              <span class="rate-label">{GRADE_INFO[grade].label} · {store.intervals[grade]}</span>
-              <kbd class="key">{GRADE_INFO[grade].key}</kbd>
+              <span class="rate-zh" lang="zh-Hant-TW">{GRADE_INFO[g].zh}</span>
+              <span class="rate-label">{GRADE_INFO[g].label} · {store.intervals[g]}</span>
+              <kbd class="key">{GRADE_INFO[g].key}</kbd>
             </button>
           {/each}
         </div>
       {:else}
-        <button type="button" class="btn primary show" aria-keyshortcuts="Space" onclick={reveal}>
+        <button
+          type="button"
+          class="btn primary show"
+          class:pressed={pressed === 'show'}
+          aria-keyshortcuts="Space"
+          onclick={reveal}
+        >
           Show answer <kbd class="key">Space</kbd>
         </button>
       {/if}
     </div>
   {:else}
-    <div class="done">
-      <Seal text="完" size={84} />
-      <h1 class="hanzi" lang="zh-Hant-TW">今天完成了</h1>
-      <p class="sub">
-        {store.stats.reviewed ? 'All done for today.' : 'Nothing to study right now.'}
-      </p>
-
-      {#if store.stats.reviewed}
-        <dl class="stats">
-          <div>
-            <dt>Reviews</dt>
-            <dd class="tabular">{store.stats.reviewed}</dd>
-          </div>
-          <div>
-            <dt>New words</dt>
-            <dd class="tabular">{store.stats.learned}</dd>
-          </div>
-          <div>
-            <dt>Again</dt>
-            <dd class="tabular again">{store.stats.again}</dd>
-          </div>
-        </dl>
-      {/if}
-
-      {#if store.nextDue}
-        <p class="next">
-          Next review in {formatInterval(Math.max(0, store.nextDue.getTime() - Date.now()))}
-        </p>
-      {/if}
-      <div class="done-actions">
-        <a class="btn quiet" href={router.href('/read')} onclick={router.link}>Read a story</a>
-        <a class="btn quiet" href={router.href('/path')} onclick={router.link}>Browse the path</a>
-      </div>
-    </div>
+    <SessionComplete
+      stats={store.stats}
+      xp={store.sessionXp}
+      streak={store.streak}
+      nextDue={store.nextDue}
+      celebrate={studied && store.stats.reviewed > 0}
+    />
   {/if}
 </section>
 
@@ -311,6 +372,7 @@
     display: flex;
     align-items: center;
     gap: 14px;
+    min-width: 0;
   }
 
   .modes :global(.segmented) {
@@ -322,51 +384,119 @@
     color: var(--ink-3);
   }
 
-  @media (max-width: 560px) {
+  @media (max-width: 640px) {
     .mode-hint {
       display: none;
     }
   }
 
+  .counters {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+  }
+
+  .session-xp,
   .left {
-    font-family: var(--font-serif);
-    font-size: 22px;
-    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 32px;
+    padding: 0 11px;
+    border-radius: var(--radius-pill);
+    font-size: 14px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .session-xp {
+    color: var(--gold-deep);
+    background: var(--gold-wash);
+    animation: bump var(--dur-4) var(--ease-spring);
+  }
+
+  @keyframes bump {
+    40% {
+      transform: scale(1.12);
+    }
+  }
+
+  .left {
     color: var(--ink-2);
+    background: var(--fill);
   }
 
   .progress {
-    height: 3px;
-    margin: 14px 0 16px;
-    border-radius: 2px;
-    background: var(--fill);
+    height: 10px;
+    margin: 14px 0 18px;
+    border-radius: var(--radius-pill);
+    background: var(--paper-sunken);
     overflow: hidden;
   }
 
-  .progress div {
+  .progress span {
+    display: block;
     height: 100%;
-    background: var(--seal);
-    transform-origin: left;
-    transition: transform 400ms var(--ease);
+    border-radius: inherit;
+    background:
+      linear-gradient(to bottom, rgb(255 255 255 / 0.35), transparent 55%),
+      linear-gradient(90deg, var(--jade), color-mix(in oklab, var(--jade) 60%, var(--sky)));
+    transition: transform var(--dur-4) var(--ease-spring-soft);
+  }
+
+  /* The card, with the next ones peeking out underneath. */
+  .deck {
+    position: relative;
+    flex: 1;
+    display: grid;
+    min-height: 380px;
+  }
+
+  .deck > :global(.card) {
+    grid-area: 1 / 1;
+  }
+
+  .deck.stacked::before,
+  .deck.tall::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-lg);
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    box-shadow: var(--shadow-1);
+  }
+
+  .deck.stacked::before {
+    transform: translateY(8px) scale(0.96);
+    opacity: 0.8;
+  }
+
+  .deck.tall::after {
+    transform: translateY(15px) scale(0.92);
+    opacity: 0.5;
+    z-index: -1;
   }
 
   .card {
     position: relative;
-    flex: 1;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 360px;
+    min-height: 380px;
     padding: 18px 24px 22px;
     cursor: pointer;
-    /* 田字格: practice-paper grid */
+    box-shadow: var(--shadow-3);
+    /* 田字格: a faint practice-paper cross behind the character */
     background-image:
       linear-gradient(var(--grid-line), var(--grid-line)),
       linear-gradient(var(--grid-line), var(--grid-line));
     background-size:
-      1px 100%,
-      100% 1px;
-    background-position: center;
+      1px 46%,
+      46% 1px;
+    background-position: center 42%;
     background-repeat: no-repeat;
   }
 
@@ -383,12 +513,15 @@
   }
 
   .new {
-    padding: 1px 8px;
-    border-radius: 4px;
-    background: var(--ink);
-    color: var(--paper);
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 9px;
+    border-radius: var(--radius-pill);
+    background: var(--sky);
+    color: var(--sky-ink);
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
@@ -401,21 +534,14 @@
     justify-content: center;
     width: 100%;
     min-height: 180px;
-    animation: ink 320ms var(--ease);
-  }
-
-  @keyframes ink {
-    from {
-      opacity: 0;
-      filter: blur(4px);
-    }
   }
 
   .prompt {
     margin: 0;
     max-width: 22ch;
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-size: clamp(24px, 4vw, 34px);
+    font-weight: 800;
     line-height: 1.25;
     text-align: center;
   }
@@ -432,26 +558,40 @@
     width: 112px;
     height: 112px;
     border-radius: 50%;
-    background: var(--seal-wash);
-    color: var(--seal);
-    transition: transform var(--dur) var(--ease);
+    background: var(--sky-wash);
+    color: var(--sky-text);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklab, var(--sky) 22%, transparent),
+      0 8px 20px -10px color-mix(in oklab, var(--sky) 50%, transparent);
+    transition:
+      transform 160ms var(--ease-out),
+      box-shadow 160ms var(--ease-out),
+      background-color var(--dur-2) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .listen:hover {
+      background: color-mix(in oklab, var(--sky) 18%, var(--paper-raised));
+    }
   }
 
   .listen:active {
     transform: scale(0.95);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--sky) 30%, transparent);
+    transition-duration: 80ms;
   }
 
   .answer {
     width: 100%;
     max-width: 520px;
     text-align: center;
-    animation: ink 320ms var(--ease);
   }
 
   .meaning {
     margin: 4px 0 0;
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-size: 22px;
+    font-weight: 700;
     line-height: 1.35;
   }
 
@@ -469,9 +609,9 @@
   .example {
     margin: 16px auto 0;
     padding: 12px 16px;
-    border-left: 3px solid var(--seal);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    background: var(--paper);
+    border-left: 4px solid var(--sky);
+    border-radius: 4px var(--radius-sm) var(--radius-sm) 4px;
+    background: var(--sky-wash);
     text-align: left;
     cursor: auto;
   }
@@ -495,28 +635,34 @@
   .answer-tools {
     display: flex;
     justify-content: center;
-    gap: 8px;
-    margin-top: 12px;
+    gap: 10px;
+    margin-top: 14px;
   }
 
   .tool {
     display: grid;
     place-items: center;
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
     color: var(--ink-2);
     background: var(--fill);
+    transition: transform var(--dur-4) var(--ease-spring);
+  }
+
+  .tool:active {
+    transform: scale(0.9);
   }
 
   .controls {
-    padding-top: 16px;
+    min-height: 92px;
+    padding-top: 18px;
   }
 
   .show {
     width: 100%;
-    min-height: 56px;
-    border-radius: var(--radius);
+    min-height: 58px;
+    font-size: 17px;
   }
 
   .ratings {
@@ -531,35 +677,47 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 64px;
+    min-height: 66px;
     padding: 8px 4px;
     border-radius: var(--radius);
-    border: 1px solid color-mix(in srgb, var(--c) 35%, transparent);
-    background: color-mix(in srgb, var(--c) 9%, var(--paper-raised));
+    border: 1px solid color-mix(in oklab, var(--c) 30%, transparent);
+    background: color-mix(in oklab, var(--c) 8%, var(--paper-raised));
     color: var(--c);
+    box-shadow:
+      var(--shadow-1),
+      0 4px 12px -6px color-mix(in oklab, var(--c) 35%, transparent);
     transition:
-      transform var(--dur) var(--ease),
-      background-color var(--dur) var(--ease);
-  }
-
-  .rate:active {
-    transform: scale(0.96);
+      transform 160ms var(--ease-out),
+      box-shadow 160ms var(--ease-out),
+      border-color var(--dur-2) var(--ease-out),
+      background-color var(--dur-2) var(--ease-out);
   }
 
   @media (hover: hover) {
     .rate:hover {
-      background: color-mix(in srgb, var(--c) 16%, var(--paper-raised));
+      transform: translateY(-1px);
+      border-color: color-mix(in oklab, var(--c) 45%, transparent);
+      background: color-mix(in oklab, var(--c) 13%, var(--paper-raised));
     }
+  }
+
+  .rate:active,
+  .rate.pressed {
+    transform: scale(0.97);
+    background: color-mix(in oklab, var(--c) 18%, var(--paper-raised));
+    box-shadow: inset 0 1px 2px color-mix(in oklab, var(--c) 20%, transparent);
+    transition-duration: 80ms;
   }
 
   .rate-zh {
     font-family: var(--font-kai);
-    font-size: 20px;
+    font-size: 21px;
     line-height: 1.2;
   }
 
   .rate-label {
     font-size: 12px;
+    font-weight: 700;
     color: var(--ink-2);
     font-variant-numeric: tabular-nums;
   }
@@ -580,69 +738,8 @@
     }
 
     .show .key {
-      color: color-mix(in srgb, var(--paper) 70%, transparent);
-      border-color: color-mix(in srgb, var(--paper) 40%, transparent);
+      color: color-mix(in srgb, var(--jade-ink) 75%, transparent);
+      border-color: color-mix(in srgb, var(--jade-ink) 45%, transparent);
     }
-  }
-
-  .done {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 40px 0;
-  }
-
-  .done h1 {
-    margin: 22px 0 4px;
-    font-size: 34px;
-  }
-
-  .sub {
-    margin: 0;
-    color: var(--ink-2);
-  }
-
-  .stats {
-    display: flex;
-    gap: 32px;
-    margin: 26px 0 0;
-  }
-
-  .stats div {
-    display: flex;
-    flex-direction: column-reverse;
-  }
-
-  .stats dt {
-    font-size: 13px;
-    color: var(--ink-2);
-  }
-
-  .stats dd {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: 30px;
-    font-weight: 600;
-  }
-
-  .again {
-    color: var(--again);
-  }
-
-  .next {
-    margin: 22px 0 0;
-    font-size: 14px;
-    color: var(--ink-2);
-  }
-
-  .done-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 26px;
   }
 </style>

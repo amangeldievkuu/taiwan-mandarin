@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Loading from '../ui/Loading.svelte';
   import {
     LEVELS,
     toToneMarkedSyllables,
@@ -164,7 +165,7 @@
   {:else if missing}
     <p class="empty">This reader doesn't exist.</p>
   {:else}
-    <p class="empty">Loading…</p>
+    <Loading />
   {/if}
 </div>
 
@@ -192,7 +193,7 @@
 
   .r-sub {
     margin: 4px 0 0;
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-size: 19px;
     color: var(--ink-2);
   }
@@ -233,7 +234,7 @@
     font-family: var(--font-kai);
     font-size: 16px;
     line-height: 1;
-    color: var(--indigo);
+    color: var(--sky-text);
   }
 
   .text {
@@ -288,7 +289,7 @@
   }
 
   .tok.glossed {
-    color: var(--indigo);
+    color: var(--sky-text);
   }
 
   rt {
@@ -323,7 +324,7 @@
   .translation {
     margin: 6px 0 0 !important;
     text-indent: 0 !important;
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-size: 17px;
     line-height: 1.55;
     color: var(--ink-2);

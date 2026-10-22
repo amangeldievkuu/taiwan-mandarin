@@ -125,7 +125,7 @@
               </button>
             {/if}
           </div>
-          <Reading pinyin={example.pinyin} />
+          <Reading pinyin={example.pinyin} text={example.zh} wordLengths={example.wordLengths} />
           <p class="ex-en">{example.en}</p>
           <p class="ex-src">
             {#if example.source === 'tatoeba' && example.ref}
@@ -210,7 +210,7 @@
 
   .meaning {
     margin: 14px 0 0;
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-size: 22px;
     line-height: 1.4;
     text-align: center;

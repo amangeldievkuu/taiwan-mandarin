@@ -10,7 +10,14 @@ import type { Transcript } from '../src/speech/whisper.service.js';
 
 const RATE = 16000;
 let transcript: Transcript = { text: '', words: [] };
-const stub = { available: true, transcribe: async () => transcript };
+let transcribed = 0;
+const stub = {
+  available: true,
+  transcribe: async () => {
+    transcribed++;
+    return transcript;
+  },
+};
 
 /** 16-bit mono WAV of voiced syllables with the given pitch contours, 0.3 s each + 0.08 s gaps. */
 function wav(contours: ((t: number) => number)[]): string {
@@ -119,6 +126,20 @@ describe('POST /v1/speech/check', () => {
     transcript = { text: '你', words: [] };
     const res = await check(wav([low]), '你好', 'ni3 hao3');
     expect(res.body.syllables[1].sound).toBe('missing');
+  });
+
+  it('turns silence away before speech-to-text', async () => {
+    transcribed = 0;
+    const res = await check(wav([]), '你好', 'ni3 hao3');
+    expect(res.status).toBe(400);
+    expect(transcribed).toBe(0);
+  });
+
+  it('turns a reading that does not fit the characters away before speech-to-text', async () => {
+    transcribed = 0;
+    const res = await check(wav([rising]), '你好', 'ni3');
+    expect(res.status).toBe(400);
+    expect(transcribed).toBe(0);
   });
 
   it('rejects audio that is not WAV', async () => {

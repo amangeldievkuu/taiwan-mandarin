@@ -176,6 +176,83 @@ describe('sync', () => {
   });
 });
 
+describe('activity', () => {
+  const at = (iso: string, rating = 3, state = 2) => ({
+    ...review('你好'),
+    rating,
+    state,
+    review: Date.parse(iso),
+    durationMs: 1500,
+  });
+  const sync = (auth: object, body: object) =>
+    request(http)
+      .post('/v1/sync')
+      .set(auth)
+      .send({ since: 0, cards: [], reviews: [], ...body });
+
+  it('counts each day in the learner’s time zone, for every device', async () => {
+    const { token } = await signUp();
+    const auth = { authorization: `Bearer ${token}` };
+    // 23:30 and 00:30 in Taipei: two days there, one in UTC.
+    const phone = await sync(auth, {
+      reviews: [at('2026-10-20T15:30:00Z', 1, 2), at('2026-10-20T16:30:00Z', 4, 0)],
+      activity: { timeZone: 'Asia/Taipei', since: 0 },
+    });
+    expect(phone.status).toBe(200);
+    expect(phone.body.activity).toMatchObject({ timeZone: 'Asia/Taipei', full: true });
+    expect(phone.body.activity.days).toEqual([
+      expect.objectContaining({ date: '2026-10-20', reviews: 1, again: 1, graded: 1, kept: 0 }),
+      expect.objectContaining({ date: '2026-10-21', reviews: 1, easy: 1, learned: 1, ms: 1500 }),
+    ]);
+    const utc = await sync(auth, { activity: { timeZone: 'UTC', since: 0 } });
+    expect(utc.body.activity.days).toEqual([
+      expect.objectContaining({ date: '2026-10-20', reviews: 2 }),
+    ]);
+
+    // A second device, already in sync, gets the day it touched with both devices' totals
+    // (and days stored minutes before its cursor again, which it simply replaces).
+    const laptop = await sync(auth, {
+      since: phone.body.cursor,
+      reviews: [at('2026-10-21T02:00:00Z')],
+      activity: { timeZone: 'Asia/Taipei', since: phone.body.cursor },
+    });
+    expect(laptop.body.activity.full).toBe(false);
+    expect(laptop.body.activity.days).toContainEqual(
+      expect.objectContaining({ date: '2026-10-21', reviews: 2 }),
+    );
+
+    const stats = await request(http).get('/v1/me/stats').query({ tz: 'Asia/Taipei' }).set(auth);
+    expect(stats.status).toBe(200);
+    expect(stats.body.reviews.total).toBe(3);
+    expect(stats.body.xp.total).toBe(3 * 10 + 5);
+  });
+
+  it('follows daylight saving: the 25-hour day in New York', async () => {
+    const { token } = await signUp();
+    const auth = { authorization: `Bearer ${token}` };
+    const res = await sync(auth, {
+      reviews: [at('2026-11-01T04:30:00Z'), at('2026-11-02T04:30:00Z'), at('2026-11-02T05:30:00Z')],
+      activity: { timeZone: 'America/New_York', since: 0 },
+    });
+    expect(
+      res.body.activity.days.map((d: { date: string; reviews: number }) => [d.date, d.reviews]),
+    ).toEqual([
+      ['2026-11-01', 2],
+      ['2026-11-02', 1],
+    ]);
+  });
+
+  it('rejects unknown time zones and sends nothing unasked', async () => {
+    const { token } = await signUp();
+    const auth = { authorization: `Bearer ${token}` };
+    const bad = await sync(auth, { activity: { timeZone: 'Mars/Base', since: 0 } });
+    expect(bad.status).toBe(400);
+    expect(bad.body.issues.map((i: { path: string }) => i.path)).toEqual(['activity.timeZone']);
+    const plain = await sync(auth, {});
+    expect(plain.body.activity).toBeUndefined();
+  });
+});
+
 describe('personal access tokens', () => {
   it('reads data but cannot manage tokens', async () => {
     const { token } = await signUp();

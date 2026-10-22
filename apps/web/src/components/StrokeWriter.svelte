@@ -172,7 +172,7 @@
     position: relative;
     width: 242px;
     height: 242px;
-    border: 1px solid var(--separator);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     overflow: hidden;
     touch-action: none;
@@ -183,7 +183,7 @@
     position: absolute;
     inset: 0;
     fill: none;
-    stroke: var(--separator);
+    stroke: var(--rule);
     stroke-width: 1;
   }
 
@@ -196,7 +196,7 @@
   }
 
   .canvas.quiz {
-    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+    border-color: color-mix(in srgb, var(--seal) 50%, transparent);
   }
 
   .missing {
@@ -206,7 +206,7 @@
     place-items: center;
     margin: 0;
     font-size: 15px;
-    color: var(--text-2);
+    color: var(--ink-2);
   }
 
   .unverified {
@@ -223,7 +223,7 @@
     min-height: 20px;
     margin: 10px 0 6px;
     font-size: 15px;
-    color: var(--text-2);
+    color: var(--ink-2);
   }
 
   .actions {
@@ -242,8 +242,8 @@
     border-radius: var(--radius);
     font-size: 15px;
     font-weight: 600;
-    color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--seal);
+    background: color-mix(in srgb, var(--seal) 10%, transparent);
   }
 
   .actions button:disabled {

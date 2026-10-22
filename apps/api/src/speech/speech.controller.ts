@@ -37,14 +37,14 @@ export class SpeechController {
   @HttpCode(200)
   @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @ApiOperation({
-    summary: 'Check a recording against a word or sentence: syllables (Whisper) and tones (pitch)',
+    summary: 'Check a recording against a word or sentence: syllables (speech-to-text) and tones',
   })
   @ApiZodBody(PronounceRequestSchema)
   async check(
     @CurrentUser() user: AuthUser,
     @ZodBody(PronounceRequestSchema) body: PronounceRequest,
   ): Promise<PronounceResult> {
-    await this.quota.consume(user.id, 'speech');
-    return this.speech.check(body);
+    // The quota is only charged for recordings that get sent for recognition.
+    return this.speech.check(body, () => this.quota.consume(user.id, 'speech'));
   }
 }

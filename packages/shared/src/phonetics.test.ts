@@ -3,10 +3,13 @@ import {
   fromToneMarked,
   fromZhuyin,
   parseSyllable,
+  pinyinSentence,
+  pinyinWord,
   plainPinyin,
   syllableToZhuyin,
   toToneMarked,
   toZhuyin,
+  zhuyinSentence,
   zhuyinString,
 } from './phonetics.ts';
 
@@ -29,6 +32,83 @@ describe('toToneMarked', () => {
     ['zhi1', 'zhī'],
   ])('%s → %s', (input, expected) => {
     expect(toToneMarked(input)).toBe(expected);
+  });
+});
+
+describe('pinyinWord', () => {
+  it.each([
+    ['jie2 yun4', 'jiéyùn'],
+    ['xi1 an1', "xī'ān"], // 西安, not xiān
+    ['wan3 an1', "wǎn'ān"],
+    ['nü3 er2', "nǚ'ér"],
+    ['tian1 e2', "tiān'é"],
+    ['ai4 qing2', 'àiqíng'], // only later syllables take an apostrophe
+    ['xie4 xie5', 'xièxie'],
+  ])('%s → %s', (input, expected) => {
+    expect(pinyinWord(input)).toBe(expected);
+  });
+});
+
+describe('pinyinSentence', () => {
+  const sentence = 'ni3 shi4 jin1 tian1 mai3 hai2 shi4 zuo2 tian1 mai3 de5';
+
+  it('separates words and joins their syllables', () => {
+    expect(pinyinSentence('你是今天買還是昨天買的？', sentence, [1, 1, 2, 1, 2, 2, 1, 1])).toBe(
+      'Nǐ shì jīntiān mǎi háishì zuótiān mǎi de?',
+    );
+    expect(pinyinSentence('你好。你呢？', 'ni3 hao3 ni3 ne5', [2, 1, 1])).toBe('Nǐhǎo. Nǐ ne?');
+  });
+
+  it('spaces every syllable when word lengths are missing or do not fit', () => {
+    expect(pinyinSentence('你是今天買還是昨天買的？', sentence)).toBe(
+      'Nǐ shì jīn tiān mǎi hái shì zuó tiān mǎi de?',
+    );
+    expect(pinyinSentence('你好，再見', 'ni3 hao3 zai4 jian4', [4])).toBe('Nǐ hǎo, zài jiàn');
+  });
+
+  it('keeps digits and Latin letters', () => {
+    expect(pinyinSentence('大樓有20層。', 'da4 lou2 you3 ceng2', [2, 1, 1])).toBe(
+      'Dàlóu yǒu 20 céng.',
+    );
+    expect(pinyinSentence('現在是7點50分。', 'xian4 zai4 shi4 dian3 fen1', [2, 1, 1, 1])).toBe(
+      'Xiànzài shì 7 diǎn 50 fēn.',
+    );
+    expect(pinyinSentence('4 月 8 日開學。', 'yue4 ri4 kai1 xue2', [1, 1, 2])).toBe(
+      '4 yuè 8 rì kāixué.',
+    );
+    expect(pinyinSentence('我在7-Eleven買咖啡。', 'wo3 zai4 mai3 ka1 fei1', [1, 1, 1, 2])).toBe(
+      'Wǒ zài 7-Eleven mǎi kāfēi.',
+    );
+  });
+
+  it('writes punctuation in its Latin form and capitalizes each sentence', () => {
+    expect(pinyinSentence('他說：「晚安！」', 'ta1 shuo1 wan3 an1', [1, 1, 2])).toBe(
+      "Tā shuō: “Wǎn'ān!”",
+    );
+    expect(
+      pinyinSentence(
+        '蘋果、香蕉，都好吃。',
+        'ping2 guo3 xiang1 jiao1 dou1 hao3 chi1',
+        [2, 2, 1, 2],
+      ),
+    ).toBe('Píngguǒ, xiāngjiāo, dōu hǎochī.');
+  });
+
+  it('rejects a reading that does not match the characters', () => {
+    expect(() => pinyinSentence('你好', 'ni3')).toThrow();
+  });
+});
+
+describe('zhuyinSentence', () => {
+  const gap = String.fromCharCode(0x3000); // ideographic space between words
+
+  it('spaces syllables, separates words and keeps the punctuation', () => {
+    expect(zhuyinSentence('我們走吧。', 'wo3 men5 zou3 ba5', [2, 1, 1])).toBe(
+      `ㄨㄛˇ ˙ㄇㄣ${gap}ㄗㄡˇ${gap}˙ㄅㄚ。`,
+    );
+    expect(zhuyinSentence('你好，你呢？', 'ni3 hao3 ni3 ne5', [2, 1, 1])).toBe(
+      `ㄋㄧˇ ㄏㄠˇ，ㄋㄧˇ${gap}˙ㄋㄜ？`,
+    );
   });
 });
 

@@ -85,9 +85,29 @@ CI (`.github/workflows/ci.yml`) runs content build, type checks, lint, all tests
 PostgreSQL service) and the production builds.
 
 **More example sentences.** `npm run examples -w @taiwan-mandarin/content -- --levels L3,L4`
-writes Taiwan-style sentences for words without one, with OpenAI (`OPENAI_API_KEY`). Each
+writes Taiwan-style sentences for words without one, with OpenAI (`OPENAI_API_KEY` from
+`apps/api/.env`; model `--model` / `OPENAI_EXAMPLES_MODEL` / `OPENAI_MODEL`, effort `--effort` /
+`OPENAI_EXAMPLES_EFFORT`, default `medium`). Each
 result is validated (contains the word, passes the guard) and appended to
 `data/generated/examples-ai.jsonl`; then rebuild the content.
+
+## Streak, XP and seals
+
+- **Streak plant (梅, with 金繼 kintsugi).** Every day with a review waters a plum tree in a celadon
+  pot. It sprouts on day one, becomes a small tree at 7 days, buds at 30 and blooms at 100. Missing
+  a day breaks nothing: come back within three days and the crack in the pot is mended with a gold
+  seam, and the count goes on. After a longer break the plant moves to your garden (Me), gold and
+  all, and a new seed is planted. Logic: `packages/shared/src/kintsugi.ts`; drawing:
+  `apps/web/src/lib/plant-art.ts`.
+- **XP.** 10 per answer and 5 more for a new word, the same for every grade, so honest grading
+  never costs anything.
+- **Seals (印譜).** Nine milestones (first gold seam, buds at 30 days, 1,000 words…).
+- All of it comes from practice totals per day (`packages/shared/src/activity.ts`). Signed in,
+  sync returns those totals for every device in the learner's time zone, so phone, iPad and
+  laptop show the same plant.
+- Sound effects (Web Audio, no files) and vibration (Android) are on by default and can be
+  switched off per device in Me › Settings. Everything moves with springs, and nothing moves
+  under the system's reduced-motion setting.
 
 ## API and sync
 
@@ -99,7 +119,8 @@ between devices.
 - **Same origin.** The web app calls the API under `/api` (Vite proxies it in development), so
   the cookie stays first-party. That matters for Safari on iPhone and iPad.
 - **Sync** (`POST /v1/sync`): cards merge last-write-wins per word, review logs are append-only
-  and keyed by client UUIDs, and deck and settings are whole-value last-write-wins. It runs on
+  and keyed by client UUIDs, and deck and settings are whole-value last-write-wins. Practice
+  totals per day come back for the days that changed (`activity`). It runs on
   start, when the app becomes visible, 5 s after changes, and on sign-in. The first sign-in on a
   device merges its local progress into the account.
 - **Personal FSRS.** Review logs live in PostgreSQL. The fsrs-rs optimizer
@@ -114,24 +135,45 @@ between devices.
 
 ### AI features (sign-in required)
 
-These run on the server with OpenAI (`OPENAI_API_KEY`; model `OPENAI_MODEL`, default `gpt-5`;
-the same key powers Whisper):
+These run on the server with OpenAI (`OPENAI_API_KEY`, which also powers speech-to-text). Every
+setting lives in `apps/api/.env` (or the environment in Docker); an empty value means "default".
 
-- Answers use the Responses API with structured outputs, validated against zod schemas.
-- Per-user daily quotas apply (`AI_DAILY_LIMIT`).
+| Variable                                        | Default                | What it does                                                           |
+| ----------------------------------------------- | ---------------------- | ---------------------------------------------------------------------- |
+| `OPENAI_MODEL`                                  | `gpt-6-luna`           | Model for explain and conversation                                     |
+| `OPENAI_REASONING_EFFORT`                       | `low`                  | `none`, `minimal`, `low`, `medium`, `high`, `xhigh` or `max`           |
+| `OPENAI_EXPLAIN_MODEL`, `OPENAI_EXPLAIN_EFFORT` | the two above          | Explain a sentence only                                                |
+| `OPENAI_TALK_MODEL`, `OPENAI_TALK_EFFORT`       | `OPENAI_MODEL`, `none` | Conversation only                                                      |
+| `OPENAI_TRANSCRIBE_MODEL`                       | `whisper-1`            | Pronunciation check (whisper-1 gives word timestamps)                  |
+| `OPENAI_SERVICE_TIER`                           | `auto`                 | `priority` answers faster at a higher price, `flex` slower and cheaper |
+| `OPENAI_VERBOSITY`                              | (not sent)             | `low`, `medium` or `high`                                              |
+| `OPENAI_TIMEOUT_MS`, `OPENAI_MAX_RETRIES`       | `45000`, `1`           | Raise the timeout for slow settings (gpt-5 at medium effort)           |
+| `AI_DAILY_LIMIT`, `SPEECH_DAILY_LIMIT`          | `200`, `300`           | Requests per user per day                                              |
+
+- Answers use the Responses API with structured outputs, validated against zod schemas. Nothing
+  is stored on OpenAI's side (`store: false`), and prompts are laid out so repeated parts are
+  cached.
+- Not every model accepts every effort (gpt-6.1-sol and gpt-6-astra reject `none`): the API then
+  retries once with the nearest one and logs which variable to change.
+- The API logs one line per call, the place to look when something feels slow, e.g.
+  `explain gpt-6-luna effort=low · 3.42 s (first output 0.91 s) · in 1,104 (cached 1,024) · out 1,380 (reasoning 210)`.
+  The startup log shows the settings in use.
 
 **Explain a sentence** (Dictionary › Explain): text or a photo of a sign, menu or message. You
-get a translation, a word-by-word breakdown, grammar and usage notes. Readings are then replaced
-with the path's or dictionary's Taiwan readings. When the model's reading matches none of ours
-(垃圾 lājī), ours wins. Tokens link to the path for one-tap "add to deck".
+get a translation, a word-by-word breakdown, grammar and usage notes, streamed as they are
+written (`POST /v1/ai/explain/stream`, NDJSON: the translation first, then each word). Typed
+text is taken as it is; the model only transcribes photos. Readings are then replaced with the
+path's or dictionary's Taiwan readings. When the model's reading matches none of ours (垃圾 lājī),
+ours wins, and Mainland character readings are fixed for words we don't have. Tokens link to the
+path for one-tap "add to deck".
 
 **Talk** (conversation practice): eight Taiwan situations (night-market stall, bubble tea, MRT,
 7-Eleven, clinic…).
 
 - The partner may only use the learner's vocabulary: synced cards, Novice 1, and the levels below
   their path.
-- Each reply is split into words and checked. More than two unknown words, or Mainland wording,
-  triggers one rewrite through a developer message.
+- Each reply (and each correction) is split into words and checked. More than two unknown words,
+  or Mainland wording, triggers one rewrite: the model sees its first attempt and what to change.
 - Remaining unknown words are returned as "new words" to tap.
 - The learner's messages get a 修正 correction when needed.
 
@@ -140,9 +182,11 @@ with the path's or dictionary's Taiwan readings. When the model's reading matche
 Record a word or sentence on its word page. The browser decodes the recording (AAC on Safari,
 Opus on Chrome) to 16 kHz mono WAV, so the server needs no ffmpeg.
 
-- **Syllables.** OpenAI Whisper (`OPENAI_API_KEY`, `whisper-1`, word timestamps, the target as
-  the prompt) transcribes the recording. Its Simplified output is converted to Taiwan characters
-  and aligned with the target by edit distance. Homophones count as correct sounds.
+- **Syllables.** Speech-to-text (`OPENAI_TRANSCRIBE_MODEL`, default `whisper-1` with word
+  timestamps) transcribes the recording. The prompt never contains the target, so the check
+  reports what was said rather than what was expected. Silence and readings that don't fit are
+  turned away before the paid call. The output is converted to Taiwan characters and aligned
+  with the target by edit distance. Homophones count as correct sounds.
 - **Tones.** `packages/shared/src/pronunciation` (pure TypeScript, tested on synthetic voices) runs
   a YIN F0 tracker and converts pitch to semitones in the speaker's own range. It then matches
   each syllable's contour against templates for the four tones.

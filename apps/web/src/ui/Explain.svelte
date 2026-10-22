@@ -1,25 +1,32 @@
 <script lang="ts">
   // Paste a sign, menu or message from Taiwan (or take a photo of it): translation, word-by-word
-  // breakdown with Taiwan readings, grammar and usage notes. Signed out, text can still be tapped
-  // through word by word.
+  // breakdown with Taiwan readings, grammar and usage notes, streamed in as the AI writes them.
+  // Signed out, text can still be tapped through word by word.
   import { LEVELS, type Level } from '@taiwan-mandarin/shared';
-  import type { ExplainResult } from '@taiwan-mandarin/shared/api';
+  import type { ExplainResult, ExplainStreamEvent } from '@taiwan-mandarin/shared/api';
   import HanziText from './HanziText.svelte';
   import Icon from './Icon.svelte';
   import Reading from './Reading.svelte';
   import SignInPrompt from './SignInPrompt.svelte';
-  import { api } from '../lib/api';
+  import { ApiError, apiStream } from '../lib/api';
   import { photoToBase64 } from '../lib/image';
   import { canSpeak, speak } from '../lib/speech';
   import { store } from '../lib/store.svelte';
   import { account } from '../lib/sync.svelte';
 
+  /** The explanation as far as it has arrived; `done` once the final result replaced it. */
+  type View = ExplainResult & { done: boolean };
+
   let text = $state('');
   let photo = $state<{ data: string; mediaType: 'image/jpeg'; preview: string } | null>(null);
   let busy = $state(false);
   let error = $state<string | null>(null);
-  let result = $state<ExplainResult | null>(null);
+  let view = $state<View | null>(null);
   let fileInput = $state<HTMLInputElement>();
+  let controller: AbortController | null = null;
+
+  // Leaving the page stops the answer.
+  $effect(() => () => controller?.abort());
 
   async function pick(event: Event) {
     const file = (event.currentTarget as HTMLInputElement).files?.[0];
@@ -29,21 +36,54 @@
   }
 
   async function explain() {
+    controller?.abort();
+    const mine = new AbortController();
+    controller = mine;
     busy = true;
     error = null;
+    const typed = text.trim();
+    view = {
+      source: typed,
+      translation: '',
+      tokens: [],
+      grammar: [],
+      notes: [],
+      warnings: [],
+      done: false,
+    };
     try {
-      result = await api<ExplainResult>('/v1/ai/explain', {
-        method: 'POST',
-        body: {
-          ...(text.trim() ? { text: text.trim() } : {}),
+      const events = apiStream<ExplainStreamEvent>(
+        '/v1/ai/explain/stream',
+        {
+          ...(typed ? { text: typed } : {}),
           ...(photo ? { image: { data: photo.data, mediaType: photo.mediaType } } : {}),
         },
-      });
+        { signal: mine.signal },
+      );
+      for await (const event of events) {
+        if (!view) break;
+        if (event.type === 'source') view.source = event.text;
+        else if (event.type === 'translation') view.translation = event.text;
+        else if (event.type === 'token') view.tokens.push(event.token);
+        else if (event.type === 'done') view = { ...event.result, done: true };
+        else if (event.type === 'error') throw new ApiError(event.status, event.message);
+      }
+      if (view && !view.done && !mine.signal.aborted)
+        error = 'The answer stopped early. Try again.';
     } catch (e) {
-      error = e instanceof Error ? e.message : String(e);
+      if (!mine.signal.aborted) error = e instanceof Error ? e.message : String(e);
     } finally {
-      busy = false;
+      if (controller === mine) {
+        controller = null;
+        busy = false;
+      }
     }
+  }
+
+  function stop() {
+    controller?.abort();
+    controller = null;
+    busy = false;
   }
 
   const levelLabel = (id?: string) => LEVELS.find((l) => l.id === id)?.en;
@@ -84,15 +124,20 @@
         <Icon name="camera" size={18} /> Photo
       </button>
       {#if account.user}
-        <button
-          type="button"
-          class="btn seal small"
-          disabled={busy || (!text.trim() && !photo)}
-          onclick={explain}
-        >
-          <Icon name="sparkle" size={18} />
-          {busy ? 'Reading…' : 'Explain'}
-        </button>
+        {#if busy}
+          <button type="button" class="btn quiet small" onclick={stop}>
+            <Icon name="close" size={18} /> Stop
+          </button>
+        {:else}
+          <button
+            type="button"
+            class="btn seal small"
+            disabled={!text.trim() && !photo}
+            onclick={explain}
+          >
+            <Icon name="sparkle" size={18} /> Explain
+          </button>
+        {/if}
       {/if}
     </div>
   </div>
@@ -105,28 +150,39 @@
   {/if}
   {#if error}<p class="error" role="alert">{error}</p>{/if}
 
-  {#if result}
-    <article class="result">
+  {#if view}
+    {@const words = view.tokens.filter((t) => t.pinyin)}
+    <article class="result" aria-busy={!view.done}>
       <div class="source sheet">
         <div class="source-line">
-          <HanziText text={result.source} class="source-zh" />
-          {#if canSpeak}
+          {#if view.source}
+            <HanziText text={view.source} class="source-zh" />
+          {:else}
+            <p class="waiting">Reading the photo…</p>
+          {/if}
+          {#if canSpeak && view.source}
             <button
               type="button"
               class="tool"
               aria-label="Listen"
-              onclick={() => result && speak(result.source)}
+              onclick={() => view && speak(view.source)}
             >
               <Icon name="speaker" />
             </button>
           {/if}
         </div>
-        <p class="translation">{result.translation}</p>
+        {#if view.translation}
+          <p class="translation">{view.translation}</p>
+        {:else if busy}
+          <p class="translation waiting">Translating…</p>
+        {/if}
       </div>
 
-      <h3 class="section-title">Word by word <span class="zh" lang="zh-Hant-TW">逐詞</span></h3>
+      {#if words.length || busy}
+        <h3 class="section-title">Word by word <span class="zh" lang="zh-Hant-TW">逐詞</span></h3>
+      {/if}
       <ol class="tokens">
-        {#each result.tokens.filter((t) => t.pinyin) as token, i (i)}
+        {#each words as token, i (i)}
           {@const st = status(token.wordId)}
           <li class="token sheet">
             <span class="t-zh hanzi" lang="zh-Hant-TW">{token.text}</span>
@@ -153,12 +209,18 @@
             </span>
           </li>
         {/each}
+        {#if busy && !view.done}
+          {#each [0, 1, 2] as i (i)}<li
+              class="token sheet placeholder"
+              aria-hidden="true"
+            ></li>{/each}
+        {/if}
       </ol>
 
-      {#if result.grammar.length}
+      {#if view.grammar.length}
         <h3 class="section-title">Grammar <span class="zh" lang="zh-Hant-TW">語法</span></h3>
         <ul class="list notes">
-          {#each result.grammar as g, i (i)}
+          {#each view.grammar as g, i (i)}
             <li class="row">
               <span class="row-main"
                 ><strong lang="zh-Hant-TW" class="hanzi">{g.pattern}</strong>
@@ -168,18 +230,20 @@
           {/each}
         </ul>
       {/if}
-      {#if result.notes.length}
+      {#if view.notes.length}
         <h3 class="section-title">Notes <span class="zh" lang="zh-Hant-TW">說明</span></h3>
         <ul class="list notes">
-          {#each result.notes as note, i (i)}<li class="row">{note}</li>{/each}
+          {#each view.notes as note, i (i)}<li class="row">{note}</li>{/each}
         </ul>
       {/if}
-      {#if result.warnings.length}
-        <p class="footnote">Taiwan-standard check: {result.warnings.join(' · ')}</p>
+      {#if view.warnings.length}
+        <p class="footnote">Taiwan-standard check: {view.warnings.join(' · ')}</p>
       {/if}
-      <p class="footnote">
-        AI explanation. Readings come from the TOCFL lists and dictionary where possible.
-      </p>
+      {#if view.done}
+        <p class="footnote">
+          AI explanation. Readings come from the TOCFL lists and dictionary where possible.
+        </p>
+      {/if}
     </article>
   {:else if text.trim() && !busy}
     <div class="sheet tap">
@@ -274,7 +338,7 @@
 
   .translation {
     margin: 8px 0 0;
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-size: 19px;
     line-height: 1.45;
   }
@@ -304,6 +368,25 @@
     flex-direction: column;
     gap: 2px;
     padding: 12px 14px;
+    animation: rise 300ms var(--ease) both;
+  }
+
+  .placeholder {
+    min-height: 118px;
+    background: linear-gradient(100deg, var(--fill) 30%, var(--paper-raised) 50%, var(--fill) 70%) 0
+      0 / 300% 100%;
+    animation: shimmer 1.4s linear infinite;
+  }
+
+  @keyframes shimmer {
+    to {
+      background-position: -150% 0;
+    }
+  }
+
+  .waiting {
+    margin: 0;
+    color: var(--ink-3);
   }
 
   .t-zh {

@@ -1,6 +1,7 @@
 <script lang="ts">
   // One navigation, three shapes: a bottom tab bar on phones, an icon rail on tablets and a
-  // labeled sidebar on desktops (see app.css breakpoints).
+  // labeled sidebar on desktops (see app.css breakpoints). A jade highlight slides to the current
+  // page; the navigation stays put while pages transition.
   import Icon, { type IconName } from './Icon.svelte';
   import Seal from './Seal.svelte';
   import { router, type RouteName } from '../lib/router.svelte';
@@ -33,14 +34,17 @@
     { path: '/talk', icon: 'talk', zh: '對話', en: 'Talk', match: ['talk'], phone: false },
     { path: '/me', icon: 'me', zh: '我', en: 'Me', match: ['me'], phone: true },
   ];
+  const PHONE = ITEMS.filter((i) => i.phone);
 
   const active = (item: Item) => item.match.includes(router.route.name);
+  const railIndex = $derived(ITEMS.findIndex(active));
+  const phoneIndex = $derived(PHONE.findIndex(active));
   const due = $derived(store.dueCount);
 </script>
 
-<nav class="nav" aria-label="Main">
+<nav class="nav" aria-label="Main" style:--rail-i={railIndex} style:--phone-i={phoneIndex}>
   <a class="brand" href={router.href('/')} onclick={router.link} aria-label="臺灣華語 home">
-    <Seal text="華" size={36} />
+    <Seal text="華" size={38} />
     <span class="brand-text">
       <span class="brand-zh" lang="zh-Hant-TW">臺灣華語</span>
       <span class="brand-en">Taiwan Mandarin</span>
@@ -48,8 +52,14 @@
   </a>
 
   <ul>
+    <li
+      class="indicator"
+      class:off-phone={phoneIndex < 0}
+      class:off-rail={railIndex < 0}
+      aria-hidden="true"
+    ></li>
     {#each ITEMS as item (item.path)}
-      <li class:phone={item.phone}>
+      <li class="item" class:phone={item.phone}>
         <a
           href={router.href(item.path)}
           onclick={router.link}
@@ -66,7 +76,9 @@
             <span class="zh" lang="zh-Hant-TW">{item.zh}</span>
             <span class="en">{item.en}</span>
           </span>
-          {#if item.path === '/study' && due > 0}<span class="count tabular">{due}</span>{/if}
+          {#if item.path === '/study' && due > 0}
+            {#key due}<span class="count tabular">{due}</span>{/key}
+          {/if}
         </a>
       </li>
     {/each}
@@ -80,10 +92,12 @@
     inset: auto 0 0;
     z-index: 20;
     padding-bottom: var(--safe-bottom);
-    background: color-mix(in srgb, var(--paper) 86%, transparent);
+    /* Nearly opaque: page transitions capture the bar without its blur. */
+    background: color-mix(in srgb, var(--paper-raised) 94%, transparent);
     backdrop-filter: saturate(160%) blur(18px);
     -webkit-backdrop-filter: saturate(160%) blur(18px);
     border-top: 1px solid var(--rule);
+    view-transition-name: nav;
   }
 
   .brand {
@@ -91,6 +105,7 @@
   }
 
   ul {
+    position: relative;
     display: flex;
     justify-content: space-around;
     max-width: 560px;
@@ -99,21 +114,50 @@
     list-style: none;
   }
 
-  li:not(.phone) {
+  .item:not(.phone) {
     display: none;
   }
 
-  li {
+  .item {
     flex: 1;
+  }
+
+  /* The highlight under the current item; slides with a spring. */
+  .indicator {
+    position: absolute;
+    top: 7px;
+    left: 0;
+    width: 20%;
+    height: 32px;
+    pointer-events: none;
+    transform: translateX(calc(var(--phone-i) * 100%));
+    transition:
+      transform var(--dur-4) var(--ease-spring),
+      opacity var(--dur-2) var(--ease-out);
+  }
+
+  .indicator::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: 58px;
+    margin: 0 auto;
+    border-radius: var(--radius-pill);
+    background: var(--jade-wash);
+  }
+
+  .indicator.off-phone {
+    opacity: 0;
   }
 
   a {
     position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 3px;
     height: var(--tabbar-h);
     color: var(--ink-3);
     text-decoration: none;
@@ -121,7 +165,7 @@
   }
 
   a.active {
-    color: var(--ink);
+    color: var(--jade-text);
   }
 
   .glyph {
@@ -129,15 +173,25 @@
     display: grid;
   }
 
+  a.active .glyph {
+    animation: bounce var(--dur-4) var(--ease-spring);
+  }
+
+  @keyframes bounce {
+    40% {
+      transform: translateY(-3px) scale(1.12);
+    }
+  }
+
   .dot {
     position: absolute;
     top: -1px;
     right: -3px;
-    width: 8px;
-    height: 8px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
     background: var(--seal);
-    box-shadow: 0 0 0 2px var(--paper);
+    box-shadow: 0 0 0 2px var(--paper-raised);
   }
 
   .label {
@@ -157,13 +211,10 @@
     display: none;
   }
 
-  a.active .zh {
-    color: var(--seal);
-  }
-
   /* ---- Tablet: icon rail ---- */
   @media (min-width: 700px) {
     .nav {
+      --item-h: 62px;
       inset: 0 auto 0 0;
       width: var(--rail-w);
       padding: calc(var(--safe-top) + 18px) 0 18px;
@@ -180,6 +231,11 @@
       align-items: center;
       gap: 10px;
       text-decoration: none;
+      transition: transform var(--dur-4) var(--ease-spring);
+    }
+
+    .brand:hover {
+      transform: rotate(-4deg) scale(1.06);
     }
 
     .brand-text {
@@ -193,22 +249,42 @@
       padding: 0 10px;
     }
 
-    li:not(.phone) {
+    .item:not(.phone) {
       display: block;
     }
 
     a {
-      height: 62px;
-      border-radius: 14px;
+      height: var(--item-h);
+      border-radius: 16px;
     }
 
-    a.active {
-      background: var(--fill);
+    .indicator {
+      top: 0;
+      left: 10px;
+      width: auto;
+      right: 10px;
+      height: var(--item-h);
+      opacity: 1;
+      transform: translateY(calc(var(--rail-i) * (var(--item-h) + 4px)));
+    }
+
+    .indicator::before {
+      width: auto;
+      border-radius: 16px;
+    }
+
+    .indicator.off-phone {
+      opacity: 1;
+    }
+
+    .indicator.off-rail {
+      opacity: 0;
     }
 
     @media (hover: hover) {
-      a:hover {
+      a:not(.active):hover {
         color: var(--ink);
+        background: var(--fill);
       }
     }
   }
@@ -216,6 +292,7 @@
   /* ---- Desktop: labeled sidebar ---- */
   @media (min-width: 1100px) {
     .nav {
+      --item-h: 48px;
       align-items: stretch;
       padding: 28px 16px;
       gap: 30px;
@@ -223,6 +300,10 @@
 
     .brand {
       padding: 0 10px;
+    }
+
+    .brand:hover {
+      transform: none;
     }
 
     .brand-text {
@@ -238,6 +319,7 @@
 
     .brand-en {
       font-size: 12px;
+      font-weight: 700;
       color: var(--ink-3);
       letter-spacing: 0.04em;
     }
@@ -246,13 +328,22 @@
       padding: 0;
     }
 
+    .indicator {
+      left: 0;
+      right: 0;
+    }
+
     a {
       flex-direction: row;
       justify-content: flex-start;
       gap: 14px;
-      height: 46px;
+      height: var(--item-h);
       padding: 0 12px;
-      border-radius: 12px;
+      border-radius: 14px;
+    }
+
+    .indicator::before {
+      border-radius: 14px;
     }
 
     .label {
@@ -269,7 +360,7 @@
     .en {
       display: inline;
       font-size: 15px;
-      font-weight: 500;
+      font-weight: 700;
     }
 
     .dot {
@@ -279,14 +370,21 @@
     .count {
       display: inline;
       margin-left: auto;
-      min-width: 24px;
-      padding: 1px 7px;
-      border-radius: 999px;
+      min-width: 26px;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 800;
       text-align: center;
       background: var(--seal);
       color: var(--seal-ink);
+      animation: bump var(--dur-4) var(--ease-spring);
+    }
+
+    @keyframes bump {
+      from {
+        transform: scale(0.6);
+      }
     }
   }
 </style>

@@ -1,10 +1,11 @@
 <script lang="ts">
+  import Loading from '../ui/Loading.svelte';
   import {
     LEVEL_IDS,
     LEVELS,
+    pinyinWord,
     plainPinyin,
     TOPICS,
-    toToneMarkedSyllables,
     type Level,
     type TopicId,
     type Word,
@@ -95,7 +96,7 @@
     return () => observer.disconnect();
   });
 
-  const pinyinLine = (w: Word) => toToneMarkedSyllables(w.pinyin).join('');
+  const pinyinLine = (w: Word) => pinyinWord(w.pinyin);
 </script>
 
 <div class="page wide">
@@ -178,7 +179,7 @@
         {/if}
       </div>
       {#if loading && words.length === 0}
-        <p class="empty">Loading…</p>
+        <Loading />
       {:else if filtered.length === 0}
         <p class="empty"><span class="hanzi" lang="zh-Hant-TW">無</span>No words match.</p>
       {:else}

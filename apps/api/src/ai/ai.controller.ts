@@ -1,15 +1,33 @@
-import { Controller, Get, HttpCode, Inject, Param, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Param,
+  Post,
+  Res,
+  ServiceUnavailableException,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiProduces, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import {
   ExplainRequestSchema,
   TalkRequestSchema,
   type ExplainRequest,
   type ExplainResult,
+  type TalkConversation,
+  type TalkEndResponse,
+  type TalkListItem,
   type TalkResponse,
 } from '@taiwan-mandarin/shared/api';
+import type { Response } from 'express';
 import type { z } from 'zod';
 import { AuthGuard, CurrentUser, type AuthUser } from '../auth/auth.guard.js';
+import { writeNdjson } from '../common/ndjson.js';
 import { ApiZodBody, ZodBody } from '../common/zod.js';
 import { LlmService } from './llm.service.js';
 import { ExplainService } from './explain.service.js';
@@ -51,6 +69,28 @@ export class AiController {
     return this.explainer.explain(body);
   }
 
+  @Post('explain/stream')
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @ApiOperation({
+    summary: 'Explain text or a photo, streamed as NDJSON: the translation first, then each word',
+  })
+  @ApiProduces('application/x-ndjson')
+  @ApiZodBody(ExplainRequestSchema)
+  async explainStream(
+    @CurrentUser() user: AuthUser,
+    @ZodBody(ExplainRequestSchema) body: ExplainRequest,
+    @Res() res: Response,
+  ): Promise<void> {
+    // Checked before the stream starts, so these still come back as plain HTTP errors.
+    if (!this.llm.available) {
+      throw new ServiceUnavailableException(
+        'AI features are not set up on this server (OPENAI_API_KEY).',
+      );
+    }
+    await this.quota.consume(user.id, 'ai');
+    await writeNdjson(res, (signal) => this.explainer.explainStream(body, signal));
+  }
+
   @Post('talk')
   @HttpCode(200)
   @Throttle({ default: { limit: 30, ttl: 60_000 } })
@@ -66,13 +106,38 @@ export class AiController {
 
   @Get('talk')
   @ApiOperation({ summary: 'Recent conversations' })
-  conversations(@CurrentUser() user: AuthUser) {
+  conversations(@CurrentUser() user: AuthUser): Promise<TalkListItem[]> {
     return this.talker.list(user.id);
   }
 
   @Get('talk/:id')
-  @ApiOperation({ summary: 'A conversation with all its messages' })
-  conversation(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+  @ApiOperation({ summary: 'A conversation with all its messages (and its summary, once ended)' })
+  conversation(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<TalkConversation> {
     return this.talker.messages(user.id, id);
+  }
+
+  @Post('talk/:id/end')
+  @HttpCode(200)
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  @ApiOperation({ summary: 'End a conversation: a goodbye from the partner, then a summary' })
+  end(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<TalkEndResponse> {
+    // The goodbye uses one AI message when there is one left today; without it the chat still ends.
+    const mayClose = () =>
+      this.quota.consume(user.id, 'ai').then(
+        () => true,
+        (error: unknown) => {
+          if (error instanceof HttpException && error.getStatus() === HttpStatus.TOO_MANY_REQUESTS)
+            return false;
+          throw error;
+        },
+      );
+    return this.talker.end(user.id, id, mayClose);
+  }
+
+  @Delete('talk/:id')
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Delete a conversation' })
+  async remove(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<void> {
+    await this.talker.remove(user.id, id);
   }
 }

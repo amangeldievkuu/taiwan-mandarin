@@ -10,16 +10,23 @@
   import Talk from './routes/Talk.svelte';
   import Today from './routes/Today.svelte';
   import WordPage from './routes/WordPage.svelte';
+  import Celebrations from './ui/Celebrations.svelte';
   import LookupSheet from './ui/LookupSheet.svelte';
   import Nav from './ui/Nav.svelte';
   import Seal from './ui/Seal.svelte';
-  import { router } from './lib/router.svelte';
+  import { feedback } from './lib/feedback.svelte';
+  import { router, viewKey } from './lib/router.svelte';
   import { store } from './lib/store.svelte';
   import { account } from './lib/sync.svelte';
 
   onMount(() => {
     void store.init().then(() => account.init());
-    return store.watchVisibility();
+    const stopFeedback = feedback.init();
+    const stopWatching = store.watchVisibility();
+    return () => {
+      stopFeedback();
+      stopWatching();
+    };
   });
 
   $effect(() => {
@@ -64,7 +71,7 @@
 {#if store.ready}
   <Nav />
   <main>
-    {#key router.route.name + (router.route.params.id ?? router.route.params.level ?? '')}
+    {#key viewKey(router.route)}
       <div class="view">
         {#if router.route.name === 'today'}
           <Today />
@@ -91,6 +98,7 @@
     {/key}
   </main>
   <LookupSheet />
+  <Celebrations />
 {:else}
   <div class="splash">
     <Seal text="華" size={72} />
@@ -107,14 +115,17 @@
     min-height: 100dvh;
   }
 
-  .view {
-    animation: enter 260ms var(--ease);
+  /* Without the View Transitions API, pages still fade up into place. */
+  @supports not (view-transition-name: none) {
+    .view {
+      animation: enter var(--dur-3) var(--ease-out);
+    }
   }
 
   @keyframes enter {
     from {
       opacity: 0;
-      transform: translateY(6px);
+      transform: translateY(8px);
     }
   }
 

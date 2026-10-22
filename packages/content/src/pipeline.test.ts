@@ -1,5 +1,7 @@
+import type { DictShard, Word } from '@taiwan-mandarin/shared';
 import { describe, expect, it } from 'vitest';
 import { cleanDefinition, normalizePinyin, parseCedictLine, syllableInventory } from './cedict.ts';
+import { pickExamples } from './examples.ts';
 import { citationTones, parseForms, pinyinVariants, readForm, zhuyinVariants } from './headword.ts';
 import { alignPinyin, type PinyinContext } from './pinyin.ts';
 import { taiwanCharReadings } from './dictionary.ts';
@@ -59,6 +61,58 @@ describe('CC-CEDICT parsing', () => {
     expect(cleanDefinition('see 什麼|什么[shen2 me5]')).toBe('see 什麼 (shénme)');
     expect(cleanDefinition('used for 師傅|师傅 (in Taiwan)')).toBe('used for 師傅 (in Taiwan)');
     expect(cleanDefinition('also pr. [shui2]')).toBe('also pr. shuí');
+  });
+
+  it('writes readings inside definitions as words', () => {
+    expect(cleanDefinition('see 西安[Xi1 an1]')).toBe("see 西安 (Xī'ān)");
+    expect(cleanDefinition('see 馬英九[Ma3 Ying1 jiu3]')).toBe('see 馬英九 (Mǎ Yīngjiǔ)');
+    expect(cleanDefinition('see 一不做，二不休[yi1 bu4 zuo4 , er4 bu4 xiu1]')).toBe(
+      'see 一不做，二不休 (yībùzuò, èrbùxiū)',
+    );
+  });
+});
+
+describe('example sentences', () => {
+  const word = (hanzi: string, pinyin: string, rank: number): Word => ({
+    id: hanzi,
+    hanzi,
+    pinyin,
+    en: hanzi,
+    level: 'N1',
+    src: 'tocfl',
+    rank,
+    topic: 'core',
+    glossSource: 'cedict',
+  });
+  const words = [
+    word('我', 'wo3', 1),
+    word('今天', 'jin1 tian1', 2),
+    word('買', 'mai3', 3),
+    word('的', 'de5', 4),
+    word('東西', 'dong1 xi5', 5),
+  ];
+  const shards: DictShard[] = Array.from({ length: 128 }, () => ({}));
+  const { examples, annotate, wordLengths } = pickExamples(
+    [{ id: '1', zh: '我今天買的東西。', en: 'What I bought today.', native: true }],
+    words,
+    shards,
+    4,
+  );
+
+  it('keeps word boundaries so readings can be spaced by word', () => {
+    expect(examples.get('今天')?.[0]).toMatchObject({
+      pinyin: 'wo3 jin1 tian1 mai3 de5 dong1 xi5',
+      wordLengths: [1, 2, 1, 1, 2],
+    });
+    expect(annotate('今天我買東西')).toEqual({
+      pinyin: 'jin1 tian1 wo3 mai3 dong1 xi5',
+      wordLengths: [2, 1, 1, 2],
+    });
+    expect(wordLengths('我買東西？')).toEqual([1, 1, 2]);
+  });
+
+  it('skips sentences with a word it cannot read', () => {
+    expect(annotate('我買蘋果')).toBeUndefined();
   });
 });
 

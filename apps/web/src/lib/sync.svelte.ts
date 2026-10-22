@@ -106,6 +106,7 @@ class Account {
     this.syncing = true;
     this.error = null;
     try {
+      store.useAccount(this.user.id);
       const local = await store.pendingChanges();
       const request: SyncRequest = {
         since: store.syncState.cursor,
@@ -116,6 +117,7 @@ class Account {
           value: $state.snapshot(store.settings),
           updatedAt: store.syncState.settingsUpdatedAt,
         },
+        activity: store.activityRequest(),
       };
       const response = await api<SyncResponse>('/v1/sync', { method: 'POST', body: request });
       await store.applyRemote({
@@ -126,6 +128,7 @@ class Account {
         fsrsWeights: response.fsrs?.w,
         acceptedReviews: response.acceptedReviews,
         pushedAt: local.startedAt,
+        activity: response.activity,
       });
       this.lastSync = new Date();
     } catch (e) {

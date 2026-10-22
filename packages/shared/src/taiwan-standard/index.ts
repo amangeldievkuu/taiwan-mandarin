@@ -84,6 +84,17 @@ export function checkReading(word: Pick<Word, 'id' | 'hanzi' | 'pinyin'>): Issue
   });
 }
 
+/** The same reading with Mainland character readings replaced: 學期 xue2 qi1 → xue2 qi2. */
+export function taiwanReading(hanzi: string, pinyin: string): string {
+  const chars = [...hanzi];
+  return splitSyllables(pinyin)
+    .map((syllable, i) => {
+      const normalized = syllable.toLowerCase().replace(/v|u:/g, 'ü');
+      return MAINLAND_READINGS[chars[i] ?? '']?.[normalized] ?? syllable;
+    })
+    .join(' ');
+}
+
 /** Every Chinese-bearing string in study-path words. */
 export function vocabTexts(words: readonly Word[], topics: readonly Topic[]): TextEntry[] {
   return [

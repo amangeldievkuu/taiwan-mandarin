@@ -2,7 +2,8 @@
 //   cards     last-write-wins on the client's updatedAt (per word);
 //   reviews   append-only, keyed by the client's UUID (retries are harmless);
 //   deck, settings   whole-value last-write-wins.
-// It answers with every card the server has that changed since the client's cursor.
+// It answers with every card the server has that changed since the client's cursor, and, when asked,
+// practice totals per day in the client's time zone (so every device shows the same streak).
 
 import { Inject, Injectable } from '@nestjs/common';
 import type { CardRecordDto, SyncRequest, SyncResponse } from '@taiwan-mandarin/shared/api';
@@ -10,6 +11,7 @@ import { SettingsSchema, DeckEntrySchema } from '@taiwan-mandarin/shared/api';
 import { z } from 'zod';
 import type { Card as CardRow } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { ActivityService } from './activity.service.js';
 
 export function toDto(row: CardRow): CardRecordDto {
   return {
@@ -54,7 +56,10 @@ function toRow(userId: string, r: CardRecordDto) {
 
 @Injectable()
 export class SyncService {
-  constructor(@Inject(PrismaService) private readonly db: PrismaService) {}
+  constructor(
+    @Inject(PrismaService) private readonly db: PrismaService,
+    @Inject(ActivityService) private readonly activity: ActivityService,
+  ) {}
 
   async sync(userId: string, request: SyncRequest): Promise<SyncResponse> {
     // Cursor first: anything written from here on is newer than what this response returns.
@@ -87,6 +92,8 @@ export class SyncService {
 
     // Reviews: insert, ignoring ids we already have.
     if (request.reviews.length) {
+      // Stored-at time set here rather than by the database, whose default depends on its zone.
+      const storedAt = new Date();
       await this.db.reviewLog.createMany({
         data: request.reviews.map((r) => ({
           id: r.id,
@@ -101,6 +108,7 @@ export class SyncService {
           elapsedDays: r.elapsedDays,
           scheduledDays: r.scheduledDays,
           durationMs: r.durationMs,
+          createdAt: storedAt,
         })),
         skipDuplicates: true,
       });
@@ -126,6 +134,8 @@ export class SyncService {
 
     const settings = SettingsSchema.safeParse(saved.settings);
     const deck = z.array(DeckEntrySchema).safeParse(saved.deck);
+    const asked = request.activity;
+    const days = asked ? await this.activity.days(userId, asked.timeZone, asked.since) : undefined;
     return {
       cursor,
       cards: changed.map(toDto),
@@ -145,6 +155,9 @@ export class SyncService {
           }
         : {}),
       acceptedReviews: request.reviews.map((r) => r.id),
+      ...(asked && days
+        ? { activity: { timeZone: asked.timeZone, full: asked.since === 0, days } }
+        : {}),
     };
   }
 }

@@ -1,54 +1,104 @@
-/* 臺灣華語 — "ink & paper": warm rice paper, ink-black type, one vermilion seal accent. */
+/* 臺灣華語: bright and fresh. A clean canvas, jade for going forward, sky for information, the
+   vermilion 華 seal for the brand and gold for kintsugi and XP. Rounded type, brush-style hanzi,
+   soft-lit buttons and cards that lift on hover and settle when pressed, and motion that
+   reduced-motion turns off. */
 
 :root {
-  --paper: #f7f3ec;
-  --paper-raised: #fffdf8;
-  --paper-sunken: #efe8dc;
-  --ink: #1e1b18;
-  --ink-2: #6b635a;
-  --ink-3: #a39a8e;
-  --rule: rgba(30, 27, 24, 0.12);
-  --rule-strong: rgba(30, 27, 24, 0.22);
+  /* Surfaces */
+  --paper: #f4f8f6;
+  --paper-raised: #ffffff;
+  --paper-sunken: #e8efec;
+  /* Text and lines */
+  --ink: #14211c;
+  --ink-2: #4a5a54;
+  --ink-3: #6e7d77;
+  --rule: rgb(20 33 28 / 0.1);
+  --rule-strong: rgb(20 33 28 / 0.18);
+  --fill: rgb(20 33 28 / 0.06);
+  /* Vermilion seal: brand, Again, errors */
   --seal: #c8102e;
   --seal-ink: #fffaf2;
-  --seal-wash: rgba(200, 16, 46, 0.08);
-  --jade: #3e7c6b;
-  --ochre: #b0741c;
-  --indigo: #3b4a7a;
-  --shadow: 0 1px 2px rgba(60, 40, 20, 0.06), 0 8px 24px -12px rgba(60, 40, 20, 0.18);
-  --scrim: rgba(30, 27, 24, 0.32);
-  --grid-line: rgba(200, 16, 46, 0.14);
+  --seal-edge: #8e0b21;
+  --seal-wash: rgb(200 16 46 / 0.08);
+  /* Jade: main actions, Good, progress */
+  --jade: #0a8564;
+  --jade-ink: #ffffff;
+  --jade-edge: #06664d;
+  --jade-wash: #e2f3ec;
+  --jade-text: #08765a;
+  /* Sky: Easy, information, focus */
+  --sky: #1670c4;
+  --sky-ink: #ffffff;
+  --sky-edge: #0f538f;
+  --sky-wash: #e3effa;
+  --sky-text: #135fa6;
+  /* Gold: kintsugi seams, XP */
+  --gold: #f5b82e;
+  --gold-ink: #2b1d00;
+  --gold-edge: #b98410;
+  --gold-deep: #9a6400;
+  --gold-wash: #fff4d6;
+  --gold-gradient: linear-gradient(135deg, #fff1b8, #f2c14e 45%, #b9831a);
+  /* Ochre: Hard, an open crack */
+  --ochre: #a65f00;
+  --ochre-wash: #fbefdc;
 
-  /* Ratings: ink washes */
+  --shadow-1: 0 1px 2px rgb(16 40 32 / 0.06), 0 1px 1px rgb(16 40 32 / 0.04);
+  --shadow-2:
+    0 1px 2px rgb(16 40 32 / 0.05), 0 4px 12px -2px rgb(16 40 32 / 0.07),
+    0 12px 28px -12px rgb(16 40 32 / 0.12);
+  --shadow-3:
+    0 2px 4px rgb(16 40 32 / 0.05), 0 10px 24px -6px rgb(16 40 32 / 0.1),
+    0 28px 56px -20px rgb(16 40 32 / 0.22);
+  --shadow: var(--shadow-2);
+  --scrim: rgb(14 24 20 / 0.36);
+  --grid-line: rgb(200 16 46 / 0.12);
+  --glow-1: rgb(10 133 100 / 0.1);
+  --glow-2: rgb(22 112 196 / 0.08);
+
+  /* Ratings */
   --again: var(--seal);
   --hard: var(--ochre);
-  --good: var(--jade);
-  --easy: var(--indigo);
-
-  /* Legacy names used by older components */
-  --bg: var(--paper);
-  --cell: var(--paper-raised);
-  --fill: rgba(30, 27, 24, 0.06);
-  --text: var(--ink);
-  --text-2: var(--ink-2);
-  --text-3: var(--ink-3);
-  --separator: var(--rule);
-  --outline: var(--paper-sunken);
-  --accent: var(--seal);
+  --good: var(--jade-text);
+  --easy: var(--sky-text);
 
   --font-ui:
-    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang TC', 'Noto Sans TC',
-    'Helvetica Neue', sans-serif;
+    ui-rounded, 'SF Pro Rounded', Nunito, -apple-system, BlinkMacSystemFont, 'PingFang TC',
+    'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  --font-display: var(--font-ui);
   --font-kai: 'LXGW WenKai TC', 'Kaiti TC', 'BiauKai', 'Noto Serif TC', serif;
-  --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Noto Serif TC', serif;
   --font-hanzi: var(--font-kai);
 
-  --radius-sm: 8px;
-  --radius: 14px;
-  --radius-lg: 22px;
-  --dur: 220ms;
-  --ease: cubic-bezier(0.22, 0.8, 0.24, 1);
-  --tabbar-h: 58px;
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-md: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: 28px;
+  --fs-3xl: clamp(30px, 4.4vw, 40px);
+  --fs-hero: clamp(44px, 8vw, 64px);
+
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+
+  /* Motion. Springs overshoot a little and settle; reduced motion sets every duration to 0. */
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+  --dur-4: 520ms;
+  --dur: var(--dur-2);
+  --ease-out: cubic-bezier(0.22, 0.8, 0.24, 1);
+  --ease-in: cubic-bezier(0.5, 0, 0.75, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease: var(--ease-out);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring-soft: cubic-bezier(0.3, 1.25, 0.6, 1);
+
+  --tabbar-h: 62px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --rail-w: 0px;
@@ -58,48 +108,158 @@
   color-scheme: light;
 }
 
+/* Damped springs (about 12% and 5% overshoot), for 400–560 ms. A custom property holding linear()
+   in a browser without it would fall back to `ease`, hence @supports. */
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --ease-spring: linear(
+      0,
+      0.081,
+      0.268,
+      0.493,
+      0.708,
+      0.885,
+      1.011,
+      1.087,
+      1.122,
+      1.124,
+      1.108,
+      1.081,
+      1.053,
+      1.027,
+      1.007,
+      0.994,
+      0.987,
+      0.984,
+      0.985,
+      0.988,
+      0.991,
+      0.995,
+      0.998,
+      1,
+      1
+    );
+    --ease-spring-soft: linear(
+      0,
+      0.071,
+      0.231,
+      0.42,
+      0.601,
+      0.753,
+      0.871,
+      0.953,
+      1.005,
+      1.033,
+      1.045,
+      1.045,
+      1.04,
+      1.032,
+      1.023,
+      1.015,
+      1.009,
+      1.004,
+      1.001,
+      0.999,
+      0.998,
+      0.998,
+      0.998,
+      0.998,
+      1
+    );
+  }
+}
+
+/* Dark: the same block twice, for the explicit choice and for "auto" following the system. */
 :root[data-theme='dark'] {
-  --paper: #151311;
-  --paper-raised: #1e1b18;
-  --paper-sunken: #0e0d0b;
-  --ink: #ede6da;
-  --ink-2: #a69c8e;
-  --ink-3: #6f665b;
-  --rule: rgba(237, 230, 218, 0.11);
-  --rule-strong: rgba(237, 230, 218, 0.2);
-  --seal: #e04b5a;
-  --seal-ink: #1a0a0c;
-  --seal-wash: rgba(224, 75, 90, 0.12);
-  --jade: #6fb39f;
-  --ochre: #d9a441;
-  --indigo: #8c9bd6;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
-  --scrim: rgba(0, 0, 0, 0.55);
-  --grid-line: rgba(224, 75, 90, 0.16);
-  --fill: rgba(237, 230, 218, 0.08);
+  --paper: #0e1513;
+  --paper-raised: #16201d;
+  --paper-sunken: #0a0f0d;
+  --ink: #e6efeb;
+  --ink-2: #a0b1aa;
+  --ink-3: #6e807a;
+  --rule: rgb(230 239 235 / 0.1);
+  --rule-strong: rgb(230 239 235 / 0.18);
+  --fill: rgb(230 239 235 / 0.07);
+  --seal: #f25563;
+  --seal-ink: #1a0709;
+  --seal-edge: #b23542;
+  --seal-wash: rgb(242 85 99 / 0.14);
+  --jade: #3dcb9e;
+  --jade-ink: #06231a;
+  --jade-edge: #23946f;
+  --jade-wash: rgb(61 203 158 / 0.14);
+  --jade-text: #3dcb9e;
+  --sky: #62b4f6;
+  --sky-ink: #061a2b;
+  --sky-edge: #3483c4;
+  --sky-wash: rgb(98 180 246 / 0.14);
+  --sky-text: #62b4f6;
+  --gold: #f4c55a;
+  --gold-ink: #1f1500;
+  --gold-edge: #b98a1f;
+  --gold-deep: #f4c55a;
+  --gold-wash: rgb(244 197 90 / 0.14);
+  --gold-gradient: linear-gradient(135deg, #fff3c4, #f4c55a 45%, #c8952a);
+  --ochre: #f0a43a;
+  --ochre-wash: rgb(240 164 58 / 0.14);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.5);
+  --shadow-2:
+    0 1px 2px rgb(0 0 0 / 0.45), 0 12px 32px -16px rgb(0 0 0 / 0.7),
+    inset 0 1px 0 rgb(255 255 255 / 0.04);
+  --shadow-3:
+    0 2px 6px rgb(0 0 0 / 0.5), 0 24px 48px -16px rgb(0 0 0 / 0.75),
+    inset 0 1px 0 rgb(255 255 255 / 0.04);
+  --scrim: rgb(0 0 0 / 0.6);
+  --grid-line: rgb(242 85 99 / 0.16);
+  --glow-1: rgb(61 203 158 / 0.09);
+  --glow-2: rgb(98 180 246 / 0.07);
   color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --paper: #151311;
-    --paper-raised: #1e1b18;
-    --paper-sunken: #0e0d0b;
-    --ink: #ede6da;
-    --ink-2: #a69c8e;
-    --ink-3: #6f665b;
-    --rule: rgba(237, 230, 218, 0.11);
-    --rule-strong: rgba(237, 230, 218, 0.2);
-    --seal: #e04b5a;
-    --seal-ink: #1a0a0c;
-    --seal-wash: rgba(224, 75, 90, 0.12);
-    --jade: #6fb39f;
-    --ochre: #d9a441;
-    --indigo: #8c9bd6;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
-    --scrim: rgba(0, 0, 0, 0.55);
-    --grid-line: rgba(224, 75, 90, 0.16);
-    --fill: rgba(237, 230, 218, 0.08);
+    --paper: #0e1513;
+    --paper-raised: #16201d;
+    --paper-sunken: #0a0f0d;
+    --ink: #e6efeb;
+    --ink-2: #a0b1aa;
+    --ink-3: #6e807a;
+    --rule: rgb(230 239 235 / 0.1);
+    --rule-strong: rgb(230 239 235 / 0.18);
+    --fill: rgb(230 239 235 / 0.07);
+    --seal: #f25563;
+    --seal-ink: #1a0709;
+    --seal-edge: #b23542;
+    --seal-wash: rgb(242 85 99 / 0.14);
+    --jade: #3dcb9e;
+    --jade-ink: #06231a;
+    --jade-edge: #23946f;
+    --jade-wash: rgb(61 203 158 / 0.14);
+    --jade-text: #3dcb9e;
+    --sky: #62b4f6;
+    --sky-ink: #061a2b;
+    --sky-edge: #3483c4;
+    --sky-wash: rgb(98 180 246 / 0.14);
+    --sky-text: #62b4f6;
+    --gold: #f4c55a;
+    --gold-ink: #1f1500;
+    --gold-edge: #b98a1f;
+    --gold-deep: #f4c55a;
+    --gold-wash: rgb(244 197 90 / 0.14);
+    --gold-gradient: linear-gradient(135deg, #fff3c4, #f4c55a 45%, #c8952a);
+    --ochre: #f0a43a;
+    --ochre-wash: rgb(240 164 58 / 0.14);
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.5);
+    --shadow-2:
+      0 1px 2px rgb(0 0 0 / 0.45), 0 12px 32px -16px rgb(0 0 0 / 0.7),
+      inset 0 1px 0 rgb(255 255 255 / 0.04);
+    --shadow-3:
+      0 2px 6px rgb(0 0 0 / 0.5), 0 24px 48px -16px rgb(0 0 0 / 0.75),
+      inset 0 1px 0 rgb(255 255 255 / 0.04);
+    --scrim: rgb(0 0 0 / 0.6);
+    --grid-line: rgb(242 85 99 / 0.16);
+    --glow-1: rgb(61 203 158 / 0.09);
+    --glow-2: rgb(98 180 246 / 0.07);
     color-scheme: dark;
   }
 }
@@ -122,9 +282,30 @@
   }
 }
 
+/* Reduced motion: no movement at all, everywhere (JS motion checks prefersReducedMotion too). */
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --dur: 0ms;
+    --dur-1: 0ms;
+    --dur-2: 0ms;
+    --dur-3: 0ms;
+    --dur-4: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
 
@@ -146,14 +327,15 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-ui);
-  font-size: 16px;
+  font-size: var(--fs-md);
+  font-weight: 500;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: 'kern', 'palt';
+  font-feature-settings: 'kern';
   overflow-x: hidden;
 }
 
-/* Faint paper fibre */
+/* Morning light: a soft jade and sky glow at the top of the canvas. */
 body::before {
   content: '';
   position: fixed;
@@ -161,8 +343,8 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(120% 80% at 10% 0%, rgba(200, 16, 46, 0.035), transparent 60%),
-    radial-gradient(90% 70% at 100% 100%, rgba(59, 74, 122, 0.04), transparent 60%);
+    radial-gradient(70% 45% at 12% -8%, var(--glow-1), transparent 70%),
+    radial-gradient(60% 40% at 100% -4%, var(--glow-2), transparent 70%);
 }
 
 :lang(zh-Hant-TW) {
@@ -195,9 +377,8 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid var(--seal);
+  outline: 2px solid var(--sky);
   outline-offset: 2px;
-  border-radius: 6px;
 }
 
 .hanzi {
@@ -249,25 +430,26 @@ a {
 
 .eyebrow {
   margin: 0;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink-3);
 }
 
 .title {
   margin: 2px 0 0;
-  font-family: var(--font-serif);
-  font-size: clamp(28px, 4vw, 38px);
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
   line-height: 1.1;
 }
 
 .title .zh {
   font-family: var(--font-kai);
   font-weight: 400;
+  letter-spacing: 0;
   color: var(--seal);
   margin-right: 0.3em;
 }
@@ -277,18 +459,18 @@ a {
   align-items: baseline;
   justify-content: space-between;
   margin: 32px 0 12px;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--ink);
 }
 
 .section-title .zh {
   font-family: var(--font-kai);
   font-size: 16px;
+  font-weight: 400;
   letter-spacing: 0.1em;
-  text-transform: none;
   color: var(--ink-3);
   margin-left: 8px;
 }
@@ -300,6 +482,29 @@ a {
   border: 1px solid var(--rule);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
+}
+
+/* A card you can press: it lifts a little towards the pointer and settles when pressed. */
+.pressable {
+  box-shadow: var(--shadow-1);
+  transition:
+    transform var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .pressable:hover {
+    transform: translateY(-2px);
+    border-color: var(--rule-strong);
+    box-shadow: var(--shadow-2);
+  }
+}
+
+.pressable:active {
+  transform: scale(0.995);
+  box-shadow: var(--shadow-1);
+  transition-duration: 80ms;
 }
 
 .list {
@@ -346,7 +551,7 @@ a.row {
 
 .row-sub {
   display: block;
-  font-size: 14px;
+  font-size: var(--fs-sm);
   color: var(--ink-2);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -376,51 +581,125 @@ a.row {
   color: var(--ink-2);
 }
 
-/* ---------- Buttons ---------- */
+/* ---------- Buttons: soft light from above, a coloured shadow, settle when pressed ---------- */
 
 .btn {
+  --btn-face: var(--paper-raised);
+  --btn-ink: var(--ink);
+  --btn-edge: var(--rule-strong);
+  --btn-hover: color-mix(in oklab, var(--btn-face) 92%, white);
+  --btn-sheen: rgb(255 255 255 / 0.1);
+  --btn-glow: color-mix(in oklab, var(--btn-face) 45%, transparent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 46px;
-  padding: 0 20px;
-  border-radius: 999px;
-  font-size: 16px;
-  font-weight: 600;
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: 12px;
+  background: linear-gradient(var(--btn-sheen), transparent) var(--btn-face);
+  color: var(--btn-ink);
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  letter-spacing: 0.005em;
+  line-height: 1;
   text-decoration: none;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    inset 0 0 0 1px color-mix(in oklab, var(--btn-edge) 35%, transparent),
+    0 1px 2px color-mix(in oklab, var(--btn-edge) 30%, transparent),
+    0 4px 10px -4px var(--btn-glow);
   transition:
-    transform var(--dur) var(--ease),
-    background-color var(--dur) var(--ease),
-    opacity var(--dur) var(--ease);
+    transform 160ms var(--ease-out),
+    box-shadow 160ms var(--ease-out),
+    background-color var(--dur-2) var(--ease-out),
+    opacity var(--dur-2) var(--ease-out);
 }
 
-.btn:active:not(:disabled) {
-  transform: scale(0.97);
+@media (hover: hover) {
+  .btn:hover:not(:disabled) {
+    background-color: var(--btn-hover);
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.2),
+      inset 0 0 0 1px color-mix(in oklab, var(--btn-edge) 35%, transparent),
+      0 2px 4px color-mix(in oklab, var(--btn-edge) 25%, transparent),
+      0 8px 18px -6px var(--btn-glow);
+  }
+}
+
+.btn:active:not(:disabled),
+.btn.pressed {
+  transform: scale(0.98);
+  box-shadow:
+    inset 0 1px 2px rgb(0 0 0 / 0.12),
+    inset 0 0 0 1px color-mix(in oklab, var(--btn-edge) 40%, transparent),
+    0 1px 1px color-mix(in oklab, var(--btn-edge) 25%, transparent);
+  transition-duration: 80ms;
 }
 
 .btn:disabled {
-  opacity: 0.4;
+  opacity: 0.5;
+  box-shadow: none;
 }
 
 .btn.primary {
-  background: var(--ink);
-  color: var(--paper);
+  --btn-face: var(--jade);
+  --btn-ink: var(--jade-ink);
+  --btn-edge: var(--jade-edge);
 }
 
 .btn.seal {
-  background: var(--seal);
-  color: var(--seal-ink);
+  --btn-face: var(--seal);
+  --btn-ink: var(--seal-ink);
+  --btn-edge: var(--seal-edge);
 }
 
-.btn.quiet {
-  background: var(--fill);
+.btn.sky {
+  --btn-face: var(--sky);
+  --btn-ink: var(--sky-ink);
+  --btn-edge: var(--sky-edge);
+}
+
+.btn.gold {
+  --btn-face: var(--gold);
+  --btn-ink: var(--gold-ink);
+  --btn-edge: var(--gold-edge);
+}
+
+/* Quiet: the neutral button, a hairline and a whisper of shadow. */
+.btn.quiet,
+.btn:not(.primary, .seal, .sky, .gold) {
+  --btn-hover: color-mix(in oklab, var(--paper-raised) 94%, var(--ink));
+  --btn-sheen: transparent;
+  box-shadow:
+    inset 0 0 0 1px var(--rule-strong),
+    var(--shadow-1);
+}
+
+@media (hover: hover) {
+  .btn.quiet:hover:not(:disabled),
+  .btn:not(.primary, .seal, .sky, .gold):hover:not(:disabled) {
+    box-shadow:
+      inset 0 0 0 1px var(--rule-strong),
+      var(--shadow-2);
+  }
+}
+
+.btn.quiet:active:not(:disabled),
+.btn:not(.primary, .seal, .sky, .gold):active:not(:disabled) {
+  background-color: var(--btn-hover);
+  box-shadow:
+    inset 0 0 0 1px var(--rule-strong),
+    inset 0 1px 2px rgb(0 0 0 / 0.06);
 }
 
 .btn.small {
   min-height: 36px;
   padding: 0 14px;
-  font-size: 14px;
+  border-radius: 10px;
+  font-size: var(--fs-sm);
 }
 
 .icon {
@@ -429,7 +708,7 @@ a.row {
   flex: none;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.7;
+  stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -438,23 +717,40 @@ a.row {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  min-height: 32px;
-  padding: 0 12px;
+  min-height: 34px;
+  padding: 0 13px;
   border: 1px solid var(--rule-strong);
-  border-radius: 999px;
-  font-size: 14px;
+  border-radius: var(--radius-pill);
+  background: var(--paper-raised);
+  font-size: var(--fs-sm);
+  font-weight: 600;
   white-space: nowrap;
   transition:
     background-color var(--dur) var(--ease),
     color var(--dur) var(--ease),
-    border-color var(--dur) var(--ease);
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease),
+    transform var(--dur-3) var(--ease-spring);
+}
+
+@media (hover: hover) {
+  .chip:hover:not([aria-pressed='true'], .on) {
+    background: color-mix(in oklab, var(--paper-raised) 94%, var(--ink));
+  }
+}
+
+.chip:active {
+  transform: scale(0.97);
 }
 
 .chip[aria-pressed='true'],
 .chip.on {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--paper);
+  background: var(--jade);
+  border-color: var(--jade);
+  color: var(--jade-ink);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.16),
+    0 1px 2px color-mix(in oklab, var(--jade-edge) 35%, transparent);
 }
 
 /* Small vermilion square label, like a name seal */
@@ -464,7 +760,7 @@ a.row {
   min-width: 22px;
   height: 22px;
   padding: 0 5px;
-  border-radius: 4px;
+  border-radius: 5px;
   background: var(--seal);
   color: var(--seal-ink);
   font-family: var(--font-kai);
@@ -475,21 +771,21 @@ a.row {
 .level-tag {
   display: inline-flex;
   align-items: center;
-  height: 20px;
-  padding: 0 6px;
-  border: 1px solid currentColor;
-  border-radius: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  background: var(--fill);
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-weight: 700;
+  letter-spacing: 0.03em;
   color: var(--ink-2);
   white-space: nowrap;
 }
 
 .badge-tw {
   display: inline-block;
-  padding: 1px 6px;
-  border-radius: 4px;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
   font-family: var(--font-kai);
   font-size: 12px;
   color: var(--seal);
@@ -505,28 +801,29 @@ a.row {
 
 .search .icon {
   position: absolute;
-  left: 14px;
+  left: 15px;
   color: var(--ink-3);
   pointer-events: none;
 }
 
 .search input {
   width: 100%;
-  height: 48px;
-  padding: 0 16px 0 44px;
+  height: 50px;
+  padding: 0 16px 0 46px;
   border: 1px solid var(--rule-strong);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--paper-raised);
   font-size: 17px;
   outline: none;
+  box-shadow: var(--shadow-1);
   transition:
     border-color var(--dur) var(--ease),
     box-shadow var(--dur) var(--ease);
 }
 
 .search input:focus {
-  border-color: var(--ink-2);
-  box-shadow: 0 0 0 4px var(--fill);
+  border-color: var(--sky);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--sky) 18%, transparent);
 }
 
 .empty {
@@ -553,6 +850,127 @@ kbd {
   border-radius: 5px;
   font-family: var(--font-ui);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--ink-2);
+}
+
+/* ---------- Motion utilities ---------- */
+
+/* Fades up when it appears; set --i on list items to stagger them (capped at 12). Hidden only
+   while it waits its turn (backwards), so it never holds transform afterwards. */
+.enter {
+  animation: enter var(--dur-4) var(--ease-spring-soft) backwards;
+  animation-delay: calc(min(var(--i, 0), 12) * 40ms);
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* A placeholder with light passing over it, while content loads. */
+.skeleton {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+      100deg,
+      var(--fill) 30%,
+      color-mix(in oklab, var(--paper-raised) 70%, transparent) 50%,
+      var(--fill) 70%
+    )
+    0 0 / 300% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -150% 0;
+  }
+}
+
+/* ---------- Page transitions (View Transitions API; see router.svelte.ts) ---------- */
+
+@supports (view-transition-name: none) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    mix-blend-mode: normal;
+  }
+
+  ::view-transition-old(root) {
+    animation: vt-fade-out var(--dur-2) var(--ease-in) both;
+  }
+
+  ::view-transition-new(root) {
+    animation: vt-rise-in var(--dur-4) var(--ease-spring-soft) both;
+  }
+
+  :root[data-nav='forward']::view-transition-old(root) {
+    animation-name: vt-out-left;
+  }
+
+  :root[data-nav='forward']::view-transition-new(root) {
+    animation-name: vt-in-right;
+  }
+
+  :root[data-nav='back']::view-transition-old(root) {
+    animation-name: vt-out-right;
+  }
+
+  :root[data-nav='back']::view-transition-new(root) {
+    animation-name: vt-in-left;
+  }
+
+  /* The navigation and toasts stay where they are. */
+  ::view-transition-old(nav),
+  ::view-transition-old(toasts) {
+    animation: none;
+    opacity: 0;
+  }
+
+  ::view-transition-new(nav),
+  ::view-transition-new(toasts) {
+    animation: none;
+  }
+}
+
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes vt-out-left {
+  to {
+    opacity: 0;
+    transform: translateX(-6%);
+  }
+}
+
+@keyframes vt-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(8%);
+  }
+}
+
+@keyframes vt-out-right {
+  to {
+    opacity: 0;
+    transform: translateX(6%);
+  }
+}
+
+@keyframes vt-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-8%);
+  }
 }

@@ -10,6 +10,7 @@ import {
   longestMatchAt,
   plainPinyin,
   segment,
+  splitSyllables,
   type ContentManifest,
   type DictEntry,
   type DictShard,
@@ -137,6 +138,33 @@ export class ContentService implements OnModuleInit {
         ? { ...token, entry: this.lookup(token.text)[0], word: this.wordByForm(token.text) }
         : token,
     );
+  }
+
+  /**
+   * Numbered pinyin for the Chinese characters of `text`, one syllable each, with each word's
+   * length so the app can space the reading by word. Study-path readings first, then the
+   * dictionary, then character by character; undefined when a character has no reading at all.
+   */
+  reading(text: string): { pinyin: string; wordLengths: number[] } | undefined {
+    const syllables: string[] = [];
+    const wordLengths: number[] = [];
+    for (const token of this.segment(text)) {
+      if (!token.han) continue;
+      const chars = [...token.text];
+      const whole = splitSyllables(token.word?.pinyin ?? token.entry?.p ?? '');
+      if (whole.length === chars.length) syllables.push(...whole);
+      else
+        for (const char of chars) {
+          const one = splitSyllables(
+            this.wordByForm(char)?.pinyin ?? this.lookup(char)[0]?.p ?? '',
+          );
+          const [syllable] = one;
+          if (one.length !== 1 || !syllable) return undefined;
+          syllables.push(syllable);
+        }
+      wordLengths.push(chars.length);
+    }
+    return syllables.length ? { pinyin: syllables.join(' '), wordLengths } : undefined;
   }
 
   /** Longest dictionary word starting at `index`. */

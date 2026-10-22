@@ -1,4 +1,5 @@
 <script lang="ts" generics="T extends string">
+  // A segmented control: a raised thumb slides (with a little spring) to the chosen option.
   interface Option {
     value: T;
     label: string;
@@ -16,9 +17,17 @@
   }
 
   let { label, options, value, onchange }: Props = $props();
+  const index = $derived(options.findIndex((o) => o.value === value));
 </script>
 
-<div class="segmented" role="radiogroup" aria-label={label}>
+<div
+  class="segmented"
+  role="radiogroup"
+  aria-label={label}
+  style:--n={options.length}
+  style:--i={Math.max(0, index)}
+>
+  <span class="thumb" class:hidden={index < 0} aria-hidden="true"></span>
   {#each options as option (option.value)}
     <button
       type="button"
@@ -36,36 +45,57 @@
 
 <style>
   .segmented {
+    position: relative;
     display: grid;
     grid-auto-columns: 1fr;
     grid-auto-flow: column;
     gap: 2px;
-    padding: 2px;
+    padding: 3px;
+    border-radius: 14px;
+    background: var(--paper-sunken);
+  }
+
+  /* Columns are equal (1fr), so the thumb is one column wide and moves by whole columns. */
+  .thumb {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    left: 3px;
+    width: calc((100% - 6px - (var(--n) - 1) * 2px) / var(--n));
     border-radius: 11px;
-    background: var(--fill);
+    background: var(--paper-raised);
+    box-shadow:
+      0 0 0 1px var(--rule),
+      0 1px 2px rgb(0 0 0 / 0.08),
+      0 4px 10px -4px rgb(0 0 0 / 0.12);
+    transform: translateX(calc(var(--i) * (100% + 2px)));
+    transition: transform var(--dur-4) var(--ease-spring);
+  }
+
+  .thumb.hidden {
+    opacity: 0;
   }
 
   button {
+    position: relative;
+    z-index: 1;
     min-height: 40px;
     padding: 4px 8px;
-    border-radius: 7px;
+    border-radius: 11px;
     font-size: 15px;
-    font-weight: 500;
+    font-weight: 700;
     white-space: nowrap;
+    color: var(--ink-2);
     transition:
-      background-color var(--dur) var(--ease),
-      box-shadow var(--dur) var(--ease);
+      color var(--dur) var(--ease),
+      transform var(--dur-3) var(--ease-spring);
   }
 
-  button {
-    color: var(--ink-2);
+  button:active {
+    transform: scale(0.96);
   }
 
   .active {
     color: var(--ink);
-    background: var(--paper-raised);
-    box-shadow:
-      0 0 0 1px var(--rule),
-      0 2px 6px rgba(0, 0, 0, 0.08);
   }
 </style>

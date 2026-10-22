@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Loading from '../ui/Loading.svelte';
   import { LEVELS, TOPIC_BY_ID, type Reader } from '@taiwan-mandarin/shared';
   import Seal from '../ui/Seal.svelte';
   import { content } from '../lib/content.svelte';
@@ -45,7 +46,7 @@
   {#if failed}
     <p class="empty">Couldn't load the readers.</p>
   {:else if readers === null}
-    <p class="empty">Loading…</p>
+    <Loading />
   {:else if readers.length === 0}
     <p class="empty"><span class="hanzi" lang="zh-Hant-TW">書</span>No readers yet.</p>
   {:else}
@@ -56,7 +57,11 @@
       <div class="grid">
         {#each items as reader (reader.id)}
           {@const share = known(reader)}
-          <a class="story sheet" href={router.href(`/read/${reader.id}`)} onclick={router.link}>
+          <a
+            class="story sheet pressable"
+            href={router.href(`/read/${reader.id}`)}
+            onclick={router.link}
+          >
             <div class="story-top">
               <Seal text={LEVEL_SEAL[reader.level]} size={34} outline />
               <span class="topic">
@@ -103,16 +108,6 @@
     flex-direction: column;
     padding: 18px;
     text-decoration: none;
-    transition:
-      transform var(--dur) var(--ease),
-      border-color var(--dur) var(--ease);
-  }
-
-  @media (hover: hover) {
-    .story:hover {
-      transform: translateY(-2px);
-      border-color: var(--rule-strong);
-    }
   }
 
   .story-top {
@@ -148,7 +143,7 @@
 
   .story-en {
     margin: 2px 0 0;
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-size: 17px;
   }
 

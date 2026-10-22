@@ -15,10 +15,22 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { cardCounts, dailyReviews, LEVEL_IDS, retention, streaks } from '@taiwan-mandarin/shared';
+import {
+  cardCounts,
+  dailyFromActivity,
+  dayKeyIn,
+  kintsugi,
+  LEVEL_IDS,
+  practicedDays,
+  retentionOf,
+  totalXp,
+  windowTotals,
+  xpForDay,
+} from '@taiwan-mandarin/shared';
 import {
   DeckEntrySchema,
   LevelSchema,
+  TimeZoneSchema,
   TokenCreateSchema,
   type CardRecordDto,
   type StatsDto,
@@ -31,6 +43,7 @@ import { ApiZodBody, ZodBody, ZodPipe } from '../common/zod.js';
 import { ContentService } from '../content/content.service.js';
 import { FsrsService } from '../fsrs/fsrs.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { ActivityService } from '../sync/activity.service.js';
 import { toDto } from '../sync/sync.service.js';
 import { TokensService } from './tokens.service.js';
 
@@ -48,29 +61,33 @@ export class MeController {
     @Inject(TokensService) private readonly tokens: TokensService,
     @Inject(FsrsService) private readonly fsrs: FsrsService,
     @Inject(ContentService) private readonly content: ContentService,
+    @Inject(ActivityService) private readonly activity: ActivityService,
   ) {}
 
   @Get('stats')
-  @ApiOperation({ summary: 'Streak, words learned, retention and the last 30 days' })
-  async stats(@CurrentUser() user: AuthUser): Promise<StatsDto> {
-    const [cards, reviews] = await Promise.all([
+  @ApiOperation({ summary: 'Streak, XP, words learned, retention and the last 30 days' })
+  @ApiQuery({
+    name: 'tz',
+    required: false,
+    description: 'IANA time zone the calendar days are counted in (default UTC)',
+  })
+  async stats(
+    @CurrentUser() user: AuthUser,
+    @Query('tz', new ZodPipe(TimeZoneSchema.default('UTC'))) tz = 'UTC',
+  ): Promise<StatsDto> {
+    const zone = (await this.activity.knows(tz)) ? tz : 'UTC';
+    const [cards, total, days] = await Promise.all([
       this.db.card.findMany({
         where: { userId: user.id },
         select: { stability: true, suspended: true, level: true },
       }),
-      this.db.reviewLog.findMany({
-        where: { userId: user.id },
-        select: { reviewedAt: true, rating: true, state: true },
-      }),
+      this.db.reviewLog.count({ where: { userId: user.id } }),
+      this.activity.days(user.id, zone),
     ]);
-    const points = reviews.map((r) => ({
-      review: r.reviewedAt.getTime(),
-      rating: r.rating,
-      state: r.state,
-    }));
-    const now = new Date();
-    const since = now.getTime() - 30 * 86_400_000;
-    const recent = points.filter((r) => r.review >= since);
+    const map = Object.fromEntries((days ?? []).map((d) => [d.date, d]));
+    const today = dayKeyIn(Date.now(), zone);
+    const last30 = windowTotals(map, today, 30);
+    const streak = kintsugi(practicedDays(map), today);
     const counts = cardCounts(
       Object.fromEntries(cards.map((c, i) => [i, { card: c, suspended: c.suspended }])),
     );
@@ -79,9 +96,15 @@ export class MeController {
     );
     return {
       cards: { ...counts, byLevel },
-      reviews: { total: points.length, last30Days: recent.length, retention: retention(recent) },
-      streak: streaks(points, now),
-      days: dailyReviews(points, now, 30),
+      reviews: { total, last30Days: last30.reviews, retention: retentionOf(last30) },
+      streak: {
+        current: streak.count,
+        longest: streak.longest,
+        crack: streak.crack,
+        seams: streak.seams,
+      },
+      xp: { total: totalXp(map), today: xpForDay(map[today]) },
+      days: dailyFromActivity(map, today, 30),
     };
   }
 

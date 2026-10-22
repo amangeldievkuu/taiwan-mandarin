@@ -1,6 +1,6 @@
-// Pronunciation check: what was said (Whisper) against what was meant, syllable by syllable, and
-// the tone of each syllable from its pitch contour, judged against the tones expected after
-// sandhi. Tone judgements are approximate and reported as such.
+// Pronunciation check: what was said (speech-to-text) against what was meant, syllable by
+// syllable, and the tone of each syllable from its pitch contour, judged against the tones
+// expected after sandhi. Tone judgements are approximate and reported as such.
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import {
@@ -66,7 +66,14 @@ export class SpeechService {
     @Inject(ContentService) private readonly content: ContentService,
   ) {}
 
-  async check(request: PronounceRequest): Promise<PronounceResult> {
+  /**
+   * Everything that can fail without a paid call is checked first; `charge` (the daily quota)
+   * runs only once the recording is worth sending.
+   */
+  async check(
+    request: PronounceRequest,
+    charge: () => Promise<void> = async () => {},
+  ): Promise<PronounceResult> {
     const wav = Buffer.from(request.audio, 'base64');
     let pcm;
     try {
@@ -76,8 +83,30 @@ export class SpeechService {
     }
     if (pcm.samples.length / pcm.sampleRate > 15)
       throw new BadRequestException('Keep recordings under 15 seconds');
-    const transcript = await this.whisper.transcribe(wav, request.target);
-    return this.analyze(request, pcm, transcript);
+    this.target(request);
+    if (peak(pcm.samples) < SILENCE) {
+      throw new BadRequestException(
+        "Didn't catch any speech. Try again a little closer to the microphone.",
+      );
+    }
+    await charge();
+
+    // Pitch tracking is CPU work: do it while the transcription request is on its way.
+    const transcribing = this.whisper.transcribe(wav);
+    transcribing.catch(() => undefined); // awaited below
+    await new Promise((resolve) => setImmediate(resolve));
+    const frames = trackPitch(pcm.samples, { sampleRate: pcm.sampleRate });
+    return this.analyze(request, pcm, await transcribing, frames);
+  }
+
+  /** The target's characters and reading, one syllable per character. */
+  private target(request: PronounceRequest): { chars: string[]; pinyin: string } {
+    const chars = [...request.target].filter((c) => HAN.test(c));
+    const pinyin = request.pinyin ?? this.readingOf(request.target);
+    if (!chars.length || !pinyin || splitSyllables(pinyin).length !== chars.length) {
+      throw new BadRequestException('Need a reading with one syllable per character');
+    }
+    return { chars, pinyin };
   }
 
   /** Separate from `check` so it can be tested with a known transcript. */
@@ -85,13 +114,10 @@ export class SpeechService {
     request: PronounceRequest,
     pcm: { samples: Float32Array; sampleRate: number },
     transcript: Transcript,
+    frames: PitchFrame[] = trackPitch(pcm.samples, { sampleRate: pcm.sampleRate }),
   ): PronounceResult {
-    const chars = [...request.target].filter((c) => HAN.test(c));
+    const { chars, pinyin } = this.target(request);
     const target = chars.join('');
-    const pinyin = request.pinyin ?? this.readingOf(request.target);
-    if (!pinyin || splitSyllables(pinyin).length !== chars.length) {
-      throw new BadRequestException('Need a reading with one syllable per character');
-    }
     const syllables = splitSyllables(pinyin);
     const expected = surfaceTones(target, pinyin);
 
@@ -111,7 +137,6 @@ export class SpeechService {
       heard.push(...wordChars);
     else heard.push(...plainHeard.map((char) => ({ char, span: null })));
 
-    const frames = trackPitch(pcm.samples, { sampleRate: pcm.sampleRate });
     const range = speakerRange(frames);
     const fallback = evenSpans(frames, chars.length);
     const matched = align(
@@ -163,10 +188,19 @@ export class SpeechService {
     return syllables.every(Boolean) ? syllables.join(' ') : undefined;
   }
 
-  /** Whisper may pick a homophone (在 for 再): same syllable means the sound was right. */
+  /** Speech-to-text may pick a homophone (在 for 再): same syllable means the sound was right. */
   private sameSound(heardChar: string, targetSyllable: string): boolean {
     return this.content.lookup(heardChar).some((e) => toneless(e.p) === toneless(targetSyllable));
   }
+}
+
+/** Peak level below this (about -40 dBFS) is silence or room noise, not speech. */
+const SILENCE = 0.01;
+
+function peak(samples: Float32Array): number {
+  let max = 0;
+  for (const s of samples) max = Math.max(max, Math.abs(s));
+  return max;
 }
 
 /** Without timestamps: the voiced stretch, split evenly. */

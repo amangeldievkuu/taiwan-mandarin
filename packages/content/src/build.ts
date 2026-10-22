@@ -86,7 +86,7 @@ const sentences = readTatoeba({
   eng: RAW.tatoebaEng,
   links: RAW.tatoebaLinks,
 });
-const { examples, usable, annotate } = pickExamples(
+const { examples, usable, annotate, wordLengths } = pickExamples(
   sentences,
   words,
   dictionary.shards,
@@ -100,13 +100,15 @@ for (const ai of readJsonl<{ id: string; zh: string; en: string; pinyin?: string
   DATA.aiExamples,
 )) {
   if (!wordIds.has(ai.id)) throw new Error(`examples-ai: unknown word id ${ai.id}`);
-  const pinyin = ai.pinyin ?? annotate(ai.zh);
+  const reading = ai.pinyin
+    ? { pinyin: ai.pinyin, wordLengths: wordLengths(ai.zh) }
+    : annotate(ai.zh);
   const han = [...ai.zh].filter((c) => /\p{Script=Han}/u.test(c)).length;
-  if (!pinyin || pinyin.split(' ').length !== han) {
+  if (!reading || reading.pinyin.split(' ').length !== han) {
     skipped++; // a character with no known reading; give it a `pinyin` in the file to keep it
     continue;
   }
-  const example: Example = { zh: ai.zh, pinyin, en: ai.en, source: 'ai' };
+  const example: Example = { zh: ai.zh, ...reading, en: ai.en, source: 'ai' };
   const list = examples.get(ai.id) ?? [];
   if (list.length < 2 && !list.some((e) => e.zh === ai.zh)) examples.set(ai.id, [...list, example]);
 }

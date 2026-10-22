@@ -58,6 +58,11 @@ export interface Example {
   zh: string;
   /** Numbered pinyin for the Chinese characters of `zh`, one syllable each, in order. */
   pinyin: string;
+  /**
+   * Characters per word of `zh`'s Chinese text, in order ("我|明天|來" → [1, 2, 1]), so readings can
+   * be spaced by word. Missing in content built before it was added.
+   */
+  wordLengths?: number[];
   en: string;
   source: 'tatoeba' | 'ai' | 'curated';
   /** Source id, e.g. the Tatoeba sentence number. */

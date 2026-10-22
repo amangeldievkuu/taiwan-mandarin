@@ -65,15 +65,19 @@
   {#each BANDS as band (band.name)}
     <h2 class="section-title">{band.name} <span class="zh" lang="zh-Hant-TW">{band.zh}</span></h2>
     <ol class="stations">
-      {#each band.levels as id (id)}
+      {#each band.levels as id, i (id)}
         {@const info = LEVELS.find((l) => l.id === id) ?? { en: id, zh: '', cefr: '' }}
         {@const meta = manifest?.levels.find((l) => l.id === id)}
         {@const s = started[id]}
         {@const active = store.settings.levels.includes(id)}
         {@const share = meta?.count ? s.started / meta.count : 0}
-        <li class="station sheet" class:active>
+        <li class="station sheet enter" class:active style:--i={i}>
           <a class="station-main" href={router.href(`/path/${id}`)} onclick={router.link}>
-            <Seal text={LEVEL_SEAL[id]} size={58} outline={!active && s.started === 0} />
+            {#key active}
+              <span class="seal" class:stamped={active}>
+                <Seal text={LEVEL_SEAL[id]} size={58} outline={!active && s.started === 0} />
+              </span>
+            {/key}
             <div class="station-body">
               <div class="station-name">
                 <strong>{info.en}</strong>
@@ -83,9 +87,10 @@
               <div class="bar" aria-hidden="true">
                 <span
                   class="mature"
-                  style:width="{meta?.count ? (100 * s.mature) / meta.count : 0}%"
+                  style:transform="translateX({(meta?.count ? s.mature / meta.count : 0) * 100 -
+                    100}%)"
                 ></span>
-                <span class="started" style:width="{100 * share}%"></span>
+                <span class="started" style:transform="translateX({share * 100 - 100}%)"></span>
               </div>
               <small class="tabular">
                 {s.started.toLocaleString()} / {(meta?.count ?? 0).toLocaleString()} words
@@ -131,22 +136,53 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
     margin: 0;
-    padding: 0 0 0 0;
+    padding: 0;
     list-style: none;
   }
 
+  /* The trail joining the stations, behind their seals. */
+  .stations::before {
+    content: '';
+    position: absolute;
+    top: 30px;
+    bottom: 30px;
+    left: 46px;
+    border-left: 3px dotted color-mix(in oklab, var(--jade) 45%, var(--rule-strong));
+  }
+
   .station {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 8px;
     padding-right: 14px;
-    transition: border-color var(--dur) var(--ease);
+    transition:
+      border-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease);
   }
 
   .station.active {
-    border-color: color-mix(in srgb, var(--seal) 40%, var(--rule));
+    border-color: color-mix(in oklab, var(--jade) 50%, var(--rule));
+    box-shadow:
+      0 0 0 3px color-mix(in oklab, var(--jade) 14%, transparent),
+      var(--shadow);
+  }
+
+  .seal {
+    display: grid;
+  }
+
+  .seal.stamped {
+    animation: stamp 520ms var(--ease-spring);
+  }
+
+  @keyframes stamp {
+    from {
+      transform: scale(1.5) rotate(-10deg);
+      opacity: 0.3;
+    }
   }
 
   .station-main {
@@ -181,22 +217,22 @@
 
   .bar {
     position: relative;
-    height: 6px;
+    height: 10px;
     margin: 8px 0 6px;
-    border-radius: 3px;
-    background: var(--fill);
+    border-radius: var(--radius-pill);
+    background: var(--paper-sunken);
     overflow: hidden;
   }
 
   .bar span {
     position: absolute;
-    inset: 0 auto 0 0;
-    border-radius: 3px;
-    transition: width 700ms var(--ease);
+    inset: 0;
+    border-radius: inherit;
+    transition: transform 900ms var(--ease-spring-soft);
   }
 
   .started {
-    background: color-mix(in srgb, var(--jade) 40%, transparent);
+    background: color-mix(in oklab, var(--jade) 40%, transparent);
   }
 
   .mature {
@@ -214,19 +250,40 @@
     align-items: center;
     gap: 4px;
     flex: none;
-    min-height: 36px;
-    padding: 0 12px;
-    border-radius: 999px;
+    min-height: 38px;
+    padding: 0 14px;
+    border-radius: var(--radius-pill);
     border: 1px solid var(--rule-strong);
+    background: var(--paper-raised);
+    box-shadow: var(--shadow-1);
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--ink-2);
+    transition:
+      transform 160ms var(--ease-out),
+      box-shadow 160ms var(--ease-out),
+      background-color var(--dur) var(--ease);
+  }
+
+  @media (hover: hover) {
+    .toggle:hover:not(.on) {
+      background: color-mix(in oklab, var(--paper-raised) 94%, var(--ink));
+    }
+  }
+
+  .toggle:active {
+    transform: scale(0.97);
+    box-shadow: none;
+    transition-duration: 80ms;
   }
 
   .toggle.on {
-    border-color: var(--seal);
-    background: var(--seal);
-    color: var(--seal-ink);
+    border-color: var(--jade-edge);
+    background: var(--jade);
+    color: var(--jade-ink);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.16),
+      0 1px 2px color-mix(in oklab, var(--jade-edge) 35%, transparent);
   }
 
   @media (max-width: 480px) {

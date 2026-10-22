@@ -3,6 +3,7 @@
 
 import { DEFAULT_SETTINGS, type Level, type Settings } from '@taiwan-mandarin/shared';
 import { TypeConvert, type Card } from 'ts-fsrs';
+import type { ActivityState } from './activity';
 
 export interface CardRecord {
   card: Card;
@@ -30,6 +31,8 @@ export interface SyncState {
   deckUpdatedAt: number;
   /** Personal FSRS weights from the server. */
   fsrsWeights?: number[];
+  /** The account last synced with; another account starts its downloads over. */
+  userId?: string;
 }
 
 export interface Snapshot {
@@ -41,6 +44,8 @@ export interface Snapshot {
   daily: Daily;
   updatedAt: number;
   sync?: SyncState;
+  /** Practice per day for the streak, XP and charts (missing before it existed: rebuilt). */
+  activity?: ActivityState;
 }
 
 /** One answer to one card. Mirrors ts-fsrs's ReviewLog plus what sync and stats need. */

@@ -22,6 +22,7 @@ import { PrismaService } from './prisma/prisma.service.js';
 import { SpeechController } from './speech/speech.controller.js';
 import { SpeechService } from './speech/speech.service.js';
 import { WhisperService } from './speech/whisper.service.js';
+import { ActivityService } from './sync/activity.service.js';
 import { SyncController } from './sync/sync.controller.js';
 import { SyncService } from './sync/sync.service.js';
 
@@ -51,6 +52,7 @@ const env = loadEnv();
     AuthService,
     AuthGuard,
     SyncService,
+    ActivityService,
     TokensService,
     FsrsService,
     LlmService,

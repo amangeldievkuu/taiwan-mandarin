@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Reviews per day for the last 30 days: one series of thin bars, today in vermilion.
+  // Reviews per day for the last 30 days: one series of rounded bars that grow in, today in jade.
   // Hover or tap a day for its again / hard / good / easy breakdown; a table carries the same data
   // for screen readers.
   import type { DayStats } from '../lib/stats';
@@ -61,6 +61,7 @@
         class="bar"
         class:today
         class:dim={hover !== null && hover !== i}
+        style:--i={i}
         d={bar(x, (day.total / top) * plotH)}
       />
       <!-- Hit target taller and wider than the bar -->
@@ -150,12 +151,22 @@
   }
 
   .bar {
-    fill: var(--ink-2);
+    fill: color-mix(in oklab, var(--jade) 45%, var(--paper-sunken));
+    transform-box: fill-box;
+    transform-origin: bottom;
+    animation: grow var(--dur-4) var(--ease-spring-soft) both;
+    animation-delay: calc(var(--i) * 18ms);
     transition: opacity var(--dur) var(--ease);
   }
 
+  @keyframes grow {
+    from {
+      transform: scaleY(0);
+    }
+  }
+
   .bar.today {
-    fill: var(--seal);
+    fill: var(--jade);
   }
 
   .bar.dim {

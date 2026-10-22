@@ -8,6 +8,7 @@ import {
   sameWordForms,
   levelIndex,
   segment,
+  splitSyllables,
   type DictEntry,
   type DictShard,
   type Example,
@@ -60,19 +61,25 @@ export function readTatoeba(paths: { cmn: string; eng: string; links: string }):
 
 const PUNCTUATION_ONLY = /^[\s\p{P}\p{S}0-9０-９]*$/u;
 
-/** Builds the sentence's pinyin from its words' readings; undefined when a character is unknown. */
+/**
+ * The sentence's pinyin from its words' readings, with each word's length so the app can space the
+ * reading by word; undefined when a word has no reading with one syllable per character.
+ */
 function sentencePinyin(
   tokens: ReturnType<typeof segment>,
   reading: (word: string) => string | undefined,
-): string | undefined {
+): { pinyin: string; wordLengths: number[] } | undefined {
   const syllables: string[] = [];
+  const wordLengths: number[] = [];
   for (const token of tokens) {
     if (!token.han) continue;
     const pinyin = reading(token.text);
-    if (!pinyin) return undefined;
+    const length = [...token.text].length;
+    if (!pinyin || splitSyllables(pinyin).length !== length) return undefined;
     syllables.push(pinyin);
+    wordLengths.push(length);
   }
-  return syllables.join(' ');
+  return { pinyin: syllables.join(' '), wordLengths };
 }
 
 export function pickExamples(
@@ -84,7 +91,8 @@ export function pickExamples(
 ): {
   examples: Map<string, Example[]>;
   usable: number;
-  annotate: (zh: string) => string | undefined;
+  annotate: (zh: string) => { pinyin: string; wordLengths: number[] } | undefined;
+  wordLengths: (zh: string) => number[];
 } {
   const lookup = (word: string): DictEntry[] | undefined => shards[dictShardOf(word)]?.[word];
   // Lowest-level reading of each written form: the reading a learner meets first.
@@ -109,8 +117,8 @@ export function pickExamples(
     if (hanCount < 4 || hanCount > 24 || /[A-Za-z]/.test(s.zh) || s.en.length > 120) continue;
     if (checkText({ text: s.zh, where: `tatoeba:${s.id}` }).length) continue;
     const tokens = segment(s.zh, lexicon);
-    const pinyin = sentencePinyin(tokens, reading);
-    if (!pinyin) continue;
+    const annotated = sentencePinyin(tokens, reading);
+    if (!annotated) continue;
     // Hardest word in the sentence; words outside the path count as beyond Level 6.
     const levels = tokens
       .filter((t) => t.han && !PUNCTUATION_ONLY.test(t.text))
@@ -120,7 +128,13 @@ export function pickExamples(
       });
     const hardest = Math.max(0, ...levels);
     usable++;
-    const example: Example = { zh: s.zh, pinyin, en: s.en, source: 'tatoeba', ref: s.id };
+    const example: Example = {
+      zh: s.zh,
+      ...annotated,
+      en: s.en,
+      source: 'tatoeba',
+      ref: s.id,
+    };
     for (const token of tokens) {
       const word = byForm.get(token.text);
       if (!word) continue;
@@ -140,6 +154,9 @@ export function pickExamples(
 
   /** Pinyin for a sentence written elsewhere (AI examples), from the same word readings. */
   const annotate = (zh: string) => sentencePinyin(segment(zh, lexicon), reading);
+  /** Word lengths alone, for a sentence whose pinyin is given. */
+  const wordLengths = (zh: string) =>
+    segment(zh, lexicon).flatMap((t) => (t.han ? [[...t.text].length] : []));
 
   const examples = new Map<string, Example[]>();
   for (const [id, list] of candidates) {
@@ -151,5 +168,5 @@ export function pickExamples(
         .map((c) => c.example),
     );
   }
-  return { examples, usable, annotate };
+  return { examples, usable, annotate, wordLengths };
 }

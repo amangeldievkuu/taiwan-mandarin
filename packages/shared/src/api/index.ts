@@ -3,7 +3,17 @@
 // web bundle only takes the types.
 
 import { z } from 'zod';
+import type { DayActivity } from '../activity.ts';
 import type { Level } from '../content/types.ts';
+import { isTimeZone } from '../days.ts';
+
+/** An IANA time zone ("Asia/Taipei"): where the learner's calendar days begin and end. */
+export const TimeZoneSchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[A-Za-z0-9_+\-/]+$/)
+  .refine(isTimeZone, 'Unknown time zone');
 
 export const LevelSchema = z.enum([
   'N1',
@@ -111,6 +121,11 @@ export const SyncRequestSchema = z.object({
     .object({ entries: z.array(DeckEntrySchema).max(5000), updatedAt: z.number().int() })
     .optional(),
   settings: z.object({ value: SettingsSchema, updatedAt: z.number().int() }).optional(),
+  /**
+   * Practice totals per day in this time zone, for the streak, XP and charts: every day when
+   * `since` is 0, otherwise the days with reviews stored after `since` (epoch ms).
+   */
+  activity: z.object({ timeZone: TimeZoneSchema, since: z.number().int().min(0) }).optional(),
 });
 export type SyncRequest = z.infer<typeof SyncRequestSchema>;
 
@@ -125,6 +140,11 @@ export interface SyncResponse {
   fsrs?: { w: number[]; trainedAt: string; reviewCount: number };
   /** Review ids the server stored (or already had). */
   acceptedReviews: string[];
+  /**
+   * Totals per day across all the learner's devices (when asked for). `full`: every day, which
+   * replaces what the client had; otherwise only days that changed.
+   */
+  activity?: { timeZone: string; full: boolean; days: DayActivity[] };
 }
 
 // ---- Personal access tokens (public API) ----
@@ -152,7 +172,12 @@ export interface TokenCreatedDto extends TokenDto {
 export interface StatsDto {
   cards: { learned: number; mature: number; suspended: number; byLevel: Record<string, number> };
   reviews: { total: number; last30Days: number; retention: number | null };
-  streak: { current: number; longest: number };
+  /**
+   * The kintsugi streak: days practiced in the current bowl (a gap of up to three days is mended
+   * with gold), the most in any bowl, days missed that can still be mended, and gold seams.
+   */
+  streak: { current: number; longest: number; crack: number; seams: number };
+  xp: { total: number; today: number };
   days: { date: string; total: number; again: number; hard: number; good: number; easy: number }[];
 }
 
@@ -177,6 +202,7 @@ export interface ExplainToken {
   /** Numbered pinyin (Taiwan reading) for Chinese tokens. */
   pinyin?: string;
   gloss?: string;
+  /** Part of speech from the word lists (N, Vs, …), for study-path words. */
   pos?: string;
   note?: string;
   /** Study-path word, when the token is one. */
@@ -195,6 +221,19 @@ export interface ExplainResult {
   /** Taiwan-standard guard findings in the generated text, if any. */
   warnings: string[];
 }
+
+/**
+ * POST /v1/ai/explain/stream sends one of these per line (application/x-ndjson): the source text,
+ * the translation as it grows, each word once it is complete, and finally the whole result
+ * (authoritative: it replaces what came before). `ping` keeps idle connections open.
+ */
+export type ExplainStreamEvent =
+  | { type: 'source'; text: string }
+  | { type: 'translation'; text: string }
+  | { type: 'token'; index: number; token: ExplainToken }
+  | { type: 'ping' }
+  | { type: 'done'; result: ExplainResult }
+  | { type: 'error'; status: number; message: string };
 
 // ---- AI: conversation practice ----
 
@@ -218,22 +257,67 @@ export const TalkRequestSchema = z.object({
 });
 export type TalkRequest = z.input<typeof TalkRequestSchema>;
 
+/** A sentence's reading: numbered pinyin, one syllable per Chinese character, and word lengths. */
+export interface TextReading {
+  pinyin: string;
+  wordLengths: number[];
+}
+
 export interface TalkMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  /** Assistant: the reply's Taiwan reading, when every character has one. */
+  reading?: TextReading;
   /** Assistant: English translation. */
   translation?: string;
   /** Assistant: words in the reply the learner hasn't studied. */
   newWords?: { text: string; pinyin?: string; gloss?: string; wordId?: string }[];
   /** User: a corrected version and why, when the message had mistakes or un-Taiwanese wording. */
-  correction?: { corrected: string; explanation: string } | null;
+  correction?: { corrected: string; explanation: string; reading?: TextReading } | null;
 }
 
 export interface TalkResponse {
   conversationId: string;
   /** The learner's message with its correction (if one was sent) and the partner's reply. */
   messages: TalkMessage[];
+}
+
+/** How a finished conversation went. */
+export interface TalkSummary {
+  /** Messages the learner sent. */
+  sent: number;
+  /** Of those, how many came back with a correction. */
+  corrected: number;
+  /** New words the partner used, once each, in the order they came up. */
+  newWords: NonNullable<TalkMessage['newWords']>;
+}
+
+/** A row of GET /v1/ai/talk. */
+export interface TalkListItem {
+  id: string;
+  scenario: ScenarioId;
+  updatedAt: string;
+  /** Set once the learner ended it. */
+  endedAt: string | null;
+  last: string;
+}
+
+/** GET /v1/ai/talk/:id */
+export interface TalkConversation {
+  scenario: ScenarioId;
+  messages: TalkMessage[];
+  endedAt: string | null;
+  /** Once ended. */
+  summary: TalkSummary | null;
+}
+
+/** POST /v1/ai/talk/:id/end */
+export interface TalkEndResponse {
+  /** The partner's goodbye; null when there wasn't one (already ended, or no AI left today). */
+  message: TalkMessage | null;
+  endedAt: string;
+  summary: TalkSummary;
 }
 
 // ---- Pronunciation check ----

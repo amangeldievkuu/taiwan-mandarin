@@ -29,6 +29,12 @@ export const ALLOWLIST: readonly AllowEntry[] = [
     where: 'apps/api/src/ai/taiwan-style.ts',
     reason: 'The AI style guide explains that 台 is the everyday form of 臺.',
   },
+  ...(['explain', 'talk'] as const).map((where) => ({
+    term: '台',
+    where,
+    reason:
+      'AI answers and the texts learners bring may use 台, the everyday form of 臺 (台北, 一台).',
+  })),
   {
     term: '菜單',
     where: 'vocab:菜單',

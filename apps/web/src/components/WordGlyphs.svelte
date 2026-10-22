@@ -86,7 +86,7 @@
     align-content: center;
     font-size: calc(var(--size) * 0.22);
     line-height: 1.02;
-    color: var(--text);
+    color: var(--ink);
   }
 
   /* Tone marks use the UI font: Kai's ˇ looks like a check mark */
@@ -123,7 +123,7 @@
     font-family: var(--font-ui);
     font-size: max(13px, calc(var(--size) * 0.17));
     line-height: 1.2;
-    color: var(--text-2);
+    color: var(--ink-2);
   }
 
   .hidden {

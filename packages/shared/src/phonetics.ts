@@ -132,6 +132,18 @@ export function toToneMarked(pinyin: string): string {
   return toToneMarkedSyllables(pinyin).join(' ');
 }
 
+/** Syllables of one word, joined; an apostrophe marks a later syllable starting with a, o or e. */
+function joinWord(syllables: readonly Syllable[]): string {
+  return syllables
+    .map((s, i) => (i > 0 && /^[aoeê]/.test(s.spelling) ? "'" : '') + markSyllable(s))
+    .join('');
+}
+
+/** One word as written in pinyin: "jie2 yun4" → "jiéyùn", "xi1 an1" → "xī'ān". */
+export function pinyinWord(pinyin: string): string {
+  return joinWord(splitSyllables(pinyin).map(parseSyllable));
+}
+
 export function syllableToZhuyin(syllable: string): ZhuyinSyllable {
   const { initial, final, tone } = parseSyllable(syllable);
   // b/p/m/f + o is ㄛ directly; every other final maps from the table.
@@ -149,6 +161,202 @@ export function zhuyinString(pinyin: string): string {
   return toZhuyin(pinyin)
     .map(({ body, tone }) => (tone === '˙' ? tone + body : body + tone))
     .join(' ');
+}
+
+// ---- Sentences ----
+
+type Attach = 'open' | 'close' | 'join' | 'dash';
+
+/** Punctuation in pinyin text: how it attaches to its neighbours, and how it is written there. */
+const PUNCTUATION: Record<string, [Attach, string]> = {
+  ',': ['close', ','], '、': ['close', ','], '.': ['close', '.'], '。': ['close', '.'],
+  '?': ['close', '?'], '!': ['close', '!'], ':': ['close', ':'], ';': ['close', ';'],
+  '%': ['close', '%'], '…': ['close', '…'], '⋯': ['close', '…'],
+  ')': ['close', ')'], ']': ['close', ']'], '】': ['close', ']'], '〕': ['close', ']'],
+  '」': ['close', '”'], '”': ['close', '”'], '』': ['close', '’'], '’': ['close', '’'],
+  '》': ['close', '”'], '〉': ['close', '’'],
+  '(': ['open', '('], '[': ['open', '['], '【': ['open', '['], '〔': ['open', '['],
+  '「': ['open', '“'], '“': ['open', '“'], '『': ['open', '‘'], '‘': ['open', '‘'],
+  '《': ['open', '“'], '〈': ['open', '‘'],
+  '—': ['dash', '—'], '―': ['dash', '—'], '–': ['dash', '–'],
+  '-': ['join', '-'], '~': ['join', '~'], '/': ['join', '/'],
+}; // prettier-ignore
+
+/** Middle dots between the parts of a foreign name (喬治‧華盛頓) separate words. */
+const NAME_DOTS = new Set(['·', '・', '‧', '•']);
+
+type Piece = { kind: 'word'; text: string } | { kind: Attach; text: string } | { kind: 'gap' };
+
+const HAN_RUN = /(\p{Script=Han}+)|([^\p{Script=Han}]+)/gu;
+
+/** Outside Chinese runs: numbers and Latin words (3.5, 10:30, LINE), whitespace, single marks. */
+const LATIN_TOKEN =
+  /[0-9A-Za-z０-９Ａ-Ｚａ-ｚ]+(?:[.,:'’．，：][0-9A-Za-z０-９Ａ-Ｚａ-ｚ]+)*|\s+|./gsu;
+
+/** Fullwidth ASCII (，？！２０ＡＢ) as plain ASCII. */
+const halfwidth = (text: string) =>
+  text.replace(/[\uff01-\uff5e]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
+
+/** True when `lengths` split every run of Chinese characters exactly. */
+function splitsRuns(
+  lengths: readonly number[] | undefined,
+  runs: readonly number[],
+): lengths is readonly number[] {
+  if (!lengths) return false;
+  let i = 0;
+  for (const run of runs) {
+    for (let left = run; left > 0;) {
+      const n = lengths[i++];
+      if (n === undefined || !Number.isInteger(n) || n < 1 || n > left) return false;
+      left -= n;
+    }
+  }
+  return i === lengths.length;
+}
+
+/**
+ * A sentence as words and punctuation. Each Chinese character takes the next syllable; characters
+ * are grouped into words by `wordLengths` (characters per word), or one per word when the lengths
+ * are missing or don't fit the text.
+ */
+function sentencePieces(
+  text: string,
+  pinyin: string,
+  wordLengths: readonly number[] | undefined,
+  word: (syllables: string[]) => string,
+  punctuation: (char: string, dq: boolean) => Piece,
+): Piece[] {
+  const syllables = splitSyllables(pinyin);
+  const runs = [...text.matchAll(HAN_RUN)];
+  const hanRuns = runs.flatMap((r) => (r[1] ? [[...r[1]].length] : []));
+  const han = hanRuns.reduce((a, b) => a + b, 0);
+  if (han !== syllables.length) {
+    throw new Error(`${han} characters but ${syllables.length} syllables in "${text}"`);
+  }
+  const lengths = splitsRuns(wordLengths, hanRuns) ? wordLengths : syllables.map(() => 1);
+
+  const pieces: Piece[] = [];
+  let s = 0;
+  let w = 0;
+  let dq = false;
+  for (const [, hanRun, other] of runs) {
+    if (hanRun) {
+      for (let left = [...hanRun].length; left > 0;) {
+        const n = lengths[w++] ?? 1;
+        pieces.push({ kind: 'word', text: word(syllables.slice(s, s + n)) });
+        s += n;
+        left -= n;
+      }
+      continue;
+    }
+    for (const [token] of (other ?? '').matchAll(LATIN_TOKEN)) {
+      if (/^\s/.test(token) || NAME_DOTS.has(token)) pieces.push({ kind: 'gap' });
+      else if (/^[0-9A-Za-z０-９Ａ-Ｚａ-ｚ]/.test(token))
+        pieces.push({ kind: 'word', text: token });
+      else {
+        const piece = punctuation(token, dq);
+        if (halfwidth(token) === '"') dq = !dq;
+        pieces.push(piece);
+      }
+    }
+  }
+  return pieces;
+}
+
+/**
+ * A sentence in pinyin: words separated by spaces, syllables of a word joined, punctuation in its
+ * Latin form attached to the word before it, digits and Latin letters kept, and each sentence
+ * capitalized. "你好，我是小明。" with lengths [2, 1, 1, 2] → "Nǐhǎo, wǒ shì xiǎomíng."
+ */
+export function pinyinSentence(
+  text: string,
+  pinyin: string,
+  wordLengths?: readonly number[],
+): string {
+  const pieces = sentencePieces(
+    text,
+    pinyin,
+    wordLengths,
+    (syllables) => joinWord(syllables.map(parseSyllable)),
+    (char, dq): Piece => {
+      const c = halfwidth(char);
+      if (c === '"') return { kind: dq ? 'close' : 'open', text: dq ? '”' : '“' };
+      const known = PUNCTUATION[c];
+      return known ? { kind: known[0], text: known[1] } : { kind: 'word', text: c };
+    },
+  );
+
+  let out = '';
+  let prev: 'start' | Piece['kind'] = 'start';
+  let capital = true;
+  let colon = false;
+  const spaced = () => prev === 'word' || prev === 'close' || prev === 'dash' || prev === 'gap';
+  for (const piece of pieces) {
+    switch (piece.kind) {
+      case 'gap':
+        if (prev !== 'start' && prev !== 'open' && prev !== 'join') prev = 'gap';
+        continue;
+      case 'word': {
+        const word = halfwidth(piece.text);
+        const text = capital ? word.charAt(0).toUpperCase() + word.slice(1) : word;
+        out += (spaced() ? ' ' : '') + text;
+        capital = false;
+        colon = false;
+        break;
+      }
+      case 'close':
+        out += piece.text;
+        if ('.?!'.includes(piece.text)) capital = true;
+        colon = piece.text === ':';
+        break;
+      case 'open':
+        out += (spaced() ? ' ' : '') + piece.text;
+        // A quotation after a colon starts a new sentence: 他說：「好！」 → Tā shuō: “Hǎo!”
+        if (colon) capital = true;
+        colon = false;
+        break;
+      case 'join':
+        out += piece.text;
+        break;
+      case 'dash':
+        out += (prev === 'start' ? '' : ' ') + piece.text;
+        break;
+    }
+    prev = piece.kind;
+  }
+  return out;
+}
+
+/**
+ * A sentence in Zhuyin: syllables separated by spaces, words by an ideographic space (U+3000), and
+ * the original punctuation kept. "我們走吧。" with lengths [2, 1, 1] gives the words "ㄨㄛˇ ˙ㄇㄣ",
+ * "ㄗㄡˇ" and "˙ㄅㄚ", then "。".
+ */
+export function zhuyinSentence(
+  text: string,
+  pinyin: string,
+  wordLengths?: readonly number[],
+): string {
+  const pieces = sentencePieces(
+    text,
+    pinyin,
+    wordLengths,
+    (syllables) => zhuyinString(syllables.join(' ')),
+    (char): Piece => ({ kind: 'close', text: char }),
+  );
+  let out = '';
+  let between = false;
+  for (const piece of pieces) {
+    if (piece.kind === 'gap') continue;
+    if (piece.kind === 'word') {
+      out += (between ? '\u3000' : '') + piece.text;
+      between = true;
+    } else {
+      out += piece.text;
+      between = false;
+    }
+  }
+  return out;
 }
 
 /** Tone-marked vowel → [plain vowel, tone]. Breves (ă ĭ ŏ ŭ, common in word lists) count as 3rd tone. */

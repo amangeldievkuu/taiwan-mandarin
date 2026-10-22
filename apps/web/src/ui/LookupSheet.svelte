@@ -1,13 +1,19 @@
 <script lang="ts">
   // Dictionary entry for the tapped word: bottom sheet on phones, floating panel on wider screens.
   import { LEVELS, type DictEntry } from '@taiwan-mandarin/shared';
+  import { MediaQuery } from 'svelte/reactivity';
   import Icon from './Icon.svelte';
   import Reading from './Reading.svelte';
+  import Skeleton from './Skeleton.svelte';
   import { content } from '../lib/content.svelte';
   import { lookup } from '../lib/lookup.svelte';
   import { router } from '../lib/router.svelte';
   import { canSpeak, speak } from '../lib/speech';
   import { store } from '../lib/store.svelte';
+  import { fade, sheet } from '../lib/transitions';
+
+  /** A floating panel beside the text; on phones a bottom sheet over it. */
+  const wide = new MediaQuery('min-width: 700px');
 
   /** Entries grouped by reading, so 和 hé / huò show as separate blocks. */
   const groups = $derived.by(() => {
@@ -42,8 +48,20 @@
 <svelte:window onkeydown={onKey} />
 
 {#if lookup.open}
-  <button class="scrim" type="button" aria-label="Close" onclick={() => lookup.close()}></button>
-  <aside class="panel sheet" aria-label="Dictionary" aria-live="polite">
+  <button
+    class="scrim"
+    type="button"
+    aria-label="Close"
+    onclick={() => lookup.close()}
+    transition:fade
+  ></button>
+  <aside
+    class="panel sheet"
+    aria-label="Dictionary"
+    aria-live="polite"
+    in:sheet={{ wide: wide.current }}
+    out:sheet={{ wide: wide.current }}
+  >
     <div class="grip" aria-hidden="true"></div>
     <header>
       <span class="word hanzi" lang="zh-Hant-TW">{lookup.word}</span>
@@ -64,7 +82,10 @@
     {/if}
 
     {#if lookup.loading}
-      <p class="muted">Looking up…</p>
+      <div class="loading" aria-label="Looking up">
+        <Skeleton width="40%" height="20px" />
+        <Skeleton lines={3} height="14px" />
+      </div>
     {:else if groups.length === 0}
       <p class="muted">Not in the dictionary.</p>
     {:else}
@@ -119,7 +140,6 @@
     inset: 0;
     z-index: 40;
     background: var(--scrim);
-    animation: fade var(--dur) var(--ease);
   }
 
   .panel {
@@ -129,8 +149,7 @@
     max-height: min(72dvh, 620px);
     overflow-y: auto;
     padding: 8px 20px calc(var(--safe-bottom) + 20px);
-    border-radius: 22px 22px 0 0;
-    animation: rise var(--dur) var(--ease);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     overscroll-behavior: contain;
   }
 
@@ -154,7 +173,7 @@
       max-height: calc(100dvh - 40px);
       border-radius: var(--radius-lg);
       padding: 18px 22px 22px;
-      animation: slide var(--dur) var(--ease);
+      box-shadow: var(--shadow-3);
     }
 
     .grip {
@@ -260,23 +279,10 @@
     color: var(--jade);
   }
 
-  @keyframes fade {
-    from {
-      opacity: 0;
-    }
-  }
-
-  @keyframes rise {
-    from {
-      transform: translateY(24px);
-      opacity: 0;
-    }
-  }
-
-  @keyframes slide {
-    from {
-      transform: translateX(16px);
-      opacity: 0;
-    }
+  .loading {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 14px 0;
   }
 </style>

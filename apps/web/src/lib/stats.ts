@@ -1,10 +1,10 @@
-// Learning statistics: shared with the API (packages/shared/src/stats.ts).
+// Learning statistics: shared with the API (packages/shared/src/stats.ts, activity.ts, kintsugi.ts).
 
 export {
   cardCounts,
-  dailyReviews,
-  retention,
-  streaks,
+  dailyFromActivity,
+  retentionOf,
+  windowTotals,
   type CardCounts,
   type DayStats,
 } from '@taiwan-mandarin/shared';

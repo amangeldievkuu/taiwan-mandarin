@@ -2,7 +2,7 @@
 // dictionary's own "Taiwan pr." readings, and rewrites cross-references to Traditional only.
 
 import { readFileSync } from 'node:fs';
-import { parseSyllable, toToneMarked } from '@taiwan-mandarin/shared';
+import { parseSyllable, pinyinWord } from '@taiwan-mandarin/shared';
 
 export interface CedictEntry {
   trad: string;
@@ -27,14 +27,38 @@ export function normalizePinyin(text: string): string {
   ).join(' ');
 }
 
-/** Pinyin as readers see it inside a definition: "le4 se4" → "lèsè". */
-const displayPinyin = (numbered: string) => {
+/**
+ * A CC-CEDICT reading as readers see it inside a definition: "le4 se4" → "lèsè", "Xi1 an1" →
+ * "Xī'ān". A capital starts a new word, so names split into surname and given name ("Ma3 Ying1
+ * jiu3" → "Mǎ Yīngjiǔ"), and CC-CEDICT's commas stay ("yi1 bu4 zuo4 , er4 bu4 xiu1" →
+ * "yībùzuò, èrbùxiū").
+ */
+function displayPinyin(raw: string): string {
   try {
-    return toToneMarked(numbered).replace(/ /g, '');
+    return raw
+      .split(',')
+      .map((part) => {
+        const words: string[][] = [];
+        for (const syllable of part.replace(/u:/gi, 'ü').match(/[a-zü]+[1-5]/gi) ?? []) {
+          const last = words.at(-1);
+          if (!last || /^[A-ZÜ]/.test(syllable)) words.push([syllable]);
+          else last.push(syllable);
+        }
+        return words
+          .map((word) => {
+            const written = pinyinWord(word.join(' ').toLowerCase());
+            return /^[A-ZÜ]/.test(word[0] ?? '')
+              ? written.charAt(0).toUpperCase() + written.slice(1)
+              : written;
+          })
+          .join(' ');
+      })
+      .filter(Boolean)
+      .join(', ');
   } catch {
-    return numbered;
+    return normalizePinyin(raw);
   }
-};
+}
 
 /** "什麼|什么[shen2 me5]" → "什麼 (shénme)"; "臺|台[tai2]" → "臺 (tái)"; "[han4]" → "hàn". */
 export function cleanDefinition(def: string): string {
@@ -42,14 +66,12 @@ export function cleanDefinition(def: string): string {
     def
       .replace(
         /([^\s|[\]/,;()]+)\|[^\s|[\]/,;()]+\[([^\]]+)\]/g,
-        (_, trad: string, py: string) => `${trad} (${displayPinyin(normalizePinyin(py))})`,
+        (_, trad: string, py: string) => `${trad} (${displayPinyin(py)})`,
       )
       .replace(/([^\s|[\]/,;()]+)\[([^\]]+)\]/g, (_, trad: string, py: string) =>
-        /^[a-z]/i.test(trad)
-          ? `${trad} ${displayPinyin(normalizePinyin(py))}`
-          : `${trad} (${displayPinyin(normalizePinyin(py))})`,
+        /^[a-z]/i.test(trad) ? `${trad} ${displayPinyin(py)}` : `${trad} (${displayPinyin(py)})`,
       )
-      .replace(/\[([a-zü: 1-5]+)\]/gi, (_, py: string) => displayPinyin(normalizePinyin(py)))
+      .replace(/\[([a-zü: 1-5]+)\]/gi, (_, py: string) => displayPinyin(py))
       // A bare cross-reference without a reading: "師傅|师傅" → "師傅".
       .replace(/([^\s|[\]/,;()]+)\|[^\s|[\]/,;()]+/g, '$1')
       .trim()

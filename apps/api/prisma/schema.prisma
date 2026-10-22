@@ -116,6 +116,8 @@ model ReviewLog {
 
   @@index([userId, reviewedAt])
   @@index([userId, wordId, reviewedAt])
+  /// Sync asks which days have reviews stored since its last visit.
+  @@index([userId, createdAt])
 }
 
 model Conversation {
@@ -126,6 +128,8 @@ model Conversation {
   level     String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  /// When the learner ended it; finished conversations are read-only.
+  endedAt   DateTime?
   messages  Message[]
 
   @@index([userId, updatedAt])

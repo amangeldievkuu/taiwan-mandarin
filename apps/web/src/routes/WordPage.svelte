@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Loading from '../ui/Loading.svelte';
   import type { Word } from '@taiwan-mandarin/shared';
   import Icon from '../ui/Icon.svelte';
   import WordDetail from '../ui/WordDetail.svelte';
@@ -41,7 +42,7 @@
       <span class="hanzi" lang="zh-Hant-TW">無</span>This word isn't in the study path.
     </p>
   {:else}
-    <p class="empty">Loading…</p>
+    <Loading />
   {/if}
 </div>
 

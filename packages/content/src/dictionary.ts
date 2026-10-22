@@ -14,17 +14,12 @@ import {
   type DictShard,
   type Word,
 } from '@taiwan-mandarin/shared';
-import { MAINLAND_READINGS } from '@taiwan-mandarin/shared/taiwan-standard';
+import { taiwanReading } from '@taiwan-mandarin/shared/taiwan-standard';
 import { toneless, type CedictEntry } from './cedict.ts';
 import { fold } from './lexicon.ts';
 
-export function taiwanCharReadings(hanzi: string, pinyin: string): string {
-  const chars = [...hanzi];
-  return pinyin
-    .split(' ')
-    .map((syllable, i) => MAINLAND_READINGS[chars[i] ?? '']?.[syllable] ?? syllable)
-    .join(' ');
-}
+/** Mainland character readings → Taiwan ones (shared with the API's explanations). */
+export const taiwanCharReadings = taiwanReading;
 
 export function buildDictionary(
   cedict: readonly CedictEntry[],

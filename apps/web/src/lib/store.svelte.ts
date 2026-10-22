@@ -1,6 +1,6 @@
-// App state with Svelte 5 runes: settings, FSRS cards, the learner's own deck, today's counters
-// and the study session. Words come from `content`; every answer is also kept as a review log
-// (for stats, sync and personalized FSRS parameters).
+// App state with Svelte 5 runes: settings, FSRS cards, the learner's own deck, today's counters,
+// the study session, and practice per day (the kintsugi streak and XP). Words come from `content`;
+// every answer is also kept as a review log (for stats, sync and personalized FSRS parameters).
 
 import type { IPreview } from 'ts-fsrs';
 import {
@@ -16,7 +16,28 @@ import {
   type Card,
   type Grade,
 } from './srs';
-import { DEFAULT_SETTINGS, LEVEL_IDS, type Settings, type Word } from '@taiwan-mandarin/shared';
+import {
+  achievements,
+  currentTimeZone,
+  DEFAULT_SETTINGS,
+  kintsugi,
+  LEVEL_IDS,
+  practicedDays,
+  totalXp,
+  XP,
+  xpForDay,
+  type DayActivity,
+  type Settings,
+  type Word,
+} from '@taiwan-mandarin/shared';
+import {
+  applyDownload,
+  countReview,
+  emptyActivity,
+  mergedDays,
+  rebuildActivity,
+  type ActivityState,
+} from './activity';
 import { content } from './content.svelte';
 import {
   BrowserStorage,
@@ -74,6 +95,10 @@ class Store {
   daily = $state<Daily>(freshDaily());
   /** Bumped after every review, so stats reload. */
   reviewRevision = $state(0);
+  /** Today's local date, kept current when the app comes back and at midnight. */
+  today = $state(dayKey(new Date()));
+  /** Practice per day: the server's totals plus this device's unsent reviews. Replaced, never mutated. */
+  activity = $state.raw<ActivityState>(emptyActivity());
   syncState = $state<SyncState>({ cursor: 0, pushedAt: 0, settingsUpdatedAt: 0, deckUpdatedAt: 0 });
   /** Called after any change worth syncing (set by the account module). */
   onLocalChange: (() => void) | null = null;
@@ -104,6 +129,16 @@ class Store {
       .length;
   });
 
+  /** Every day with practice, on all devices (as of the last sync) and this one. */
+  days = $derived(mergedDays(this.activity));
+  /** The kintsugi streak: missed days mend with gold. */
+  streak = $derived(kintsugi(practicedDays(this.days), this.today));
+  xp = $derived({ total: totalXp(this.days), today: xpForDay(this.days[this.today]) });
+  /** The seal album: milestones earned and on the way. */
+  seals = $derived(achievements(this.days, this.streak));
+  /** XP earned in this study session. */
+  sessionXp = $derived(this.stats.reviewed * XP.review + this.stats.learned * XP.newWord);
+
   private pending: { preview: IPreview; at: Date } | null = null;
   private shownAt = 0;
   private saveTimer: ReturnType<typeof setTimeout> | undefined;
@@ -126,12 +161,25 @@ class Store {
         if (snapshot.sync) this.syncState = snapshot.sync;
         if (stored.version !== 2) await this.flush();
       }
+      await this.loadActivity(stored && 'activity' in stored ? stored.activity : undefined);
       this.configureFsrs();
       await this.fillMissingLevels();
       await this.startSession();
       this.ready = true;
     } catch (e) {
       this.error = e instanceof Error ? e.message : String(e);
+    }
+  }
+
+  /** The saved activity, caught up with reviews saved after it; rebuilt from the log otherwise. */
+  private async loadActivity(saved: ActivityState | undefined): Promise<void> {
+    const timeZone = currentTimeZone();
+    if (saved && saved.timeZone === timeZone) {
+      const missed = await this.storage.reviews(saved.countedUpTo + 1).catch(() => []);
+      this.activity = missed.reduce(countReview, saved);
+    } else {
+      // First run with activity, or the device moved to another time zone.
+      this.activity = rebuildActivity(await this.storage.reviews(0).catch(() => []), timeZone);
     }
   }
 
@@ -171,7 +219,8 @@ class Store {
 
   /** Rebuild the queue (e.g. settings changed or the app resumed) while keeping stats. */
   async refreshQueue(): Promise<void> {
-    if (this.daily.date !== dayKey(new Date())) {
+    this.today = dayKey(new Date());
+    if (this.daily.date !== this.today) {
       this.daily = freshDaily();
       this.finished = 0;
       this.stats = emptyStats();
@@ -271,6 +320,7 @@ class Store {
       pending: true,
     };
     void this.storage.addReview(review).then(() => this.reviewRevision++);
+    this.activity = countReview(this.activity, review);
 
     this.daily.reviewCount++;
     if (isNew) {
@@ -304,6 +354,7 @@ class Store {
     this.deck = [];
     this.syncState = { cursor: 0, pushedAt: 0, settingsUpdatedAt: 0, deckUpdatedAt: 0 };
     this.daily = freshDaily();
+    this.activity = emptyActivity();
     await this.storage.clear();
     await this.startSession();
     await this.flush();
@@ -332,6 +383,21 @@ class Store {
     return { cards, reviews, startedAt };
   }
 
+  /** Signed in to another account than at the last sync: download everything for this one. */
+  useAccount(userId: string): void {
+    if (this.syncState.userId === userId) return;
+    // Before accounts were remembered the cursor belonged to this account already.
+    const switched = this.syncState.userId !== undefined;
+    this.syncState = { ...this.syncState, userId, ...(switched ? { cursor: 0 } : {}) };
+    this.activity = { ...this.activity, remote: {}, cursor: 0, remoteComplete: false };
+  }
+
+  /** What the next sync asks about activity: every day until we have them all, then changes. */
+  activityRequest(): { timeZone: string; since: number } {
+    const a = this.activity;
+    return { timeZone: a.timeZone, since: a.remoteComplete ? a.cursor : 0 };
+  }
+
   /** Applies the server's answer: newer cards, settings and deck, personal FSRS weights. */
   async applyRemote(remote: {
     cursor: number;
@@ -341,6 +407,7 @@ class Store {
     fsrsWeights?: number[];
     acceptedReviews: string[];
     pushedAt: number;
+    activity?: { timeZone: string; full: boolean; days: DayActivity[] };
   }): Promise<void> {
     for (const [id, record] of remote.cards) {
       const local = this.cards[id];
@@ -359,6 +426,14 @@ class Store {
     if (remote.fsrsWeights) this.syncState.fsrsWeights = remote.fsrsWeights;
     this.configureFsrs();
     await this.storage.markSynced(remote.acceptedReviews);
+    if (remote.activity) {
+      // Everything pending when the sync began was sent; what is pending now came later (its
+      // review time is when the card was turned over, up to ten minutes earlier).
+      const unsent = (await this.storage.reviews(remote.pushedAt - 10 * 60_000)).filter(
+        (r) => r.pending,
+      );
+      this.activity = applyDownload(this.activity, remote.activity, remote.cursor, unsent);
+    }
     await this.flush();
     if (!this.revealed) await this.refreshQueue();
     this.reviewRevision++;
@@ -382,21 +457,39 @@ class Store {
         daily: $state.snapshot(this.daily),
         updatedAt: Date.now(),
         sync: $state.snapshot(this.syncState),
+        activity: this.activity,
       })
       .catch(() => {});
   }
 
-  /** Flush pending writes when the page is hidden; refresh the queue when it comes back. */
+  /**
+   * Flush pending writes when the page is hidden; refresh the queue when it comes back. Keeps
+   * `today` right across midnight too, for the streak.
+   */
   watchVisibility(): () => void {
     const onChange = () => {
       if (document.visibilityState === 'hidden') {
         if (this.saveTimer) void this.flush();
-      } else if (!this.revealed) {
-        void this.refreshQueue();
+      } else {
+        this.today = dayKey(new Date());
+        if (!this.revealed) void this.refreshQueue();
       }
     };
+    let midnight: ReturnType<typeof setTimeout> | undefined;
+    const atMidnight = () => {
+      const now = new Date();
+      const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1);
+      midnight = setTimeout(() => {
+        this.today = dayKey(new Date());
+        atMidnight();
+      }, next.getTime() - Date.now());
+    };
+    atMidnight();
     document.addEventListener('visibilitychange', onChange);
-    return () => document.removeEventListener('visibilitychange', onChange);
+    return () => {
+      clearTimeout(midnight);
+      document.removeEventListener('visibilitychange', onChange);
+    };
   }
 
   private hideAnswer(): void {
