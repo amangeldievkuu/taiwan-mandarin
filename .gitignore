@@ -27,3 +27,6 @@ data/raw
 # Generated app content (npm run content); built from the official lists, not redistributed
 apps/web/public/content
 apps/web/public/dict
+
+# Database dumps (docker compose backup service)
+backups

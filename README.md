@@ -83,6 +83,23 @@ microphone and secure cookies need HTTPS on a real domain. With such a proxy in 
 listens only on 127.0.0.1; nginx sends security headers (CSP and others) with the app. Then open
 it on the iPhone or iPad and choose Share › Add to Home Screen.
 
+#### Backups
+
+The `backup` service dumps the database into `./backups` when it starts and then every
+`BACKUP_INTERVAL_HOURS` (24), and deletes dumps older than `BACKUP_KEEP_DAYS` (14) after each new
+one succeeds. Dumps hold emails and password hashes, so they are readable by their owner only.
+The service shows as unhealthy in `docker compose ps` when the newest dump is older than two
+intervals.
+
+```sh
+docker compose --profile app run --rm backup now    # a dump right now, e.g. before an upgrade
+deploy/restore.sh backups/taiwan_mandarin-20261022-040000.dump
+```
+
+`restore.sh` asks first, stops the API, replaces the database with the dump in one transaction (a
+failure leaves it as it was) and starts the API again. A copy on the same disk doesn't survive
+losing the machine: also copy `./backups` somewhere else, e.g. with a nightly `rsync` or `rclone`.
+
 CI (`.github/workflows/ci.yml`) runs content build, type checks, lint, all tests (with a
 PostgreSQL service) and the production builds.
 
