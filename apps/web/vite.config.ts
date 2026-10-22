@@ -12,12 +12,14 @@ export default defineConfig({
   // The API is same-origin under /api, as in production (so the refresh cookie stays first-party).
   server: {
     proxy: {
-      '/api': { target: 'http://localhost:3000', rewrite: (path) => path.replace(/^\/api/, '') },
+      // 127.0.0.1, not localhost: Node resolves localhost to ::1 first, where another dev server
+      // on port 3000 (IPv6 only) would answer instead of the API.
+      '/api': { target: 'http://127.0.0.1:3000', rewrite: (path) => path.replace(/^\/api/, '') },
     },
   },
   preview: {
     proxy: {
-      '/api': { target: 'http://localhost:3000', rewrite: (path) => path.replace(/^\/api/, '') },
+      '/api': { target: 'http://127.0.0.1:3000', rewrite: (path) => path.replace(/^\/api/, '') },
     },
   },
   plugins: [
