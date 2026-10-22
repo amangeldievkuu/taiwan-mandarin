@@ -96,6 +96,7 @@
     <textarea
       bind:value={text}
       rows="3"
+      aria-label="Chinese text to explain"
       placeholder="Paste Chinese text: a sign, a menu, a LINE message…"
       lang="zh-Hant-TW"></textarea>
     {#if photo}
@@ -256,6 +257,12 @@
 <style>
   .input {
     padding: 12px;
+  }
+
+  /* The textarea has no outline of its own; the card shows where typing goes. */
+  .input:focus-within {
+    outline: 2px solid var(--sky);
+    outline-offset: 2px;
   }
 
   textarea {

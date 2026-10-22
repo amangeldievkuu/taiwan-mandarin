@@ -51,6 +51,17 @@ export const LoginSchema = z.object({
 });
 export type LoginBody = z.infer<typeof LoginSchema>;
 
+export const ChangePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1).max(200),
+    newPassword: z.string().min(8).max(200),
+  })
+  .refine((b) => b.newPassword !== b.currentPassword, {
+    message: 'The new password is the same as the current one',
+    path: ['newPassword'],
+  });
+export type ChangePasswordBody = z.infer<typeof ChangePasswordSchema>;
+
 export interface UserDto {
   id: string;
   email: string;

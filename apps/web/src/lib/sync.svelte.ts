@@ -6,6 +6,7 @@ import type { Settings } from '@taiwan-mandarin/shared';
 import type {
   AuthResponse,
   CardRecordDto,
+  ChangePasswordBody,
   LoginBody,
   RegisterBody,
   SyncRequest,
@@ -108,6 +109,19 @@ class Account {
     // Send what this device has first: the next account signed in here starts from its own data.
     await this.sync();
     await api('/v1/auth/logout', { method: 'POST', auth: false }).catch(() => undefined);
+    setSession(null);
+    this.setUser(null);
+  }
+
+  /** Changes the password; the server signs out every other device and renews this session. */
+  async changePassword(body: ChangePasswordBody): Promise<void> {
+    this.signedIn(await api<AuthResponse>('/v1/auth/password', { method: 'POST', body }));
+  }
+
+  /** Signs out on every device, this one included (after sending what this device has). */
+  async logoutEverywhere(): Promise<void> {
+    await this.sync();
+    await api('/v1/auth/logout-all', { method: 'POST' });
     setSession(null);
     this.setUser(null);
   }

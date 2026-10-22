@@ -43,6 +43,36 @@
   function onKey(e: KeyboardEvent) {
     if (e.key === 'Escape' && lookup.open) lookup.close();
   }
+
+  // A dialog for keyboards and screen readers: focus moves in when it opens and goes back to
+  // where it was when it closes. On phones it covers the page, so Tab stays inside it.
+  let panel = $state<HTMLElement>();
+  $effect(() => {
+    if (!lookup.open || !panel) return;
+    const returnTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    panel.focus({ preventScroll: true });
+    return () => {
+      if (returnTo?.isConnected) returnTo.focus({ preventScroll: true });
+    };
+  });
+
+  function trapTab(e: KeyboardEvent) {
+    if (e.key !== 'Tab' || wide.current || !panel) return;
+    const focusable = [
+      ...panel.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex="0"]'),
+    ];
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (!first || !last) return;
+    const at = document.activeElement;
+    if (e.shiftKey && (at === first || at === panel)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && at === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
 </script>
 
 <svelte:window onkeydown={onKey} />
@@ -55,16 +85,21 @@
     onclick={() => lookup.close()}
     transition:fade
   ></button>
-  <aside
+  <div
+    bind:this={panel}
     class="panel sheet"
-    aria-label="Dictionary"
-    aria-live="polite"
+    role="dialog"
+    aria-modal={wide.current ? undefined : 'true'}
+    aria-labelledby="lookup-word"
+    aria-busy={lookup.loading}
+    tabindex="-1"
+    onkeydown={trapTab}
     in:sheet={{ wide: wide.current }}
     out:sheet={{ wide: wide.current }}
   >
     <div class="grip" aria-hidden="true"></div>
     <header>
-      <span class="word hanzi" lang="zh-Hant-TW">{lookup.word}</span>
+      <span id="lookup-word" class="word hanzi" lang="zh-Hant-TW">{lookup.word}</span>
       <div class="tools">
         {#if canSpeak}
           <button type="button" class="tool" aria-label="Listen" onclick={() => speak(lookup.word)}>
@@ -131,7 +166,7 @@
         {/each}
       </div>
     {/if}
-  </aside>
+  </div>
 {/if}
 
 <style>
@@ -145,6 +180,7 @@
   .panel {
     position: fixed;
     z-index: 41;
+    outline: none;
     inset: auto 0 0;
     max-height: min(72dvh, 620px);
     overflow-y: auto;

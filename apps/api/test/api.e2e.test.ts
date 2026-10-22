@@ -146,6 +146,45 @@ describe('auth', () => {
     expect((await request(http).post('/v1/auth/refresh').set('cookie', cookie)).status).toBe(401);
   });
 
+  it('changes the password, ending other sessions, and signs out everywhere', async () => {
+    const { email, token, cookie } = await signUp();
+    const other = await signIn(email); // another device
+    const me = (t: string) => request(http).get('/v1/auth/me').set('authorization', `Bearer ${t}`);
+    const refresh = (c: string) => request(http).post('/v1/auth/refresh').set('cookie', c);
+    const change = (currentPassword: string, newPassword: string) =>
+      request(http)
+        .post('/v1/auth/password')
+        .set('authorization', `Bearer ${token}`)
+        .send({ currentPassword, newPassword });
+
+    // A wrong current password is 403, so clients don't take it for an expired session.
+    expect((await change('not my password', 'a new long password')).status).toBe(403);
+    const changed = await change('correct horse battery', 'a new long password');
+    expect(changed.status).toBe(200);
+    const fresh = { token: changed.body.accessToken as string, cookie: refreshCookie(changed) };
+
+    // Every earlier session ends at once, access tokens included; this device carries on.
+    for (const res of [await me(token), await me(other.token), await refresh(other.cookie)])
+      expect(res.status).toBe(401);
+    expect((await me(fresh.token)).status).toBe(200);
+    expect(
+      (
+        await request(http)
+          .post('/v1/auth/login')
+          .send({ email, password: 'correct horse battery' })
+      ).status,
+    ).toBe(401);
+
+    // Signing out everywhere ends this device's session too.
+    await request(http)
+      .post('/v1/auth/logout-all')
+      .set('authorization', `Bearer ${fresh.token}`)
+      .expect(204);
+    expect((await me(fresh.token)).status).toBe(401);
+    expect((await refresh(fresh.cookie)).status).toBe(401);
+    expect((await refresh(cookie)).status).toBe(401);
+  });
+
   it('protects personal routes', async () => {
     expect((await request(http).get('/v1/me/stats')).status).toBe(401);
     expect(
@@ -367,7 +406,7 @@ describe('reset progress', () => {
 
 describe('personal access tokens', () => {
   it('reads data but cannot manage tokens', async () => {
-    const { token } = await signUp();
+    const { token } = await signIn(account);
     const created = await request(http)
       .post('/v1/me/tokens')
       .set('authorization', `Bearer ${token}`)

@@ -4,10 +4,22 @@
 // The exception is reuse within a few seconds of rotation, which is two tabs refreshing at once.
 
 import { randomUUID } from 'node:crypto';
-import { ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import argon2 from 'argon2';
-import type { AuthResponse, LoginBody, RegisterBody, UserDto } from '@taiwan-mandarin/shared/api';
+import type {
+  AuthResponse,
+  ChangePasswordBody,
+  LoginBody,
+  RegisterBody,
+  UserDto,
+} from '@taiwan-mandarin/shared/api';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { randomToken, sha256 } from './crypto.js';
 
@@ -117,6 +129,46 @@ export class AuthService {
     });
   }
 
+  /**
+   * Changes the password and ends every session; this device gets a new one. A wrong current
+   * password is 403, not 401, which clients take to mean the session itself is gone.
+   */
+  async changePassword(
+    userId: string,
+    body: ChangePasswordBody,
+    userAgent?: string,
+  ): Promise<Session> {
+    const user = await this.db.user.findUnique({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException();
+    const ok = await argon2.verify(user.passwordHash, body.currentPassword).catch(() => false);
+    if (!ok) throw new ForbiddenException('The current password is wrong');
+    await this.db.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash: await argon2.hash(body.newPassword, { type: argon2.argon2id }),
+        sessionsValidFrom: new Date(),
+      },
+    });
+    await this.revokeAll(userId);
+    return this.issue(user, randomUUID(), userAgent);
+  }
+
+  /** Ends every session of the account, on every device, including access tokens already issued. */
+  async logoutEverywhere(userId: string): Promise<void> {
+    await this.db.user.update({
+      where: { id: userId },
+      data: { sessionsValidFrom: new Date() },
+    });
+    await this.revokeAll(userId);
+  }
+
+  private async revokeAll(userId: string): Promise<void> {
+    await this.db.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+  }
+
   async me(userId: string): Promise<UserDto> {
     const user = await this.db.user.findUnique({ where: { id: userId } });
     if (!user) throw new UnauthorizedException();
@@ -160,8 +212,9 @@ export class AuthService {
     user: { id: string; email: string; displayName: string | null; createdAt: Date },
     refreshToken: string,
   ): Promise<Session> {
+    // iatMs: the issue time to the millisecond (iat has whole seconds), for sessionsValidFrom.
     const accessToken = await this.jwt.signAsync(
-      { sub: user.id },
+      { sub: user.id, iatMs: Date.now() },
       { expiresIn: ACCESS_TTL_SECONDS },
     );
     return { user: toDto(user), accessToken, expiresIn: ACCESS_TTL_SECONDS, refreshToken };

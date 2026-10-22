@@ -32,6 +32,8 @@ model User {
   fsrsAttemptedCount Int       @default(0)
   /// IANA time zone the learner last synced from, for day boundaries in server-side jobs.
   timeZone           String?
+  /// Access tokens issued before this are refused (password change, sign out everywhere).
+  sessionsValidFrom  DateTime?
 
   cards         Card[]
   reviews       ReviewLog[]

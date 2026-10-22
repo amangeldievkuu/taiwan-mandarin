@@ -13,9 +13,11 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import {
+  ChangePasswordSchema,
   LoginSchema,
   RegisterSchema,
   type AuthResponse,
+  type ChangePasswordBody,
   type LoginBody,
   type RegisterBody,
   type UserDto,
@@ -83,6 +85,40 @@ export class AuthController {
   @ApiOperation({ summary: 'Sign out on this device' })
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
     await this.auth.logout(this.cookie(req));
+    res.clearCookie(COOKIE, { path: '/' });
+  }
+
+  @Post('password')
+  @HttpCode(200)
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @ApiOperation({
+    summary: 'Change the password; signs out every other device (this one gets a new session)',
+  })
+  @ApiZodBody(ChangePasswordSchema)
+  async changePassword(
+    @CurrentUser() user: AuthUser,
+    @ZodBody(ChangePasswordSchema) body: ChangePasswordBody,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponse> {
+    return this.respond(
+      res,
+      await this.auth.changePassword(user.id, body, req.headers['user-agent']),
+    );
+  }
+
+  @Post('logout-all')
+  @HttpCode(204)
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Sign out on every device, this one included' })
+  async logoutEverywhere(
+    @CurrentUser() user: AuthUser,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    await this.auth.logoutEverywhere(user.id);
     res.clearCookie(COOKIE, { path: '/' });
   }
 

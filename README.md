@@ -118,6 +118,10 @@ between devices.
 
 - **Accounts.** Passwords use argon2id. Access is a 15-minute JWT held in memory. A rotating
   refresh token sits in an httpOnly cookie, and reusing a rotated token revokes the whole chain.
+  Changing the password (Me › Account) signs out every other device, and "Sign out everywhere"
+  ends every session; access tokens issued before either stop working at once.
+- **Updates.** A new version of the app downloads in the background and waits for the learner to
+  tap Reload, so it never swaps the app out mid-answer.
 - **Same origin.** The web app calls the API under `/api` (Vite proxies it in development), so
   the cookie stays first-party. That matters for Safari on iPhone and iPad.
 - **Sync** (`POST /v1/sync`): cards merge last-write-wins per word, review logs are append-only

@@ -62,13 +62,23 @@ export class AuthGuard implements CanActivate {
       return true;
     }
 
+    let payload: { sub: string; iat?: number; iatMs?: number };
     try {
-      const payload = await this.jwt.verifyAsync<{ sub: string }>(token);
-      request.user = { id: payload.sub, via: 'session' };
-      return true;
+      payload = await this.jwt.verifyAsync<typeof payload>(token);
     } catch {
       throw new UnauthorizedException('Session expired');
     }
+    // Ended since it was issued (password changed, signed out everywhere), or the account is gone.
+    const user = await this.db.user.findUnique({
+      where: { id: payload.sub },
+      select: { sessionsValidFrom: true },
+    });
+    const issuedAt = payload.iatMs ?? (payload.iat ?? 0) * 1000;
+    if (!user || (user.sessionsValidFrom && issuedAt < user.sessionsValidFrom.getTime())) {
+      throw new UnauthorizedException('Session expired');
+    }
+    request.user = { id: payload.sub, via: 'session' };
+    return true;
   }
 }
 

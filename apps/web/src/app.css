@@ -11,7 +11,7 @@
   /* Text and lines */
   --ink: #14211c;
   --ink-2: #4a5a54;
-  --ink-3: #6e7d77;
+  --ink-3: #606d68; /* 4.6:1 or better on every paper */
   --rule: rgb(20 33 28 / 0.1);
   --rule-strong: rgb(20 33 28 / 0.18);
   --fill: rgb(20 33 28 / 0.06);
@@ -176,7 +176,7 @@
   --paper-sunken: #0a0f0d;
   --ink: #e6efeb;
   --ink-2: #a0b1aa;
-  --ink-3: #6e807a;
+  --ink-3: #788c85;
   --rule: rgb(230 239 235 / 0.1);
   --rule-strong: rgb(230 239 235 / 0.18);
   --fill: rgb(230 239 235 / 0.07);
@@ -223,7 +223,7 @@
     --paper-sunken: #0a0f0d;
     --ink: #e6efeb;
     --ink-2: #a0b1aa;
-    --ink-3: #6e807a;
+    --ink-3: #788c85;
     --rule: rgb(230 239 235 / 0.1);
     --rule-strong: rgb(230 239 235 / 0.18);
     --fill: rgb(230 239 235 / 0.07);

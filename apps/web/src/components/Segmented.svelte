@@ -18,21 +18,44 @@
 
   let { label, options, value, onchange }: Props = $props();
   const index = $derived(options.findIndex((o) => o.value === value));
+  let group = $state<HTMLElement>();
+
+  // The radio-group pattern: one Tab stop (the chosen option), arrow keys move and choose.
+  function onKey(e: KeyboardEvent) {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    const to =
+      step !== undefined
+        ? (Math.max(0, index) + step + options.length) % options.length
+        : e.key === 'Home'
+          ? 0
+          : e.key === 'End'
+            ? options.length - 1
+            : undefined;
+    const option = to === undefined ? undefined : options[to];
+    if (to === undefined || !option) return;
+    e.preventDefault();
+    onchange(option.value);
+    group?.querySelectorAll<HTMLElement>('[role="radio"]')[to]?.focus();
+  }
 </script>
 
 <div
+  bind:this={group}
   class="segmented"
   role="radiogroup"
   aria-label={label}
+  tabindex="-1"
+  onkeydown={onKey}
   style:--n={options.length}
   style:--i={Math.max(0, index)}
 >
   <span class="thumb" class:hidden={index < 0} aria-hidden="true"></span>
-  {#each options as option (option.value)}
+  {#each options as option, i (option.value)}
     <button
       type="button"
       role="radio"
       aria-checked={option.value === value}
+      tabindex={i === Math.max(0, index) ? 0 : -1}
       class:active={option.value === value}
       style:font-family={option.font}
       lang={option.lang}

@@ -7,7 +7,7 @@
     "moduleResolution": "bundler",
     "customConditions": ["source"],
     "allowImportingTsExtensions": true,
-    "types": ["svelte", "vite/client"],
+    "types": ["svelte", "vite/client", "vite-plugin-pwa/vanillajs"],
     "allowArbitraryExtensions": true,
     "allowJs": true,
     "checkJs": true

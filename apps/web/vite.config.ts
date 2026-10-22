@@ -23,7 +23,8 @@ export default defineConfig({
   plugins: [
     svelte(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // A new version waits for the learner's "Reload" (src/lib/pwa.svelte.ts).
+      registerType: 'prompt',
       includeAssets: ['icon.svg', 'favicon.ico', 'apple-touch-icon-180x180.png'],
       manifest: {
         name: '臺灣華語',

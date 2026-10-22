@@ -82,6 +82,39 @@
     }
   }
 
+  // ---- Password and sessions ----
+  let changing = $state(false);
+  let currentPassword = $state('');
+  let newPassword = $state('');
+  let passwordBusy = $state(false);
+  let passwordMessage = $state<{ text: string; ok: boolean } | null>(null);
+  async function changePassword(event: SubmitEvent) {
+    event.preventDefault();
+    passwordBusy = true;
+    passwordMessage = null;
+    try {
+      await account.changePassword({ currentPassword, newPassword });
+      currentPassword = newPassword = '';
+      changing = false;
+      passwordMessage = { text: 'Password changed. Your other devices are signed out.', ok: true };
+    } catch (e) {
+      passwordMessage = { text: e instanceof Error ? e.message : String(e), ok: false };
+    } finally {
+      passwordBusy = false;
+    }
+  }
+
+  let confirmEverywhere = $state(false);
+  let everywhereError = $state<string | null>(null);
+  async function logoutEverywhere() {
+    everywhereError = null;
+    try {
+      await account.logoutEverywhere();
+    } catch (e) {
+      everywhereError = e instanceof Error ? e.message : String(e);
+    }
+  }
+
   let confirmDelete = $state(false);
 </script>
 
@@ -154,6 +187,78 @@
     </div>
   </div>
 
+  <h3 class="sub">Password and sessions</h3>
+  <div class="sheet block">
+    {#if changing}
+      <form onsubmit={changePassword}>
+        <label>
+          <span>Current password</span>
+          <input
+            type="password"
+            autocomplete="current-password"
+            required
+            bind:value={currentPassword}
+          />
+        </label>
+        <label>
+          <span>New password</span>
+          <input
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            required
+            bind:value={newPassword}
+          />
+        </label>
+        <p>Changing it signs out your other devices.</p>
+        <div class="actions">
+          <button class="btn primary small" type="submit" disabled={passwordBusy}>
+            {passwordBusy ? 'Changing…' : 'Change password'}
+          </button>
+          <button type="button" class="btn quiet small" onclick={() => (changing = false)}
+            >Cancel</button
+          >
+        </div>
+      </form>
+    {:else if confirmEverywhere}
+      <p>
+        Sign out on every device, this one included? Progress already synced stays in your account,
+        and API tokens keep working.
+      </p>
+      <div class="actions">
+        <button type="button" class="btn seal small" onclick={logoutEverywhere}
+          >Sign out everywhere</button
+        >
+        <button type="button" class="btn quiet small" onclick={() => (confirmEverywhere = false)}
+          >Cancel</button
+        >
+      </div>
+    {:else}
+      <div class="actions">
+        <button
+          type="button"
+          class="btn quiet small"
+          onclick={() => {
+            changing = true;
+            passwordMessage = null;
+          }}>Change password…</button
+        >
+        <button type="button" class="btn quiet small" onclick={() => (confirmEverywhere = true)}
+          >Sign out everywhere…</button
+        >
+      </div>
+    {/if}
+    {#if passwordMessage}
+      <p
+        class={passwordMessage.ok ? 'fine' : 'error'}
+        role={passwordMessage.ok ? 'status' : 'alert'}
+      >
+        {passwordMessage.text}
+      </p>
+    {/if}
+    {#if everywhereError}<p class="error" role="alert">{everywhereError}</p>{/if}
+  </div>
+
   <h3 class="sub">Personal memory model</h3>
   <div class="sheet block">
     <p>
@@ -190,7 +295,12 @@
       </div>
     {/if}
     <form class="token-form" onsubmit={createToken}>
-      <input placeholder="Token name, e.g. Anki export" bind:value={tokenName} maxlength="60" />
+      <input
+        aria-label="Token name"
+        placeholder="Token name, e.g. Anki export"
+        bind:value={tokenName}
+        maxlength="60"
+      />
       <button class="btn quiet small" type="submit" disabled={!tokenName.trim()}>Create</button>
     </form>
     {#if tokens.length}

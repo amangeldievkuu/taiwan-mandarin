@@ -14,13 +14,23 @@
   import LookupSheet from './ui/LookupSheet.svelte';
   import Nav from './ui/Nav.svelte';
   import Seal from './ui/Seal.svelte';
+  import UpdatePrompt from './ui/UpdatePrompt.svelte';
   import { feedback } from './lib/feedback.svelte';
+  import { pwa } from './lib/pwa.svelte';
   import { router, viewKey } from './lib/router.svelte';
   import { store } from './lib/store.svelte';
   import { account } from './lib/sync.svelte';
+  import { toasts } from './lib/toast.svelte';
 
   onMount(() => {
     void store.init().then(() => account.init());
+    pwa.start(() =>
+      toasts.show({
+        kind: 'info',
+        title: 'Ready to work offline',
+        body: 'Words you open from now on stay available without a connection.',
+      }),
+    );
     const stopFeedback = feedback.init();
     const stopWatching = store.watchVisibility();
     return () => {
@@ -99,6 +109,7 @@
   </main>
   <LookupSheet />
   <Celebrations />
+  <UpdatePrompt />
 {:else}
   <div class="splash">
     <Seal text="華" size={72} />

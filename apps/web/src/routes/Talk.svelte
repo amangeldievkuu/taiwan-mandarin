@@ -49,6 +49,16 @@
   let scenario = $state<ScenarioId>('free');
   let messages = $state<TalkMessage[]>([]);
   let draft = $state('');
+  /** Read out by screen readers when a reply arrives (not when an old conversation loads). */
+  let announcement = $state('');
+  const announce = (reply: TalkMessage, correction?: TalkMessage['correction']) => {
+    announcement = [
+      correction && `Correction: ${correction.corrected}. ${correction.explanation}`,
+      `${reply.content}${reply.translation ? ` (${reply.translation})` : ''}`,
+    ]
+      .filter(Boolean)
+      .join(' ');
+  };
   /** In a conversation, or opening one. */
   let open = $state(false);
   let sending = $state(false);
@@ -120,6 +130,7 @@
       conversationId = res.conversationId;
       messages = [...messages.filter((m) => m.id !== pending?.id), ...res.messages];
       const reply = res.messages.at(-1);
+      if (reply) announce(reply, res.messages.find((m) => m.role === 'user')?.correction);
       if (reply && canSpeak) void speak(reply.content);
       void scrollDown();
     } catch (e) {
@@ -186,6 +197,7 @@
       if (mine !== session) return;
       if (res.message) {
         messages = [...messages, res.message];
+        announce(res.message);
         if (canSpeak) void speak(res.message.content);
       }
       endedAt = res.endedAt;
@@ -357,6 +369,7 @@
       {/if}
     </header>
 
+    <p class="visually-hidden" aria-live="polite">{announcement}</p>
     <ol class="thread" bind:this={thread}>
       {#each messages as m (m.id)}
         <li class="msg {m.role}">
@@ -557,6 +570,7 @@
       >
         <input
           bind:value={draft}
+          aria-label="Your reply"
           placeholder="用中文回答… (English is OK too)"
           lang="zh-Hant-TW"
           autocomplete="off"
@@ -907,6 +921,12 @@
     border-radius: 999px;
     background: var(--paper-raised);
     box-shadow: var(--shadow);
+  }
+
+  /* The input has no outline of its own; the composer shows where typing goes. */
+  .composer:focus-within {
+    outline: 2px solid var(--sky);
+    outline-offset: 2px;
   }
 
   @media (min-width: 700px) {
