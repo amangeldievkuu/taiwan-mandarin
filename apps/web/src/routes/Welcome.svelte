@@ -1,8 +1,10 @@
 <script lang="ts">
-  // The welcome page: what the app is, told along a road. 墨 the ink bot walks the road as the
-  // page scrolls, passing a signpost for every TOCFL level, and sits down for tea when you stop.
+  // The welcome page: what the app is, told along a road. 墨, a drop of ink, walks the road as the
+  // page scrolls, passing a signpost for every TOCFL level, towards a Taiwan cherry (山櫻花) in a pot
+  // that puts out a flowering branch for each level and blooms in full at the end. It sits down and says something when you stop.
   import { LEVELS, type Bowl } from '@taiwan-mandarin/shared';
-  import Bot from '../ui/landing/Bot.svelte';
+  import InkBlob, { type Line } from '../ui/landing/InkBlob.svelte';
+  import RoadPlant from '../ui/landing/RoadPlant.svelte';
   import Icon from '../ui/Icon.svelte';
   import Seal from '../ui/Seal.svelte';
   import StreakPlant from '../ui/StreakPlant.svelte';
@@ -19,7 +21,7 @@
 
   let road = $state<HTMLElement>();
   let progress = $state(0);
-  // The road element owns --p (set by the walk action); mirror it for the signposts and XP.
+  // The road element owns --p (set by the walk action); mirror it for the signposts and the plant.
   $effect(() => {
     const el = road;
     if (!el) return;
@@ -30,7 +32,39 @@
     return () => observer.disconnect();
   });
   const reached = $derived(POSTS.filter((p) => progress >= p.at - 0.015).length);
-  const xp = $derived(reached * 25);
+  const blooming = $derived(progress >= 0.99);
+
+  /** How far the plant has grown: a leaf's share of the stem per signpost, the rest to the end. */
+  const grow = $derived.by(() => {
+    const knots = [0, ...POSTS.map((p) => p.at - 0.015), 1];
+    const k = Math.max(
+      0,
+      Math.min(
+        knots.length - 2,
+        knots.findLastIndex((x) => progress >= x),
+      ),
+    );
+    const from = knots[k] ?? 0;
+    const span = (knots[k + 1] ?? 1) - from;
+    const frac = span > 0 ? Math.min(1, Math.max(0, (progress - from) / span)) : 1;
+    return (k + frac) / (knots.length - 1);
+  });
+
+  /** What 墨 says when it sits down: one line for each stretch of the road. */
+  const SAYS: Line[] = [
+    { zh: '你好！', en: 'hello!' },
+    { zh: '出發！', en: 'off we go' },
+    { zh: '一步一步', en: 'step by step' },
+    { zh: '慢慢來', en: 'take it slow' },
+    { zh: '加油！', en: 'keep going' },
+    { zh: '好厲害', en: 'look at you' },
+    { zh: '快到了', en: 'almost there' },
+    { zh: '再一點', en: 'a little more' },
+    { zh: '到了！', en: 'made it' },
+  ];
+  const says = $derived(
+    blooming ? { zh: '開花了！', en: 'it bloomed' } : SAYS[Math.min(reached, SAYS.length - 1)],
+  );
 
   /** A plant in bloom, for the picture. */
   const bloom: Bowl = {
@@ -133,7 +167,7 @@
   </section>
 
   <section class="plant sheet">
-    <StreakPlant bowl={bloom} size={170} label="A plum tree in bloom, 120 days" />
+    <StreakPlant bowl={bloom} size={170} label="A plum tree in bloom, 120 days" lively />
     <div>
       <h2>A plum tree that grows with you</h2>
       <p>
@@ -182,7 +216,7 @@
     </p>
   </footer>
 
-  <!-- The road: sticks to the bottom while the page scrolls, and 墨 walks along it. -->
+  <!-- The road: sticks to the bottom while the page scrolls, and 墨 walks along it to the pot. -->
   <div class="road" aria-hidden="true">
     <svg class="ground" viewBox="0 0 1000 24" preserveAspectRatio="none">
       <path
@@ -200,11 +234,10 @@
       {/each}
     </ul>
     <div class="walker">
-      <Bot />
+      <InkBlob {says} flip={progress > 0.55} />
     </div>
-    <div class="xp" class:on={xp > 0}>
-      {#key xp}<span class="xp-chip"><span aria-hidden="true">✦</span> {xp}</span>{/key}
-      <small>{reached} of {POSTS.length} levels</small>
+    <div class="plant-pot">
+      <RoadPlant {grow} {reached} total={POSTS.length} bloom={blooming} />
     </div>
   </div>
 </div>
@@ -484,6 +517,8 @@
 
   /* ---- The road ---- */
   .road {
+    --walker-w: 58px;
+    --pot-w: 72px;
     position: sticky;
     bottom: 0;
     z-index: 5;
@@ -494,12 +529,12 @@
     pointer-events: none;
   }
 
+  /* The road runs from the left edge to the pot. */
   .ground {
     position: absolute;
     left: var(--gutter);
-    right: var(--gutter);
     bottom: calc(var(--safe-bottom) + 10px);
-    width: calc(100% - 2 * var(--gutter));
+    width: calc(100% - 2 * var(--gutter) - var(--pot-w) + 6px);
     height: 24px;
     overflow: visible;
   }
@@ -518,7 +553,7 @@
 
   .posts {
     position: absolute;
-    inset: 0 var(--gutter) auto;
+    inset: 0 calc(var(--gutter) + var(--pot-w) + var(--walker-w) * 0.4) auto var(--gutter);
     height: 100%;
     margin: 0;
     padding: 0;
@@ -579,71 +614,33 @@
     }
   }
 
+  /* 墨 walks from the left edge to just short of the pot. */
   .walker {
     position: absolute;
     bottom: calc(var(--safe-bottom) + 18px);
-    left: calc(var(--gutter) + var(--p) * (100% - 2 * var(--gutter) - 84px));
-    width: 84px;
-    filter: drop-shadow(0 6px 6px rgb(26 28 30 / 0.12));
+    left: calc(
+      var(--gutter) + var(--p) * (100% - 2 * var(--gutter) - var(--walker-w) - var(--pot-w))
+    );
+    width: var(--walker-w);
+    filter: drop-shadow(0 4px 4px rgb(26 28 30 / 0.12));
+  }
+
+  .plant-pot {
+    position: absolute;
+    right: var(--gutter);
+    bottom: calc(var(--safe-bottom) + 2px);
+    width: var(--pot-w);
   }
 
   @media (max-width: 640px) {
-    .walker {
-      width: 68px;
-      left: calc(var(--gutter) + var(--p) * (100% - 2 * var(--gutter) - 68px));
+    .road {
+      --walker-w: 46px;
+      --pot-w: 54px;
     }
-  }
-
-  /* Top right, stepping left at the end of the road so 墨 can sit there. */
-  .xp {
-    position: absolute;
-    top: 30px;
-    right: calc(var(--gutter) + max(0px, (var(--p) - 0.72) * 420px));
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 2px;
-    opacity: 0;
-    transform: translateY(6px);
-    transition:
-      opacity var(--dur-3) var(--ease-out),
-      transform var(--dur-3) var(--ease-out);
-  }
-
-  .xp.on {
-    opacity: 1;
-    transform: none;
-  }
-
-  .xp-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    height: 30px;
-    padding: 0 11px;
-    border-radius: var(--radius-pill);
-    background: var(--gold-wash);
-    color: var(--gold-deep);
-    font-size: 14px;
-    font-weight: 800;
-    animation: bump var(--dur-4) var(--ease-spring);
-  }
-
-  @keyframes bump {
-    40% {
-      transform: scale(1.14);
-    }
-  }
-
-  .xp small {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--ink-3);
   }
 
   @media (prefers-reduced-motion: reduce) {
     .hint :global(.icon),
-    .xp-chip,
     .hero-text,
     .hero-seal {
       animation: none;

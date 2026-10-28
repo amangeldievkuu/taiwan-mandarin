@@ -41,8 +41,11 @@ labelled sidebar with keyboard shortcuts: `Space` reveals, `1`–`4` rate, `r` r
 opens search, and `g` then `t`/`s`/`p`/`c`/`r`/`d`/`m` navigates (`c` for conversation). Me holds progress and leads to the
 account, settings, garden, levels and about pages. Every back button names where it goes (back to
 the page you came from, or up to the parent after a deep link), and a level page can switch to any
-other level without leaving it. A first visit lands on `/welcome`, where 墨 the
-ink bot walks the TOCFL road as the page scrolls (and sits down for tea when it stops).
+other level without leaving it. A first visit lands on `/welcome`, where 墨, a drop
+of ink, walks the TOCFL road as the page scrolls towards a Taiwan cherry (台灣山櫻花) in a pot
+that puts out a branch of hanging rose bells for every level and blooms in full at the end, when a
+white-eye (綠繡眼) drops in; it sways, drops petals, and has a gold seam drawn down it (and sits down to say something
+when the scrolling stops).
 
 ## Layout
 
