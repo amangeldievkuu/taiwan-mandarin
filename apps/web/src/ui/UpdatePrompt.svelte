@@ -1,11 +1,15 @@
 <script lang="ts">
   // Offers the new version once it is downloaded; stays until the learner reloads or says later.
   import { pwa } from '../lib/pwa.svelte';
+  import { router } from '../lib/router.svelte';
   import { rise } from '../lib/transitions';
+
+  /** The study page keeps its grade buttons at the bottom, so the prompt goes to the top there. */
+  const atTop = $derived(router.route.name === 'study');
 </script>
 
 {#if pwa.needRefresh}
-  <div class="update" role="status" in:rise={{ y: 16 }}>
+  <div class="update" class:top={atTop} role="status" in:rise={{ y: atTop ? -16 : 16 }}>
     <span>A new version of the app is ready.</span>
     <button type="button" class="btn primary small" onclick={() => pwa.reload()}>Reload</button>
     <button type="button" class="btn quiet small" onclick={() => pwa.later()}>Later</button>
@@ -30,6 +34,11 @@
     background: var(--paper-raised);
     box-shadow: var(--shadow-3);
     font-size: 14px;
+  }
+
+  .update.top {
+    top: calc(var(--safe-top) + 12px);
+    bottom: auto;
   }
 
   .update span {

@@ -7,6 +7,8 @@
     font?: string;
     /** Language of the label, e.g. "zh-Hant-TW" for Chinese labels. */
     lang?: string;
+    /** A small second line, e.g. the English for a Chinese label. */
+    sub?: string;
   }
 
   interface Props {
@@ -62,6 +64,7 @@
       onclick={() => onchange(option.value)}
     >
       {option.label}
+      {#if option.sub}<span class="sub" lang="en">{option.sub}</span>{/if}
     </button>
   {/each}
 </div>
@@ -102,6 +105,10 @@
   button {
     position: relative;
     z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     min-height: 40px;
     padding: 4px 8px;
     border-radius: 11px;
@@ -120,5 +127,17 @@
 
   .active {
     color: var(--ink);
+  }
+
+  .sub {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--ink-3);
+  }
+
+  .active .sub {
+    color: var(--ink-2);
   }
 </style>

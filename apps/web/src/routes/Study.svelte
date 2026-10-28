@@ -1,6 +1,13 @@
 <script lang="ts" module>
   type Mode = 'recognize' | 'recall' | 'listen';
   const MODE_KEY = 'taiwan-mandarin:study-mode';
+  const MODES: Mode[] = ['recognize', 'recall', 'listen'];
+  /** What each mode asks of the learner; shown on the control and on the card itself. */
+  const MODE_INFO: Record<Mode, { zh: string; en: string; hint: string }> = {
+    recognize: { zh: '認字', en: 'Recognise', hint: 'See the word, recall the meaning' },
+    recall: { zh: '回想', en: 'Recall', hint: 'See the meaning, recall the word' },
+    listen: { zh: '聽力', en: 'Listen', hint: 'Hear the word, recall it' },
+  };
 
   function savedMode(): Mode {
     try {
@@ -34,7 +41,7 @@
   import { GRADES, Rating, type Grade } from '../lib/srs';
   import { store } from '../lib/store.svelte';
   import { toasts } from '../lib/toast.svelte';
-  import { cardIn, cardOut, flipIn } from '../lib/transitions';
+  import { cardIn, cardOut, flipIn, rise } from '../lib/transitions';
 
   const GRADE_INFO: Record<Grade, { label: string; zh: string; color: string; key: string }> = {
     [Rating.Again]: { label: 'Again', zh: '再來', color: 'var(--again)', key: '1' },
@@ -78,6 +85,15 @@
   let halfway = false;
   let glyphs = $state<HTMLElement>();
   let pressed = $state<string | null>(null);
+  /** The phone's mode menu is open. */
+  let modeOpen = $state(false);
+  /** Just graded: the next card's "Show answer" ignores a second tap meant for the rating. */
+  let cooling = $state(false);
+
+  function pickMode(m: Mode) {
+    mode = m;
+    modeOpen = false;
+  }
 
   // A new card is shown: note the time, and in listening mode play it. Only a new card counts:
   // revealing it or switching modes must not restart the clock.
@@ -118,6 +134,8 @@
       ?.getBoundingClientRect();
     const gained = XP.review + (isNew ? XP.newWord : 0);
     exitGrade = g;
+    cooling = true;
+    setTimeout(() => (cooling = false), 320);
     feedback.play('grade');
     feedback.buzz('light');
     store.rate(g);
@@ -143,6 +161,10 @@
   function onkeydown(event: KeyboardEvent) {
     if (event.metaKey || event.ctrlKey || event.altKey || lookup.open) return;
     if (event.target instanceof HTMLElement && event.target.closest('input, textarea')) return;
+    if (modeOpen) {
+      if (event.key === 'Escape') modeOpen = false;
+      return;
+    }
     if (!store.revealed && (event.key === ' ' || event.key === 'Enter')) {
       event.preventDefault();
       press('show');
@@ -174,23 +196,61 @@
 <section class="study">
   <header class="top">
     <div class="modes">
-      <Segmented
-        label="Study mode"
-        value={mode}
-        onchange={(m) => (mode = m)}
-        options={[
-          { value: 'recognize', label: '認字', lang: 'zh-Hant-TW' },
-          { value: 'recall', label: '回想', lang: 'zh-Hant-TW' },
-          { value: 'listen', label: '聽力', lang: 'zh-Hant-TW' },
-        ]}
-      />
-      <span class="mode-hint">
-        {mode === 'recognize'
-          ? 'See the word, recall the meaning'
-          : mode === 'recall'
-            ? 'See the meaning, recall the word'
-            : 'Hear the word, recall it'}
-      </span>
+      <!-- Phones: one chip opens a menu, away from the card's tap target. -->
+      <div class="mode-pick">
+        <button
+          type="button"
+          class="chip mode-chip"
+          aria-haspopup="menu"
+          aria-expanded={modeOpen}
+          aria-label="Study mode: {MODE_INFO[mode].en}"
+          onclick={() => (modeOpen = !modeOpen)}
+        >
+          <span class="hanzi" lang="zh-Hant-TW">{MODE_INFO[mode].zh}</span>
+          {MODE_INFO[mode].en}
+          <svg class="chevron down" viewBox="0 0 8 14" aria-hidden="true"
+            ><path d="M1 5l3 3 3-3" /></svg
+          >
+        </button>
+        {#if modeOpen}
+          <button
+            type="button"
+            class="mode-scrim"
+            aria-label="Close"
+            onclick={() => (modeOpen = false)}
+          ></button>
+          <div class="mode-menu sheet" role="menu" aria-label="Study mode" in:rise={{ y: -6 }}>
+            {#each MODES as m (m)}
+              <button
+                type="button"
+                class="mode-item"
+                role="menuitemradio"
+                aria-checked={mode === m}
+                onclick={() => pickMode(m)}
+              >
+                <span class="mode-zh hanzi" lang="zh-Hant-TW">{MODE_INFO[m].zh}</span>
+                <span class="mode-en">{MODE_INFO[m].en}<small>{MODE_INFO[m].hint}</small></span>
+                {#if mode === m}<Icon name="check" size={18} />{/if}
+              </button>
+            {/each}
+          </div>
+        {/if}
+      </div>
+      <!-- Tablets and desktops: the control inline. -->
+      <div class="mode-inline">
+        <Segmented
+          label="Study mode"
+          value={mode}
+          onchange={pickMode}
+          options={MODES.map((m) => ({
+            value: m,
+            label: MODE_INFO[m].zh,
+            sub: MODE_INFO[m].en,
+            lang: 'zh-Hant-TW',
+          }))}
+        />
+      </div>
+      <span class="mode-hint">{MODE_INFO[mode].hint}</span>
     </div>
     {#if word}
       <div class="counters">
@@ -230,6 +290,10 @@
             {#if isNew}<span class="new">New</span>{/if}
             {#if level}<span class="level-tag">{level.en}</span>{/if}
             {#if word.tw}<span class="badge-tw" lang="zh-Hant-TW">臺灣</span>{/if}
+            <span class="level-tag mode-tag {mode}" title={MODE_INFO[mode].hint}>
+              <span class="hanzi" lang="zh-Hant-TW">{MODE_INFO[mode].zh}</span>
+              {MODE_INFO[mode].en}
+            </span>
           </div>
 
           <div class="face">
@@ -238,6 +302,7 @@
               {#if word.cl}<p class="prompt-sub">
                   measure word <span class="hanzi" lang="zh-Hant-TW">{word.cl}</span>
                 </p>{/if}
+              <p class="prompt-sub tap">Tap to see the word</p>
             {:else if mode === 'listen' && !store.revealed}
               <button
                 type="button"
@@ -340,6 +405,7 @@
           class="btn primary show"
           class:pressed={pressed === 'show'}
           aria-keyshortcuts="Space"
+          disabled={cooling}
           onclick={reveal}
         >
           Show answer <kbd class="key">Space</kbd>
@@ -358,18 +424,19 @@
 </section>
 
 <style>
+  /* Room for the fixed tab bar at the bottom (like .page), or a long answer would end under it. */
   .study {
     display: flex;
     flex-direction: column;
     max-width: calc(680px + 2 * var(--gutter));
-    min-height: calc(100dvh - var(--tabbar-h) - var(--safe-bottom));
+    min-height: 100dvh;
     margin: 0 auto;
-    padding: calc(var(--safe-top) + 14px) var(--gutter) 16px;
+    padding: calc(var(--safe-top) + 14px) var(--gutter)
+      calc(var(--tabbar-h) + var(--safe-bottom) + 12px);
   }
 
   @media (min-width: 700px) {
     .study {
-      min-height: 100dvh;
       padding-top: 28px;
       padding-bottom: 28px;
     }
@@ -384,24 +451,123 @@
 
   .modes {
     display: flex;
-    align-items: center;
-    gap: 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
     min-width: 0;
   }
 
+  .mode-inline {
+    display: none;
+  }
+
   .modes :global(.segmented) {
-    width: 220px;
+    width: 270px;
   }
 
   .mode-hint {
     font-size: 13px;
+    line-height: 1.3;
     color: var(--ink-3);
   }
 
-  @media (max-width: 640px) {
-    .mode-hint {
+  @media (min-width: 700px) {
+    .modes {
+      flex-direction: row;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .mode-pick {
       display: none;
     }
+
+    .mode-inline {
+      display: block;
+    }
+  }
+
+  /* The phone's mode menu */
+  .mode-pick {
+    position: relative;
+  }
+
+  .mode-chip {
+    gap: 6px;
+    font-weight: 700;
+  }
+
+  .mode-chip .hanzi {
+    font-size: 16px;
+  }
+
+  .mode-chip .chevron {
+    width: 8px;
+    height: 14px;
+    margin-left: 2px;
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+
+  .mode-chip[aria-expanded='true'] .chevron {
+    transform: rotate(180deg);
+  }
+
+  .mode-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 29;
+    cursor: default;
+  }
+
+  .mode-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 30;
+    width: min(300px, calc(100vw - 2 * var(--gutter)));
+    padding: 6px;
+    box-shadow: var(--shadow-3);
+  }
+
+  .mode-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 54px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    text-align: left;
+    color: var(--ink);
+  }
+
+  .mode-item[aria-checked='true'] {
+    background: var(--jade-wash);
+    color: var(--jade-text);
+  }
+
+  .mode-item:active {
+    background: var(--fill);
+  }
+
+  .mode-zh {
+    font-size: 20px;
+    flex: none;
+  }
+
+  .mode-en {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .mode-en small {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-3);
   }
 
   .counters {
@@ -522,8 +688,29 @@
   .meta {
     align-self: stretch;
     display: flex;
+    align-items: center;
     gap: 6px;
     min-height: 22px;
+  }
+
+  /* Which mode the card is in, so an English front is never a surprise. */
+  .mode-tag {
+    margin-left: auto;
+    gap: 4px;
+  }
+
+  .mode-tag .hanzi {
+    font-size: 13px;
+  }
+
+  .mode-tag.recall {
+    background: var(--sky-wash);
+    color: var(--sky-text);
+  }
+
+  .mode-tag.listen {
+    background: var(--jade-wash);
+    color: var(--jade-text);
   }
 
   .new {
@@ -564,6 +751,10 @@
     margin: 10px 0 0;
     color: var(--ink-2);
     font-size: 14px;
+  }
+
+  .prompt-sub.tap {
+    color: var(--ink-3);
   }
 
   .listen {
@@ -668,9 +859,21 @@
     transform: scale(0.9);
   }
 
+  /* Sticks above the tab bar while a long answer scrolls, so the grades are always in reach. */
   .controls {
+    position: sticky;
+    bottom: calc(var(--tabbar-h) + var(--safe-bottom));
+    z-index: 2;
     min-height: 92px;
-    padding-top: 18px;
+    margin: 0 calc(-1 * var(--gutter));
+    padding: 18px var(--gutter) 8px;
+    background: linear-gradient(to bottom, transparent, var(--paper) 20px);
+  }
+
+  @media (min-width: 700px) {
+    .controls {
+      bottom: 0;
+    }
   }
 
   .show {
