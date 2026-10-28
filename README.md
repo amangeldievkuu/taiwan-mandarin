@@ -34,10 +34,11 @@ flowchart LR
   SHARED[packages/shared<br/>phonetics, segmentation, guard,<br/>stats, pitch & tones, API contract] -.-> PIPE & WEB & API
 ```
 
-On a phone the app has a bottom tab bar. On an iPad it becomes an icon rail with split views (word
+On a phone the app has a bottom tab bar with six tabs (Today, Study, Talk, Read, Dictionary, Me)
+that steps aside while the keyboard is up. On an iPad it becomes an icon rail with split views (word
 list beside details, the reading text beside the dictionary panel). On a desktop it becomes a
 labelled sidebar with keyboard shortcuts: `Space` reveals, `1`–`4` rate, `r` replays audio, `/`
-opens search, and `g` then `t`/`s`/`p`/`r`/`d`/`m` navigates. Me holds progress and leads to the
+opens search, and `g` then `t`/`s`/`p`/`c`/`r`/`d`/`m` navigates (`c` for conversation). Me holds progress and leads to the
 account, settings, garden, levels and about pages. A first visit lands on `/welcome`, where 墨 the
 ink bot walks the TOCFL road as the page scrolls (and sits down for tea when it stops).
 

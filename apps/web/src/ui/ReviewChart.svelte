@@ -109,21 +109,24 @@
     </div>
   {/if}
 
-  <table class="visually-hidden">
-    <caption>Reviews per day</caption>
-    <thead
-      ><tr><th>Day</th><th>Total</th><th>Again</th><th>Hard</th><th>Good</th><th>Easy</th></tr
-      ></thead
-    >
-    <tbody>
-      {#each days as d (d.date)}
-        <tr
-          ><td>{d.date}</td><td>{d.total}</td><td>{d.again}</td><td>{d.hard}</td><td>{d.good}</td
-          ><td>{d.easy}</td></tr
-        >
-      {/each}
-    </tbody>
-  </table>
+  <!-- A table ignores width: 1px, so a clipping box holds it (it widened phone pages). -->
+  <div class="visually-hidden">
+    <table>
+      <caption>Reviews per day</caption>
+      <thead
+        ><tr><th>Day</th><th>Total</th><th>Again</th><th>Hard</th><th>Good</th><th>Easy</th></tr
+        ></thead
+      >
+      <tbody>
+        {#each days as d (d.date)}
+          <tr
+            ><td>{d.date}</td><td>{d.total}</td><td>{d.again}</td><td>{d.hard}</td><td>{d.good}</td
+            ><td>{d.easy}</td></tr
+          >
+        {/each}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <style>

@@ -1,7 +1,9 @@
 <script lang="ts">
   // One navigation, three shapes: a bottom tab bar on phones, an icon rail on tablets and a
   // labeled sidebar on desktops (see app.css breakpoints). A jade highlight slides to the current
-  // page; the navigation stays put while pages transition.
+  // page; the navigation stays put while pages transition. On a phone the tab bar steps aside
+  // while the keyboard is up, so it never sits on top of what is being typed.
+  import { onMount } from 'svelte';
   import Icon, { type IconName } from './Icon.svelte';
   import Seal from './Seal.svelte';
   import { ME_ROUTES, router, type RouteName } from '../lib/router.svelte';
@@ -14,7 +16,7 @@
     en: string;
     /** Routes that highlight this item. */
     match: RouteName[];
-    /** Shown in the phone tab bar (5 fit comfortably). */
+    /** Shown in the phone tab bar (six fit, down to a 320px screen). */
     phone: boolean;
   }
 
@@ -29,9 +31,9 @@
       match: ['path', 'level', 'word'],
       phone: false,
     },
+    { path: '/talk', icon: 'talk', zh: '對話', en: 'Talk', match: ['talk'], phone: true },
     { path: '/read', icon: 'read', zh: '閱讀', en: 'Read', match: ['read', 'reader'], phone: true },
     { path: '/dict', icon: 'dict', zh: '字典', en: 'Dictionary', match: ['dict'], phone: true },
-    { path: '/talk', icon: 'talk', zh: '對話', en: 'Talk', match: ['talk'], phone: false },
     { path: '/me', icon: 'me', zh: '我', en: 'Me', match: ME_ROUTES, phone: true },
   ];
   const PHONE = ITEMS.filter((i) => i.phone);
@@ -40,9 +42,46 @@
   const railIndex = $derived(ITEMS.findIndex(active));
   const phoneIndex = $derived(PHONE.findIndex(active));
   const due = $derived(store.dueCount);
+
+  // Typing on a phone: <html data-typing> takes the tab bar away (app.css sets --tabbar-h to 0,
+  // so everything docked above it drops down too) until the field loses focus.
+  onMount(() => {
+    const root = document.documentElement;
+    const phone = matchMedia('(max-width: 699px)');
+    const typing = (el: EventTarget | null) =>
+      el instanceof HTMLElement &&
+      (el.isContentEditable ||
+        el instanceof HTMLTextAreaElement ||
+        (el instanceof HTMLInputElement &&
+          !['button', 'checkbox', 'radio', 'range', 'submit', 'reset', 'file', 'color'].includes(
+            el.type,
+          )));
+    const update = () => {
+      if (phone.matches && typing(document.activeElement)) root.dataset['typing'] = '';
+      else delete root.dataset['typing'];
+    };
+    // focusout fires before the next field's focusin: wait a tick so moving between fields
+    // doesn't flash the bar.
+    const later = () => setTimeout(update, 0);
+    document.addEventListener('focusin', update);
+    document.addEventListener('focusout', later);
+    phone.addEventListener('change', update);
+    return () => {
+      document.removeEventListener('focusin', update);
+      document.removeEventListener('focusout', later);
+      phone.removeEventListener('change', update);
+      delete root.dataset['typing'];
+    };
+  });
 </script>
 
-<nav class="nav" aria-label="Main" style:--rail-i={railIndex} style:--phone-i={phoneIndex}>
+<nav
+  class="nav"
+  aria-label="Main"
+  style:--rail-i={railIndex}
+  style:--phone-i={phoneIndex}
+  style:--phone-n={PHONE.length}
+>
   <a class="brand" href={router.href('/')} onclick={router.link} aria-label="臺灣華語 home">
     <Seal text="華" size={38} />
     <span class="brand-text">
@@ -98,6 +137,20 @@
     -webkit-backdrop-filter: saturate(160%) blur(18px);
     border-top: 1px solid var(--rule);
     view-transition-name: nav;
+    transition:
+      opacity var(--dur-1) var(--ease-out),
+      visibility 0s;
+  }
+
+  /* Typing: --tabbar-h is 0 then (app.css), so the bar has no height to slide by; it fades out
+     and is hidden, and comes back the moment the field is left. */
+  :global(:root[data-typing]) .nav {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity var(--dur-1) var(--ease-out),
+      visibility 0s var(--dur-1);
   }
 
   .brand {
@@ -127,7 +180,7 @@
     position: absolute;
     top: 7px;
     left: 0;
-    width: 20%;
+    width: calc(100% / var(--phone-n));
     height: 32px;
     pointer-events: none;
     transform: translateX(calc(var(--phone-i) * 100%));
@@ -140,7 +193,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    width: 58px;
+    width: min(56px, calc(100% - 6px));
     margin: 0 auto;
     border-radius: var(--radius-pill);
     background: var(--jade-wash);

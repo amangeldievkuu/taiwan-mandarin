@@ -79,7 +79,7 @@
     }
   });
 
-  // Keyboard navigation (desktop): g then t/s/p/r/d/m.
+  // Keyboard navigation (desktop): g then t/s/p/c/r/d/m.
   let pendingG = false;
   function onKey(e: KeyboardEvent) {
     const target = e.target as HTMLElement | null;
@@ -92,7 +92,15 @@
       return;
     if (pendingG) {
       pendingG = false;
-      const to = { t: '/', s: '/study', p: '/path', r: '/read', d: '/dict', m: '/me' }[e.key];
+      const to = {
+        t: '/',
+        s: '/study',
+        p: '/path',
+        c: '/talk',
+        r: '/read',
+        d: '/dict',
+        m: '/me',
+      }[e.key];
       if (to) {
         e.preventDefault();
         router.go(to);

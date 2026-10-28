@@ -262,6 +262,14 @@
   --font-hanzi: var(--font-ui);
 }
 
+/* Phone keyboard up (Nav sets data-typing): the tab bar steps aside, and everything docked above
+   it (the Talk composer, the study grades, page padding) drops to the bottom edge. */
+@media (max-width: 699px) {
+  :root[data-typing] {
+    --tabbar-h: 0px;
+  }
+}
+
 @media (min-width: 700px) {
   :root {
     --rail-w: 84px;
