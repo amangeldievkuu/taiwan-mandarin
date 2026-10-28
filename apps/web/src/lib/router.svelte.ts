@@ -100,15 +100,42 @@ function parse(url: URL): Route {
 export const viewKey = (route: Route): string =>
   route.name + (route.params['id'] ?? route.params['level'] ?? '');
 
+/**
+ * What each history entry of ours carries: the in-app page before it, so a back button knows
+ * where it leads (even after a reload) and never steps out of the app.
+ */
+interface EntryState {
+  tm: 1;
+  prev: string | null;
+}
+
+const isEntry = (state: unknown): state is EntryState =>
+  typeof state === 'object' && state !== null && (state as { tm?: unknown }).tm === 1;
+
+/** The current page as an in-app path (with its query). */
+const here = (): string => location.pathname.slice(base.length) + location.search || '/';
+
+interface GoOptions {
+  /** Replace this history entry instead of adding one (switching between siblings). */
+  replace?: boolean;
+  /** Animate the change (by default only for new entries). */
+  animate?: boolean;
+  /** Start the new page at the top (by default only for new entries). */
+  scrollTop?: boolean;
+}
+
 class Router {
   route = $state<Route>(parse(new URL(location.href)));
-  /** True after an in-app navigation, so "back" can use history instead of jumping home. */
-  private moved = false;
+  /** The in-app page before this one in history, or null when this is the first. */
+  prev = $state<string | null>(null);
   /** Latest navigation, so a slow transition never shows an older page over a newer one. */
   private seq = 0;
 
   constructor() {
+    if (isEntry(history.state)) this.prev = history.state.prev;
+    else history.replaceState({ tm: 1, prev: null } satisfies EntryState, '');
     addEventListener('popstate', (event) => {
+      this.prev = isEntry(event.state) ? event.state.prev : null;
       // A back swipe the browser already animated (iOS Safari) isn't animated twice.
       const animated = 'hasUAVisualTransition' in event && event.hasUAVisualTransition === true;
       this.show(parse(new URL(location.href)), !animated);
@@ -119,18 +146,41 @@ class Router {
     return base + path;
   }
 
-  go(path: string, options: { replace?: boolean } = {}): void {
-    const url = new URL(this.href(path), location.origin);
-    if (url.href === location.href) return;
-    if (options.replace) history.replaceState(null, '', url);
-    else history.pushState(null, '', url);
-    this.moved = true;
-    this.show(parse(url), !options.replace, !options.replace);
+  /** The route an in-app path leads to. */
+  resolve(path: string): Route {
+    return parse(new URL(this.href(path), location.origin));
   }
 
-  back(fallback = '/'): void {
-    if (this.moved && history.length > 1) history.back();
-    else this.go(fallback, { replace: true });
+  /** Where back goes: the page before this one, if it was ours. */
+  get previous(): Route | null {
+    return this.prev === null ? null : this.resolve(this.prev);
+  }
+
+  go(path: string, options: GoOptions = {}): void {
+    const url = new URL(this.href(path), location.origin);
+    if (url.href === location.href) {
+      // The page you are on (e.g. its tab tapped again): back to the top.
+      scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' });
+      return;
+    }
+    const { replace = false } = options;
+    if (replace) {
+      history.replaceState({ tm: 1, prev: this.prev } satisfies EntryState, '', url);
+    } else {
+      const prev = here();
+      history.pushState({ tm: 1, prev } satisfies EntryState, '', url);
+      this.prev = prev;
+    }
+    this.show(parse(url), options.animate ?? !replace, options.scrollTop ?? !replace);
+  }
+
+  /**
+   * Back to the page before, if it was ours; otherwise up to `parent` (a deep link, or the first
+   * page of the visit), replacing this entry so back doesn't bounce between the two.
+   */
+  back(parent = '/'): void {
+    if (this.prev !== null) history.back();
+    else this.go(parent, { replace: true, animate: true });
   }
 
   /** Click handler for <a href>: in-app navigation without a page load. */

@@ -77,7 +77,10 @@
     }
     if (s.crack && s.mendBy) {
       return s.mendBy === store.today
-        ? { title: 'Your plant needs water', body: 'Last day: study today and the crack turns to gold.' }
+        ? {
+            title: 'Your plant needs water',
+            body: 'Last day: study today and the crack turns to gold.',
+          }
         : {
             title: 'Your plant needs water',
             body: `Study by ${weekday(s.mendBy)} and the missed ${s.crack === 1 ? 'day turns' : 'days turn'} to gold.`,
@@ -189,7 +192,14 @@
     </div>
   </a>
 
-  <h2 class="section-title">Your path <span class="zh" lang="zh-Hant-TW">學習路徑</span></h2>
+  <h2 class="section-title">
+    <span>Your path <span class="zh" lang="zh-Hant-TW">學習路徑</span></span>
+    <a class="see-all" href={router.href('/path')} onclick={router.link}
+      >All levels <svg class="chevron" viewBox="0 0 8 14" aria-hidden="true"
+        ><path d="M1 1l6 6-6 6" /></svg
+      ></a
+    >
+  </h2>
   {#if current}
     <a
       class="level sheet pressable enter"
@@ -549,5 +559,21 @@
     from {
       transform: scale(0.5);
     }
+  }
+
+  .see-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    font-family: var(--font-ui);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--jade-text);
+    text-decoration: none;
+  }
+
+  .see-all .chevron {
+    stroke: currentColor;
   }
 </style>

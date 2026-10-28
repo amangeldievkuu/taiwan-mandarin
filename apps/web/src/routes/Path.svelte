@@ -16,6 +16,7 @@
 
 <script lang="ts">
   import { LEVEL_IDS, LEVELS } from '@taiwan-mandarin/shared';
+  import BackButton from '../ui/BackButton.svelte';
   import Icon from '../ui/Icon.svelte';
   import Seal from '../ui/Seal.svelte';
   import { content } from '../lib/content.svelte';
@@ -53,6 +54,7 @@
 <div class="page">
   <header class="page-head">
     <div>
+      <BackButton parent="/" optional />
       <p class="eyebrow">TOCFL · 華語文能力測驗</p>
       <h1 class="title"><span class="zh">路徑</span>Your path</h1>
     </div>

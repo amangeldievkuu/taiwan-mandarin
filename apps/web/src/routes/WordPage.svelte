@@ -1,10 +1,9 @@
 <script lang="ts">
   import Loading from '../ui/Loading.svelte';
   import type { Word } from '@taiwan-mandarin/shared';
-  import Icon from '../ui/Icon.svelte';
+  import BackButton from '../ui/BackButton.svelte';
   import WordDetail from '../ui/WordDetail.svelte';
   import { content } from '../lib/content.svelte';
-  import { router } from '../lib/router.svelte';
   import { store } from '../lib/store.svelte';
 
   interface Props {
@@ -42,13 +41,7 @@
 </script>
 
 <div class="page">
-  <button
-    type="button"
-    class="back"
-    onclick={() => router.back(word ? `/path/${word.level}` : '/path')}
-  >
-    <Icon name="back" size={18} /> Back
-  </button>
+  <BackButton parent={word ? `/path/${word.level}` : '/path'} />
   {#if word}
     <WordDetail {word} />
   {:else if missing}
@@ -61,15 +54,3 @@
     <Loading />
   {/if}
 </div>
-
-<style>
-  .back {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    margin-left: -6px;
-    padding: 6px;
-    color: var(--ink-2);
-    font-weight: 500;
-  }
-</style>

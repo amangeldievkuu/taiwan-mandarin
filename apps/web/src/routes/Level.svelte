@@ -10,6 +10,7 @@
     type TopicId,
     type Word,
   } from '@taiwan-mandarin/shared';
+  import BackButton from '../ui/BackButton.svelte';
   import Icon from '../ui/Icon.svelte';
   import Seal from '../ui/Seal.svelte';
   import WordDetail from '../ui/WordDetail.svelte';
@@ -102,14 +103,37 @@
   });
 
   const pinyinLine = (w: Word) => pinyinWord(w.pinyin);
+
+  // Moving between levels replaces this page in history, so back still returns to where the
+  // learner came from (Today, the path, a word) rather than through every level they looked at.
+  const index = $derived(LEVEL_IDS.indexOf(level));
+  const prevLevel = $derived(index > 0 ? LEVELS[index - 1] : undefined);
+  const nextLevel = $derived(index < LEVELS.length - 1 ? LEVELS[index + 1] : undefined);
+
+  function switchTo(event: MouseEvent, id: Level) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)
+      return;
+    event.preventDefault();
+    if (id === level) return;
+    router.go(`/path/${id}`, { replace: true, animate: true, scrollTop: true });
+  }
+
+  // The current level in view: centred in the strip, but only when it would be cut off.
+  let strip = $state<HTMLElement>();
+  $effect(() => {
+    const el = strip?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!strip || !el) return;
+    const box = strip.getBoundingClientRect();
+    const chip = el.getBoundingClientRect();
+    if (chip.left >= box.left && chip.right <= box.right) return;
+    strip.scrollLeft += chip.left - box.left - (box.width - chip.width) / 2;
+  });
 </script>
 
 <div class="page wide">
+  <BackButton parent="/path" />
   <header class="page-head">
     <div class="head">
-      <a class="back" href={router.href('/path')} onclick={router.link} aria-label="Back to path"
-        ><Icon name="back" /></a
-      >
       <Seal text={LEVEL_SEAL[level]} size={48} />
       <div>
         <p class="eyebrow">{info.cefr} · <span lang="zh-Hant-TW">{info.zh}</span></p>
@@ -130,6 +154,26 @@
       {store.settings.levels.includes(level) ? 'Studying' : 'Study this level'}
     </button>
   </header>
+
+  <nav class="levels" aria-label="Levels" bind:this={strip}>
+    <a class="lv all" href={router.href('/path')} onclick={router.link}>
+      <Icon name="path" size={18} />
+      <span>All levels</span>
+    </a>
+    {#each LEVELS as l (l.id)}
+      {@const studying = store.settings.levels.includes(l.id)}
+      <a
+        class="lv"
+        class:current={l.id === level}
+        aria-current={l.id === level ? 'page' : undefined}
+        href={router.href(`/path/${l.id}`)}
+        onclick={(e) => switchTo(e, l.id)}
+      >
+        <Seal text={LEVEL_SEAL[l.id]} size={26} outline={!studying} />
+        <span>{l.en}</span>
+      </a>
+    {/each}
+  </nav>
 
   <div class="tools">
     <label class="search">
@@ -221,6 +265,30 @@
         </ul>
         {#if shown.length < filtered.length}<div bind:this={sentinel} class="sentinel"></div>{/if}
       {/if}
+      {#if shown.length >= filtered.length}
+        <nav class="pager" aria-label="Neighbouring levels">
+          {#if prevLevel}
+            <a
+              class="pager-link sheet pressable"
+              href={router.href(`/path/${prevLevel.id}`)}
+              onclick={(e) => switchTo(e, prevLevel.id)}
+            >
+              <Icon name="back" />
+              <span><small>Previous level</small><strong>{prevLevel.en}</strong></span>
+            </a>
+          {/if}
+          {#if nextLevel}
+            <a
+              class="pager-link next sheet pressable"
+              href={router.href(`/path/${nextLevel.id}`)}
+              onclick={(e) => switchTo(e, nextLevel.id)}
+            >
+              <span><small>Next level</small><strong>{nextLevel.en}</strong></span>
+              <Icon name="forward" />
+            </a>
+          {/if}
+        </nav>
+      {/if}
     </div>
     {#if wide && selectedWord}
       <aside class="detail-col sheet">
@@ -239,14 +307,117 @@
     gap: 14px;
   }
 
-  .back {
-    display: grid;
-    place-items: center;
-    width: 40px;
-    height: 40px;
-    margin-left: -8px;
-    border-radius: 50%;
+  /* Every level, one tap away; the current one is filled in. */
+  .levels {
+    display: flex;
+    gap: 8px;
+    margin: -8px calc(-1 * var(--gutter)) 18px;
+    padding: 4px var(--gutter) 8px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .levels::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Wide screens have room for every level: they wrap instead of scrolling. */
+  @media (min-width: 900px) {
+    .levels {
+      flex-wrap: wrap;
+      margin: -8px 0 18px;
+      padding: 4px 0 8px;
+      overflow: visible;
+    }
+  }
+
+  .lv {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 14px 0 8px;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-pill);
+    background: var(--paper-raised);
     color: var(--ink-2);
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-decoration: none;
+    scroll-snap-align: center;
+    transition:
+      background-color var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      color var(--dur) var(--ease);
+  }
+
+  .lv.all {
+    padding-left: 12px;
+    color: var(--jade-text);
+  }
+
+  .lv.current {
+    border-color: var(--jade);
+    background: var(--jade-wash);
+    color: var(--jade-text);
+  }
+
+  @media (hover: hover) {
+    .lv:not(.current):hover {
+      border-color: var(--ink-3);
+      color: var(--ink);
+    }
+  }
+
+  .lv:active {
+    transform: scale(0.97);
+  }
+
+  /* After the last word: on to the next level, or back to the previous one. */
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .pager-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 64px;
+    padding: 10px 14px;
+    text-decoration: none;
+    color: var(--ink);
+  }
+
+  .pager-link.next {
+    grid-column: 2;
+    justify-content: flex-end;
+    text-align: right;
+  }
+
+  .pager-link span {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .pager-link small {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-3);
+  }
+
+  .pager-link strong {
+    font-size: 16px;
+  }
+
+  .pager-link :global(.icon) {
+    color: var(--jade-text);
   }
 
   .tools {

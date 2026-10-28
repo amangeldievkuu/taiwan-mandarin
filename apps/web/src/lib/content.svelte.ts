@@ -41,6 +41,7 @@ class Content {
   private pending = new Map<Level, Promise<void>>();
   private shards = new Map<number, Promise<DictShard>>();
   private readersPromise: Promise<Reader[]> | undefined;
+  private readerList = $state.raw<Reader[] | null>(null);
   private searchPromise: Promise<SearchRow[]> | undefined;
 
   async init(): Promise<ContentManifest> {
@@ -170,8 +171,16 @@ class Content {
 
   readers(): Promise<Reader[]> {
     this.readersPromise ??= this.init().then((m) => getJson<Reader[]>('content/readers.json', m));
-    this.readersPromise.catch(() => (this.readersPromise = undefined));
+    this.readersPromise.then(
+      (list) => (this.readerList = list),
+      () => (this.readersPromise = undefined),
+    );
     return this.readersPromise;
+  }
+
+  /** A reader's title, once the readers have loaded (for back buttons). */
+  readerTitle(id: string): string | undefined {
+    return this.readerList?.find((r) => r.id === id)?.title;
   }
 }
 

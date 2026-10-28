@@ -39,7 +39,9 @@ that steps aside while the keyboard is up. On an iPad it becomes an icon rail wi
 list beside details, the reading text beside the dictionary panel). On a desktop it becomes a
 labelled sidebar with keyboard shortcuts: `Space` reveals, `1`–`4` rate, `r` replays audio, `/`
 opens search, and `g` then `t`/`s`/`p`/`c`/`r`/`d`/`m` navigates (`c` for conversation). Me holds progress and leads to the
-account, settings, garden, levels and about pages. A first visit lands on `/welcome`, where 墨 the
+account, settings, garden, levels and about pages. Every back button names where it goes (back to
+the page you came from, or up to the parent after a deep link), and a level page can switch to any
+other level without leaving it. A first visit lands on `/welcome`, where 墨 the
 ink bot walks the TOCFL road as the page scrolls (and sits down for tea when it stops).
 
 ## Layout

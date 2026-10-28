@@ -1,4 +1,5 @@
 <script lang="ts">
+  import BackButton from '../ui/BackButton.svelte';
   import Loading from '../ui/Loading.svelte';
   import {
     LEVELS,
@@ -10,7 +11,6 @@
   import Icon from '../ui/Icon.svelte';
   import { content } from '../lib/content.svelte';
   import { lookup } from '../lib/lookup.svelte';
-  import { router } from '../lib/router.svelte';
   import { canSpeak, speak, stopSpeaking } from '../lib/speech';
   import { store } from '../lib/store.svelte';
 
@@ -87,9 +87,7 @@
 </script>
 
 <div class="page">
-  <button type="button" class="back" onclick={() => router.back('/read')}
-    ><Icon name="back" size={18} /> Readers</button
-  >
+  <BackButton parent="/read" />
 
   {#if reader}
     <header class="head">
@@ -176,16 +174,6 @@
 </div>
 
 <style>
-  .back {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    margin-left: -6px;
-    padding: 6px;
-    color: var(--ink-2);
-    font-weight: 500;
-  }
-
   .head {
     margin: 10px 0 24px;
   }

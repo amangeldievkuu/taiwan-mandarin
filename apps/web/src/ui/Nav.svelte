@@ -41,6 +41,23 @@
   const active = (item: Item) => item.match.includes(router.route.name);
   const railIndex = $derived(ITEMS.findIndex(active));
   const phoneIndex = $derived(PHONE.findIndex(active));
+
+  // Pages without a phone tab (the path, a level, a word) stay under the tab they were reached
+  // from, like a stack in that tab; reached directly, the path and its levels belong to Today.
+  const TODAY = PHONE.findIndex((i) => i.path === '/');
+  let section = $state(-1);
+  $effect(() => {
+    if (phoneIndex >= 0) section = phoneIndex;
+  });
+  const phoneShown = $derived(
+    phoneIndex >= 0
+      ? phoneIndex
+      : section >= 0
+        ? section
+        : ['path', 'level'].includes(router.route.name)
+          ? TODAY
+          : -1,
+  );
   const due = $derived(store.dueCount);
 
   // Typing on a phone: <html data-typing> takes the tab bar away (app.css sets --tabbar-h to 0,
@@ -79,7 +96,7 @@
   class="nav"
   aria-label="Main"
   style:--rail-i={railIndex}
-  style:--phone-i={phoneIndex}
+  style:--phone-i={phoneShown}
   style:--phone-n={PHONE.length}
 >
   <a class="brand" href={router.href('/')} onclick={router.link} aria-label="臺灣華語 home">
@@ -93,7 +110,7 @@
   <ul>
     <li
       class="indicator"
-      class:off-phone={phoneIndex < 0}
+      class:off-phone={phoneShown < 0}
       class:off-rail={railIndex < 0}
       aria-hidden="true"
     ></li>
@@ -103,6 +120,7 @@
           href={router.href(item.path)}
           onclick={router.link}
           class:active={active(item)}
+          class:section={phoneIndex < 0 && item.phone && PHONE.indexOf(item) === phoneShown}
           aria-current={active(item) ? 'page' : undefined}
           title={item.en}
         >
@@ -217,7 +235,8 @@
     transition: color var(--dur) var(--ease);
   }
 
-  a.active {
+  a.active,
+  a.section {
     color: var(--jade-text);
   }
 
@@ -304,6 +323,10 @@
 
     .item:not(.phone) {
       display: block;
+    }
+
+    a.section:not(.active) {
+      color: var(--ink-3);
     }
 
     a {
