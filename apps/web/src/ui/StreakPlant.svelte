@@ -23,15 +23,61 @@
     fresh?: Seam | null;
     size?: number;
     label?: string;
+    /** Sway in the breeze and, with flowers out, let petals drift down. For a plant shown on its
+        own; a garden of them stays still. */
+    lively?: boolean;
   }
 
-  let { bowl, crack = 0, fresh = null, size = 120, label }: Props = $props();
+  let { bowl, crack = 0, fresh = null, size = 120, label, lively = false }: Props = $props();
   const id = $props.id();
   const plant = $derived(plantShape(bowl?.start ?? '', bowl?.days ?? 0));
   const inBloom = $derived((bowl?.days ?? 0) >= 100);
   const seams = $derived(bowl ? visibleSeams(bowl) : []);
   const crackSeed = $derived(bowl ? `crack:${bowl.end}` : '');
-  const PETALS = [0, 72, 144, 216, 288].map((a) => (a * Math.PI) / 180);
+  const PETALS = [0, 72, 144, 216, 288];
+  const STAMENS = Array.from({ length: 10 }, (_, i) => i * 36 + 18);
+  /** A rounded plum petal from the flower's heart, pointing up, 1 long. */
+  const PETAL = 'M0-.12C-.48-.22-.62-.78-.3-1-.12-1.1.12-1.1.3-1 .62-.78.48-.22 0-.12Z';
+  /** The dark red sepals that show between plum petals. */
+  const SEPAL = 'M0-.1C-.22-.2-.24-.52 0-.66.24-.52.22-.2 0-.1Z';
+  /** Moss tufts and a pebble round the foot of a tree. */
+  const MOSS = [
+    { cx: 51, cy: 71.9, rx: 4.6, ry: 1.5 },
+    { cx: 67, cy: 72.4, rx: 5.4, ry: 1.6 },
+    { cx: 74.5, cy: 72, rx: 2.6, ry: 1 },
+  ];
+
+  /** A soft pink glow behind the flowers. */
+  const haze = $derived.by(() => {
+    const flowers = plant.blossoms;
+    if (!flowers.length) return null;
+    const xs = flowers.map((f) => f.x);
+    const ys = flowers.map((f) => f.y);
+    return {
+      cx: xs.reduce((a, b) => a + b, 0) / xs.length,
+      cy: ys.reduce((a, b) => a + b, 0) / ys.length,
+      rx: Math.max(16, (Math.max(...xs) - Math.min(...xs)) / 2 + 12),
+      ry: Math.max(14, (Math.max(...ys) - Math.min(...ys)) / 2 + 12),
+    };
+  });
+  /** Petals that come loose from the first few flowers and drift down to the soil. */
+  const drift = $derived(
+    plant.blossoms.slice(0, 4).map((f, i) => ({
+      x: f.x,
+      y: f.y,
+      dx: -5 - i * 3,
+      dy: Math.max(6, SOIL.cy - f.y - 1),
+      dur: 5 + i * 0.8,
+      delay: i * 1.6,
+      turn: i * 70,
+    })),
+  );
+  /** Petals already fallen, lying on the soil. */
+  const FALLEN = [
+    { x: 47, y: 72.3, turn: 30 },
+    { x: 68, y: 72.9, turn: -50 },
+    { x: 74.5, y: 72.1, turn: 105 },
+  ];
 </script>
 
 <svg
@@ -55,9 +101,19 @@
       <stop offset="0.45" stop-color="#f2c14e" />
       <stop offset="1" stop-color="#b9831a" />
     </linearGradient>
-    <radialGradient id="{id}-petal">
-      <stop offset="0.2" stop-color="#fff7f9" />
-      <stop offset="1" stop-color="#f7c3d0" />
+    <!-- Plum petals: blushing pink at the heart, nearly white at the rim. -->
+    <linearGradient id="{id}-petal" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#f08aa5" />
+      <stop offset="0.5" stop-color="#fbd3de" />
+      <stop offset="1" stop-color="#fffafb" />
+    </linearGradient>
+    <radialGradient id="{id}-blush">
+      <stop offset="0" stop-color="#e2607e" stop-opacity="0.55" />
+      <stop offset="1" stop-color="#e2607e" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="{id}-haze">
+      <stop offset="0" stop-color="#ffc8d8" stop-opacity="0.7" />
+      <stop offset="1" stop-color="#ffc8d8" stop-opacity="0" />
     </radialGradient>
     <clipPath id="{id}-pot"><path d={POT_BODY} /></clipPath>
   </defs>
@@ -66,8 +122,20 @@
   <ellipse class="shadow" cx="60" cy="115" rx="26" ry="2.6" />
   <path class="pot" d={POT_BODY} fill="url(#{id}-glaze)" />
   <g clip-path="url(#{id}-pot)">
-    <rect class="rim-light" x={POT_RIM.x} y={POT_RIM.y} width={POT_RIM.width} height={POT_RIM.height} />
-    <rect class="rim-shade" x={POT_RIM.x} y={POT_RIM.y + POT_RIM.height} width={POT_RIM.width} height="3" />
+    <rect
+      class="rim-light"
+      x={POT_RIM.x}
+      y={POT_RIM.y}
+      width={POT_RIM.width}
+      height={POT_RIM.height}
+    />
+    <rect
+      class="rim-shade"
+      x={POT_RIM.x}
+      y={POT_RIM.y + POT_RIM.height}
+      width={POT_RIM.width}
+      height="3"
+    />
     <ellipse class="shine" cx="43" cy="97" rx="2.6" ry="10" />
     {#each seams as seam (seamKey(seam))}
       {@const d = seamPath(seamKey(seam), seam.days)}
@@ -87,49 +155,115 @@
   {#if bowl}
     {#key bowl.start}
       <g class="plant">
-        {#each plant.stems as stem, i (i)}
-          <path class="stem" class:woody={plant.woody} d={stem.d} stroke-width={stem.width} />
-        {/each}
-        {#each plant.leaves as leaf, i (i)}
-          <g transform="translate({leaf.x} {leaf.y}) rotate({leaf.angle})">
-            <g class="leaf tone-{leaf.tone}" style:--droop="{leaf.droop}deg">
-              <path d={leafPath(leaf.size)} />
-              <path class="vein" d="M0.8 0 L{leaf.size * 0.82} 0" />
+        <g class="sway" class:lively>
+          {#if haze}
+            <ellipse
+              class="haze"
+              cx={haze.cx}
+              cy={haze.cy}
+              rx={haze.rx}
+              ry={haze.ry}
+              fill="url(#{id}-haze)"
+              opacity={inBloom ? 1 : 0.55}
+            />
+          {/if}
+          {#each [...plant.stems, ...plant.shoots] as stem, i (i)}
+            {#if stem.outline}
+              <!-- Wood: a tapering limb, dark at the edge, catching the light along one side. -->
+              <path class="bark" d={stem.outline} />
+              <path
+                class="bark-light"
+                d={stem.d}
+                stroke-width={stem.width * 0.28}
+                transform="translate(-{stem.width * 0.18} 0)"
+              />
+            {:else}
+              <path class="stem" d={stem.d} stroke-width={stem.width} />
+            {/if}
+          {/each}
+          {#each plant.leaves as leaf, i (i)}
+            <g transform="translate({leaf.x} {leaf.y}) rotate({leaf.angle})">
+              <g class="leaf tone-{leaf.tone}" style:--droop="{leaf.droop}deg">
+                <path d={leafPath(leaf.size)} />
+                <path class="vein" d="M0.8 0 L{leaf.size * 0.82} 0" />
+              </g>
             </g>
-          </g>
-        {/each}
-        {#each plant.buds as bud, i (i)}
-          <g class="bud" transform="translate({bud.x} {bud.y}) rotate({bud.angle + 90})">
-            <ellipse class="calyx" cx="0" cy="1.2" rx="1.5" ry="1.1" />
-            <ellipse class="bud-body" cx="0" cy="-0.6" rx="1.8" ry="2.4" />
-          </g>
-        {/each}
-        {#each plant.blossoms as flower, i (i)}
-          <g class="blossom" transform="translate({flower.x} {flower.y}) rotate({flower.turn})">
-            {#each PETALS as a, p (p)}
-              <circle
+          {/each}
+          {#each plant.buds as bud, i (i)}
+            <g class="bud" transform="translate({bud.x} {bud.y}) rotate({bud.angle + 90})">
+              <ellipse class="calyx" cx="0" cy="1.2" rx="1.5" ry="1.1" />
+              <ellipse class="bud-body" cx="0" cy="-0.6" rx="1.8" ry="2.4" />
+              <ellipse class="bud-light" cx="-0.6" cy="-1.4" rx="0.5" ry="0.9" />
+            </g>
+          {/each}
+          {#each plant.blossoms as flower, i (i)}
+            <g
+              class="blossom"
+              transform="translate({flower.x} {flower.y}) rotate({flower.turn}) scale({flower.size *
+                0.95})"
+            >
+              {#each PETALS as a (a)}
+                <path class="sepal" d={SEPAL} transform="rotate({a + 36})" />
+              {/each}
+              {#each PETALS as a (a)}
+                <path class="petal" d={PETAL} transform="rotate({a})" fill="url(#{id}-petal)" />
+              {/each}
+              <circle r="0.46" fill="url(#{id}-blush)" />
+              {#each STAMENS as a (a)}
+                <g transform="rotate({a})">
+                  <path class="filament" d="M0-.16V-.5" />
+                  <circle class="anther" cy="-.54" r=".055" />
+                </g>
+              {/each}
+              <circle class="heart" r="0.17" style:fill={inBloom ? `url(#${id}-gold)` : null} />
+            </g>
+          {/each}
+        </g>
+
+        {#if plant.woody}
+          {#each MOSS as m, i (i)}
+            <ellipse class="moss" cx={m.cx} cy={m.cy} rx={m.rx} ry={m.ry} />
+            <ellipse
+              class="moss-light"
+              cx={m.cx - m.rx * 0.2}
+              cy={m.cy - m.ry * 0.35}
+              rx={m.rx * 0.55}
+              ry={m.ry * 0.45}
+            />
+          {/each}
+          <ellipse class="pebble" cx="44.5" cy="72.1" rx="2" ry="1.2" />
+        {/if}
+
+        {#if inBloom}
+          {#each FALLEN as f, i (i)}
+            <path
+              class="petal fallen"
+              d={PETAL}
+              transform="translate({f.x} {f.y}) scale(1 0.55) rotate({f.turn}) scale(2.6)"
+              fill="url(#{id}-petal)"
+            />
+          {/each}
+        {/if}
+
+        {#if lively}
+          {#each drift as p, i (i)}
+            <g
+              class="drift"
+              style:transform-origin="{p.x}px {p.y}px"
+              style:--dx="{p.dx}px"
+              style:--dy="{p.dy}px"
+              style:animation-duration="{p.dur}s"
+              style:animation-delay="{p.delay}s"
+            >
+              <path
                 class="petal"
-                cx={Math.cos(a) * flower.size * 0.48}
-                cy={Math.sin(a) * flower.size * 0.48}
-                r={flower.size * 0.5}
+                d={PETAL}
+                transform="translate({p.x} {p.y}) rotate({p.turn}) scale(2.8)"
                 fill="url(#{id}-petal)"
               />
-            {/each}
-            <circle
-              class="heart"
-              r={flower.size * 0.24}
-              style:fill={inBloom ? `url(#${id}-gold)` : null}
-            />
-            {#each PETALS as a, p (p)}
-              <circle
-                class="stamen"
-                cx={Math.cos(a + 0.6) * flower.size * 0.36}
-                cy={Math.sin(a + 0.6) * flower.size * 0.36}
-                r="0.45"
-              />
-            {/each}
-          </g>
-        {/each}
+            </g>
+          {/each}
+        {/if}
       </g>
     {/key}
   {:else}
@@ -144,17 +278,23 @@
     overflow: visible;
     --stem: #4f9a5c;
     --bark: #6e4c38;
+    --bark-edge: #4a3125;
+    --bark-light: #a67f62;
     --leaf-0: #6dbb7a;
     --leaf-1: #3f8f5a;
   }
 
   :global(:root[data-theme='dark']) .plant-art {
     --bark: #a27c60;
+    --bark-edge: #6e4c38;
+    --bark-light: #d0ab8c;
   }
 
   @media (prefers-color-scheme: dark) {
     :global(:root:not([data-theme='light'])) .plant-art {
       --bark: #a27c60;
+      --bark-edge: #6e4c38;
+      --bark-light: #d0ab8c;
     }
   }
 
@@ -242,8 +382,37 @@
     stroke-linejoin: round;
   }
 
-  .stem.woody {
-    stroke: var(--bark);
+  .bark {
+    fill: var(--bark);
+    stroke: var(--bark-edge);
+    stroke-width: 0.4;
+    stroke-linejoin: round;
+  }
+
+  .bark-light {
+    fill: none;
+    stroke: var(--bark-light);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.55;
+  }
+
+  .sepal {
+    fill: #9b2c45;
+  }
+
+  .moss {
+    fill: #5f8f4e;
+  }
+
+  .moss-light {
+    fill: #8dbb73;
+  }
+
+  .pebble {
+    fill: #b9b2a6;
+    stroke: rgb(0 0 0 / 0.15);
+    stroke-width: 0.3;
   }
 
   .leaf {
@@ -273,17 +442,91 @@
     fill: #e2607e;
   }
 
+  .bud-light {
+    fill: rgb(255 255 255 / 0.45);
+  }
+
   .petal {
     stroke: #eba3b5;
-    stroke-width: 0.35;
+    stroke-width: 0.05;
+  }
+
+  .fallen {
+    opacity: 0.85;
+  }
+
+  /* Plum blossom's fine stamens, fanned out with gold tips. */
+  .filament {
+    fill: none;
+    stroke: #d9718f;
+    stroke-width: 0.035;
+    stroke-linecap: round;
+  }
+
+  .anther {
+    fill: #e9b23c;
   }
 
   .heart {
     fill: #e2607e;
   }
 
-  .stamen {
-    fill: #e9b23c;
+  .haze {
+    filter: blur(2px);
+  }
+
+  /* Lively: the tree sways from the soil, and petals come loose and drift down. */
+  .sway {
+    transform-box: view-box;
+    transform-origin: 60px 72px;
+  }
+
+  .sway.lively {
+    animation: sway 6s ease-in-out infinite alternate;
+  }
+
+  @keyframes sway {
+    from {
+      rotate: -1.4deg;
+    }
+    to {
+      rotate: 1.4deg;
+    }
+  }
+
+  .drift {
+    opacity: 0;
+    animation: fall ease-in-out infinite;
+  }
+
+  @keyframes fall {
+    0% {
+      opacity: 0;
+      translate: 0 0;
+      rotate: 0deg;
+    }
+    12% {
+      opacity: 0.95;
+    }
+    50% {
+      translate: calc(var(--dx) * 0.4 + 3px) calc(var(--dy) * 0.5);
+      rotate: 150deg;
+    }
+    85% {
+      opacity: 0.8;
+    }
+    100% {
+      opacity: 0;
+      translate: var(--dx) var(--dy);
+      rotate: 300deg;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sway.lively,
+    .drift {
+      animation: none;
+    }
   }
 
   /* Needs water: days missed that can still be mended. The leaves droop and the colour fades

@@ -74,8 +74,11 @@ interface Point {
 }
 
 export interface Stem {
+  /** The centre line. */
   d: string;
   width: number;
+  /** For wood: the filled outline of the limb, tapering from base to tip. */
+  outline?: string;
 }
 
 export interface Leaf extends Point {
@@ -98,6 +101,8 @@ export interface Blossom extends Point {
 
 export interface Plant {
   woody: boolean;
+  /** Thin straight shoots off the branches, as plum trees put up in winter. */
+  shoots: Stem[];
   stems: Stem[];
   leaves: Leaf[];
   buds: Bud[];
@@ -107,6 +112,7 @@ export interface Plant {
 const MAX_BRANCHES = 5;
 const MAX_LEAVES = 18;
 const MAX_FLOWERS = 16;
+const SHOOT_FLOWERS = 3;
 
 const point = (p: Point) => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
 const along = (a: Point, b: Point, t: number): Point => ({
@@ -114,6 +120,45 @@ const along = (a: Point, b: Point, t: number): Point => ({
   y: a.y + (b.y - a.y) * t,
 });
 const heading = (a: Point, b: Point) => (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
+
+/** The outline of a limb along `pts`, `from` wide at the base narrowing to `to` at a rounded
+    tip, so wood reads as wood rather than a line of one width. */
+export function taper(pts: Point[], from: number, to: number): string {
+  let run = 0;
+  const lengths = pts.map((p, i) => {
+    const prev = pts[i - 1];
+    if (prev) run += Math.hypot(p.x - prev.x, p.y - prev.y);
+    return run;
+  });
+  const total = run || 1;
+  const unit = (a: Point, b: Point): Point => {
+    const l = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+    return { x: -(b.y - a.y) / l, y: (b.x - a.x) / l };
+  };
+  const left: Point[] = [];
+  const right: Point[] = [];
+  pts.forEach((p, i) => {
+    const prev = pts[i - 1];
+    const next = pts[i + 1];
+    const n1 = prev ? unit(prev, p) : null;
+    const n2 = next ? unit(p, next) : null;
+    let n = n1 && n2 ? { x: n1.x + n2.x, y: n1.y + n2.y } : (n1 ?? n2 ?? { x: 1, y: 0 });
+    const l = Math.hypot(n.x, n.y) || 1;
+    n = { x: n.x / l, y: n.y / l };
+    // Keep the width across a bend (a mitre), within reason.
+    const miter = n1 && n2 ? Math.min(1.6, 1 / Math.max(0.3, n.x * n1.x + n.y * n1.y)) : 1;
+    const half = ((from + (to - from) * ((lengths[i] ?? 0) / total)) / 2) * miter;
+    left.push({ x: p.x + n.x * half, y: p.y + n.y * half });
+    right.push({ x: p.x - n.x * half, y: p.y - n.y * half });
+  });
+  const tipR = (to / 2).toFixed(2);
+  const end = right[right.length - 1] ?? { x: 0, y: 0 };
+  return (
+    `M${left.map(point).join(' L')} ` +
+    `A${tipR} ${tipR} 0 0 1 ${point(end)} ` +
+    `L${right.reverse().slice(1).map(point).join(' L')} Z`
+  );
+}
 
 function leaf(at: Point, angle: number, size: number, tone: 0 | 1): Leaf {
   const right = Math.cos((angle * Math.PI) / 180) >= 0;
@@ -144,7 +189,7 @@ function seedling(random: () => number, days: number): Plant {
       leaf(at, side > 0 ? -25 - random() * 20 : -155 + random() * 20, 7 + i, (i % 2) as 0 | 1),
     );
   }
-  return { woody: false, stems, leaves, buds: [], blossoms: [] };
+  return { woody: false, stems, shoots: [], leaves, buds: [], blossoms: [] };
 }
 
 /** A plum tree: a zigzag trunk, angular branches, leaves, then buds and blossoms. */
@@ -185,10 +230,26 @@ function tree(random: () => number, days: number): Plant {
     angle: -90 + (random() - 0.5) * 80,
   }));
 
-  const stems: Stem[] = twigs.map(([a, b], i) => ({
-    d: `M${point(a)} L${point(b)}`,
-    width: (2.9 - i * 0.5) * (0.8 + grow * 0.25),
+  // Drawn last, so adding them left every earlier drawing as it was.
+  const shootSlots = Array.from({ length: MAX_BRANCHES }, () => ({
+    t: 0.35 + random() * 0.5,
+    length: 0.6 + random() * 0.4,
+    lean: (random() - 0.5) * 24,
+    flowers: Array.from({ length: SHOOT_FLOWERS }, () => ({
+      t: 0.35 + random() * 0.6,
+      size: 3.4 + random() * 1,
+      turn: random() * 72,
+    })),
   }));
+
+  const girth = 0.8 + grow * 0.25;
+  const stems: Stem[] = [
+    {
+      d: `M${trunk.map(point).join(' L')}`,
+      width: 2.9 * girth,
+      outline: taper(trunk, 4.4 * girth, 1.1 * girth),
+    },
+  ];
 
   // Branches: two angular segments each, one more every ten days, longer as the tree grows.
   const branches = Math.min(MAX_BRANCHES, 1 + Math.floor((days - 7) / 10));
@@ -200,9 +261,15 @@ function tree(random: () => number, days: number): Plant {
       x: elbow.x + slot.side * reach * (0.4 + slot.kink * 0.2),
       y: elbow.y - reach * (0.35 + slot.rise * 0.5),
     };
-    stems.push({ d: `M${point(start)} L${point(elbow)} L${point(tip)}`, width: 1.6 + grow * 0.4 });
+    const width = 1.6 + grow * 0.4;
+    stems.push({
+      d: `M${point(start)} L${point(elbow)} L${point(tip)}`,
+      width,
+      outline: taper([start, elbow, tip], width * 1.3, 0.6),
+    });
     twigs.push([start, elbow], [elbow, tip]);
   }
+  const branchTwigs = twigs.slice(segments);
   // Only the upper wood carries leaves and flowers.
   const upper = twigs.filter(([, b]) => b.y < base.y - height * 0.35);
   const pick = (r: number): [Point, Point] => upper[Math.floor(r * upper.length)] ?? [base, base];
@@ -238,12 +305,36 @@ function tree(random: () => number, days: number): Plant {
     else buds.push({ ...at, angle: slot.angle });
   });
 
-  return { woody: true, stems, leaves, buds, blossoms };
+  // Shoots: a thin straight rod up from each branch from three weeks on, with buds along it
+  // that open in full bloom.
+  const shoots: Stem[] = [];
+  if (days >= 21) {
+    shootSlots.slice(0, branches).forEach((slot, k) => {
+      const [a, b] = branchTwigs[k * 2 + 1] ?? [base, base];
+      const start = along(a, b, slot.t);
+      const reach = (5 + 8 * grow) * slot.length;
+      const angle = ((-90 + slot.lean) * Math.PI) / 180;
+      const tip = { x: start.x + Math.cos(angle) * reach, y: start.y + Math.sin(angle) * reach };
+      shoots.push({
+        d: `M${point(start)} L${point(tip)}`,
+        width: 0.7,
+        outline: taper([start, tip], 0.9, 0.35),
+      });
+      // One bud from fifty days; all of them open in full bloom.
+      slot.flowers.forEach((f, i) => {
+        const at = along(start, tip, f.t);
+        if (days >= 100) blossoms.push({ ...at, size: f.size, turn: f.turn });
+        else if (days >= 50 && i === 0) buds.push({ ...at, angle: -90 + slot.lean });
+      });
+    });
+  }
+
+  return { woody: true, stems, shoots, leaves, buds, blossoms };
 }
 
 /** The plant for a streak `days` long, shaped by `seed`. Empty before the first day. */
 export function plantShape(seed: string, days: number): Plant {
-  if (days <= 0) return { woody: false, stems: [], leaves: [], buds: [], blossoms: [] };
+  if (days <= 0) return { woody: false, stems: [], shoots: [], leaves: [], buds: [], blossoms: [] };
   const random = seeded(`plant:${seed}`);
   return days < 7 ? seedling(random, days) : tree(random, days);
 }
