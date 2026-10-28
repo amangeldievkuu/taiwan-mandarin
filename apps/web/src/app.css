@@ -1,20 +1,20 @@
-/* 臺灣華語: bright and fresh. A clean canvas, jade for going forward, sky for information, the
-   vermilion 華 seal for the brand and gold for kintsugi and XP. Rounded type, brush-style hanzi,
-   soft-lit buttons and cards that lift on hover and settle when pressed, and motion that
-   reduced-motion turns off. */
+/* 臺灣華語: clean and fresh. A white canvas with neutral greys, jade for going forward, sky for
+   information, the vermilion 華 seal for the brand and gold for kintsugi and XP. Rounded type,
+   brush-style hanzi, soft-lit buttons and cards that lift on hover and settle when pressed, and
+   motion that reduced-motion turns off. */
 
 :root {
-  /* Surfaces */
-  --paper: #f4f8f6;
+  /* Surfaces: white paper, white cards set off by a hairline and a soft shadow */
+  --paper: #ffffff;
   --paper-raised: #ffffff;
-  --paper-sunken: #e8efec;
-  /* Text and lines */
-  --ink: #14211c;
-  --ink-2: #4a5a54;
-  --ink-3: #606d68; /* 4.6:1 or better on every paper */
-  --rule: rgb(20 33 28 / 0.1);
-  --rule-strong: rgb(20 33 28 / 0.18);
-  --fill: rgb(20 33 28 / 0.06);
+  --paper-sunken: #f2f3f5;
+  /* Text and lines: neutral greys, no tint */
+  --ink: #1a1c1e;
+  --ink-2: #4e5358;
+  --ink-3: #6a7075; /* 5:1 or better on every paper */
+  --rule: rgb(26 28 30 / 0.1);
+  --rule-strong: rgb(26 28 30 / 0.18);
+  --fill: rgb(26 28 30 / 0.06);
   /* Vermilion seal: brand, Again, errors */
   --seal: #c8102e;
   --seal-ink: #fffaf2;
@@ -43,18 +43,16 @@
   --ochre: #a65f00;
   --ochre-wash: #fbefdc;
 
-  --shadow-1: 0 1px 2px rgb(16 40 32 / 0.06), 0 1px 1px rgb(16 40 32 / 0.04);
+  --shadow-1: 0 1px 2px rgb(26 28 30 / 0.06), 0 1px 1px rgb(26 28 30 / 0.04);
   --shadow-2:
-    0 1px 2px rgb(16 40 32 / 0.05), 0 4px 12px -2px rgb(16 40 32 / 0.07),
-    0 12px 28px -12px rgb(16 40 32 / 0.12);
+    0 1px 2px rgb(26 28 30 / 0.05), 0 4px 12px -2px rgb(26 28 30 / 0.07),
+    0 12px 28px -12px rgb(26 28 30 / 0.12);
   --shadow-3:
-    0 2px 4px rgb(16 40 32 / 0.05), 0 10px 24px -6px rgb(16 40 32 / 0.1),
-    0 28px 56px -20px rgb(16 40 32 / 0.22);
+    0 2px 4px rgb(26 28 30 / 0.05), 0 10px 24px -6px rgb(26 28 30 / 0.1),
+    0 28px 56px -20px rgb(26 28 30 / 0.22);
   --shadow: var(--shadow-2);
-  --scrim: rgb(14 24 20 / 0.36);
+  --scrim: rgb(16 18 20 / 0.4);
   --grid-line: rgb(200 16 46 / 0.12);
-  --glow-1: rgb(10 133 100 / 0.1);
-  --glow-2: rgb(22 112 196 / 0.08);
 
   /* Ratings */
   --again: var(--seal);
@@ -171,15 +169,15 @@
 
 /* Dark: the same block twice, for the explicit choice and for "auto" following the system. */
 :root[data-theme='dark'] {
-  --paper: #0e1513;
-  --paper-raised: #16201d;
-  --paper-sunken: #0a0f0d;
-  --ink: #e6efeb;
-  --ink-2: #a0b1aa;
-  --ink-3: #788c85;
-  --rule: rgb(230 239 235 / 0.1);
-  --rule-strong: rgb(230 239 235 / 0.18);
-  --fill: rgb(230 239 235 / 0.07);
+  --paper: #0f1012;
+  --paper-raised: #17191c;
+  --paper-sunken: #0a0b0c;
+  --ink: #ebedef;
+  --ink-2: #a8adb3;
+  --ink-3: #80868c;
+  --rule: rgb(235 237 239 / 0.1);
+  --rule-strong: rgb(235 237 239 / 0.18);
+  --fill: rgb(235 237 239 / 0.07);
   --seal: #f25563;
   --seal-ink: #1a0709;
   --seal-edge: #b23542;
@@ -211,22 +209,20 @@
     inset 0 1px 0 rgb(255 255 255 / 0.04);
   --scrim: rgb(0 0 0 / 0.6);
   --grid-line: rgb(242 85 99 / 0.16);
-  --glow-1: rgb(61 203 158 / 0.09);
-  --glow-2: rgb(98 180 246 / 0.07);
   color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --paper: #0e1513;
-    --paper-raised: #16201d;
-    --paper-sunken: #0a0f0d;
-    --ink: #e6efeb;
-    --ink-2: #a0b1aa;
-    --ink-3: #788c85;
-    --rule: rgb(230 239 235 / 0.1);
-    --rule-strong: rgb(230 239 235 / 0.18);
-    --fill: rgb(230 239 235 / 0.07);
+    --paper: #0f1012;
+    --paper-raised: #17191c;
+    --paper-sunken: #0a0b0c;
+    --ink: #ebedef;
+    --ink-2: #a8adb3;
+    --ink-3: #80868c;
+    --rule: rgb(235 237 239 / 0.1);
+    --rule-strong: rgb(235 237 239 / 0.18);
+    --fill: rgb(235 237 239 / 0.07);
     --seal: #f25563;
     --seal-ink: #1a0709;
     --seal-edge: #b23542;
@@ -258,8 +254,6 @@
       inset 0 1px 0 rgb(255 255 255 / 0.04);
     --scrim: rgb(0 0 0 / 0.6);
     --grid-line: rgb(242 85 99 / 0.16);
-    --glow-1: rgb(61 203 158 / 0.09);
-    --glow-2: rgb(98 180 246 / 0.07);
     color-scheme: dark;
   }
 }
@@ -333,18 +327,6 @@ body {
   -webkit-font-smoothing: antialiased;
   font-feature-settings: 'kern';
   overflow-x: hidden;
-}
-
-/* Morning light: a soft jade and sky glow at the top of the canvas. */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(70% 45% at 12% -8%, var(--glow-1), transparent 70%),
-    radial-gradient(60% 40% at 100% -4%, var(--glow-2), transparent 70%);
 }
 
 :lang(zh-Hant-TW) {

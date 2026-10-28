@@ -39,11 +39,20 @@
     };
   });
 
+  /** The browser chrome's colour (status bar, title bar): --paper in each theme. */
+  const THEME_COLOR = { light: '#ffffff', dark: '#0f1012' } as const;
+
   $effect(() => {
     const root = document.documentElement;
+    const theme = store.settings.theme;
     root.dataset.glyph = store.settings.glyphStyle;
-    if (store.settings.theme === 'auto') delete root.dataset.theme;
-    else root.dataset.theme = store.settings.theme;
+    if (theme === 'auto') delete root.dataset.theme;
+    else root.dataset.theme = theme;
+    // A forced theme recolours the chrome too; "auto" leaves each meta on its own scheme.
+    for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+      const own = meta.media.includes('dark') ? 'dark' : 'light';
+      meta.content = THEME_COLOR[theme === 'auto' ? own : theme];
+    }
   });
 
   // Keyboard navigation (desktop): g then t/s/p/r/d/m.

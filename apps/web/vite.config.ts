@@ -36,8 +36,8 @@ export default defineConfig({
         lang: 'zh-Hant-TW',
         display: 'standalone',
         start_url: '/',
-        theme_color: '#F4F8F6',
-        background_color: '#F4F8F6',
+        theme_color: '#ffffff',
+        background_color: '#ffffff',
         categories: ['education'],
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
