@@ -4,6 +4,7 @@
 
 import { flushSync } from 'svelte';
 import { reduced } from './motion';
+import { navKind } from './nav';
 
 export type RouteName =
   | 'today'
@@ -58,26 +59,6 @@ const PATTERNS: [RouteName, RegExp][] = [
   ['welcome', /^\/welcome\/?$/],
 ];
 
-/** How deep a page sits: tabs are 0, so moving to a larger number slides forward. */
-const DEPTH: Record<RouteName, number> = {
-  today: 0,
-  study: 0,
-  path: 0,
-  read: 0,
-  dict: 0,
-  talk: 0,
-  me: 0,
-  welcome: 0,
-  level: 1,
-  reader: 1,
-  'me-account': 1,
-  'me-settings': 1,
-  'me-garden': 1,
-  'me-levels': 1,
-  'me-about': 1,
-  word: 2,
-};
-
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 function parse(url: URL): Route {
@@ -128,6 +109,8 @@ class Router {
   route = $state<Route>(parse(new URL(location.href)));
   /** The in-app page before this one in history, or null when this is the first. */
   prev = $state<string | null>(null);
+  /** The page shown before this one, whichever way we came (null on the first page). */
+  from = $state<Route | null>(null);
   /** Latest navigation, so a slow transition never shows an older page over a newer one. */
   private seq = 0;
 
@@ -198,6 +181,7 @@ class Router {
     const seq = ++this.seq;
     const update = () => {
       if (seq !== this.seq) return;
+      this.from = this.route;
       this.route = next;
       if (scrollTop) scrollTo({ top: 0 });
     };
@@ -212,9 +196,8 @@ class Router {
       update();
       return;
     }
-    const depth = DEPTH[next.name] - DEPTH[from.name];
     const root = document.documentElement;
-    root.dataset['nav'] = depth > 0 ? 'forward' : depth < 0 ? 'back' : 'tab';
+    root.dataset['nav'] = navKind(from.name, next.name);
     const transition = document.startViewTransition(() => flushSync(update));
     void transition.finished.finally(() => {
       if (seq === this.seq) delete root.dataset['nav'];

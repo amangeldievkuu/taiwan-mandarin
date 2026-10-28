@@ -33,6 +33,7 @@
   import TaiwanNote from '../components/TaiwanNote.svelte';
   import WordGlyphs, { fitSize } from '../components/WordGlyphs.svelte';
   import { celebrate } from '../lib/celebrate.svelte';
+  import { companion } from '../lib/companion.svelte';
   import { feedback } from '../lib/feedback.svelte';
   import { lookup } from '../lib/lookup.svelte';
   import { flipFrom } from '../lib/motion';
@@ -265,8 +266,10 @@
   </header>
 
   {#if word}
+    <!-- 墨 sits on the right-hand end of the progress bar, clear of the buttons below. -->
     <div
       class="progress"
+      use:companion.perch
       role="progressbar"
       aria-valuemin={0}
       aria-valuemax={100}

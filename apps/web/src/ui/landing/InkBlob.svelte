@@ -1,8 +1,9 @@
 <!--
-  墨 (Mo), a drop of ink with legs, drawn in outline. It drips onto the page, walks while the page scrolls, faces
-  the way it is going, sits down to say something when the scrolling stops, and dozes off after a
-  while. Tap it and it hops. The parent sets `--dir` and the classes walking / sitting / sleepy /
-  fast (see lib/walk.ts); everything else is CSS on the SVG.
+  墨 (Mo), a drop of ink with legs, drawn in outline. It drips onto the page, walks while the
+  page scrolls, faces the way it is going, sits down to say something when the scrolling stops,
+  and dozes off after a while. Tap it and it hops. The parent sets `--dir` and the classes
+  walking / sitting / sleepy / fast (see lib/walk.ts), hanging (on a rope or a thread) and hush
+  (sitting without a word); everything else is CSS on the SVG.
 -->
 <script module lang="ts">
   export interface Line {
@@ -17,9 +18,11 @@
     says?: Line;
     /** Put the speech bubble on the left, near the end of the road. */
     flip?: boolean;
+    /** Put the speech bubble underneath, near the top of the screen. */
+    below?: boolean;
   }
 
-  let { says, flip = false }: Props = $props();
+  let { says, flip = false, below = false }: Props = $props();
 
   const TAPS: Line[] = [
     { zh: '嘿！', en: 'hey!' },
@@ -54,7 +57,7 @@
   const line = $derived(tapped ?? says);
 </script>
 
-<div class="blob" class:tapped={!!tapped} class:flip>
+<div class="blob" class:tapped={!!tapped} class:flip class:below>
   <button class="body" class:hopping type="button" tabindex="-1" aria-hidden="true" onclick={hop}>
     <svg viewBox="0 0 30 30">
       <!-- z z z, for dozing -->
@@ -297,6 +300,15 @@
     rotate: -70deg;
   }
 
+  /* Hanging on a rope or a thread: legs dangling apart. */
+  :global(.hanging) .leg-a {
+    rotate: 18deg;
+  }
+
+  :global(.hanging) .leg-b {
+    rotate: -18deg;
+  }
+
   /* Dozing: eyes shut, z's float up. */
   :global(.sleepy) .blob:not(.tapped) .eyes {
     animation: none;
@@ -405,7 +417,20 @@
     transform-origin: 100% 100%;
   }
 
-  :global(.sitting:not(.sleepy)) .says,
+  .below .says {
+    top: calc(100% + 4px);
+    bottom: auto;
+    translate: 0 -6px;
+    border-radius: 3px 14px 14px 14px;
+    transform-origin: 0 0;
+  }
+
+  .below.flip .says {
+    border-radius: 14px 3px 14px 14px;
+    transform-origin: 100% 0;
+  }
+
+  :global(.sitting:not(.sleepy):not(.hush)) .says,
   .tapped .says {
     opacity: 1;
     translate: 0 0;

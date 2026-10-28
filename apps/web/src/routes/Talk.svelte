@@ -32,6 +32,7 @@
   import SignInPrompt from '../ui/SignInPrompt.svelte';
   import Skeleton from '../ui/Skeleton.svelte';
   import { api } from '../lib/api';
+  import { companion } from '../lib/companion.svelte';
   import { content } from '../lib/content.svelte';
   import { lookup } from '../lib/lookup.svelte';
   import { canSpeak, speak, stopSpeaking } from '../lib/speech';
@@ -342,7 +343,8 @@
         </p>{/if}
     {/if}
   {:else}
-    <header class="chat-head">
+    <!-- No corner to spare in a conversation: 墨 climbs out of the way until you leave it. -->
+    <header class="chat-head" use:companion.stepAway>
       <button type="button" class="back" onclick={leave} aria-label="All conversations"
         ><Icon name="back" /></button
       >

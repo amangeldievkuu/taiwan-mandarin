@@ -1,0 +1,269 @@
+<!--
+  墨 on every page. It sits in the bottom-right corner on top of the tab bar (up top on pages
+  with controls docked at the bottom, or on whatever a page offers it with `use:perch`), and
+  every time the page changes it turns up in a way that fits the move: it walks over from the
+  side the new tab is on, rappels down a rope into a deeper page, and swings in on a thread when
+  you go back. Then it says a word about where you are, and dozes off if you leave it be.
+-->
+<script lang="ts">
+  import { tick, untrack } from 'svelte';
+  import InkBlob, { type Line } from '../landing/InkBlob.svelte';
+  import { companion } from '../../lib/companion.svelte';
+  import { arrive, climbAway, stopAll, type Rig } from '../../lib/entrances';
+  import { reduced } from '../../lib/motion';
+  import { entranceFor, type Entrance } from '../../lib/nav';
+  import { router, viewKey, type RouteName } from '../../lib/router.svelte';
+
+  /** What 墨 says on arriving at each page. */
+  const LINES: Record<RouteName, Line> = {
+    welcome: { zh: '你好！', en: 'hello!' },
+    today: { zh: '早安！', en: 'morning!' },
+    study: { zh: '加油！', en: "you've got this" },
+    path: { zh: '一步一步', en: 'step by step' },
+    level: { zh: '爬山囉', en: 'up we go' },
+    word: { zh: '這個字', en: 'this one' },
+    read: { zh: '讀書囉', en: 'reading time' },
+    reader: { zh: '噓…', en: 'shh…' },
+    dict: { zh: '查一查', en: 'look it up' },
+    talk: { zh: '聊聊吧', en: "let's talk" },
+    me: { zh: '是你！', en: "it's you!" },
+    'me-account': { zh: '歡迎', en: 'welcome' },
+    'me-settings': { zh: '調一調', en: 'tweak away' },
+    'me-garden': { zh: '好漂亮', en: 'how pretty' },
+    'me-levels': { zh: '好多級', en: 'so many levels' },
+    'me-about': { zh: '我是墨', en: "I'm Mo" },
+  };
+
+  /** Pages with controls docked at the bottom: 墨 sits up top on these instead. */
+  const UP_TOP = new Set<RouteName>(['study', 'talk']);
+  const SAY_MS = 2600;
+  const DOZE_MS = 20_000;
+
+  let mover = $state<HTMLElement>();
+  let cord = $state<HTMLElement>();
+  let body = $state<HTMLElement>();
+
+  let pose = $state<'sitting' | 'walking' | 'hanging'>('sitting');
+  /** Which way 墨 faces: 1 right, -1 left (towards the page, from its corner). */
+  let dir = $state(-1);
+  let quiet = $state(true);
+  let sleepy = $state(false);
+  /** Climbed out of sight (a page asked for room). */
+  let gone = $state(false);
+
+  const place = $derived(
+    companion.anchor ? 'anchor' : UP_TOP.has(router.route.name) ? 'top' : 'floor',
+  );
+  const view = $derived(viewKey(router.route));
+  const line = $derived(LINES[router.route.name]);
+
+  // On a perch a page offered: follow its top right-hand corner as the page scrolls or resizes.
+  let anchorAt = $state<{ x: number; y: number } | null>(null);
+  $effect(() => {
+    const el = companion.anchor;
+    if (!el) {
+      anchorAt = null;
+      return;
+    }
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      const r = el.getBoundingClientRect();
+      anchorAt = { x: r.right, y: r.top };
+    };
+    const queue = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+    measure();
+    const resized = new ResizeObserver(queue);
+    resized.observe(el);
+    addEventListener('scroll', queue, { passive: true, capture: true });
+    addEventListener('resize', queue);
+    return () => {
+      cancelAnimationFrame(frame);
+      resized.disconnect();
+      removeEventListener('scroll', queue, true);
+      removeEventListener('resize', queue);
+    };
+  });
+
+  let sayTimer: ReturnType<typeof setTimeout> | undefined;
+  let dozeTimer: ReturnType<typeof setTimeout> | undefined;
+
+  /** At the perch: sit, face the page, say the line for a moment, doze off later. */
+  function settle() {
+    pose = 'sitting';
+    dir = -1;
+    sleepy = false;
+    quiet = false;
+    clearTimeout(sayTimer);
+    clearTimeout(dozeTimer);
+    sayTimer = setTimeout(() => (quiet = true), SAY_MS);
+    dozeTimer = setTimeout(() => (sleepy = true), DOZE_MS);
+  }
+
+  const rig = (): Rig | null => (mover && cord && body ? { mover, cord, body } : null);
+
+  async function enter(entrance: Entrance) {
+    if (companion.away) return;
+    gone = false;
+    quiet = true;
+    sleepy = false;
+    clearTimeout(sayTimer);
+    clearTimeout(dozeTimer);
+    // Let the perch for the new page take its place before measuring from it.
+    await tick();
+    await new Promise(requestAnimationFrame);
+    const parts = rig();
+    if (!parts || reduced()) {
+      settle();
+      return;
+    }
+    if (entrance.kind === 'walk') {
+      pose = 'walking';
+      dir = entrance.from === 'left' ? 1 : -1;
+    } else {
+      pose = 'hanging';
+    }
+    if (await arrive(parts, entrance)) settle();
+  }
+
+  async function leave() {
+    quiet = true;
+    clearTimeout(sayTimer);
+    clearTimeout(dozeTimer);
+    const parts = rig();
+    if (!parts || reduced()) {
+      gone = true;
+      return;
+    }
+    pose = 'hanging';
+    if (await climbAway(parts)) gone = true;
+  }
+
+  // A new page: 墨 comes along. (On the first one it just drips in.)
+  let shown = '';
+  $effect(() => {
+    if (view === shown) return;
+    const first = shown === '';
+    shown = view;
+    untrack(() => {
+      if (first) settle();
+      else void enter(entranceFor(router.from?.name ?? router.route.name, router.route.name));
+    });
+  });
+
+  // A page wants the room: climb away, and come back down the rope once it is gone.
+  $effect(() => {
+    const away = companion.away;
+    untrack(() => {
+      if (away) void leave();
+      else if (gone) void enter({ kind: 'rappel' });
+    });
+  });
+
+  $effect(() => () => {
+    clearTimeout(sayTimer);
+    clearTimeout(dozeTimer);
+    const parts = rig();
+    if (parts) stopAll(parts);
+  });
+</script>
+
+<div
+  class="companion {place}"
+  class:walking={pose === 'walking'}
+  class:sitting={pose === 'sitting'}
+  class:hanging={pose === 'hanging'}
+  class:hush={quiet}
+  class:sleepy
+  class:gone
+  style:--dir={dir}
+  style:left={place === 'anchor' && anchorAt ? `${anchorAt.x}px` : null}
+  style:top={place === 'anchor' && anchorAt ? `${anchorAt.y}px` : null}
+>
+  <div class="mover" bind:this={mover}>
+    <span class="cord" bind:this={cord}></span>
+    <div class="body" bind:this={body}>
+      <InkBlob says={line} flip below={place === 'top'} />
+    </div>
+  </div>
+</div>
+
+<style>
+  .companion {
+    --mo-w: 40px;
+    position: fixed;
+    z-index: 25;
+    width: var(--mo-w);
+    pointer-events: none;
+  }
+
+  @media (max-width: 699px) {
+    .companion {
+      --mo-w: 34px;
+    }
+  }
+
+  /* Bottom right, on top of the tab bar (which steps aside while typing, and 墨 with it). */
+  .floor {
+    right: var(--gutter);
+    bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 2px);
+    transition: bottom var(--dur-3) var(--ease-out);
+  }
+
+  @media (min-width: 700px) {
+    .floor {
+      bottom: 18px;
+    }
+  }
+
+  .top {
+    right: var(--gutter);
+    top: calc(var(--safe-top) + 12px);
+  }
+
+  /* Sitting on the top edge of what the page offered, at its right-hand end: a little smaller,
+     to fit the gap above a progress bar. */
+  .anchor {
+    --mo-w: 26px;
+    translate: calc(-100% - 2px) -100%;
+  }
+
+  .gone {
+    visibility: hidden;
+  }
+
+  .mover {
+    position: relative;
+  }
+
+  .body {
+    transform-origin: 50% 100%;
+  }
+
+  /* The rope (rappelling, climbing away) or the thread (swinging in) up to the top of the
+     screen, from the curl on 墨's head. */
+  .cord {
+    position: absolute;
+    left: calc(50% - 1px);
+    bottom: calc(100% - 3px);
+    display: none;
+    width: 2px;
+    height: var(--cord, 0px);
+    transform-origin: 50% 0;
+    border-radius: 1px;
+  }
+
+  .cord:global([data-kind='rope']) {
+    display: block;
+    background: repeating-linear-gradient(to bottom, var(--ink) 0 4px, var(--ink-2) 4px 6px);
+  }
+
+  .cord:global([data-kind='thread']) {
+    display: block;
+    left: calc(50% - 0.5px);
+    width: 1px;
+    background: var(--ink-3);
+  }
+</style>

@@ -17,10 +17,12 @@
   import Welcome from './routes/Welcome.svelte';
   import WordPage from './routes/WordPage.svelte';
   import Celebrations from './ui/Celebrations.svelte';
+  import Companion from './ui/companion/Companion.svelte';
   import LookupSheet from './ui/LookupSheet.svelte';
   import Nav from './ui/Nav.svelte';
   import Seal from './ui/Seal.svelte';
   import UpdatePrompt from './ui/UpdatePrompt.svelte';
+  import { companion } from './lib/companion.svelte';
   import { feedback } from './lib/feedback.svelte';
   import { pwa } from './lib/pwa.svelte';
   import { router, viewKey } from './lib/router.svelte';
@@ -160,6 +162,7 @@
       </div>
     {/key}
   </main>
+  {#if !bare && companion.on}<Companion />{/if}
   <LookupSheet />
   <Celebrations />
   <UpdatePrompt />

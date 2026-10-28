@@ -5,6 +5,7 @@
   import SubpageHead from '../ui/SubpageHead.svelte';
   import Switch from '../ui/Switch.svelte';
   import { api } from '../lib/api';
+  import { companion } from '../lib/companion.svelte';
   import { feedback } from '../lib/feedback.svelte';
   import { store } from '../lib/store.svelte';
   import { account } from '../lib/sync.svelte';
@@ -136,6 +137,16 @@
         />
       </SettingRow>
     {/if}
+    <SettingRow
+      label="墨 on every page"
+      hint="The ink drop that comes along with you (this device)"
+    >
+      <Switch
+        checked={companion.on}
+        label="墨 on every page"
+        onchange={(on) => companion.setOn(on)}
+      />
+    </SettingRow>
   </div>
 
   <h2 class="section-title">Data <span class="zh" lang="zh-Hant-TW">資料</span></h2>
