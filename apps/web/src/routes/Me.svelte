@@ -36,8 +36,8 @@
   );
 
   const accountSub = $derived.by(() => {
-    if (!account.checked) return 'Checking your session…';
     if (!account.user) return 'Sign in to keep your progress in sync';
+    if (account.verifying) return `${account.user.email} · checking your session…`;
     if (account.syncing) return `${account.user.email} · syncing…`;
     if (account.error) return `${account.user.email} · sync failed`;
     if (account.lastSync)

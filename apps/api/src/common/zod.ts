@@ -11,10 +11,12 @@ export class ZodPipe<T extends z.ZodType> implements PipeTransform<unknown, z.in
   transform(value: unknown): z.infer<T> {
     const result = this.schema.safeParse(value);
     if (!result.success) {
-      throw new BadRequestException({
-        message: 'Invalid request',
-        issues: result.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
-      });
+      const issues = result.error.issues.map((i) => ({
+        path: i.path.join('.'),
+        message: i.message,
+      }));
+      // The first problem, so a form can show it as it is; the schemas word their own messages.
+      throw new BadRequestException({ message: issues[0]?.message ?? 'Invalid request', issues });
     }
     return result.data;
   }

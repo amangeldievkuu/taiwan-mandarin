@@ -8,13 +8,17 @@
   }
 
   let { seal, text }: Props = $props();
+  /** Back here once signed in. */
+  const href = $derived(
+    router.href(`/me/account?next=${encodeURIComponent(location.pathname + location.search)}`),
+  );
 </script>
 
 <div class="prompt sheet">
   <Seal text={seal} size={52} outline />
   <div>
     <p>{text}</p>
-    <a class="btn primary small" href={router.href('/me/account')} onclick={router.link}>Sign in</a>
+    <a class="btn primary small" {href} onclick={router.link}>Sign in</a>
   </div>
 </div>
 

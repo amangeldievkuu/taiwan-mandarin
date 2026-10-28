@@ -38,23 +38,34 @@ export const SettingsSchema = z.object({
 
 // ---- Auth ----
 
+const email = z.email('Enter a valid email address').max(254, 'That email is too long');
+const newPassword = z
+  .string()
+  .min(8, 'Use at least 8 characters for the password')
+  .max(200, 'That password is too long');
+
 export const RegisterSchema = z.object({
-  email: z.email().max(254),
-  password: z.string().min(8).max(200),
-  displayName: z.string().trim().min(1).max(60).optional(),
+  email,
+  password: newPassword,
+  displayName: z
+    .string()
+    .trim()
+    .min(1, 'Enter a name, or leave it empty')
+    .max(60, 'That name is too long')
+    .optional(),
 });
 export type RegisterBody = z.infer<typeof RegisterSchema>;
 
 export const LoginSchema = z.object({
-  email: z.email().max(254),
-  password: z.string().min(1).max(200),
+  email,
+  password: z.string().min(1, 'Enter your password').max(200, 'That password is too long'),
 });
 export type LoginBody = z.infer<typeof LoginSchema>;
 
 export const ChangePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1).max(200),
-    newPassword: z.string().min(8).max(200),
+    currentPassword: z.string().min(1, 'Enter your current password').max(200),
+    newPassword,
   })
   .refine((b) => b.newPassword !== b.currentPassword, {
     message: 'The new password is the same as the current one',

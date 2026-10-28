@@ -3,9 +3,11 @@ import {
   Delete,
   HttpCode,
   Inject,
+  Logger,
   Post,
   Req,
   Res,
+  UnauthorizedException,
   UseGuards,
   Get,
 } from '@nestjs/common';
@@ -28,6 +30,9 @@ import { AuthGuard, CurrentUser, type AuthUser } from './auth.guard.js';
 import { AuthService, REFRESH_TTL_MS, type Session } from './auth.service.js';
 
 const COOKIE = 'tm_refresh';
+const log = new Logger('Auth');
+/** Warned once: a production sign-in over plain http gets a cookie without Secure. */
+let warnedInsecure = false;
 
 @ApiTags('auth')
 @Controller('v1/auth')
@@ -46,7 +51,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
-    return this.respond(res, await this.auth.register(body, req.headers['user-agent']));
+    return this.respond(req, res, await this.auth.register(body, req.headers['user-agent']));
   }
 
   @Post('login')
@@ -59,7 +64,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
-    return this.respond(res, await this.auth.login(body, req.headers['user-agent']));
+    return this.respond(req, res, await this.auth.login(body, req.headers['user-agent']));
   }
 
   @Post('refresh')
@@ -71,11 +76,13 @@ export class AuthController {
   ): Promise<AuthResponse> {
     try {
       return this.respond(
+        req,
         res,
         await this.auth.refresh(this.cookie(req), req.headers['user-agent']),
       );
     } catch (e) {
-      res.clearCookie(COOKIE, { path: '/' });
+      // Only a session that is really gone drops the cookie; a database hiccup must not.
+      if (e instanceof UnauthorizedException) res.clearCookie(COOKIE, { path: '/' });
       throw e;
     }
   }
@@ -104,6 +111,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
     return this.respond(
+      req,
       res,
       await this.auth.changePassword(user.id, body, req.headers['user-agent']),
     );
@@ -148,12 +156,22 @@ export class AuthController {
     return cookies?.[COOKIE];
   }
 
-  private respond(res: Response, session: Session): AuthResponse {
+  private respond(req: Request, res: Response, session: Session): AuthResponse {
     const { refreshToken, ...body } = session;
+    // Secure only when the request really came over https (trust proxy makes req.secure follow
+    // X-Forwarded-Proto): a Secure cookie on a plain-http deployment is silently dropped by the
+    // browser, which looked like being signed out after fifteen minutes.
+    const production = this.env.NODE_ENV === 'production';
+    if (production && !req.secure && !warnedInsecure) {
+      warnedInsecure = true;
+      log.warn(
+        'Sign-in over plain http: the session cookie is sent without Secure. Put TLS in front.',
+      );
+    }
     res.cookie(COOKIE, refreshToken, {
       httpOnly: true,
       sameSite: 'lax',
-      secure: this.env.NODE_ENV === 'production',
+      secure: production && req.secure,
       path: '/',
       maxAge: REFRESH_TTL_MS,
     });

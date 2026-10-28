@@ -110,21 +110,77 @@ describe('auth', () => {
     expect(res.body.issues.map((i: { path: string }) => i.path)).toEqual(['email', 'password']);
   });
 
-  it('rotates refresh tokens and revokes the chain on reuse', async () => {
+  it('rotates refresh tokens and revokes the chain when a used-up token is replayed', async () => {
     const { email, cookie } = await signUp();
     account = email;
-    const first = await request(http).post('/v1/auth/refresh').set('cookie', cookie);
+    const refresh = (c: string) => request(http).post('/v1/auth/refresh').set('cookie', c);
+    const first = await refresh(cookie);
     expect(first.status).toBe(200);
     const next = refreshCookie(first);
-    // Replayed later than two tabs refreshing together would: the old token was stolen.
+    // The client moved on (it rotated `next`), so the old token is a stolen copy.
+    const second = await refresh(next);
+    expect(second.status).toBe(200);
+    expect((await refresh(cookie)).status).toBe(401);
+    // The whole chain is gone, including the newest token.
+    expect((await refresh(refreshCookie(second))).status).toBe(401);
+  });
+
+  it('keeps the session when the rotated cookie never reached the client', async () => {
+    const { cookie } = await signIn(account);
+    const refresh = (c: string) => request(http).post('/v1/auth/refresh').set('cookie', c);
+    // The server rotated, the response was lost: the browser still sends the old cookie, later.
+    const first = await refresh(cookie);
+    expect(first.status).toBe(200);
     const { PrismaService } = await import('../src/prisma/prisma.service.js');
     await app.get(PrismaService).refreshToken.updateMany({
       where: { tokenHash: sha256(cookie.slice(cookie.indexOf('=') + 1)) },
-      data: { revokedAt: new Date(Date.now() - 60_000) },
+      data: { revokedAt: new Date(Date.now() - 10 * 60_000) },
     });
-    // The old token again: reuse → the whole chain is revoked, including `next`.
-    expect((await request(http).post('/v1/auth/refresh').set('cookie', cookie)).status).toBe(401);
-    expect((await request(http).post('/v1/auth/refresh').set('cookie', next)).status).toBe(401);
+    const again = await refresh(cookie);
+    expect(again.status).toBe(200);
+    // The replacement that did arrive this time carries on as normal, and from then on the old
+    // token is a stolen copy.
+    const recovered = refreshCookie(again);
+    expect((await refresh(recovered)).status).toBe(200);
+    expect((await refresh(cookie)).status).toBe(401);
+  });
+
+  it('cuts off a token replayed over and over', async () => {
+    const { cookie } = await signIn(account);
+    const refresh = (c: string) => request(http).post('/v1/auth/refresh').set('cookie', c);
+    expect((await refresh(cookie)).status).toBe(200);
+    expect((await refresh(cookie)).status).toBe(200);
+    const last = await refresh(cookie);
+    expect(last.status).toBe(200);
+    // The fourth use ends the whole chain, newest replacement included.
+    expect((await refresh(cookie)).status).toBe(401);
+    expect((await refresh(refreshCookie(last))).status).toBe(401);
+  });
+
+  it('keeps the cookie when refreshing fails for a reason other than the session', async () => {
+    const { cookie } = await signIn(account);
+    const { AuthService } = await import('../src/auth/auth.service.js');
+    const auth = app.get(AuthService);
+    const real = auth.refresh.bind(auth);
+    auth.refresh = async () => {
+      throw new Error('database away');
+    };
+    try {
+      const res = await request(http).post('/v1/auth/refresh').set('cookie', cookie);
+      expect(res.status).toBe(500);
+      expect(([] as string[]).concat(res.headers['set-cookie'] ?? [])).toEqual([]);
+    } finally {
+      auth.refresh = real;
+    }
+    expect((await request(http).post('/v1/auth/refresh').set('cookie', cookie)).status).toBe(200);
+  });
+
+  it('explains what is wrong with a sign-up', async () => {
+    const res = await request(http)
+      .post('/v1/auth/register')
+      .send({ email: 'someone@example.com', password: 'short' });
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('Use at least 8 characters for the password');
   });
 
   it('keeps the session when two tabs refresh with the same cookie at once', async () => {

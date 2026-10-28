@@ -1,7 +1,14 @@
 // Accounts and sessions: argon2id passwords, 15-minute JWT access tokens and rotating refresh
-// tokens (hashed, in an httpOnly cookie). Reusing an already-rotated refresh token revokes the
-// whole chain, which logs out a thief and the victim alike rather than leaving a stolen session.
-// The exception is reuse within a few seconds of rotation, which is two tabs refreshing at once.
+// tokens (hashed, in an httpOnly cookie). Reusing an already-rotated refresh token normally
+// revokes the whole chain, which logs out a thief and the victim alike rather than leaving a
+// stolen session.
+//
+// The exception: a rotated token whose replacements are all still unused may be used again, a
+// bounded number of times. That is what a lost response looks like (a flaky connection, the app
+// suspended mid-request, a client timeout: the server rotated, the browser kept the old cookie),
+// and also what two tabs refreshing together look like. Treating it as theft signed learners out
+// for no reason. The cost is that a token stolen and used once is only caught when its holder
+// moves on from it; a token replayed over and over is cut off after MAX_CHILDREN uses.
 
 import { randomUUID } from 'node:crypto';
 import {
@@ -25,8 +32,10 @@ import { randomToken, sha256 } from './crypto.js';
 
 export const ACCESS_TTL_SECONDS = 15 * 60;
 export const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
-/** A token replaced this recently may be used once more (two tabs refreshing together). */
-export const REUSE_GRACE_MS = 30_000;
+/** How many replacements one token may get: its rotation, then this many lost responses. */
+export const MAX_CHILDREN = 3;
+/** Expired and long-revoked tokens are dropped when their owner next refreshes. */
+const SWEEP_AFTER_MS = 60 * 24 * 60 * 60 * 1000;
 
 export interface Session extends AuthResponse {
   refreshToken: string;
@@ -84,6 +93,7 @@ export class AuthService {
     });
     if (!stored || stored.expiresAt < new Date())
       throw new UnauthorizedException('Session expired');
+    this.sweep(stored.userId);
     if (!stored.revokedAt) {
       // Revoke and replace in one transaction: a parallel refresh with the same cookie waits on
       // the row, then finds it revoked and its successor already stored.
@@ -92,15 +102,18 @@ export class AuthService {
           where: { id: stored.id, revokedAt: null },
           data: { revokedAt: new Date() },
         });
-        return count === 1 ? this.store(tx, stored.userId, stored.family, userAgent) : null;
+        return count === 1
+          ? this.store(tx, stored.userId, stored.family, userAgent, stored.id)
+          : null;
       });
       if (next) return this.session(stored.user, next);
     }
-    // Already rotated: by another tab a moment ago (fine), or a replayed stolen token.
-    if (await this.justRotated(stored.id, stored.family)) {
+    // Already rotated: a replacement the client never got (or another tab), or a replayed
+    // stolen token.
+    if (await this.replacementUnused(stored.id)) {
       return this.session(
         stored.user,
-        await this.store(this.db, stored.userId, stored.family, userAgent),
+        await this.store(this.db, stored.userId, stored.family, userAgent, stored.id),
       );
     }
     await this.db.refreshToken.updateMany({
@@ -111,14 +124,37 @@ export class AuthService {
   }
 
   /**
-   * Whether a token was replaced within the last few seconds, as when two tabs refresh at once.
-   * Rotation leaves a live successor in the family; logging out or a revoked family does not.
+   * Whether a rotated token's replacements are all still unused, so the client plainly never
+   * received one (or two tabs refreshed together). A replacement that was itself rotated, or
+   * revoked by signing out, means the client did move on and this is a replay; so does a token
+   * replaced too many times.
    */
-  private async justRotated(id: string, family: string): Promise<boolean> {
-    const row = await this.db.refreshToken.findUnique({ where: { id } });
-    if (!row?.revokedAt || Date.now() - row.revokedAt.getTime() > REUSE_GRACE_MS) return false;
-    const successor = await this.db.refreshToken.findFirst({ where: { family, revokedAt: null } });
-    return successor !== null;
+  private async replacementUnused(id: string): Promise<boolean> {
+    const children = await this.db.refreshToken.findMany({
+      where: { parentId: id },
+      select: { revokedAt: true },
+    });
+    return (
+      children.length > 0 &&
+      children.length < MAX_CHILDREN &&
+      children.every((child) => child.revokedAt === null)
+    );
+  }
+
+  /** Drops this account's expired tokens and those revoked long ago; nothing waits on it. */
+  private sweep(userId: string): void {
+    const now = Date.now();
+    void this.db.refreshToken
+      .deleteMany({
+        where: {
+          userId,
+          OR: [
+            { expiresAt: { lt: new Date(now) } },
+            { revokedAt: { lt: new Date(now - SWEEP_AFTER_MS) } },
+          ],
+        },
+      })
+      .catch(() => undefined);
   }
 
   async logout(token: string | undefined): Promise<void> {
@@ -188,12 +224,13 @@ export class AuthService {
     return this.session(user, await this.store(this.db, user.id, family, userAgent));
   }
 
-  /** Stores a new refresh token in `family` and returns it. */
+  /** Stores a new refresh token in `family` (replacing `parentId`, if any) and returns it. */
   private async store(
     db: Pick<PrismaService, 'refreshToken'>,
     userId: string,
     family: string,
     userAgent?: string,
+    parentId?: string,
   ): Promise<string> {
     const refreshToken = randomToken();
     await db.refreshToken.create({
@@ -201,6 +238,7 @@ export class AuthService {
         userId,
         tokenHash: sha256(refreshToken),
         family,
+        parentId: parentId ?? null,
         expiresAt: new Date(Date.now() + REFRESH_TTL_MS),
         userAgent: userAgent?.slice(0, 200) ?? null,
       },

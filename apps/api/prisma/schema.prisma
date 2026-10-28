@@ -51,6 +51,9 @@ model RefreshToken {
   tokenHash String    @unique
   /// Rotation chain: reusing a revoked token revokes the whole family.
   family    String    @db.Uuid
+  /// The token this one replaced, so a replacement that never reached the client can be told
+  /// from a replayed stolen token (see AuthService.refresh).
+  parentId  String?   @db.Uuid
   expiresAt DateTime
   revokedAt DateTime?
   createdAt DateTime  @default(now())
@@ -58,6 +61,7 @@ model RefreshToken {
 
   @@index([userId])
   @@index([family])
+  @@index([parentId])
 }
 
 /// Personal access token for the public API ("tm_…").

@@ -11,6 +11,7 @@ import { TalkService } from './ai/talk.service.js';
 import { AuthController } from './auth/auth.controller.js';
 import { AuthGuard } from './auth/auth.guard.js';
 import { PrismaErrorFilter } from './common/prisma-error.filter.js';
+import { ThrottlerFilter } from './common/throttler.filter.js';
 import { AuthService } from './auth/auth.service.js';
 import { ENV, loadEnv, type Env } from './config/env.js';
 import { ContentService } from './content/content.service.js';
@@ -32,8 +33,12 @@ const env = loadEnv();
 @Module({
   imports: [
     JwtModule.register({ secret: env.JWT_SECRET, signOptions: { algorithm: 'HS256' } }),
-    // 120 requests a minute per client by default; auth routes are stricter.
-    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
+    // 120 requests a minute per client by default; auth routes are stricter. The test suite
+    // signs in far more often than a person would.
+    ThrottlerModule.forRoot({
+      throttlers: [{ ttl: 60_000, limit: 120 }],
+      skipIf: () => env.NODE_ENV === 'test',
+    }),
     ScheduleModule.forRoot(),
   ],
   controllers: [
@@ -49,6 +54,7 @@ const env = loadEnv();
     { provide: ENV, useValue: env satisfies Env },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_FILTER, useClass: PrismaErrorFilter },
+    { provide: APP_FILTER, useClass: ThrottlerFilter },
     PrismaService,
     ContentService,
     AuthService,
