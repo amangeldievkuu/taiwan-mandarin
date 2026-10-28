@@ -1,10 +1,23 @@
 <script lang="ts">
   // Where the words, dictionary, examples, stroke order and fonts come from.
   import SubpageHead from '../ui/SubpageHead.svelte';
+  import { router } from '../lib/router.svelte';
 </script>
 
 <div class="page">
   <SubpageHead title="About" zh="關於" />
+
+  <ul class="list">
+    <li>
+      <a class="row" href={router.href('/welcome')} onclick={router.link}>
+        <span class="row-main">
+          <span class="row-label">Take the tour</span>
+          <span class="row-sub">The welcome page, with 墨 the ink bot</span>
+        </span>
+        <svg class="chevron" viewBox="0 0 8 14" aria-hidden="true"><path d="M1 1l6 6-6 6" /></svg>
+      </a>
+    </li>
+  </ul>
 
   <div class="sheet about">
     <h2>Sources</h2>
@@ -29,6 +42,15 @@
 </div>
 
 <style>
+  .list {
+    margin-bottom: 14px;
+  }
+
+  .row-label {
+    display: block;
+    font-weight: 700;
+  }
+
   .about {
     padding: 16px 18px;
     font-size: 14px;

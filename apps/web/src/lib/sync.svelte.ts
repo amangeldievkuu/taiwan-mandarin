@@ -51,6 +51,11 @@ const toDto = (wordId: string, r: CardRecord): CardRecordDto => ({
 const USER_KEY = 'tm-user';
 /** Set when signing out failed to reach the server, so the cookie is still revoked later. */
 const LOGOUT_KEY = 'tm-logout-pending';
+/** The account remembered on this device, if any (readable before the account module starts). */
+export function rememberedUser(): UserDto | null {
+  return remembered();
+}
+
 function remembered(): UserDto | null {
   try {
     return JSON.parse(localStorage.getItem(USER_KEY) ?? 'null') as UserDto | null;

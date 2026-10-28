@@ -14,6 +14,7 @@
   import Study from './routes/Study.svelte';
   import Talk from './routes/Talk.svelte';
   import Today from './routes/Today.svelte';
+  import Welcome from './routes/Welcome.svelte';
   import WordPage from './routes/WordPage.svelte';
   import Celebrations from './ui/Celebrations.svelte';
   import LookupSheet from './ui/LookupSheet.svelte';
@@ -24,11 +25,29 @@
   import { pwa } from './lib/pwa.svelte';
   import { router, viewKey } from './lib/router.svelte';
   import { store } from './lib/store.svelte';
-  import { account } from './lib/sync.svelte';
+  import { account, rememberedUser } from './lib/sync.svelte';
   import { toasts } from './lib/toast.svelte';
+  import { shouldWelcome, wasWelcomed } from './lib/welcome';
+
+  /** The welcome page has no navigation and no rail: it is the page before the app. */
+  const bare = $derived(router.route.name === 'welcome');
 
   onMount(() => {
-    void store.init().then(() => account.init());
+    void store.init().then(() => {
+      // Someone who has never used the app here lands on the welcome page first.
+      if (
+        router.route.name === 'today' &&
+        shouldWelcome({
+          cards: Object.keys(store.cards).length,
+          deck: store.deck.length,
+          user: rememberedUser() !== null,
+          welcomed: wasWelcomed(),
+        })
+      ) {
+        router.go('/welcome', { replace: true });
+      }
+      return account.init();
+    });
     pwa.start(() =>
       toasts.show({
         kind: 'info',
@@ -93,11 +112,13 @@
 <svelte:window onkeydown={onKey} />
 
 {#if store.ready}
-  <Nav />
-  <main>
+  {#if !bare}<Nav />{/if}
+  <main class:bare>
     {#key viewKey(router.route)}
       <div class="view">
-        {#if router.route.name === 'today'}
+        {#if router.route.name === 'welcome'}
+          <Welcome />
+        {:else if router.route.name === 'today'}
           <Today />
         {:else if router.route.name === 'study'}
           <Study />
@@ -148,6 +169,10 @@
   main {
     margin-left: var(--rail-w);
     min-height: 100dvh;
+  }
+
+  main.bare {
+    margin-left: 0;
   }
 
   /* Without the View Transitions API, pages still fade up into place. */

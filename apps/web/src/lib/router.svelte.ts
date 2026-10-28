@@ -20,7 +20,8 @@ export type RouteName =
   | 'me-settings'
   | 'me-garden'
   | 'me-levels'
-  | 'me-about';
+  | 'me-about'
+  | 'welcome';
 
 /** The pages under Me (they highlight the Me tab and slide in from it). */
 export const ME_ROUTES: RouteName[] = [
@@ -54,6 +55,7 @@ const PATTERNS: [RouteName, RegExp][] = [
   ['me-garden', /^\/me\/garden\/?$/],
   ['me-levels', /^\/me\/levels\/?$/],
   ['me-about', /^\/me\/about\/?$/],
+  ['welcome', /^\/welcome\/?$/],
 ];
 
 /** How deep a page sits: tabs are 0, so moving to a larger number slides forward. */
@@ -65,6 +67,7 @@ const DEPTH: Record<RouteName, number> = {
   dict: 0,
   talk: 0,
   me: 0,
+  welcome: 0,
   level: 1,
   reader: 1,
   'me-account': 1,
