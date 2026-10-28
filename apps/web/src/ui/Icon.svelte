@@ -32,6 +32,8 @@
     send: 'M4.5 12h11M11 6.5l6 5.5-6 5.5',
     trash: 'M5 7h14M10 7V4.5h4V7M7 7l1 13h8l1-13',
     layers: 'M12 4 3.5 8.5 12 13l8.5-4.5zM3.5 12.5 12 17l8.5-4.5M3.5 16.5 12 21l8.5-4.5',
+    info: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 11.5v5M12 8h.01',
+    leaf: 'M5 19c0-8 5-13 14-14-1 9-6 14-14 14ZM5 19l7.5-7.5',
   } as const;
 
   export type IconName = keyof typeof ICONS;

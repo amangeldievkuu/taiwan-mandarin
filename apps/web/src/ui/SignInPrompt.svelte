@@ -14,7 +14,7 @@
   <Seal text={seal} size={52} outline />
   <div>
     <p>{text}</p>
-    <a class="btn primary small" href={router.href('/me')} onclick={router.link}>Sign in</a>
+    <a class="btn primary small" href={router.href('/me/account')} onclick={router.link}>Sign in</a>
   </div>
 </div>
 

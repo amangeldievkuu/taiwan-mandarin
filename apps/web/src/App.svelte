@@ -1,8 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import About from './routes/About.svelte';
+  import Account from './routes/Account.svelte';
   import Dict from './routes/Dict.svelte';
+  import Garden from './routes/Garden.svelte';
   import Level from './routes/Level.svelte';
+  import Levels from './routes/Levels.svelte';
   import Me from './routes/Me.svelte';
+  import Settings from './routes/Settings.svelte';
   import Path from './routes/Path.svelte';
   import Read from './routes/Read.svelte';
   import ReaderView from './routes/ReaderView.svelte';
@@ -110,6 +115,16 @@
           <Dict />
         {:else if router.route.name === 'talk'}
           <Talk />
+        {:else if router.route.name === 'me-account'}
+          <Account />
+        {:else if router.route.name === 'me-settings'}
+          <Settings />
+        {:else if router.route.name === 'me-garden'}
+          <Garden />
+        {:else if router.route.name === 'me-levels'}
+          <Levels />
+        {:else if router.route.name === 'me-about'}
+          <About />
         {:else}
           <Me />
         {/if}

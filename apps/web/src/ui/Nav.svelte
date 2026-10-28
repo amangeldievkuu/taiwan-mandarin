@@ -4,7 +4,7 @@
   // page; the navigation stays put while pages transition.
   import Icon, { type IconName } from './Icon.svelte';
   import Seal from './Seal.svelte';
-  import { router, type RouteName } from '../lib/router.svelte';
+  import { ME_ROUTES, router, type RouteName } from '../lib/router.svelte';
   import { store } from '../lib/store.svelte';
 
   interface Item {
@@ -32,7 +32,7 @@
     { path: '/read', icon: 'read', zh: '閱讀', en: 'Read', match: ['read', 'reader'], phone: true },
     { path: '/dict', icon: 'dict', zh: '字典', en: 'Dictionary', match: ['dict'], phone: true },
     { path: '/talk', icon: 'talk', zh: '對話', en: 'Talk', match: ['talk'], phone: false },
-    { path: '/me', icon: 'me', zh: '我', en: 'Me', match: ['me'], phone: true },
+    { path: '/me', icon: 'me', zh: '我', en: 'Me', match: ME_ROUTES, phone: true },
   ];
   const PHONE = ITEMS.filter((i) => i.phone);
 

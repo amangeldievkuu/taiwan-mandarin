@@ -6,7 +6,31 @@ import { flushSync } from 'svelte';
 import { reduced } from './motion';
 
 export type RouteName =
-  'today' | 'study' | 'path' | 'level' | 'word' | 'read' | 'reader' | 'dict' | 'talk' | 'me';
+  | 'today'
+  | 'study'
+  | 'path'
+  | 'level'
+  | 'word'
+  | 'read'
+  | 'reader'
+  | 'dict'
+  | 'talk'
+  | 'me'
+  | 'me-account'
+  | 'me-settings'
+  | 'me-garden'
+  | 'me-levels'
+  | 'me-about';
+
+/** The pages under Me (they highlight the Me tab and slide in from it). */
+export const ME_ROUTES: RouteName[] = [
+  'me',
+  'me-account',
+  'me-settings',
+  'me-garden',
+  'me-levels',
+  'me-about',
+];
 
 export interface Route {
   name: RouteName;
@@ -25,6 +49,11 @@ const PATTERNS: [RouteName, RegExp][] = [
   ['dict', /^\/dict\/?$/],
   ['talk', /^\/talk\/?$/],
   ['me', /^\/me\/?$/],
+  ['me-account', /^\/me\/account\/?$/],
+  ['me-settings', /^\/me\/settings\/?$/],
+  ['me-garden', /^\/me\/garden\/?$/],
+  ['me-levels', /^\/me\/levels\/?$/],
+  ['me-about', /^\/me\/about\/?$/],
 ];
 
 /** How deep a page sits: tabs are 0, so moving to a larger number slides forward. */
@@ -38,6 +67,11 @@ const DEPTH: Record<RouteName, number> = {
   me: 0,
   level: 1,
   reader: 1,
+  'me-account': 1,
+  'me-settings': 1,
+  'me-garden': 1,
+  'me-levels': 1,
+  'me-about': 1,
   word: 2,
 };
 
