@@ -5,7 +5,14 @@
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { TOPICS, type ContentManifest, type Reader, type Word } from '@taiwan-mandarin/shared';
+import {
+  TOKEN_GLOSS,
+  TOPICS,
+  type ContentManifest,
+  type ForeignLang,
+  type Reader,
+  type Word,
+} from '@taiwan-mandarin/shared';
 import {
   checkText,
   checkVocab,
@@ -40,16 +47,46 @@ function files(path: string): string[] {
 const content = join(root, 'apps/web/public/content');
 const json = <T>(file: string) => JSON.parse(readFileSync(join(content, file), 'utf8')) as T;
 const manifest = json<ContentManifest>('manifest.json');
-// The Vietnamese files are the English ones plus Vietnamese, so they cover everything.
-const dir = manifest.languages?.includes('vi') ? 'vi/' : '';
-const words = manifest.levels.flatMap((level) => json<Word[]>(dir + level.file));
-const readers = json<Reader[]>(dir + 'readers.json');
+const words = manifest.levels.flatMap((level) => json<Word[]>(level.file));
+const readers = json<Reader[]>('readers.json');
+const langs = (manifest.languages ?? []).filter((l): l is ForeignLang => l !== 'en');
+
+// Each other language's files are the English ones plus its own fields: put those on the English
+// words, so checkVocab checks every language in one pass (with its own locations, "vocab:…vi").
+for (const lang of langs) {
+  const theirs = manifest.levels.flatMap((level) => json<Word[]>(`${lang}/${level.file}`));
+  if (theirs.length !== words.length)
+    throw new Error(`content/${lang}: ${theirs.length} words, not ${words.length}`);
+  theirs.forEach(({ examples, ...fields }, i) => {
+    const own = words[i] as Word;
+    if (fields.id !== own.id) throw new Error(`content/${lang}: ${fields.id} where ${own.id} is`);
+    Object.assign(own, fields);
+    examples?.forEach((e, j) => {
+      const mine = own.examples?.[j];
+      if (mine?.zh !== e.zh) throw new Error(`content/${lang}: ${own.id} has other examples`);
+      Object.assign(mine, e);
+    });
+  });
+}
 
 const issues: Issue[] = checkVocab(words, TOPICS);
 for (const reader of readers) {
   const where = `reader:${reader.id}`;
   for (const text of [reader.title, ...reader.paragraphs.map((p) => p.map((t) => t.t).join(''))]) {
     issues.push(...checkText({ text, where }));
+  }
+}
+// The readers in each other language: their title, summary, translation and glosses.
+for (const lang of langs) {
+  for (const reader of json<Reader[]>(`${lang}/readers.json`)) {
+    const where = `reader:${reader.id}.${lang}`;
+    const block = reader[lang];
+    const glosses = reader.paragraphs.flatMap((p) => p.flatMap((t) => t[TOKEN_GLOSS[lang]] ?? []));
+    for (const text of [
+      ...(block ? [block.title, block.summary, ...block.translation] : []),
+      ...glosses,
+    ])
+      issues.push(...checkText({ text, where }));
   }
 }
 let scanned = 0;
@@ -72,5 +109,5 @@ if (issues.length) {
   process.exit(1);
 }
 console.log(
-  `Taiwan-standard guard: ${words.length} words, ${readers.length} readers and ${scanned} source files OK`,
+  `Taiwan-standard guard: ${words.length} words and ${readers.length} readers (${['en', ...langs].join(', ')}) and ${scanned} source files OK`,
 );
