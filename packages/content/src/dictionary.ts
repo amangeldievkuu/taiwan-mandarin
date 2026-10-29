@@ -1,6 +1,6 @@
-// CC-CEDICT → dictionary shards with Taiwan readings, linked to study-path words. The Vietnamese
-// shards are built in the same pass: the same entries in the same order, with CVDICT's definitions
-// (or the English, marked, where CVDICT has none).
+// CC-CEDICT → dictionary shards with Taiwan readings, linked to study-path words. Each other
+// language's shards are built from the same pass: the same entries in the same order, with that
+// language's definitions (CVDICT's in Vietnamese), or the English, marked, where it has none.
 //
 // Readings, in order of authority:
 //   1. the study-path word (TOCFL / NAER, MOE readings) with the same headword and syllables;
@@ -14,6 +14,7 @@ import {
   sameWordForms,
   type DictEntry,
   type DictShard,
+  type ForeignLang,
   type Word,
 } from '@taiwan-mandarin/shared';
 import { taiwanReading } from '@taiwan-mandarin/shared/taiwan-standard';
@@ -23,12 +24,29 @@ import { fold } from './lexicon.ts';
 /** Mainland character readings → Taiwan ones (shared with the API's explanations). */
 export const taiwanCharReadings = taiwanReading;
 
+/** A language to build dictionary shards in besides English. */
+export interface DictLanguage {
+  lang: ForeignLang;
+  /** A headword's reading in the language, shown with the entry (Hán-Việt in Vietnamese). */
+  reading?: (hanzi: string, pinyin: string) => string | undefined;
+  /**
+   * Where the language's own definitions lack a study word's entry, the word's meaning stands in:
+   * for its first entry under each headword, so a word with several entries doesn't say it twice.
+   */
+  wordMeanings?: boolean;
+}
+
 export function buildDictionary(
   cedict: readonly CedictEntry[],
   words: readonly Word[],
-  /** A headword's Sino-Vietnamese reading, for the Vietnamese shards. */
-  hanViet: (hanzi: string, pinyin: string) => string | undefined = () => undefined,
-): { shards: DictShard[]; viShards: DictShard[]; maxLength: number; entries: number } {
+  languages: readonly DictLanguage[] = [],
+): {
+  shards: DictShard[];
+  /** Each language's shards: the same entries, in its words. */
+  localized: Partial<Record<ForeignLang, DictShard[]>>;
+  maxLength: number;
+  entries: number;
+} {
   // Study-path words by folded written form (headword and variants).
   const byForm = new Map<string, Word[]>();
   for (const w of words) {
@@ -59,16 +77,16 @@ export function buildDictionary(
   const shards: DictShard[] = Array.from({ length: DICT_SHARDS }, () => ({}));
   // Sort key: study-path readings first (by level), then common words, then names.
   const rank = new WeakMap<DictEntry, number>();
-  /** Each entry's Vietnamese twin. */
-  const twin = new WeakMap<DictEntry, DictEntry>();
-  const add = (head: string, entry: DictEntry, vi: string[] | undefined, proper = false) => {
+  /** Where each entry comes from: a CC-CEDICT entry and the study word it links to, or a study word. */
+  const origin = new WeakMap<DictEntry, { cedict?: CedictEntry; word?: Word }>();
+  const add = (
+    head: string,
+    entry: DictEntry,
+    from: { cedict?: CedictEntry; word?: Word },
+    proper = false,
+  ) => {
     rank.set(entry, entry.l ? levelIndex(entry.l) : proper ? 30 : 20);
-    const h = hanViet(entry.t, entry.p);
-    twin.set(entry, {
-      ...entry,
-      ...(vi?.length ? { d: vi } : { en: 1 }),
-      ...(h ? { h } : {}),
-    });
+    origin.set(entry, from);
     const shard = shards[dictShardOf(head)] as DictShard;
     (shard[head] ??= []).push(entry);
   };
@@ -90,7 +108,7 @@ export function buildDictionary(
       add(
         e.trad,
         { t: e.trad, p: pinyin, d: e.defs, ...(word ? { w: word.id, l: word.level } : {}) },
-        e.tr?.vi,
+        { cedict: e, word },
         e.proper,
       );
       continue;
@@ -104,7 +122,7 @@ export function buildDictionary(
         ...(e.classifiers.length ? { c: e.classifiers.join(' ') } : {}),
         ...(word ? { w: word.id, l: word.level } : {}),
       },
-      e.tr?.vi,
+      { cedict: e, word },
       e.proper,
     );
     // Also findable by the Taiwan form when CC-CEDICT spells it differently (臺/台, 裡/裏).
@@ -112,7 +130,7 @@ export function buildDictionary(
       add(
         e.trad,
         { t: e.trad, p: pinyin, d: e.defs, ...(word ? { w: word.id, l: word.level } : {}) },
-        e.tr?.vi,
+        { cedict: e, word },
         e.proper,
       );
     }
@@ -133,7 +151,7 @@ export function buildDictionary(
         w: w.id,
         l: w.level,
       },
-      w.vi ? [w.vi] : undefined,
+      { word: w },
     );
     maxLength = Math.max(maxLength, [...w.hanzi].length);
     entries++;
@@ -143,10 +161,31 @@ export function buildDictionary(
     for (const list of Object.values(shard))
       list.sort((a, b) => (rank.get(a) ?? 0) - (rank.get(b) ?? 0));
   }
-  const viShards = shards.map((shard) =>
-    Object.fromEntries(
-      Object.entries(shard).map(([head, list]) => [head, list.map((e) => twin.get(e) ?? e)]),
-    ),
-  );
-  return { shards, viShards, maxLength, entries };
+  const localized: Partial<Record<ForeignLang, DictShard[]>> = {};
+  for (const { lang, reading, wordMeanings } of languages) {
+    localized[lang] = shards.map((shard) =>
+      Object.fromEntries(
+        Object.entries(shard).map(([head, list]) => {
+          const meant = new Set<Word>();
+          return [
+            head,
+            list.map((e): DictEntry => {
+              const { cedict: from, word } = origin.get(e) ?? {};
+              const meaning = word?.[lang];
+              const first = word !== undefined && !meant.has(word);
+              if (word) meant.add(word);
+              const defs = from
+                ? (from.tr?.[lang] ?? (wordMeanings && first && meaning ? [meaning] : undefined))
+                : meaning
+                  ? [meaning]
+                  : undefined;
+              const h = reading?.(e.t, e.p);
+              return { ...e, ...(defs?.length ? { d: defs } : { en: 1 }), ...(h ? { h } : {}) };
+            }),
+          ];
+        }),
+      ),
+    );
+  }
+  return { shards, localized, maxLength, entries };
 }

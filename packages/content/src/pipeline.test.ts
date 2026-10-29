@@ -309,7 +309,11 @@ describe('Vietnamese content', () => {
     word('臺灣', 'tai2 wan1', 'Taiwan'),
     word('珍奶', 'zhen1 nai3', 'bubble tea', { glossSource: 'ai', vi: 'trà sữa', viSource: 'ai' }),
   ];
-  const { shards, viShards } = buildDictionary(cedict, words);
+  const { shards, localized } = buildDictionary(cedict, words, [{ lang: 'vi' }]);
+  const viShards = localized.vi ?? [];
+  const vietnamese = [
+    { lang: 'vi' as const, name: 'Vietnamese', shards: viShards, required: true },
+  ];
 
   it('builds Vietnamese dictionary shards entry for entry, marking English stand-ins', () => {
     shards.forEach((shard, i) => {
@@ -342,14 +346,14 @@ describe('Vietnamese content', () => {
       vi: { title: 'Rác', summary: 'Rác.', translation: ['Rác.'] },
     };
     writeFileSync(join(dir, 'trash.json'), JSON.stringify(reader));
-    const [read] = readReaders(dir, words, shards, viShards, 4);
+    const [read] = readReaders(dir, words, shards, vietnamese, 4);
     expect(read?.vi).toEqual({ title: 'Rác', summary: 'Rác.', translation: ['Rác.'] });
 
     writeFileSync(
       join(dir, 'trash.json'),
       JSON.stringify({ ...reader, vi: { ...reader.vi, translation: [] } }),
     );
-    expect(() => readReaders(dir, words, shards, viShards, 4)).toThrow(/Vietnamese translation/);
+    expect(() => readReaders(dir, words, shards, vietnamese, 4)).toThrow(/Vietnamese translation/);
   });
 });
 

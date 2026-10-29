@@ -1,6 +1,6 @@
 // Graded readers: data/readers/<id>.json → paragraphs split into words with readings, linked to
 // study-path words so the app can mark known words and add unknown ones with one tap. A reader's
-// `vi` block carries its Vietnamese title, summary, translation and glossary.
+// block in each other language (`vi`) carries its title, summary, translation and glossary.
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -10,8 +10,10 @@ import {
   LEVEL_IDS,
   levelIndex,
   segment,
+  TOKEN_GLOSS,
   TOPICS,
   type DictShard,
+  type ForeignLang,
   type Lexicon,
   type Reader,
   type ReaderSource,
@@ -20,12 +22,22 @@ import {
 } from '@taiwan-mandarin/shared';
 import { checkText, formatIssues } from '@taiwan-mandarin/shared/taiwan-standard';
 
+/** A language the readers are read in besides English. */
+export interface ReaderLanguage {
+  lang: ForeignLang;
+  /** Its English name, for messages. */
+  name: string;
+  /** Its dictionary shards, for glosses of words outside the study path. */
+  shards: readonly DictShard[];
+  /** Every reader must have a block in it. */
+  required: boolean;
+}
+
 export function readReaders(
   dir: string,
   words: readonly Word[],
   shards: readonly DictShard[],
-  /** The Vietnamese dictionary shards, for Vietnamese glosses. */
-  viShards: readonly DictShard[],
+  languages: readonly ReaderLanguage[],
   maxLength: number,
   /** Called with the words above each reader's level that the reader doesn't gloss itself. */
   report?: (id: string, above: string[]) => void,
@@ -39,8 +51,9 @@ export function readReaders(
     }
   }
   const lookup = (word: string) => shards[dictShardOf(word)]?.[word];
-  const viDefinitions = (word: string) => {
-    const entry = viShards[dictShardOf(word)]?.[word]?.[0];
+  /** A word's first definitions in a language's own words (not the English standing in). */
+  const definitions = (language: ReaderLanguage, word: string) => {
+    const entry = language.shards[dictShardOf(word)]?.[word]?.[0];
     return entry && !entry.en ? entry.d.slice(0, 2).join('; ') : undefined;
   };
   const NUMERAL = /^[一二三四五六七八九十百千萬億〇零兩]+$/;
@@ -81,20 +94,28 @@ export function readReaders(
       if (source.translation.length !== source.paragraphs.length) {
         throw new Error(`${file}: one translation per paragraph`);
       }
-      if (!source.vi) throw new Error(`${file}: no Vietnamese (a "vi" block)`);
-      if (source.vi.translation.length !== source.paragraphs.length) {
-        throw new Error(`${file}: one Vietnamese translation per paragraph`);
-      }
       const glossary = source.glossary ?? {};
-      const viGlossary = source.vi.glossary ?? {};
-      const untranslated = Object.keys(glossary).filter((form) => !viGlossary[form]);
-      if (untranslated.length)
-        throw new Error(`${file}: no Vietnamese glossary entry for ${untranslated.join(' ')}`);
+      const blocks = languages.flatMap((language) => {
+        const { lang, name } = language;
+        const block = source[lang];
+        if (!block) {
+          if (language.required) throw new Error(`${file}: no ${name} (a "${lang}" block)`);
+          return [];
+        }
+        if (block.translation.length !== source.paragraphs.length) {
+          throw new Error(`${file}: one ${name} translation per paragraph`);
+        }
+        const own = block.glossary ?? {};
+        const untranslated = Object.keys(glossary).filter((form) => !own[form]);
+        if (untranslated.length)
+          throw new Error(`${file}: no ${name} glossary entry for ${untranslated.join(' ')}`);
+        return [{ language, block, glossary: own }];
+      });
       const issues = [
         source.title,
         ...source.paragraphs,
         ...Object.keys(glossary),
-        ...Object.keys(viGlossary),
+        ...blocks.flatMap((b) => Object.keys(b.glossary)),
       ].flatMap((text) => checkText({ text, where }));
       if (issues.length)
         throw new Error(`${file} is not Taiwan standard:\n${formatIssues(issues)}`);
@@ -124,9 +145,13 @@ export function readReaders(
               : undefined;
           if (level > levelIndex(source.level) && !glossary[token.text]) above.push(token.text);
           const gloss = glossary[token.text] ?? autoGloss;
-          // Vietnamese for every word that has an English gloss.
-          const viGloss =
-            viGlossary[token.text] ?? (gloss ? (word?.vi ?? viDefinitions(token.text)) : undefined);
+          // Each language's gloss, for every word that has an English one.
+          const glosses = blocks.flatMap(({ language, glossary: own }) => {
+            const text =
+              own[token.text] ??
+              (gloss ? (word?.[language.lang] ?? definitions(language, token.text)) : undefined);
+            return text ? [[TOKEN_GLOSS[language.lang], text] as const] : [];
+          });
           const pinyin =
             word?.pinyin ?? lookup(token.text)?.[0]?.p ?? charByChar(token.text, lookup);
           if (!pinyin) throw new Error(`${file}: no reading for "${token.text}"`);
@@ -135,7 +160,7 @@ export function readReaders(
             p: pinyin,
             ...(word ? { w: word.id, l: word.level } : {}),
             ...(gloss ? { g: gloss } : {}),
-            ...(viGloss ? { gv: viGloss } : {}),
+            ...Object.fromEntries(glosses),
           };
         }),
       );
@@ -147,11 +172,12 @@ export function readReaders(
         titleEn: source.titleEn,
         summary: source.summary,
         translation: source.translation,
-        vi: {
-          title: source.vi.title,
-          summary: source.vi.summary,
-          translation: source.vi.translation,
-        },
+        ...Object.fromEntries(
+          blocks.map(({ language, block }) => [
+            language.lang,
+            { title: block.title, summary: block.summary, translation: block.translation },
+          ]),
+        ),
         paragraphs,
         wordCount: seen.size,
         charCount,

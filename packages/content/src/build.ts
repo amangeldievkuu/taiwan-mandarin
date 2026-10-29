@@ -116,9 +116,9 @@ for (const w of words) {
 done(`${words.filter((w) => w.hv).length} words, ${hanVietMissing.size} characters missing`);
 
 done = step('dictionary');
-const dictionary = buildDictionary(cedict, words, (hanzi, pinyin) =>
-  hanViet(hanVietTable, hanzi, pinyin),
-);
+const dictionary = buildDictionary(cedict, words, [
+  { lang: 'vi', reading: (hanzi, pinyin) => hanViet(hanVietTable, hanzi, pinyin) },
+]);
 done(`${dictionary.entries} entries, longest ${dictionary.maxLength}`);
 
 done = step('examples');
@@ -186,7 +186,7 @@ const readers = readReaders(
   DATA.readers,
   words,
   dictionary.shards,
-  dictionary.viShards,
+  [{ lang: 'vi', name: 'Vietnamese', shards: dictionary.localized.vi ?? [], required: true }],
   dictionary.maxLength,
   (id, above) => {
     if (above.length) tooHard.push(`${id}\t${[...new Set(above)].join(' ')}`);
@@ -263,7 +263,7 @@ const levels: LevelManifest[] = LEVELS.map(({ id }) => {
   };
 });
 dictionary.shards.forEach((shard, i) => write(`dict/${i}.json`, shard));
-dictionary.viShards.forEach((shard, i) => write(`dict/vi/${i}.json`, shard));
+dictionary.localized.vi?.forEach((shard, i) => write(`dict/vi/${i}.json`, shard));
 // Search index for pinyin / meaning lookups across the whole path: [id, hanzi, toneless pinyin,
 // gloss], plus the Sino-Vietnamese reading in Vietnamese.
 write(
