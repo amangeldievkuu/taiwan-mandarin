@@ -93,3 +93,43 @@ describe('curated starter words', () => {
     expect(found, formatIssues(found)).toEqual([]);
   });
 });
+
+describe('Vietnamese text', () => {
+  const word = (patch: Partial<Word>): Word => ({
+    id: '捷運',
+    hanzi: '捷運',
+    pinyin: 'jie2 yun4',
+    en: 'MRT',
+    level: 'N2',
+    src: 'tocfl',
+    rank: 0,
+    topic: 'travel',
+    glossSource: 'cedict',
+    ...patch,
+  });
+  const where = (w: Word) => checkVocab([w], []).map((i) => i.where);
+
+  it('is checked where we wrote it', () => {
+    expect(where(word({ vi: 'giống 地铁', viSource: 'ai' }))).toEqual(['vocab:捷運.vi']);
+    expect(where(word({ twVi: 'Đại lục gọi là 地铁.' }))).toEqual(['vocab:捷運.twVi']);
+    expect(
+      where(
+        word({
+          examples: [
+            {
+              zh: '我坐捷運。',
+              pinyin: 'wo3 zuo4 jie2 yun4',
+              en: '',
+              vi: 'Tôi đi 地铁.',
+              source: 'ai',
+            },
+          ],
+        }),
+      ),
+    ).toEqual(['vocab:捷運.examples.0.vi']);
+  });
+
+  it('is left alone when it is CVDICT, like CC-CEDICT', () => {
+    expect(where(word({ vi: 'giống 地铁', viSource: 'cvdict' }))).toEqual([]);
+  });
+});

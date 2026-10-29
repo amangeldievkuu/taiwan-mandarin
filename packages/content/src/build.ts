@@ -8,7 +8,7 @@
 
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import {
   LEVELS,
   plainPinyin,
@@ -16,6 +16,8 @@ import {
   type ContentManifest,
   type Example,
   type LevelManifest,
+  type Reader,
+  type SearchRow,
   type Word,
 } from '@taiwan-mandarin/shared';
 import { checkVocab, formatIssues } from '@taiwan-mandarin/shared/taiwan-standard';
@@ -128,9 +130,18 @@ for (const ai of readJsonl<{ id: string; zh: string; en: string; pinyin?: string
   if (list.length < 2 && !list.some((e) => e.zh === ai.zh)) examples.set(ai.id, [...list, example]);
 }
 if (skipped) console.warn(`  ${skipped} AI examples skipped: no reading for some character`);
+// Vietnamese translations of example sentences, by sentence (see data/generated/README.md).
+const viExamples = new Map(
+  readJsonl<{ zh: string; vi: string }>(DATA.viExamples).map((e) => [e.zh, e.vi] as const),
+);
 for (const w of words) {
   const list = examples.get(w.id);
-  if (list?.length) w.examples = list;
+  if (list?.length) {
+    w.examples = list.map((e) => {
+      const vi = viExamples.get(e.zh);
+      return vi ? { ...e, vi } : e;
+    });
+  }
 }
 done(
   `${usable} usable of ${sentences.length} Tatoeba sentences; ${examples.size} words have examples`,
@@ -151,6 +162,7 @@ const readers = readReaders(
   DATA.readers,
   words,
   dictionary.shards,
+  dictionary.viShards,
   dictionary.maxLength,
   (id, above) => {
     if (above.length) tooHard.push(`${id}\t${[...new Set(above)].join(' ')}`);
@@ -159,6 +171,22 @@ const readers = readReaders(
 done(
   `${readers.length} texts; words above their level (auto-glossed): ${readers.map((r) => `${r.id} ${Math.round(r.hard * 100)}%`).join(', ')}`,
 );
+
+/** A reader as the English file carries it, without the Vietnamese fields. */
+function englishReader(reader: Reader): Reader {
+  const r: Reader = {
+    ...reader,
+    paragraphs: reader.paragraphs.map((p) =>
+      p.map((token) => {
+        const t = { ...token };
+        delete t.gv;
+        return t;
+      }),
+    ),
+  };
+  delete r.vi;
+  return r;
+}
 
 /** A word as the English files carry it, without the Vietnamese fields. */
 function englishWord(word: Word): Word {
@@ -188,10 +216,12 @@ const files: Record<string, string> = {};
 const write = (path: string, data: unknown) => {
   const json = JSON.stringify(data);
   hash.update(json);
-  writeFileSync(
-    join(OUT[path.startsWith('dict/') ? 'dict' : 'content'], path.replace(/^\w+\//, '')),
-    json,
+  const target = join(
+    OUT[path.startsWith('dict/') ? 'dict' : 'content'],
+    path.replace(/^\w+\//, ''),
   );
+  mkdirSync(dirname(target), { recursive: true });
+  writeFileSync(target, json);
   files[path] = createHash('sha256').update(json).digest('hex').slice(0, 12);
 };
 
@@ -199,6 +229,7 @@ const levels: LevelManifest[] = LEVELS.map(({ id }) => {
   const list = words.filter((w) => w.level === id);
   const file = `words-${id}.json`;
   write(`content/${file}`, list.map(englishWord));
+  write(`content/vi/${file}`, list);
   return {
     id,
     count: list.length,
@@ -208,12 +239,23 @@ const levels: LevelManifest[] = LEVELS.map(({ id }) => {
   };
 });
 dictionary.shards.forEach((shard, i) => write(`dict/${i}.json`, shard));
-// Search index for pinyin / English lookups across the whole path: [id, hanzi, toneless pinyin, gloss].
+dictionary.viShards.forEach((shard, i) => write(`dict/vi/${i}.json`, shard));
+// Search index for pinyin / meaning lookups across the whole path: [id, hanzi, toneless pinyin,
+// gloss], plus the Sino-Vietnamese reading in Vietnamese.
 write(
   'content/search.json',
-  words.map((w) => [w.id, w.hanzi, plainPinyin(w.pinyin), w.en.slice(0, 90)]),
+  words.map((w): SearchRow => [w.id, w.hanzi, plainPinyin(w.pinyin), w.en.slice(0, 90)]),
 );
-write('content/readers.json', readers);
+write(
+  'content/vi/search.json',
+  words.map((w): SearchRow => {
+    const gloss = (w.vi ?? w.en).slice(0, 100);
+    const pinyin = plainPinyin(w.pinyin);
+    return w.hv ? [w.id, w.hanzi, pinyin, gloss, w.hv] : [w.id, w.hanzi, pinyin, gloss];
+  }),
+);
+write('content/readers.json', readers.map(englishReader));
+write('content/vi/readers.json', readers);
 
 const manifest: ContentManifest = {
   version: hash.digest('hex').slice(0, 12),
@@ -223,6 +265,7 @@ const manifest: ContentManifest = {
   readers: readers.length,
   legacyIds,
   files,
+  languages: ['en', 'vi'],
 };
 writeFileSync(join(OUT.content, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
 

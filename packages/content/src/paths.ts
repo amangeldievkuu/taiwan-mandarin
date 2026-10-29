@@ -20,6 +20,7 @@ export const DATA = {
   aiExamples: at('data/generated/examples-ai.jsonl'),
   aiGlosses: at('data/generated/glosses-ai.jsonl'),
   aiGlossesVi: at('data/generated/glosses-vi.jsonl'),
+  viExamples: at('data/generated/examples-vi.jsonl'),
   readers: at('data/readers'),
 };
 

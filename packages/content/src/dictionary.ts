@@ -1,4 +1,6 @@
-// CC-CEDICT → dictionary shards with Taiwan readings, linked to study-path words.
+// CC-CEDICT → dictionary shards with Taiwan readings, linked to study-path words. The Vietnamese
+// shards are built in the same pass: the same entries in the same order, with CVDICT's definitions
+// (or the English, marked, where CVDICT has none).
 //
 // Readings, in order of authority:
 //   1. the study-path word (TOCFL / NAER, MOE readings) with the same headword and syllables;
@@ -24,7 +26,7 @@ export const taiwanCharReadings = taiwanReading;
 export function buildDictionary(
   cedict: readonly CedictEntry[],
   words: readonly Word[],
-): { shards: DictShard[]; maxLength: number; entries: number } {
+): { shards: DictShard[]; viShards: DictShard[]; maxLength: number; entries: number } {
   // Study-path words by folded written form (headword and variants).
   const byForm = new Map<string, Word[]>();
   for (const w of words) {
@@ -55,8 +57,11 @@ export function buildDictionary(
   const shards: DictShard[] = Array.from({ length: DICT_SHARDS }, () => ({}));
   // Sort key: study-path readings first (by level), then common words, then names.
   const rank = new WeakMap<DictEntry, number>();
-  const add = (head: string, entry: DictEntry, proper = false) => {
+  /** Each entry's Vietnamese twin. */
+  const twin = new WeakMap<DictEntry, DictEntry>();
+  const add = (head: string, entry: DictEntry, vi: string[] | undefined, proper = false) => {
     rank.set(entry, entry.l ? levelIndex(entry.l) : proper ? 30 : 20);
+    twin.set(entry, vi?.length ? { ...entry, d: vi } : { ...entry, en: 1 });
     const shard = shards[dictShardOf(head)] as DictShard;
     (shard[head] ??= []).push(entry);
   };
@@ -78,6 +83,7 @@ export function buildDictionary(
       add(
         e.trad,
         { t: e.trad, p: pinyin, d: e.defs, ...(word ? { w: word.id, l: word.level } : {}) },
+        e.vi,
         e.proper,
       );
       continue;
@@ -91,6 +97,7 @@ export function buildDictionary(
         ...(e.classifiers.length ? { c: e.classifiers.join(' ') } : {}),
         ...(word ? { w: word.id, l: word.level } : {}),
       },
+      e.vi,
       e.proper,
     );
     // Also findable by the Taiwan form when CC-CEDICT spells it differently (臺/台, 裡/裏).
@@ -98,6 +105,7 @@ export function buildDictionary(
       add(
         e.trad,
         { t: e.trad, p: pinyin, d: e.defs, ...(word ? { w: word.id, l: word.level } : {}) },
+        e.vi,
         e.proper,
       );
     }
@@ -108,14 +116,18 @@ export function buildDictionary(
   // Study-path words CC-CEDICT lacks: their own gloss.
   for (const w of words) {
     if (linked.has(w) || !w.en) continue;
-    add(w.hanzi, {
-      t: w.hanzi,
-      p: w.pinyin,
-      d: [w.en],
-      ...(w.cl ? { c: w.cl } : {}),
-      w: w.id,
-      l: w.level,
-    });
+    add(
+      w.hanzi,
+      {
+        t: w.hanzi,
+        p: w.pinyin,
+        d: [w.en],
+        ...(w.cl ? { c: w.cl } : {}),
+        w: w.id,
+        l: w.level,
+      },
+      w.vi ? [w.vi] : undefined,
+    );
     maxLength = Math.max(maxLength, [...w.hanzi].length);
     entries++;
   }
@@ -124,5 +136,10 @@ export function buildDictionary(
     for (const list of Object.values(shard))
       list.sort((a, b) => (rank.get(a) ?? 0) - (rank.get(b) ?? 0));
   }
-  return { shards, maxLength, entries };
+  const viShards = shards.map((shard) =>
+    Object.fromEntries(
+      Object.entries(shard).map(([head, list]) => [head, list.map((e) => twin.get(e) ?? e)]),
+    ),
+  );
+  return { shards, viShards, maxLength, entries };
 }

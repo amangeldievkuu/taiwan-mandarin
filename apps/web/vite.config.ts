@@ -53,7 +53,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico}', 'strokes-tw.json'],
-        // Word lists and dictionary shards (~17 MB) are cached on first use, not precached.
+        // Word lists and dictionary shards (~19 MB per language) are cached on first use, not
+        // precached.
         globIgnores: ['content/**', 'dict/**'],
         navigateFallbackDenylist: [/^\/api\//, /^\/content\//, /^\/dict\//],
         runtimeCaching: [
@@ -68,7 +69,8 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: {
               cacheName: 'content',
-              expiration: { maxEntries: 400, maxAgeSeconds: YEAR },
+              // 139 files per language, plus older versions until they expire.
+              expiration: { maxEntries: 1000, maxAgeSeconds: YEAR },
               cacheableResponse: { statuses: [200] },
             },
           },

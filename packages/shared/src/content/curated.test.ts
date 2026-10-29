@@ -14,6 +14,13 @@ describe('curated starter words', () => {
     expect(word.en.trim()).not.toBe('');
   });
 
+  it('have Vietnamese for every meaning and Taiwan note', () => {
+    for (const word of CURATED) {
+      expect(word.vi?.trim(), word.hanzi).toBeTruthy();
+      expect(Boolean(word.twVi), `${word.hanzi} twVi`).toBe(Boolean(word.tw));
+    }
+  });
+
   it('use Taiwan readings', () => {
     const pinyin = (hanzi: string) => CURATED.find((w) => w.hanzi === hanzi)?.pinyin;
     expect(pinyin('垃圾')).toBe('le4 se4');

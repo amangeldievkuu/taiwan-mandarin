@@ -114,11 +114,17 @@ export function vocabTexts(words: readonly Word[], topics: readonly Topic[]): Te
       ...(w.src === 'curated' ? [{ text: w.hanzi, where: `vocab:${w.id}.hanzi` }] : []),
       // CC-CEDICT glosses are reference text quoting other forms; only our own glosses are checked.
       ...(w.glossSource === 'cedict' ? [] : [{ text: w.en, where: `vocab:${w.id}.en` }]),
+      // CVDICT is CC-CEDICT translated, so the same goes for its Vietnamese.
+      ...(w.vi && w.viSource !== 'cvdict' ? [{ text: w.vi, where: `vocab:${w.id}.vi` }] : []),
       ...(w.tw ? [{ text: w.tw, where: `vocab:${w.id}.tw` }] : []),
+      ...(w.twVi ? [{ text: w.twVi, where: `vocab:${w.id}.twVi` }] : []),
       ...(w.mainland
         ? [{ text: w.mainland, where: `vocab:${w.id}.mainland`, mainland: true }]
         : []),
-      ...(w.examples ?? []).map((e, i) => ({ text: e.zh, where: `vocab:${w.id}.examples.${i}` })),
+      ...(w.examples ?? []).flatMap((e, i) => [
+        { text: e.zh, where: `vocab:${w.id}.examples.${i}` },
+        ...(e.vi ? [{ text: e.vi, where: `vocab:${w.id}.examples.${i}.vi` }] : []),
+      ]),
     ]),
   ];
 }

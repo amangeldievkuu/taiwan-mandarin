@@ -1,4 +1,6 @@
 // Content types, shared by the web app, the content pipeline and the API.
+
+import type { Lang } from '../lang.ts';
 //
 // Each language has its own content files: English in content/ and dict/, Vietnamese in content/vi/
 // and dict/vi/. A Vietnamese file is the English one plus the fields marked "Vietnamese files", so a
@@ -133,6 +135,8 @@ export interface ContentManifest {
   legacyIds: Record<string, string>;
   /** Hash of each file ("content/words-N1.json", "dict/0.json"), to version it on its own. */
   files?: Record<string, string>;
+  /** Languages with content files ("vi": content/vi/…, dict/vi/…). Missing before Vietnamese. */
+  languages?: Lang[];
 }
 
 /** One CC-CEDICT entry in a dictionary shard, with Taiwan readings applied. */
@@ -141,8 +145,12 @@ export interface DictEntry {
   t: string;
   /** Numbered pinyin. */
   p: string;
-  /** Definitions. */
+  /** Definitions, in the file's language. */
   d: string[];
+  /** Vietnamese files: CVDICT lacks the entry, so `d` is the English. */
+  en?: 1;
+  /** Sino-Vietnamese reading (Vietnamese files). */
+  h?: string;
   /** Measure words. */
   c?: string;
   /** Word id when the entry is in the study path. */
@@ -172,8 +180,18 @@ export interface ReaderSource {
   translation: string[];
   /** Glosses for words above the reader's level, by written form. */
   glossary?: Record<string, string>;
+  /** Vietnamese title, summary, translation and glossary. */
+  vi?: ReaderTranslation;
   /** Written with AI and not yet reviewed by a person. */
   draft?: boolean;
+}
+
+export interface ReaderTranslation {
+  title: string;
+  summary: string;
+  /** One entry per paragraph. */
+  translation: string[];
+  glossary?: Record<string, string>;
 }
 
 export interface ReaderToken {
@@ -187,9 +205,13 @@ export interface ReaderToken {
   l?: Level;
   /** Gloss for a word above the reader's level (from its glossary, else the study gloss). */
   g?: string;
+  /** `g` in Vietnamese (Vietnamese files). */
+  gv?: string;
 }
 
-export interface Reader extends Omit<ReaderSource, 'paragraphs' | 'glossary'> {
+export interface Reader extends Omit<ReaderSource, 'paragraphs' | 'glossary' | 'vi'> {
+  /** Vietnamese files. */
+  vi?: Omit<ReaderTranslation, 'glossary'>;
   paragraphs: ReaderToken[][];
   /** Number of distinct study-path words. */
   wordCount: number;
@@ -208,5 +230,8 @@ export const sameWordForms = (word: Pick<Word, 'hanzi' | 'variants'>): string[] 
   ...(word.variants ?? []).filter((v) => [...v].length === [...word.hanzi].length),
 ];
 
-/** One row of content/search.json: [id, hanzi, toneless pinyin letters, gloss]. */
-export type SearchRow = [id: string, hanzi: string, pinyin: string, en: string];
+/**
+ * One row of content/search.json: [id, hanzi, toneless pinyin letters, gloss in the file's
+ * language]. Vietnamese rows add the Sino-Vietnamese reading.
+ */
+export type SearchRow = [id: string, hanzi: string, pinyin: string, gloss: string, hv?: string];

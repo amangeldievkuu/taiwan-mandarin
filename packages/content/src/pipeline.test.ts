@@ -1,10 +1,14 @@
-import type { DictShard, Word } from '@taiwan-mandarin/shared';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { dictShardOf, type DictShard, type Word } from '@taiwan-mandarin/shared';
 import { describe, expect, it } from 'vitest';
 import { cleanDefinition, normalizePinyin, parseCedictLine, syllableInventory } from './cedict.ts';
 import { pickExamples } from './examples.ts';
 import { citationTones, parseForms, pinyinVariants, readForm, zhuyinVariants } from './headword.ts';
 import { alignPinyin, type PinyinContext } from './pinyin.ts';
-import { taiwanCharReadings } from './dictionary.ts';
+import { buildDictionary, taiwanCharReadings } from './dictionary.ts';
+import { readReaders } from './readers.ts';
 import { attachVietnamese, isTaiwanReadingNote, parseCvdictLine } from './cvdict.ts';
 import { fold, gloss, studyGloss } from './lexicon.ts';
 
@@ -271,5 +275,74 @@ describe('CVDICT (Vietnamese)', () => {
         'vi',
       ),
     ).toBe('tồn tại; còn sống; (ai đó hoặc cái gì đó) ở (vị trí)');
+  });
+});
+
+describe('Vietnamese content', () => {
+  const cedict = [
+    '垃圾 垃圾 [la1 ji1] /trash/garbage/Taiwan pr. [le4 se4]/',
+    '臺灣 台湾 [Tai2 wan1] /Taiwan/',
+    '台灣 台湾 [Tai2 wan1] /variant of 臺灣|台湾[Tai2 wan1]/',
+  ].flatMap((l) => parseCedictLine(l) ?? []);
+  const vi = new Map<string, string[]>([['垃圾 垃圾 [la1 ji1]', ['rác']]]);
+  attachVietnamese(cedict, vi);
+  const word = (hanzi: string, pinyin: string, en: string, extra: Partial<Word> = {}): Word => ({
+    id: hanzi,
+    hanzi,
+    pinyin,
+    en,
+    level: 'N1',
+    src: 'tocfl',
+    rank: 0,
+    topic: 'core',
+    glossSource: 'cedict',
+    ...extra,
+  });
+  const words = [
+    word('垃圾', 'le4 se4', 'garbage', { vi: 'rác', viSource: 'cvdict' }),
+    word('臺灣', 'tai2 wan1', 'Taiwan'),
+    word('珍奶', 'zhen1 nai3', 'bubble tea', { glossSource: 'ai', vi: 'trà sữa', viSource: 'ai' }),
+  ];
+  const { shards, viShards } = buildDictionary(cedict, words);
+
+  it('builds Vietnamese dictionary shards entry for entry, marking English stand-ins', () => {
+    shards.forEach((shard, i) => {
+      const viShard = viShards[i] ?? {};
+      expect(Object.keys(viShard)).toEqual(Object.keys(shard));
+      for (const [head, list] of Object.entries(shard))
+        expect(viShard[head]?.map((e) => [e.t, e.p, e.w])).toEqual(
+          list.map((e) => [e.t, e.p, e.w]),
+        );
+    });
+    const at = (head: string) => viShards[dictShardOf(head)]?.[head];
+    expect(at('垃圾')?.[0]).toMatchObject({ d: ['rác'] });
+    expect(at('垃圾')?.[0]?.en).toBeUndefined();
+    expect(at('臺灣')?.[0]).toMatchObject({ d: ['Taiwan'], en: 1 });
+    // A study word CC-CEDICT lacks: its own Vietnamese gloss.
+    expect(at('珍奶')?.[0]).toMatchObject({ d: ['trà sữa'] });
+  });
+
+  it('reads Vietnamese reader text and checks it has one translation per paragraph', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'readers-'));
+    const reader = {
+      id: 'trash',
+      level: 'N1',
+      topic: 'daily',
+      title: '垃圾',
+      titleEn: 'Trash',
+      summary: 'Trash.',
+      paragraphs: ['垃圾。'],
+      translation: ['Trash.'],
+      vi: { title: 'Rác', summary: 'Rác.', translation: ['Rác.'] },
+    };
+    writeFileSync(join(dir, 'trash.json'), JSON.stringify(reader));
+    const [read] = readReaders(dir, words, shards, viShards, 4);
+    expect(read?.vi).toEqual({ title: 'Rác', summary: 'Rác.', translation: ['Rác.'] });
+
+    writeFileSync(
+      join(dir, 'trash.json'),
+      JSON.stringify({ ...reader, vi: { ...reader.vi, translation: [] } }),
+    );
+    expect(() => readReaders(dir, words, shards, viShards, 4)).toThrow(/Vietnamese translation/);
   });
 });

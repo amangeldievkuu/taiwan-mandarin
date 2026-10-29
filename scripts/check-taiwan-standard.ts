@@ -40,8 +40,10 @@ function files(path: string): string[] {
 const content = join(root, 'apps/web/public/content');
 const json = <T>(file: string) => JSON.parse(readFileSync(join(content, file), 'utf8')) as T;
 const manifest = json<ContentManifest>('manifest.json');
-const words = manifest.levels.flatMap((level) => json<Word[]>(level.file));
-const readers = json<Reader[]>('readers.json');
+// The Vietnamese files are the English ones plus Vietnamese, so they cover everything.
+const dir = manifest.languages?.includes('vi') ? 'vi/' : '';
+const words = manifest.levels.flatMap((level) => json<Word[]>(dir + level.file));
+const readers = json<Reader[]>(dir + 'readers.json');
 
 const issues: Issue[] = checkVocab(words, TOPICS);
 for (const reader of readers) {
