@@ -14,16 +14,12 @@ import {
   LEVELS,
   plainPinyin,
   sourceKey,
-  TOKEN_GLOSS,
   TOPICS,
-  twKey,
   type ContentManifest,
   type Example,
   type ForeignLang,
   type LevelManifest,
-  type Reader,
   type SearchRow,
-  type Word,
 } from '@taiwan-mandarin/shared';
 import { checkVocab, formatIssues } from '@taiwan-mandarin/shared/taiwan-standard';
 import { charReadings, readCedict, syllableInventory } from './cedict.ts';
@@ -31,7 +27,8 @@ import { attachTranslations } from './cvdict.ts';
 import { buildDictionary } from './dictionary.ts';
 import { charHanViet, hanViet, readHanViet } from './hanviet.ts';
 import { pickExamples, readTatoeba } from './examples.ts';
-import { CONTENT_LANGUAGES, type ContentLanguage } from './languages.ts';
+import { fileReader, fileWord } from './files.ts';
+import { CONTENT_LANGUAGES } from './languages.ts';
 import { buildLexicon } from './lexicon.ts';
 import { readFrequencyRanks, readNaer, readTocfl } from './lists.ts';
 import { DATA, OUT, RAW, ROOT } from './paths.ts';
@@ -229,34 +226,6 @@ const readers = readReaders(
 done(
   `${readers.length} texts; words above their level (auto-glossed): ${readers.map((r) => `${r.id} ${Math.round(r.hard * 100)}%`).join(', ')}`,
 );
-
-/** The languages other than `keep`, whose fields a file of `keep` (or English) leaves out. */
-const others = (keep?: ContentLanguage) => CONTENT_LANGUAGES.filter((l) => l !== keep);
-
-/** `value` without `keys`, the rest in their order. */
-const without = <T extends object>(value: T, keys: readonly string[]): T =>
-  Object.fromEntries(Object.entries(value).filter(([key]) => !keys.includes(key))) as T;
-
-/** A reader as the files of one language carry it (English when none), without the others'. */
-function fileReader(reader: Reader, keep?: ContentLanguage): Reader {
-  const langs = others(keep).map((l) => l.lang);
-  const glosses = langs.map((lang) => TOKEN_GLOSS[lang]);
-  return {
-    ...without(reader, langs),
-    paragraphs: reader.paragraphs.map((p) => p.map((token) => without(token, glosses))),
-  };
-}
-
-/** A word as the files of one language carry it (English when none), without the others' fields. */
-function fileWord(word: Word, keep?: ContentLanguage): Word {
-  const langs = others(keep).map((l) => l.lang);
-  const w = without(word, [
-    ...langs.flatMap((lang) => [lang, sourceKey(lang), twKey(lang)]),
-    ...(keep?.hanViet ? [] : ['hv']),
-  ]);
-  if (word.examples) w.examples = word.examples.map((e) => without(e, langs));
-  return w;
-}
 
 // ---- write ----
 done = step('write');

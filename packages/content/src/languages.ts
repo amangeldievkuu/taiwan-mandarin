@@ -62,7 +62,23 @@ const VI: ContentLanguage = {
   hanViet: true,
 };
 
-export const CONTENT_LANGUAGES: readonly ContentLanguage[] = [VI];
+/**
+ * No open Chinese–Russian dictionary exists, so a Russian meaning is the curated one or written with
+ * AI (glosses-ru.jsonl), and the dictionary shows it on the word's own entries; other entries stay
+ * English.
+ */
+const RU: ContentLanguage = {
+  lang: 'ru',
+  name: 'Russian',
+  mainlandNote: (taiwan) => `Так говорят на материке. На Тайване говорят ${taiwan}.`,
+  glosses: at('data/generated/glosses-ru.jsonl'),
+  examples: at('data/generated/examples-ru.jsonl'),
+  wordMeanings: true,
+  readers: 'optional',
+  searchGloss: 100,
+};
+
+export const CONTENT_LANGUAGES: readonly ContentLanguage[] = [VI, RU];
 
 export const contentLanguage = (lang: ForeignLang): ContentLanguage | undefined =>
   CONTENT_LANGUAGES.find((l) => l.lang === lang);

@@ -133,7 +133,7 @@ describe('explain', () => {
     expect(calls.at(-1)?.system).toContain('first language is English');
   });
 
-  it('explains in Russian when asked', async () => {
+  it('explains in Russian when asked, with Russian glosses from the content', async () => {
     if (!(await hasContent())) return;
     calls.length = 0;
     replies = [
@@ -151,7 +151,7 @@ describe('explain', () => {
       .send({ text: '垃圾不落地', lang: 'ru' });
     expect(res.status).toBe(200);
     expect(calls.at(-1)?.system).toContain('first language is Russian');
-    expect(res.body.tokens[0].gloss).toBeTruthy();
+    expect(res.body.tokens[0].gloss).toBe('мусор');
   });
 
   it('falls back to its own segmentation when the model’s tokens don’t match', async () => {

@@ -1,13 +1,15 @@
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { dictShardOf, type DictShard, type Word } from '@taiwan-mandarin/shared';
+import { dictShardOf, type DictShard, type Reader, type Word } from '@taiwan-mandarin/shared';
 import { describe, expect, it } from 'vitest';
 import { cleanDefinition, normalizePinyin, parseCedictLine, syllableInventory } from './cedict.ts';
 import { pickExamples } from './examples.ts';
 import { citationTones, parseForms, pinyinVariants, readForm, zhuyinVariants } from './headword.ts';
 import { alignPinyin, type PinyinContext } from './pinyin.ts';
 import { buildDictionary, taiwanCharReadings } from './dictionary.ts';
+import { fileReader, fileWord } from './files.ts';
+import { contentLanguage, type ContentLanguage } from './languages.ts';
 import { readReaders } from './readers.ts';
 import {
   attachTranslations,
@@ -354,6 +356,102 @@ describe('Vietnamese content', () => {
       JSON.stringify({ ...reader, vi: { ...reader.vi, translation: [] } }),
     );
     expect(() => readReaders(dir, words, shards, vietnamese, 4)).toThrow(/Vietnamese translation/);
+  });
+});
+
+describe('Russian content', () => {
+  const cedict = [
+    '打 打 [da2] /dozen (loanword)/',
+    '打 打 [da3] /to hit/to strike/',
+    '打 打 [da3] /from/since/',
+    '垃圾 垃圾 [la1 ji1] /trash/garbage/Taiwan pr. [le4 se4]/',
+  ].flatMap((l) => parseCedictLine(l) ?? []);
+  const word = (hanzi: string, pinyin: string, en: string, extra: Partial<Word> = {}): Word => ({
+    id: hanzi,
+    hanzi,
+    pinyin,
+    en,
+    level: 'N1',
+    src: 'tocfl',
+    rank: 0,
+    topic: 'core',
+    glossSource: 'cedict',
+    ...extra,
+  });
+  const words = [
+    word('打', 'da3', 'to hit', { ru: 'бить', ruSource: 'ai' }),
+    word('垃圾', 'le4 se4', 'garbage', {
+      vi: 'rác',
+      ru: 'мусор',
+      ruSource: 'curated',
+      hv: 'lạp ngập',
+    }),
+    word('珍奶', 'zhen1 nai3', 'bubble tea', { ru: 'бабл-ти', ruSource: 'ai' }),
+  ];
+  const { localized } = buildDictionary(cedict, words, [{ lang: 'ru', wordMeanings: true }]);
+  const at = (head: string) => localized.ru?.[dictShardOf(head)]?.[head];
+
+  it('gives a study word’s first entry its meaning, and keeps the rest English', () => {
+    expect(at('打')?.map((e) => [e.p, e.d, e.en])).toEqual([
+      ['da3', ['бить'], undefined],
+      ['da3', ['from', 'since'], 1],
+      ['da2', ['dozen (loanword)'], 1],
+    ]);
+    expect(at('垃圾')?.[0]).toMatchObject({ d: ['мусор'] });
+    expect(at('珍奶')?.[0]).toMatchObject({ d: ['бабл-ти'] });
+    expect(at('垃圾')?.[0]?.h).toBeUndefined();
+  });
+
+  const vi = contentLanguage('vi') as ContentLanguage;
+  const ru = contentLanguage('ru') as ContentLanguage;
+  const garbage = {
+    ...(words[1] as Word),
+    twVi: 'Ở Đài Loan đọc là lè sè.',
+    twRu: 'На Тайване читается lè sè.',
+    examples: [
+      { zh: '垃圾', pinyin: 'le4 se4', en: 'Trash.', vi: 'Rác.', ru: 'Мусор.', source: 'ai' },
+    ],
+  } satisfies Word;
+
+  it('keeps each language’s fields in its own files', () => {
+    expect(fileWord(garbage, ru)).toEqual({
+      ...garbage,
+      vi: undefined,
+      twVi: undefined,
+      hv: undefined,
+      examples: [{ zh: '垃圾', pinyin: 'le4 se4', en: 'Trash.', ru: 'Мусор.', source: 'ai' }],
+    } as unknown as Word);
+    const inVietnamese = fileWord(garbage, vi);
+    expect(Object.keys(inVietnamese)).not.toContain('ru');
+    expect(Object.keys(inVietnamese)).not.toContain('twRu');
+    expect(inVietnamese).toMatchObject({ vi: 'rác', hv: 'lạp ngập' });
+    const english = fileWord(garbage);
+    for (const key of ['vi', 'ru', 'ruSource', 'twVi', 'twRu', 'hv'])
+      expect(Object.keys(english)).not.toContain(key);
+  });
+
+  it('reads readers without a Russian block while it is optional', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'readers-'));
+    writeFileSync(
+      join(dir, 'trash.json'),
+      JSON.stringify({
+        id: 'trash',
+        level: 'N1',
+        topic: 'daily',
+        title: '垃圾',
+        titleEn: 'Trash',
+        summary: 'Trash.',
+        paragraphs: ['垃圾。'],
+        translation: ['Trash.'],
+      }),
+    );
+    const russian = { lang: 'ru' as const, name: 'Russian', shards: [], required: false };
+    const [read] = readReaders(dir, words, [], [russian], 4);
+    expect(read?.ru).toBeUndefined();
+    expect(() => readReaders(dir, words, [], [{ ...russian, required: true }], 4)).toThrow(
+      /no Russian/,
+    );
+    expect(fileReader(read as Reader, ru).ru).toBeUndefined();
   });
 });
 
