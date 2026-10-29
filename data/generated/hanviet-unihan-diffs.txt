@@ -1,0 +1,2 @@
+# Hán-Việt readings that differ from Unihan's kVietnamese (which also lists Nôm readings)
+

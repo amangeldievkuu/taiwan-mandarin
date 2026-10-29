@@ -279,15 +279,18 @@ async function hanvietJob(): Promise<Job<{ char: string; syllable: string; words
   };
   for (const w of words) add(w.hanzi, w.pinyin);
   for (const r of readers) for (const p of r.paragraphs) for (const t of p) if (t.p) add(t.t, t.p);
-  // Characters only ever read in the neutral tone (們, 嗎…) still need an entry.
-  const covered = new Set([...uses.values()].map((u) => u.char));
+  // A neutral tone reads like the same syllable in a full tone (朋友's you5 → you3); one with
+  // none (著 zhe5 beside zhuó and zháo; 們, 嗎) needs an entry of its own.
+  const toneless = (syllable: string) => syllable.replace(/[1-5]$/, '');
+  const toned = new Set([...uses.values()].map((u) => `${u.char}|${toneless(u.syllable)}`));
   for (const w of words) {
     const syllables = splitSyllables(w.pinyin);
     [...w.hanzi].forEach((char, i) => {
-      if (covered.has(char) || !/\p{Script=Han}/u.test(char)) return;
       const syllable = (syllables[i] ?? '').toLowerCase();
+      const key = `${char}|${toneless(syllable)}`;
+      if (!/\p{Script=Han}/u.test(char) || toned.has(key)) return;
       uses.set(`${char}|${syllable}`, { char, syllable, words: [w.hanzi] });
-      covered.add(char);
+      toned.add(key);
     });
   }
 
