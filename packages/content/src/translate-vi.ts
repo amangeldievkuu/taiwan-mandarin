@@ -29,7 +29,10 @@ import {
 } from '@taiwan-mandarin/shared';
 import { checkText } from '@taiwan-mandarin/shared/taiwan-standard';
 import { z } from 'zod';
+import { contentLanguage, type ContentLanguage } from './languages.ts';
 import { DATA, OUT, ROOT } from './paths.ts';
+
+const VI = contentLanguage('vi') as ContentLanguage;
 
 const apiEnv = join(ROOT, 'apps/api/.env');
 if (existsSync(apiEnv)) process.loadEnvFile(apiEnv);
@@ -182,7 +185,7 @@ const usable = (text: string | null, where: string, maxLength: number): text is 
 // ---- examples ----
 
 function examplesJob(): Job<{ zh: string; en: string }> {
-  const done = new Set(readJsonl<{ zh: string }>(DATA.viExamples).map((e) => e.zh));
+  const done = new Set(readJsonl<{ zh: string }>(VI.examples).map((e) => e.zh));
   const todo = new Map<string, { zh: string; en: string }>();
   for (const w of words)
     for (const e of w.examples ?? [])
@@ -199,7 +202,7 @@ Answer every number with its Vietnamese sentence.`,
     line: (e) => `${e.zh} | ${e.en}`,
     keep: (e, vi) => {
       if (!usable(vi, `vi-example:${e.zh}`, Math.max(160, e.zh.length * 8))) return false;
-      appendFileSync(DATA.viExamples, JSON.stringify({ zh: e.zh, vi }) + '\n');
+      appendFileSync(VI.examples, JSON.stringify({ zh: e.zh, vi }) + '\n');
       done.add(e.zh);
       return true;
     },
@@ -209,7 +212,7 @@ Answer every number with its Vietnamese sentence.`,
 // ---- glosses ----
 
 function glossesJob(): Job<Word> {
-  const done = new Set(readJsonl<{ id: string }>(DATA.aiGlossesVi).map((g) => g.id));
+  const done = new Set(readJsonl<{ id: string }>(VI.glosses).map((g) => g.id));
   return {
     label: 'glosses',
     items: words.filter((w) => !w.vi && w.en && !done.has(w.id)),
@@ -223,7 +226,7 @@ Answer every number with its gloss.`,
     line: (w) => `${w.hanzi} | ${toToneMarked(w.pinyin)} | ${w.en}`,
     keep: (w, vi) => {
       if (!usable(vi, `vi-gloss:${w.id}`, 120)) return false;
-      appendFileSync(DATA.aiGlossesVi, JSON.stringify({ id: w.id, vi }) + '\n');
+      appendFileSync(VI.glosses, JSON.stringify({ id: w.id, vi }) + '\n');
       done.add(w.id);
       return true;
     },

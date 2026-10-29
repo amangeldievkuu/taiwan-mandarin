@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 
 export const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
-const at = (path: string) => ROOT + path;
+export const at = (path: string) => ROOT + path;
 
 /** Downloaded sources (gitignored). `npm run fetch -w @taiwan-mandarin/content` fills it. */
 export const RAW = {
@@ -15,12 +15,10 @@ export const RAW = {
   tatoebaLinks: at('data/raw/tatoeba/cmn-eng_links.tsv'),
 };
 
-/** Committed generated files and curated inputs. */
+/** Committed generated files and curated inputs (each language's own are in languages.ts). */
 export const DATA = {
   aiExamples: at('data/generated/examples-ai.jsonl'),
   aiGlosses: at('data/generated/glosses-ai.jsonl'),
-  aiGlossesVi: at('data/generated/glosses-vi.jsonl'),
-  viExamples: at('data/generated/examples-vi.jsonl'),
   hanviet: at('data/hanviet.json'),
   readers: at('data/readers'),
 };
