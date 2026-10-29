@@ -254,6 +254,8 @@ export const vi: Messages = {
   },
 
   settings: {
+    language: 'Ngôn ngữ',
+    languageHint: 'Menu, nghĩa của từ, bản dịch và câu trả lời của AI',
     reading: 'Đọc chữ',
     phonetics: 'Phiên âm',
     phoneticsHint: 'Hiện bên cạnh mỗi chữ',
@@ -305,6 +307,11 @@ export const vi: Messages = {
     ownSentences: 'và các câu viết riêng cho ứng dụng này.',
     strokeOrder: 'Thứ tự nét',
     fonts: 'Phông chữ',
+    vietnamese: 'Nghĩa tiếng Việt',
+    cvdict:
+      'bản dịch tiếng Việt của CC-CEDICT do Phong Phan thực hiện, và các nghĩa viết riêng cho ứng dụng này.',
+    hanViet: 'Âm Hán-Việt',
+    hanVietSource: 'viết cho ứng dụng này, đối chiếu với Unicode Unihan.',
   },
 
   account: {
@@ -732,6 +739,8 @@ export const vi: Messages = {
   },
 
   landing: {
+    language: 'Ngôn ngữ',
+    reached: (n, total) => `${n}/${total}`,
     eyebrow: 'Miễn phí · Ngoại tuyến · Tiếng Hoa Đài Loan',
     headline: 'Học tiếng Hoa theo cách Đài Loan dạy.',
     lead:

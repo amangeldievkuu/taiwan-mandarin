@@ -2,7 +2,7 @@
   // The welcome page: what the app is, told along a road. 墨, a drop of ink, walks the road as the
   // page scrolls, passing a signpost for every TOCFL level, towards a Taiwan cherry (山櫻花) in a pot
   // that puts out a flowering branch for each level and blooms in full at the end. It sits down and says something when you stop.
-  import { LEVELS, type Bowl } from '@taiwan-mandarin/shared';
+  import { LANGS, LEVELS, type Bowl } from '@taiwan-mandarin/shared';
   import InkBlob, { type Line } from '../ui/landing/InkBlob.svelte';
   import { t } from '../lib/i18n/index.svelte';
   import RoadPlant from '../ui/landing/RoadPlant.svelte';
@@ -10,6 +10,7 @@
   import Seal from '../ui/Seal.svelte';
   import StreakPlant from '../ui/StreakPlant.svelte';
   import { router } from '../lib/router.svelte';
+  import { store } from '../lib/store.svelte';
   import { walk } from '../lib/walk';
   import { markWelcomed } from '../lib/welcome';
   import { LEVEL_SEAL } from './Path.svelte';
@@ -91,6 +92,17 @@
 <div class="landing" use:walk bind:this={road}>
   <section class="hero">
     <div class="hero-text">
+      <div class="languages" role="group" aria-label={t().landing.language}>
+        {#each LANGS as l (l.id)}
+          <button
+            type="button"
+            class="chip"
+            lang={l.id}
+            aria-pressed={store.settings.language === l.id}
+            onclick={() => store.chooseLanguage(l.id)}>{l.name}</button
+          >
+        {/each}
+      </div>
       <p class="eyebrow">{t().landing.eyebrow}</p>
       <h1>
         <span class="zh" lang="zh-Hant-TW">臺灣華語</span>
@@ -250,6 +262,12 @@
 
   .hero-text {
     animation: enter var(--dur-4) var(--ease-spring-soft) backwards;
+  }
+
+  .languages {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
   }
 
   h1 {

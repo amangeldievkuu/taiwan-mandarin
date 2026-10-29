@@ -8,6 +8,7 @@
   back up and it all folds away again.
 -->
 <script lang="ts">
+  import { t } from '../../lib/i18n/index.svelte';
   import { taper } from '../../lib/plant-art';
 
   interface Props {
@@ -346,7 +347,7 @@
       </g>
     {/each}
   </svg>
-  <p class="count">{reached} of {total}</p>
+  <p class="count">{t().landing.reached(reached, total)}</p>
 </div>
 
 <style>

@@ -15,9 +15,22 @@ CC-CEDICT
   Creative Commons Attribution-ShareAlike 4.0. The generated dictionary shards
   (apps/web/public/dict) are a derivative work under the same license.
 
+CVDICT (Từ điển Hán Việt CVDICT) 1.0.1
+  © Phong Phan, based on CC-CEDICT. Creative Commons Attribution-ShareAlike 4.0.
+  Originally https://github.com/ph0ngp/CVDICT; downloaded at build time from an unchanged copy
+  (github.com/phucbm/xue-hanzi at c1e7610, src/data/CVDICT.u8). The Vietnamese content files
+  (apps/web/public/content/vi, apps/web/public/dict/vi) are a derivative work under the same
+  license.
+
 Tatoeba example sentences
   © Tatoeba contributors, https://tatoeba.org — Creative Commons Attribution 2.0 France.
-  Each example links to its source sentence.
+  Each example links to its source sentence. The Vietnamese translations of these sentences
+  (data/generated/examples-vi.jsonl) are written for this app and are a derivative work under the
+  same license.
+
+Unicode Unihan database
+  © Unicode, Inc., Unicode License v3. Used only to check the Sino-Vietnamese readings in
+  data/hanviet.json (kVietnamese); not redistributed.
 
 Make Me a Hanzi stroke data (hanzi-writer-data)
   © Shaunak Kishore and contributors; Arphic Public License (derived from Arphic fonts).

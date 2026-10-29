@@ -11,6 +11,12 @@ export function detectLanguage(preferred: readonly string[]): Lang {
   return 'en';
 }
 
+/** A first visit's language: the browser's, when it prefers Vietnamese to English. */
+export const firstRunLanguage = (): Lang =>
+  typeof navigator === 'undefined'
+    ? 'en'
+    : detectLanguage(navigator.languages?.length ? navigator.languages : [navigator.language]);
+
 /** Development only: ?lang=vi shows the app in that language whatever the settings say. */
 export function devLanguage(): Lang | undefined {
   if (!import.meta.env.DEV || typeof location === 'undefined') return undefined;

@@ -8,7 +8,10 @@ Learn Taiwan Mandarin along Taiwan's official exam path. The app covers TOCFL No
 - graded reading about Taiwan life
 - example sentences, stroke order and stats
 
-It is an offline-first PWA for phone, iPad and desktop, with an optional sync backend.
+It is an offline-first PWA for phone, iPad and desktop, with an optional sync backend. The app speaks
+**English or Vietnamese** (Tiếng Việt): menus, word meanings, example and reader translations and
+the AI's replies all follow the language, and in Vietnamese words also show their Sino-Vietnamese
+(Hán-Việt) reading (國家 quốc gia). See [Languages](#languages).
 
 | Today                                        | Study (iPad)                                  | Reader (phone, dark)                         |
 | -------------------------------------------- | --------------------------------------------- | -------------------------------------------- |
@@ -249,6 +252,7 @@ character. The service worker caches every file after first use.
 | NAER 《臺灣華語文能力基準》三等七級詞語表 (2025-04) | Level 6 (精通, C2: TOCFL has no list), extra words, Zhuyin, topics    |
 | NAER 通用詞頻表                                     | Study order within a level                                            |
 | [CC-CEDICT](https://cc-cedict.org)                  | English glosses, measure words, the dictionary                        |
+| CVDICT (Phong Phan, CC BY-SA 4.0)                   | Vietnamese glosses and dictionary: CC-CEDICT translated line by line  |
 | [Tatoeba](https://tatoeba.org)                      | Example sentences with English translations                           |
 | `data/generated/*.jsonl`                            | Glosses and examples written for this app where the sources have none |
 | `packages/shared/src/content/curated.ts`            | The original 121 hand-checked words: notes, Mainland labels           |
@@ -280,6 +284,34 @@ has reviewed them. The build:
 Generated content isn't committed. The NAER list is marked 版權所有, and the TOCFL list states no
 license. Both are downloaded from their official sites at build time, and attributed in the app's
 About section and in `NOTICE`.
+
+## Languages
+
+The interface is in typed catalogs, `apps/web/src/lib/i18n/en.ts` and `vi.ts` (same keys, checked
+by svelte-check and a test). Chinese stays in the components. The language is a synced setting,
+`language`; a first visit follows the browser, and the welcome page and Settings switch it. In
+development, `?lang=vi` shows Vietnamese without changing settings.
+
+Content has a set of files per language. English is `content/` and `dict/`; Vietnamese is
+`content/vi/` and `dict/vi/`, the same files with Vietnamese added (`vi`, `twVi`, `hv` on words,
+`vi` on examples and readers, Vietnamese definitions in the dictionary with `en: 1` where CVDICT
+has none). A learner loads one set, so English learners download nothing extra. Where Vietnamese
+is missing, the English shows with a small EN tag.
+
+- **Meanings** come from CVDICT, CC-CEDICT translated into Vietnamese line by line (122,591
+  entries, CC BY-SA 4.0). Its own repository is gone, so `fetch` downloads the unchanged 1.0.1 file
+  kept in another project, pinned to a commit and checked against its SHA-256. The build glosses
+  each word from the same entries as its English. About 97% of the path has one; the rest, and the
+  121 curated words, are written by hand or with AI.
+- **Readers** carry a hand-written `vi` block (title, summary, translation, glossary).
+- **Examples, gap glosses and Hán-Việt readings** are written with OpenAI:
+  `npm run translate-vi -w @taiwan-mandarin/content -- --only examples|hanviet|glosses` (after a
+  build; `--limit 100` writes a sample first). See `data/generated/README.md`.
+- **AI features** take the language with each request: Explain and Talk answer, gloss and correct
+  in it. API errors carry a code that the app shows in the learner's language.
+
+Existing checkouts need the new source once: `npm run content` (or `npm run fetch -w
+@taiwan-mandarin/content`); `content:ensure` rebuilds content that predates Vietnamese.
 
 ## Taiwan standard (臺灣華語)
 

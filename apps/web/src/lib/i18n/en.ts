@@ -233,6 +233,8 @@ export const en = {
   },
 
   settings: {
+    language: 'Language',
+    languageHint: 'Menus, meanings, translations and AI replies',
     reading: 'Reading',
     phonetics: 'Phonetics',
     phoneticsHint: 'Shown beside every character',
@@ -283,6 +285,10 @@ export const en = {
     ownSentences: 'and sentences written for this app.',
     strokeOrder: 'Stroke order',
     fonts: 'Fonts',
+    vietnamese: 'Vietnamese meanings',
+    cvdict: "Phong Phan's Vietnamese translation of CC-CEDICT, and meanings written for this app.",
+    hanViet: 'Sino-Vietnamese readings',
+    hanVietSource: 'written for this app, checked against Unicode Unihan.',
   },
 
   account: {
@@ -677,6 +683,9 @@ export const en = {
   },
 
   landing: {
+    language: 'Language',
+    /** Levels passed on the road, under the pot. */
+    reached: (n: number, total: number) => `${n} of ${total}`,
     eyebrow: 'Free · Offline · Taiwan Mandarin',
     headline: 'Learn Mandarin the way Taiwan teaches it.',
     lead:

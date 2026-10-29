@@ -1,5 +1,6 @@
 <script lang="ts">
   // The app's settings, in four short groups: reading, studying, feedback and data.
+  import { LANGS } from '@taiwan-mandarin/shared';
   import Segmented from '../components/Segmented.svelte';
   import SettingRow from '../ui/SettingRow.svelte';
   import SubpageHead from '../ui/SubpageHead.svelte';
@@ -45,6 +46,20 @@
 
 <div class="page">
   <SubpageHead title={t().titles['me-settings']} zh="設定" />
+
+  <h2 class="section-title">
+    {t().settings.language} <span class="zh" lang="zh-Hant-TW">語言</span>
+  </h2>
+  <div class="sheet group">
+    <SettingRow label={t().settings.language} hint={t().settings.languageHint} stacked>
+      <Segmented
+        label={t().settings.language}
+        value={store.settings.language}
+        onchange={(language) => store.chooseLanguage(language)}
+        options={LANGS.map((l) => ({ value: l.id, label: l.name, lang: l.id }))}
+      />
+    </SettingRow>
+  </div>
 
   <h2 class="section-title">
     {t().settings.reading} <span class="zh" lang="zh-Hant-TW">閱讀</span>

@@ -1,4 +1,5 @@
 <script lang="ts" generics="T extends string">
+  import { locale } from '../lib/i18n/index.svelte';
   // A segmented control: a raised thumb slides (with a little spring) to the chosen option.
   interface Option {
     value: T;
@@ -64,7 +65,7 @@
       onclick={() => onchange(option.value)}
     >
       {option.label}
-      {#if option.sub}<span class="sub" lang="en">{option.sub}</span>{/if}
+      {#if option.sub}<span class="sub" lang={locale.lang}>{option.sub}</span>{/if}
     </button>
   {/each}
 </div>

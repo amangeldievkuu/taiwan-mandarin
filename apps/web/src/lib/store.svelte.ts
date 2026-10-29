@@ -27,6 +27,7 @@ import {
   XP,
   xpForDay,
   type DayActivity,
+  type Lang,
   type Settings,
   type Word,
 } from '@taiwan-mandarin/shared';
@@ -39,7 +40,7 @@ import {
   type ActivityState,
 } from './activity';
 import { content } from './content.svelte';
-import { devLanguage } from './i18n/detect';
+import { devLanguage, firstRunLanguage } from './i18n/detect';
 import { locale, t } from './i18n/index.svelte';
 import { toasts } from './toast.svelte';
 import {
@@ -93,7 +94,8 @@ export function uuid(): string {
 class Store {
   ready = $state(false);
   error = $state<string | null>(null);
-  settings = $state<Settings>({ ...DEFAULT_SETTINGS });
+  /** A first visit follows the browser's language; saved settings replace these in init(). */
+  settings = $state<Settings>({ ...DEFAULT_SETTINGS, language: firstRunLanguage() });
   cards = $state<Record<string, CardRecord>>({});
   deck = $state<Snapshot['deck']>([]);
   daily = $state<Daily>(freshDaily());
@@ -376,6 +378,22 @@ class Store {
     locale.lang = this.settings.language;
     locale.hanViet = this.settings.hanViet;
     content.setLanguage(this.settings.language);
+  }
+
+  /**
+   * Switches the language. Before this device has synced with any account it changes nothing
+   * else and stays the oldest version of the settings, so signing in to an existing account
+   * keeps that account's settings (its levels, its pace) rather than replacing them with this
+   * device's defaults.
+   */
+  async chooseLanguage(language: Lang): Promise<void> {
+    if (this.syncState.userId === undefined && this.syncState.settingsUpdatedAt === 0) {
+      this.settings = { ...this.settings, language };
+      this.applyLanguage();
+      this.persist();
+      return;
+    }
+    await this.updateSettings({ language });
   }
 
   async updateSettings(patch: Partial<Settings>): Promise<void> {
