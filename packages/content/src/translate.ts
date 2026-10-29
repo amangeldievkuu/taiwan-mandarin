@@ -26,6 +26,7 @@ import {
   splitSyllables,
   toToneMarked,
   type ContentManifest,
+  type DictShard,
   type ForeignLang,
   type Reader,
   type Word,
@@ -54,6 +55,31 @@ interface Prompts {
   glossLine: (w: Word) => string;
   /** Longest gloss kept, in characters. */
   glossLength: number;
+  /** An answer is in the language (not English, not Chinese). */
+  check?: (text: string) => boolean;
+}
+
+const RUSSIAN_STYLE = `- Natural, modern Russian as people speak and write it today; neutral register. Write ё where it belongs.
+- Taiwan context: 臺北 Тайбэй, 高雄 Гаосюн, 臺中 Тайчжун, 臺南 Тайнань, 花蓮 Хуалянь, 桃園 Таоюань, 九份 Цзюфэнь; 捷運 метро, 高鐵 скоростной поезд, 機車 скутер, 便利商店 магазин у дома, 夜市 ночной рынок, 塊/元 (money) тайваньский доллар.
+- No pinyin and no Chinese characters in the Russian.`;
+
+/** The CC-CEDICT senses of a word's own dictionary entries, for context: "to hit; to strike". */
+function cedictSenses(word: Word): string {
+  senses ??= readSenses();
+  return (senses.get(word.id) ?? []).join('; ').slice(0, 200);
+}
+let senses: Map<string, string[]> | undefined;
+function readSenses(): Map<string, string[]> {
+  const byWord = new Map<string, string[]>();
+  const manifest = contentFile<ContentManifest>('manifest.json');
+  for (let i = 0; i < manifest.dictShards; i++) {
+    const shard = JSON.parse(readFileSync(join(OUT.dict, `${i}.json`), 'utf8')) as DictShard;
+    for (const list of Object.values(shard))
+      for (const entry of list)
+        if (entry.w)
+          byWord.set(entry.w, [...new Set([...(byWord.get(entry.w) ?? []), ...entry.d])]);
+  }
+  return byWord;
 }
 
 const VIETNAMESE_STYLE = `- Natural, everyday Vietnamese as people in Vietnam say it today; neutral register.
@@ -77,6 +103,27 @@ ${VIETNAMESE_STYLE}
 Answer every number with its gloss.`,
     glossLine: (w) => `${w.hanzi} | ${toToneMarked(w.pinyin)} | ${w.en}`,
     glossLength: 120,
+  },
+  ru: {
+    examples: `You translate example sentences for Russian speakers learning Taiwan Mandarin (臺灣華語). Each line is "number | Chinese | English".
+
+- Translate the Chinese, keeping its meaning, tone and register. The English is only a reference; where it differs from the Chinese, follow the Chinese.
+- 你 is ты and 您 is вы. Where the Chinese doesn't say whether someone is a man or a woman, choose one natural reading.
+- Western names as in the English, in their usual Russian spelling (Tom Том, Mary Мэри); Chinese names in the Palladius system (王 Ван, 小明 Сяо Мин).
+${RUSSIAN_STYLE}
+Answer every number with its Russian sentence.`,
+    glosses: `You write Russian flashcard glosses for words of Taiwan Mandarin (臺灣華語), like the entries of a good Chinese–Russian dictionary. Each line is "number | word | pinyin | part of speech | measure words | English gloss | CC-CEDICT senses".
+
+- One to four senses a learner needs, most common first, separated by "; ", at most about 100 characters.
+- Follow Taiwan usage. The English gloss gives the senses to keep; CC-CEDICT's senses help tell them apart.
+- Part of speech tags: N noun, V Vi verb, Vs stative verb (often an adjective in Russian), Vp process verb, V-sep separable verb, Vaux auxiliary, Adv adverb, Conj conjunction, Prep preposition, Ptc particle, M measure word, Det determiner.
+- A verb as an infinitive (идти, есть), a noun in the nominative singular, an adjective in the masculine (красивый); a measure word as "счётное слово для …"; a particle by what it does ("вопросительная частица"). Lowercase, unless it is a name.
+${RUSSIAN_STYLE}
+Answer every number with its gloss.`,
+    glossLine: (w) =>
+      [w.hanzi, toToneMarked(w.pinyin), w.pos ?? '', w.cl ?? '', w.en, cedictSenses(w)].join(' | '),
+    glossLength: 130,
+    check: (text) => /\p{Script=Cyrillic}/u.test(text) && !/\p{Script=Han}/u.test(text),
   },
 };
 
@@ -223,9 +270,12 @@ async function runJob<Item>(job: Job<Item>): Promise<void> {
   );
 }
 
-/** Text we can store: no Simplified or Mainland Chinese slipped in, sensible length. */
+/** Text we can store: in the language, no Simplified or Mainland Chinese slipped in, sensible length. */
 const usable = (text: string | null, where: string, maxLength: number): text is string =>
-  !!text && text.length <= maxLength && checkText({ text, where }).length === 0;
+  !!text &&
+  text.length <= maxLength &&
+  (prompts.check?.(text) ?? true) &&
+  checkText({ text, where }).length === 0;
 
 // ---- examples ----
 
