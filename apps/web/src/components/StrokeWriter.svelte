@@ -26,9 +26,7 @@
 
 <script lang="ts">
   import HanziWriter from 'hanzi-writer';
-
-  const UNVERIFIED_HINT =
-    'Stroke order comes from PRC data and has not been checked against the Taiwan MOE standard.';
+  import { t } from '../lib/i18n/index.svelte';
 
   interface Props {
     char: string;
@@ -113,18 +111,16 @@
   function practice() {
     if (!writer) return;
     mode = 'quiz';
-    status = 'Draw the first stroke';
+    const say = t().strokes;
+    status = say.first;
     void writer.quiz({
       showHintAfterMisses: 3,
       onCorrectStroke: ({ strokesRemaining }) =>
-        (status = strokesRemaining ? `${strokesRemaining} strokes left` : ''),
-      onMistake: ({ mistakesOnStroke }) =>
-        (status = mistakesOnStroke >= 3 ? 'Follow the hint' : 'Try again'),
+        (status = strokesRemaining ? say.left(strokesRemaining) : ''),
+      onMistake: ({ mistakesOnStroke }) => (status = mistakesOnStroke >= 3 ? say.hint : say.again),
       onComplete: ({ totalMistakes }) => {
         mode = 'done';
-        status = totalMistakes
-          ? `Done · ${totalMistakes} ${totalMistakes === 1 ? 'mistake' : 'mistakes'}`
-          : 'Perfect · no mistakes';
+        status = totalMistakes ? say.done(totalMistakes) : say.perfect;
       },
     });
   }
@@ -135,14 +131,16 @@
     <svg class="grid" viewBox="0 0 240 240" aria-hidden="true">
       <path d="M120 0v240M0 120h240M0 0l240 240M240 0L0 240" />
     </svg>
-    <div class="target" bind:this={target} aria-label="Stroke order for {char}" role="img"></div>
+    <div class="target" bind:this={target} aria-label={t().strokes.label(char)} role="img"></div>
     {#if missing}
-      <p class="missing">No stroke data for <span lang="zh-Hant-TW">{char}</span></p>
+      <p class="missing">{t().strokes.missing} <span lang="zh-Hant-TW">{char}</span></p>
     {/if}
   </div>
 
   {#if verified === false}
-    <p class="unverified" lang="zh-Hant-TW" title={UNVERIFIED_HINT}>筆順可能與臺灣標準不同</p>
+    <p class="unverified" lang="zh-Hant-TW" title={t().strokes.unverified}>
+      筆順可能與臺灣標準不同
+    </p>
   {/if}
 
   <p class="status" aria-live="polite">{status}</p>
@@ -150,13 +148,13 @@
   <div class="actions">
     <button type="button" onclick={animate} disabled={missing || mode === 'animating'}>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5z" /></svg>
-      Stroke order
+      {t().strokes.order}
     </button>
     <button type="button" onclick={practice} disabled={missing}>
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10zM14 7.5l3 3" />
       </svg>
-      {mode === 'quiz' ? 'Restart' : 'Practice writing'}
+      {mode === 'quiz' ? t().strokes.restart : t().strokes.practice}
     </button>
   </div>
 </div>

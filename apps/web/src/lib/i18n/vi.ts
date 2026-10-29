@@ -635,4 +635,157 @@ export const vi: Messages = {
     saveFailed: 'Không lưu được câu trả lời đó',
     saveFailedBody: 'Trình duyệt từ chối lưu. Hãy kiểm tra dung lượng trống trên thiết bị này.',
   },
+
+  talk: {
+    eyebrow: 'Luyện hội thoại',
+    intro:
+      'Luyện các tình huống thực tế ở Đài Loan. Người cùng trò chuyện nói tiếng Hoa Đài Loan chỉ ' +
+      'bằng những từ bạn đã học, sửa câu bạn viết và đánh dấu từ mới để bạn chạm vào tra.',
+    signIn: 'Đăng nhập để luyện hội thoại.',
+    notSetUp: 'Máy chủ này chưa bật tính năng luyện hội thoại.',
+    choose: 'Chọn một tình huống',
+    delete: 'Xóa',
+    deleteConversation: 'Xóa cuộc trò chuyện này',
+    continue: 'Tiếp tục',
+    inProgress: 'Các cuộc trò chuyện đang dở',
+    finished: 'Đã kết thúc',
+    finishedList: 'Các cuộc trò chuyện đã kết thúc',
+    usage: (used, limit) => `Hôm nay đã dùng ${used}/${limit} tin nhắn AI.`,
+    back: 'Tất cả cuộc trò chuyện',
+    end: 'Kết thúc',
+    correction: (corrected, why) => `Sửa lại: ${corrected}. ${why}`,
+    new: 'Từ mới:',
+    loading: 'Đang tải cuộc trò chuyện',
+    goodbye: 'Đang chào tạm biệt…',
+    typing: 'Đang soạn…',
+    starting: (situation) => `Đang bắt đầu “${situation}”…`,
+    summary: 'Cuộc trò chuyện diễn ra thế nào',
+    over: 'Cuộc trò chuyện đã kết thúc',
+    niceWork: 'Làm tốt lắm!',
+    seeYou: 'Hẹn lần sau nhé',
+    sent: 'Tin đã gửi',
+    corrected: 'Được sửa',
+    outOf: (n) => `/${n}`,
+    newWords: 'Từ mới',
+    addAll: (n) => `Thêm cả ${n} từ`,
+    add: 'Thêm',
+    inDeck: 'Trong bộ thẻ',
+    learning: 'Đang học',
+    addedNote: 'Những từ đã thêm sẽ xuất hiện đầu tiên trong lượt học tới.',
+    usageToday: (used, limit) => `Hôm nay ${used}/${limit} tin nhắn AI`,
+    newConversation: 'Cuộc trò chuyện mới',
+    ended: 'Cuộc trò chuyện này đã kết thúc.',
+    endTitle: 'Kết thúc cuộc trò chuyện?',
+    endBody:
+      'Người cùng trò chuyện sẽ chào tạm biệt và bạn sẽ thấy mình đã luyện được gì. Cuộc trò ' +
+      'chuyện sẽ chuyển sang mục Đã kết thúc.',
+    keepTalking: 'Nói tiếp',
+    endChat: 'Kết thúc',
+    reply: 'Câu trả lời của bạn',
+    placeholder: '用中文回答… (tiếng Việt cũng được)',
+    send: 'Gửi',
+    hint: 'Chạm vào từ bất kỳ để xem cách đọc và nghĩa.',
+  },
+
+  landing: {
+    eyebrow: 'Miễn phí · Ngoại tuyến · Tiếng Hoa Đài Loan',
+    headline: 'Học tiếng Hoa theo cách Đài Loan dạy.',
+    lead:
+      'Chữ phồn thể, chú âm và cách đọc Đài Loan, theo lộ trình TOCFL từ Dự bị 1 đến Cấp 6. Ôn ' +
+      'tập ngắt quãng, từ điển dưới mỗi chữ, và những bài đọc ngắn về đời sống Đài Loan.',
+    start: 'Bắt đầu học',
+    fine:
+      'Không cần tài khoản. Dùng được trên điện thoại, iPad và máy tính, có mạng hay không đều ' +
+      'được.',
+    scroll: 'Cuộn xuống, 墨 sẽ bước đi',
+    inside: 'Bên trong có gì',
+    features: [
+      {
+        title: 'Lộ trình chính thức',
+        text:
+          'Mọi từ trong danh sách TOCFL và NAER của Đài Loan, từ Dự bị 1 đến Cấp 6: khoảng 15.000 ' +
+          'từ bằng chữ phồn thể, theo đúng thứ tự các kỳ thi.',
+      },
+      {
+        title: 'Ôn tập nhớ thay bạn',
+        text:
+          'Thuật toán ôn tập ngắt quãng FSRS quyết định khi nào mỗi từ quay lại. Nhận mặt chữ, ' +
+          'nhớ lại từ nghĩa, hoặc nghe mà nhận ra.',
+      },
+      {
+        title: 'Chú âm và cách đọc Đài Loan',
+        text:
+          'ㄅㄆㄇㄈ bên cạnh mỗi chữ, cách đọc người Đài Loan dùng, và phông chữ Khải kiểu bút ' +
+          'lông. Có cả pinyin nếu bạn muốn.',
+      },
+      {
+        title: 'Chạm vào chữ bất kỳ',
+        text:
+          'Từ điển có sẵn với cách đọc Đài Loan, câu ví dụ và hoạt hình thứ tự nét, trong bài ' +
+          'đọc, trên thẻ, ở mọi nơi.',
+      },
+      {
+        title: 'Đọc về Đài Loan',
+        text:
+          '24 bài đọc theo trình độ về cuộc sống nơi đây: chợ đêm, xe máy, ngày bão, tàu điện ' +
+          'MRT. Mỗi bài ở một cấp độ vừa sức bạn.',
+      },
+      {
+        title: 'Trò chuyện và hỏi',
+        text:
+          'Luyện hội thoại, nhờ giải thích một câu hay ảnh chụp biển hiệu, và kiểm tra thanh ' +
+          'điệu. Cần đăng nhập để dùng.',
+      },
+    ],
+    plantLabel: 'Một cây mai đang nở hoa, 120 ngày',
+    plantTitle: 'Một cây mai lớn lên cùng bạn',
+    plantText:
+      'Mỗi ngày bạn học là tưới cho một cây mai (梅, quốc hoa của Đài Loan). Lỡ một hai ngày cũng ' +
+      'không sao: quay lại, vết nứt trên chậu sẽ được hàn vàng theo kiểu kintsugi, và chuỗi ngày ' +
+      'vẫn tiếp tục. Cây nảy mầm ngày đầu tiên, ra nụ sau ba mươi ngày và nở hoa sau một trăm ' +
+      'ngày. Những con dấu đánh dấu các cột mốc trên đường.',
+    day: 'Một ngày học',
+    steps: [
+      { title: 'Vài phút', text: 'Mở Hôm nay: các thẻ đến hạn và mười từ mới.' },
+      { title: 'Học', text: 'Chạm để xem đáp án, tự chấm điểm. Cây của bạn lớn thêm một chút.' },
+      { title: 'Rồi đọc', text: 'Một bài ngắn, chạm vào những gì bạn chưa biết.' },
+    ],
+    install: 'Trên điện thoại, như một ứng dụng',
+    installOpen: 'Mở bằng Safari hoặc Chrome, rồi chọn',
+    installAdd: 'Chia sẻ › Thêm vào MH chính',
+    installAfter:
+      '. Ứng dụng mở toàn màn hình, giữ lại những từ bạn đã mở để dùng ngoại tuyến, và đồng bộ ' +
+      'khi bạn đăng nhập.',
+    wordsFrom: 'Từ vựng từ',
+    dictionary: 'Từ điển:',
+    withTaiwan: 'với cách đọc Đài Loan.',
+    examples: 'Câu ví dụ:',
+    ownSentences: 'và các câu viết riêng cho ứng dụng.',
+    fonts: 'Phông chữ: LXGW WenKai TC và Nunito.',
+  },
+
+  strokes: {
+    unverified:
+      'Thứ tự nét lấy từ dữ liệu của Trung Quốc đại lục, chưa được đối chiếu với chuẩn của Bộ Giáo dục Đài Loan.',
+    first: 'Hãy viết nét đầu tiên',
+    left: (n) => `Còn ${n} nét`,
+    hint: 'Hãy làm theo gợi ý',
+    again: 'Thử lại',
+    done: (mistakes) => `Xong · ${mistakes} lỗi`,
+    perfect: 'Hoàn hảo · không lỗi nào',
+    label: (char) => `Thứ tự nét của ${char}`,
+    missing: 'Không có dữ liệu nét cho',
+    order: 'Thứ tự nét',
+    restart: 'Làm lại',
+    practice: 'Luyện viết',
+  },
+
+  misc: {
+    backTo: 'Quay lại',
+    loading: 'Đang tải',
+    notInPath: 'Từ này không có trong lộ trình học.',
+    update: 'Đã có phiên bản mới của ứng dụng.',
+    reload: 'Tải lại',
+    later: 'Để sau',
+  },
 };

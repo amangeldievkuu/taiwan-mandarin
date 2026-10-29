@@ -82,140 +82,104 @@
     router.go(to);
   }
 
-  const FEATURES = [
-    {
-      seal: '路',
-      title: 'The official path',
-      text: "Every word from Taiwan's TOCFL and NAER lists, Novice 1 to Level 6: about 15,000 words in Traditional characters, in the order the exams expect.",
-    },
-    {
-      seal: '憶',
-      title: 'Reviews that remember you',
-      text: 'FSRS spaced repetition decides when each word comes back. Recognise it, recall it from the meaning, or catch it by ear.',
-    },
-    {
-      seal: '注',
-      title: 'Zhuyin and Taiwan readings',
-      text: 'ㄅㄆㄇㄈ beside every character, the readings Taiwan uses, and a brush-style Kai font. Pinyin is there if you want it.',
-    },
-    {
-      seal: '典',
-      title: 'Tap any character',
-      text: 'A built-in dictionary with Taiwan readings, example sentences and animated stroke order, in the reader, on cards, everywhere.',
-    },
-    {
-      seal: '讀',
-      title: 'Read about Taiwan',
-      text: '24 graded readers about life here: night markets, scooters, typhoon days, the MRT. Each one at a level you can manage.',
-    },
-    {
-      seal: '談',
-      title: 'Talk and ask',
-      text: 'Practise conversations, have a sentence or a photo of a sign explained, and check your tones. Sign in for these.',
-    },
-  ];
-
-  const STEPS = [
-    { zh: '早', title: 'A few minutes', text: 'Open Today: the cards due, and ten new words.' },
-    { zh: '學', title: 'Study', text: 'Tap to reveal, grade yourself. Your plant grows a little.' },
-    { zh: '讀', title: 'Then read', text: 'A short text, tapping what you don’t know.' },
-  ];
+  /** The features' seals; their titles and texts are in the catalog, in this order. */
+  const FEATURES = ['路', '憶', '注', '典', '讀', '談'];
+  /** The steps' characters, likewise. */
+  const STEPS = ['早', '學', '讀'];
 </script>
 
 <div class="landing" use:walk bind:this={road}>
   <section class="hero">
     <div class="hero-text">
-      <p class="eyebrow">Free · Offline · Taiwan Mandarin</p>
+      <p class="eyebrow">{t().landing.eyebrow}</p>
       <h1>
         <span class="zh" lang="zh-Hant-TW">臺灣華語</span>
-        <span class="en">Learn Mandarin the way Taiwan teaches it.</span>
+        <span class="en">{t().landing.headline}</span>
       </h1>
-      <p class="lead">
-        Traditional characters, Zhuyin and Taiwan readings, along the TOCFL path from Novice 1 to
-        Level 6. Spaced repetition, a dictionary under every character, and short readings about
-        life in Taiwan.
-      </p>
+      <p class="lead">{t().landing.lead}</p>
       <div class="cta">
         <button type="button" class="btn primary big" onclick={() => start('/')}>
-          Start learning <Icon name="forward" />
+          {t().landing.start}
+          <Icon name="forward" />
         </button>
         <button type="button" class="btn quiet big" onclick={() => start('/me/account')}>
-          Sign in
+          {t().auth.signIn}
         </button>
       </div>
-      <p class="fine">
-        No account needed. Works on the phone, the iPad and the laptop, with or without a
-        connection.
-      </p>
+      <p class="fine">{t().landing.fine}</p>
     </div>
     <div class="hero-seal" aria-hidden="true">
       <Seal text="華" size={132} />
       <p class="hint">
-        <Icon name="back" /> Scroll, and 墨 walks
+        <Icon name="back" />
+        {t().landing.scroll}
       </p>
     </div>
   </section>
 
   <section class="features">
-    <h2 class="section-title">What is inside <span class="zh" lang="zh-Hant-TW">內容</span></h2>
+    <h2 class="section-title">
+      {t().landing.inside} <span class="zh" lang="zh-Hant-TW">內容</span>
+    </h2>
     <ul>
-      {#each FEATURES as f, i (f.seal)}
+      {#each FEATURES as seal, i (seal)}
         <li class="feature sheet" style:--i={i}>
-          <Seal text={f.seal} size={44} outline />
-          <h3>{f.title}</h3>
-          <p>{f.text}</p>
+          <Seal text={seal} size={44} outline />
+          <h3>{t().landing.features[i]?.title}</h3>
+          <p>{t().landing.features[i]?.text}</p>
         </li>
       {/each}
     </ul>
   </section>
 
   <section class="plant sheet">
-    <StreakPlant bowl={bloom} size={170} label="A plum tree in bloom, 120 days" lively />
+    <StreakPlant bowl={bloom} size={170} label={t().landing.plantLabel} lively />
     <div>
-      <h2>A plum tree that grows with you</h2>
-      <p>
-        Every day you study waters a plum tree (梅, Taiwan's national flower). Miss a day or two and
-        nothing breaks: come back and the crack in its pot is mended with gold, kintsugi style, and
-        the streak goes on. It sprouts on day one, buds at thirty and blooms at a hundred. Seals
-        mark the milestones along the way.
-      </p>
+      <h2>{t().landing.plantTitle}</h2>
+      <p>{t().landing.plantText}</p>
     </div>
   </section>
 
   <section class="steps">
-    <h2 class="section-title">A day with it <span class="zh" lang="zh-Hant-TW">一天</span></h2>
+    <h2 class="section-title">{t().landing.day} <span class="zh" lang="zh-Hant-TW">一天</span></h2>
     <ol>
-      {#each STEPS as s, i (s.zh)}
+      {#each STEPS as zh, i (zh)}
         <li>
           <span class="step-n">{i + 1}</span>
-          <span class="step-zh hanzi" lang="zh-Hant-TW">{s.zh}</span>
-          <strong>{s.title}</strong>
-          <p>{s.text}</p>
+          <span class="step-zh hanzi" lang="zh-Hant-TW">{zh}</span>
+          <strong>{t().landing.steps[i]?.title}</strong>
+          <p>{t().landing.steps[i]?.text}</p>
         </li>
       {/each}
     </ol>
   </section>
 
   <section class="install">
-    <h2>On your phone, like an app</h2>
+    <h2>{t().landing.install}</h2>
     <p>
-      Open it in Safari or Chrome, then <strong>Share › Add to Home Screen</strong>. It opens
-      full-screen, keeps the words you have opened for offline use, and syncs when you sign in.
+      {t().landing.installOpen} <strong>{t().landing.installAdd}</strong>{t().landing.installAfter}
     </p>
     <div class="cta">
       <button type="button" class="btn primary big" onclick={() => start('/')}>
-        Start learning <Icon name="forward" />
+        {t().landing.start}
+        <Icon name="forward" />
       </button>
     </div>
   </section>
 
   <footer class="credits">
     <p>
-      Words from <a href="https://tocfl.edu.tw" target="_blank" rel="noopener">TOCFL</a> and
-      <a href="https://coct.naer.edu.tw" target="_blank" rel="noopener">NAER</a>. Dictionary:
-      <a href="https://cc-cedict.org" target="_blank" rel="noopener">CC-CEDICT</a> with Taiwan
-      readings. Examples: <a href="https://tatoeba.org" target="_blank" rel="noopener">Tatoeba</a> and
-      sentences written for the app. Fonts: LXGW WenKai TC and Nunito.
+      {t().landing.wordsFrom}
+      <a href="https://tocfl.edu.tw" target="_blank" rel="noopener">TOCFL</a>
+      {t().about.and}
+      <a href="https://coct.naer.edu.tw" target="_blank" rel="noopener">NAER</a>.
+      {t().landing.dictionary}
+      <a href="https://cc-cedict.org" target="_blank" rel="noopener">CC-CEDICT</a>
+      {t().landing.withTaiwan}
+      {t().landing.examples}
+      <a href="https://tatoeba.org" target="_blank" rel="noopener">Tatoeba</a>
+      {t().landing.ownSentences}
+      {t().landing.fonts}
     </p>
   </footer>
 
@@ -232,7 +196,7 @@
       {#each POSTS as post, i (post.id)}
         <li class="post" class:lit={i < reached} style:--x={post.at}>
           <Seal text={LEVEL_SEAL[post.id]} size={30} outline={i >= reached} />
-          <span>{post.en}</span>
+          <span>{t().levels[post.id]}</span>
         </li>
       {/each}
     </ul>

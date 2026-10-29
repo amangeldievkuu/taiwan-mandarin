@@ -2,6 +2,7 @@
   // The one back button: it says where it goes. Back to the page you came from when that was in
   // the app ("‹ Today"); otherwise up to the page's parent ("‹ Path"), as after opening a link.
   import Icon from './Icon.svelte';
+  import { t } from '../lib/i18n/index.svelte';
   import { router } from '../lib/router.svelte';
   import { routeTitle } from '../lib/titles';
 
@@ -29,7 +30,7 @@
 {#if visible}
   <a class="back" href={router.href(router.prev ?? parent)} {onclick}>
     <Icon name="back" size={20} />
-    <span class="visually-hidden">Back to</span>
+    <span class="visually-hidden">{t().misc.backTo}</span>
     <span class="label" class:hanzi={!!title.lang} lang={title.lang}>{title.text}</span>
   </a>
 {/if}

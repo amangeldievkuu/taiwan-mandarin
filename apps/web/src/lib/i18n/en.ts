@@ -613,6 +613,162 @@ export const en = {
     saveFailed: "Couldn't save that answer",
     saveFailedBody: 'The browser refused to store it. Check free space on this device.',
   },
+
+  talk: {
+    eyebrow: 'Conversation practice',
+    intro:
+      "Practise real situations in Taiwan. Your partner speaks Taiwan Mandarin using only words you've " +
+      'studied, corrects what you write, and marks any new word so you can tap it.',
+    signIn: 'Sign in to practise conversations.',
+    notSetUp: "Conversation practice isn't set up on this server yet.",
+    choose: 'Choose a situation',
+    delete: 'Delete',
+    deleteConversation: 'Delete this conversation',
+    continue: 'Continue',
+    inProgress: 'Conversations in progress',
+    finished: 'Finished',
+    finishedList: 'Finished conversations',
+    usage: (used: number, limit: number) => `${used} of ${limit} AI messages used today.`,
+    back: 'All conversations',
+    end: 'End',
+    correction: (corrected: string, why: string) => `Correction: ${corrected}. ${why}`,
+    new: 'New:',
+    loading: 'Loading the conversation',
+    goodbye: 'Saying goodbye…',
+    typing: 'Typing…',
+    starting: (situation: string) => `Starting “${situation}”…`,
+    summary: 'How the conversation went',
+    over: 'Conversation finished',
+    niceWork: 'Nice work!',
+    seeYou: 'See you next time',
+    sent: 'Messages sent',
+    corrected: 'Corrected',
+    outOf: (n: number) => ` of ${n}`,
+    newWords: 'New words',
+    addAll: (n: number) => `Add all ${n}`,
+    add: 'Add',
+    inDeck: 'In deck',
+    learning: 'Learning',
+    addedNote: 'Added words come up first in your next study session.',
+    usageToday: (used: number, limit: number) => `${used} of ${limit} AI messages today`,
+    newConversation: 'New conversation',
+    ended: 'This conversation has ended.',
+    endTitle: 'End this conversation?',
+    endBody:
+      "Your partner will say goodbye and you'll see what you practised. It moves to Finished.",
+    keepTalking: 'Keep talking',
+    endChat: 'End chat',
+    reply: 'Your reply',
+    placeholder: '用中文回答… (English is OK too)',
+    send: 'Send',
+    hint: 'Tap any word for its reading and meaning.',
+  },
+
+  landing: {
+    eyebrow: 'Free · Offline · Taiwan Mandarin',
+    headline: 'Learn Mandarin the way Taiwan teaches it.',
+    lead:
+      'Traditional characters, Zhuyin and Taiwan readings, along the TOCFL path from Novice 1 to ' +
+      'Level 6. Spaced repetition, a dictionary under every character, and short readings about ' +
+      'life in Taiwan.',
+    start: 'Start learning',
+    fine:
+      'No account needed. Works on the phone, the iPad and the laptop, with or without a ' +
+      'connection.',
+    scroll: 'Scroll, and 墨 walks',
+    inside: 'What is inside',
+    /** One per seal: 路 憶 注 典 讀 談. */
+    features: [
+      {
+        title: 'The official path',
+        text:
+          "Every word from Taiwan's TOCFL and NAER lists, Novice 1 to Level 6: about 15,000 words " +
+          'in Traditional characters, in the order the exams expect.',
+      },
+      {
+        title: 'Reviews that remember you',
+        text:
+          'FSRS spaced repetition decides when each word comes back. Recognise it, recall it from ' +
+          'the meaning, or catch it by ear.',
+      },
+      {
+        title: 'Zhuyin and Taiwan readings',
+        text:
+          'ㄅㄆㄇㄈ beside every character, the readings Taiwan uses, and a brush-style Kai font. ' +
+          'Pinyin is there if you want it.',
+      },
+      {
+        title: 'Tap any character',
+        text:
+          'A built-in dictionary with Taiwan readings, example sentences and animated stroke ' +
+          'order, in the reader, on cards, everywhere.',
+      },
+      {
+        title: 'Read about Taiwan',
+        text:
+          '24 graded readers about life here: night markets, scooters, typhoon days, the MRT. ' +
+          'Each one at a level you can manage.',
+      },
+      {
+        title: 'Talk and ask',
+        text:
+          'Practise conversations, have a sentence or a photo of a sign explained, and check your ' +
+          'tones. Sign in for these.',
+      },
+    ],
+    plantLabel: 'A plum tree in bloom, 120 days',
+    plantTitle: 'A plum tree that grows with you',
+    plantText:
+      "Every day you study waters a plum tree (梅, Taiwan's national flower). Miss a day or two " +
+      'and nothing breaks: come back and the crack in its pot is mended with gold, kintsugi ' +
+      'style, and the streak goes on. It sprouts on day one, buds at thirty and blooms at a ' +
+      'hundred. Seals mark the milestones along the way.',
+    day: 'A day with it',
+    /** One per step: 早 學 讀. */
+    steps: [
+      { title: 'A few minutes', text: 'Open Today: the cards due, and ten new words.' },
+      { title: 'Study', text: 'Tap to reveal, grade yourself. Your plant grows a little.' },
+      { title: 'Then read', text: 'A short text, tapping what you don’t know.' },
+    ],
+    install: 'On your phone, like an app',
+    installOpen: 'Open it in Safari or Chrome, then',
+    installAdd: 'Share › Add to Home Screen',
+    installAfter:
+      '. It opens full-screen, keeps the words you have opened for offline use, and syncs when ' +
+      'you sign in.',
+    wordsFrom: 'Words from',
+    dictionary: 'Dictionary:',
+    withTaiwan: 'with Taiwan readings.',
+    examples: 'Examples:',
+    ownSentences: 'and sentences written for the app.',
+    fonts: 'Fonts: LXGW WenKai TC and Nunito.',
+  },
+
+  strokes: {
+    unverified:
+      'Stroke order comes from PRC data and has not been checked against the Taiwan MOE standard.',
+    first: 'Draw the first stroke',
+    left: (n: number) => `${n} strokes left`,
+    hint: 'Follow the hint',
+    again: 'Try again',
+    done: (mistakes: number): string =>
+      `Done · ${mistakes} ${mistakes === 1 ? 'mistake' : 'mistakes'}`,
+    perfect: 'Perfect · no mistakes',
+    label: (char: string) => `Stroke order for ${char}`,
+    missing: 'No stroke data for',
+    order: 'Stroke order',
+    restart: 'Restart',
+    practice: 'Practice writing',
+  },
+
+  misc: {
+    backTo: 'Back to',
+    loading: 'Loading',
+    notInPath: "This word isn't in the study path.",
+    update: 'A new version of the app is ready.',
+    reload: 'Reload',
+    later: 'Later',
+  },
 };
 
 export type Messages = typeof en;

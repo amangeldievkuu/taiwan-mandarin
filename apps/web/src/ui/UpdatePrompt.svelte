@@ -1,5 +1,6 @@
 <script lang="ts">
   // Offers the new version once it is downloaded; stays until the learner reloads or says later.
+  import { t } from '../lib/i18n/index.svelte';
   import { pwa } from '../lib/pwa.svelte';
   import { router } from '../lib/router.svelte';
   import { rise } from '../lib/transitions';
@@ -10,9 +11,13 @@
 
 {#if pwa.needRefresh}
   <div class="update" class:top={atTop} role="status" in:rise={{ y: atTop ? -16 : 16 }}>
-    <span>A new version of the app is ready.</span>
-    <button type="button" class="btn primary small" onclick={() => pwa.reload()}>Reload</button>
-    <button type="button" class="btn quiet small" onclick={() => pwa.later()}>Later</button>
+    <span>{t().misc.update}</span>
+    <button type="button" class="btn primary small" onclick={() => pwa.reload()}
+      >{t().misc.reload}</button
+    >
+    <button type="button" class="btn quiet small" onclick={() => pwa.later()}
+      >{t().misc.later}</button
+    >
   </div>
 {/if}
 

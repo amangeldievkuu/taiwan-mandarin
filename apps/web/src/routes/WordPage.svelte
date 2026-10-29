@@ -4,6 +4,7 @@
   import BackButton from '../ui/BackButton.svelte';
   import WordDetail from '../ui/WordDetail.svelte';
   import { content } from '../lib/content.svelte';
+  import { t } from '../lib/i18n/index.svelte';
   import { store } from '../lib/store.svelte';
 
   interface Props {
@@ -46,10 +47,10 @@
     <WordDetail {word} />
   {:else if missing}
     <p class="empty">
-      <span class="hanzi" lang="zh-Hant-TW">無</span>This word isn't in the study path.
+      <span class="hanzi" lang="zh-Hant-TW">無</span>{t().misc.notInPath}
     </p>
   {:else if failed}
-    <p class="empty" role="alert">Couldn't load this. Check your connection and try again.</p>
+    <p class="empty" role="alert">{t().level.loadFailed}</p>
   {:else}
     <Loading />
   {/if}

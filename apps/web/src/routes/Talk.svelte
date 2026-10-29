@@ -34,6 +34,7 @@
   import { api } from '../lib/api';
   import { companion } from '../lib/companion.svelte';
   import { content } from '../lib/content.svelte';
+  import { intlLocale, locale, t } from '../lib/i18n/index.svelte';
   import { lookup } from '../lib/lookup.svelte';
   import { canSpeak, speak, stopSpeaking } from '../lib/speech';
   import { store } from '../lib/store.svelte';
@@ -54,7 +55,7 @@
   let announcement = $state('');
   const announce = (reply: TalkMessage, correction?: TalkMessage['correction']) => {
     announcement = [
-      correction && `Correction: ${correction.corrected}. ${correction.explanation}`,
+      correction && t().talk.correction(correction.corrected, correction.explanation),
       `${reply.content}${reply.translation ? ` (${reply.translation})` : ''}`,
     ]
       .filter(Boolean)
@@ -125,7 +126,12 @@
     try {
       const res = await api<TalkResponse>('/v1/ai/talk', {
         method: 'POST',
-        body: { ...(conversationId ? { conversationId } : {}), scenario, message },
+        body: {
+          ...(conversationId ? { conversationId } : {}),
+          scenario,
+          message,
+          lang: locale.lang,
+        },
       });
       if (mine !== session) return;
       conversationId = res.conversationId;
@@ -192,9 +198,10 @@
     error = null;
     void scrollDown();
     try {
-      const res = await api<TalkEndResponse>(`/v1/ai/talk/${conversationId}/end`, {
-        method: 'POST',
-      });
+      const res = await api<TalkEndResponse>(
+        `/v1/ai/talk/${conversationId}/end?lang=${locale.lang}`,
+        { method: 'POST' },
+      );
       if (mine !== session) return;
       if (res.message) {
         messages = [...messages, res.message];
@@ -265,22 +272,19 @@
   {#if !open}
     <header class="page-head">
       <div>
-        <p class="eyebrow">Conversation practice · 會話練習</p>
-        <h1 class="title"><span class="zh">對話</span>Talk</h1>
+        <p class="eyebrow">{t().talk.eyebrow} · 會話練習</p>
+        <h1 class="title"><span class="zh">對話</span>{t().titles.talk}</h1>
       </div>
     </header>
-    <p class="intro">
-      Practise real situations in Taiwan. Your partner speaks Taiwan Mandarin using only words
-      you've studied, corrects what you write, and marks any new word so you can tap it.
-    </p>
+    <p class="intro">{t().talk.intro}</p>
 
     {#if !account.user}
-      {#if account.checked}<SignInPrompt seal="談" text="Sign in to practise conversations." />{/if}
+      {#if account.checked}<SignInPrompt seal="談" text={t().talk.signIn} />{/if}
     {:else if status && !status.available}
-      <p class="empty">Conversation practice isn't set up on this server yet.</p>
+      <p class="empty">{t().talk.notSetUp}</p>
     {:else}
       <h2 class="section-title">
-        Choose a situation <span class="zh" lang="zh-Hant-TW">情境</span>
+        {t().talk.choose} <span class="zh" lang="zh-Hant-TW">情境</span>
       </h2>
       <div class="scenarios">
         {#each SCENARIOS as s (s.id)}
@@ -291,7 +295,7 @@
             onclick={() => start(s.id)}
           >
             <span class="s-zh hanzi" lang="zh-Hant-TW">{s.zh}</span>
-            <span class="s-en">{s.en}</span>
+            <span class="s-en">{t().scenarios[s.id]}</span>
           </button>
         {/each}
       </div>
@@ -301,27 +305,29 @@
             <li class="convo">
               <button type="button" class="row" onclick={() => resume(item)}>
                 <span class="row-main">
-                  <strong>{SCENARIOS.find((s) => s.id === item.scenario)?.en}</strong>
+                  <strong>{t().scenarios[item.scenario]}</strong>
                   <span class="row-sub hanzi" lang="zh-Hant-TW">{item.last}</span>
                 </span>
-                <span class="row-value">{new Date(item.updatedAt).toLocaleDateString()}</span>
+                <span class="row-value"
+                  >{new Date(item.updatedAt).toLocaleDateString(intlLocale())}</span
+                >
               </button>
               {#if confirmDelete === item.id}
                 <span class="confirm-delete">
                   <button
                     type="button"
                     class="btn small quiet"
-                    onclick={() => (confirmDelete = null)}>Cancel</button
+                    onclick={() => (confirmDelete = null)}>{t().common.cancel}</button
                   >
                   <button type="button" class="btn small seal" onclick={() => remove(item.id)}
-                    >Delete</button
+                    >{t().talk.delete}</button
                   >
                 </span>
               {:else}
                 <button
                   type="button"
                   class="delete"
-                  aria-label="Delete this conversation"
+                  aria-label={t().talk.deleteConversation}
                   onclick={() => (confirmDelete = item.id)}><Icon name="trash" size={18} /></button
                 >
               {/if}
@@ -331,27 +337,29 @@
       {/snippet}
       {#if listError}<p class="error" role="alert">{listError}</p>{/if}
       {#if ongoing.length}
-        <h2 class="section-title">Continue <span class="zh" lang="zh-Hant-TW">繼續</span></h2>
-        {@render conversations(ongoing, 'Conversations in progress')}
+        <h2 class="section-title">
+          {t().talk.continue} <span class="zh" lang="zh-Hant-TW">繼續</span>
+        </h2>
+        {@render conversations(ongoing, t().talk.inProgress)}
       {/if}
       {#if finished.length}
-        <h2 class="section-title">Finished <span class="zh" lang="zh-Hant-TW">完成</span></h2>
-        {@render conversations(finished, 'Finished conversations')}
+        <h2 class="section-title">
+          {t().talk.finished} <span class="zh" lang="zh-Hant-TW">完成</span>
+        </h2>
+        {@render conversations(finished, t().talk.finishedList)}
       {/if}
-      {#if status}<p class="footnote">
-          {status.used} of {status.limit} AI messages used today.
-        </p>{/if}
+      {#if status}<p class="footnote">{t().talk.usage(status.used, status.limit)}</p>{/if}
     {/if}
   {:else}
     <!-- No corner to spare in a conversation: 墨 climbs out of the way until you leave it. -->
     <header class="chat-head" use:companion.stepAway>
-      <button type="button" class="back" onclick={leave} aria-label="All conversations"
+      <button type="button" class="back" onclick={leave} aria-label={t().talk.back}
         ><Icon name="back" /></button
       >
       <Seal text="談" size={34} />
       <div class="chat-title">
         <strong class="hanzi" lang="zh-Hant-TW">{scenarioInfo?.zh}</strong>
-        <small>{scenarioInfo?.en}</small>
+        <small>{t().scenarios[scenario]}</small>
       </div>
       <button
         type="button"
@@ -366,7 +374,7 @@
           type="button"
           class="btn small quiet end-chat"
           disabled={sending || ending}
-          onclick={() => (confirmEnd = true)}>End</button
+          onclick={() => (confirmEnd = true)}>{t().talk.end}</button
         >
       {/if}
     </header>
@@ -389,15 +397,17 @@
               {/if}
               <div class="tools">
                 {#if canSpeak}
-                  <button type="button" aria-label="Listen" onclick={() => speak(m.content)}
-                    ><Icon name="speaker" size={16} /></button
+                  <button
+                    type="button"
+                    aria-label={t().word.listen}
+                    onclick={() => speak(m.content)}><Icon name="speaker" size={16} /></button
                   >
                 {/if}
                 <button
                   type="button"
                   onclick={() => (showTranslation[m.id] = !showTranslation[m.id])}
                 >
-                  {showTranslation[m.id] ? 'Hide' : 'English'}
+                  {showTranslation[m.id] ? t().auth.hide : t().reader.translation}
                 </button>
               </div>
               {#if showTranslation[m.id] && m.translation}<p class="translation">
@@ -405,7 +415,7 @@
                 </p>{/if}
               {#if m.newWords?.length}
                 <div class="new">
-                  <span>New:</span>
+                  <span>{t().talk.new}</span>
                   {#each m.newWords as w (w.text)}
                     <button type="button" class="chip" onclick={() => lookup.openWord(w.text)}>
                       <span class="hanzi" lang="zh-Hant-TW">{w.text}</span>
@@ -446,7 +456,7 @@
         </li>
       {/each}
       {#if loading}
-        <li class="history-loading" role="status" aria-label="Loading the conversation">
+        <li class="history-loading" role="status" aria-label={t().talk.loading}>
           <div class="ghost"><Skeleton lines={2} height="18px" /></div>
           <div class="ghost mine"><Skeleton width="70%" height="18px" /></div>
           <div class="ghost"><Skeleton lines={2} height="18px" /></div>
@@ -458,10 +468,10 @@
           </div>
           <span class="typing-label"
             >{ending
-              ? 'Saying goodbye…'
+              ? t().talk.goodbye
               : messages.length
-                ? 'Typing…'
-                : `Starting “${scenarioInfo?.en}”…`}</span
+                ? t().talk.typing
+                : t().talk.starting(t().scenarios[scenario])}</span
           >
         </li>
       {/if}
@@ -471,41 +481,42 @@
         <p>{error}</p>
         {#if !messages.length && !conversationId && !sending}
           <button type="button" class="btn small quiet" onclick={() => start(scenario)}>
-            Try again
+            {t().app.tryAgain}
           </button>
         {/if}
       </div>
     {/if}
 
     {#if summary}
-      <section class="summary sheet enter" aria-label="How the conversation went">
+      <section class="summary sheet enter" aria-label={t().talk.summary}>
         <header class="summary-head">
           <Seal text="完" size={42} />
           <div>
-            <p class="eyebrow" lang="zh-Hant-TW">對話結束 · Conversation finished</p>
-            <strong>{summary.sent ? 'Nice work!' : 'See you next time'}</strong>
+            <p class="eyebrow"><span lang="zh-Hant-TW">對話結束</span> · {t().talk.over}</p>
+            <strong>{summary.sent ? t().talk.niceWork : t().talk.seeYou}</strong>
           </div>
         </header>
         <dl class="facts">
           <div>
-            <dt>Messages sent</dt>
+            <dt>{t().talk.sent}</dt>
             <dd>{summary.sent}</dd>
           </div>
           <div>
-            <dt>Corrected</dt>
-            <dd>{summary.corrected}<small> of {summary.sent}</small></dd>
+            <dt>{t().talk.corrected}</dt>
+            <dd>{summary.corrected}<small>{t().talk.outOf(summary.sent)}</small></dd>
           </div>
           <div>
-            <dt>New words</dt>
+            <dt>{t().talk.newWords}</dt>
             <dd>{summary.newWords.length}</dd>
           </div>
         </dl>
         {#if summary.newWords.length}
           <div class="words-head">
-            <h3>New words <span class="zh" lang="zh-Hant-TW">生詞</span></h3>
+            <h3>{t().talk.newWords} <span class="zh" lang="zh-Hant-TW">生詞</span></h3>
             {#if addable.length > 1}
               <button type="button" class="btn small quiet" onclick={() => addToDeck(addable)}>
-                <Icon name="plus" size={16} /> Add all {addable.length}
+                <Icon name="plus" size={16} />
+                {t().talk.addAll(addable.length)}
               </button>
             {/if}
           </div>
@@ -526,40 +537,43 @@
                     <button
                       type="button"
                       class="btn small primary"
-                      onclick={() => addToDeck([wordId])}><Icon name="plus" size={16} /> Add</button
+                      onclick={() => addToDeck([wordId])}
+                      ><Icon name="plus" size={16} /> {t().talk.add}</button
                     >
                   {:else}
                     <span class="added"
                       ><Icon name="check" size={16} />
-                      {state === 'deck' ? 'In deck' : 'Learning'}</span
+                      {state === 'deck' ? t().talk.inDeck : t().talk.learning}</span
                     >
                   {/if}
                 {/if}
               </li>
             {/each}
           </ul>
-          <p class="footnote">Added words come up first in your next study session.</p>
+          <p class="footnote">{t().talk.addedNote}</p>
         {/if}
         <div class="summary-actions">
-          {#if status}<span class="usage">{status.used} of {status.limit} AI messages today</span
+          {#if status}<span class="usage">{t().talk.usageToday(status.used, status.limit)}</span
             >{/if}
-          <button type="button" class="btn primary" onclick={leave}>New conversation</button>
+          <button type="button" class="btn primary" onclick={leave}
+            >{t().talk.newConversation}</button
+          >
         </div>
       </section>
     {:else if endedAt}
       <!-- Ended, summary not loaded (shouldn't happen): still read-only. -->
-      <p class="footnote">This conversation has ended.</p>
+      <p class="footnote">{t().talk.ended}</p>
     {:else if confirmEnd}
       <div class="confirm-end sheet" role="alertdialog" aria-labelledby="end-title">
         <p>
-          <strong id="end-title">End this conversation?</strong> Your partner will say goodbye and you'll
-          see what you practised. It moves to Finished.
+          <strong id="end-title">{t().talk.endTitle}</strong>
+          {t().talk.endBody}
         </p>
         <div class="confirm-actions">
           <button type="button" class="btn small quiet" onclick={() => (confirmEnd = false)}
-            >Keep talking</button
+            >{t().talk.keepTalking}</button
           >
-          <button type="button" class="btn small primary" onclick={end}>End chat</button>
+          <button type="button" class="btn small primary" onclick={end}>{t().talk.endChat}</button>
         </div>
       </div>
     {:else if !ending}
@@ -572,8 +586,8 @@
       >
         <input
           bind:value={draft}
-          aria-label="Your reply"
-          placeholder="用中文回答… (English is OK too)"
+          aria-label={t().talk.reply}
+          placeholder={t().talk.placeholder}
           lang="zh-Hant-TW"
           autocomplete="off"
           enterkeyhint="send"
@@ -581,13 +595,13 @@
         <button
           class="send"
           type="submit"
-          aria-label="Send"
+          aria-label={t().talk.send}
           disabled={!draft.trim() || sending || loading}
         >
           <Icon name="send" />
         </button>
       </form>
-      <p class="hint">Tap any word for its reading and meaning.</p>
+      <p class="hint">{t().talk.hint}</p>
     {/if}
   {/if}
 </div>

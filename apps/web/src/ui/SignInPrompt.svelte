@@ -1,5 +1,6 @@
 <script lang="ts">
   import Seal from './Seal.svelte';
+  import { t } from '../lib/i18n/index.svelte';
   import { router } from '../lib/router.svelte';
 
   interface Props {
@@ -18,7 +19,7 @@
   <Seal text={seal} size={52} outline />
   <div>
     <p>{text}</p>
-    <a class="btn primary small" {href} onclick={router.link}>Sign in</a>
+    <a class="btn primary small" {href} onclick={router.link}>{t().auth.signIn}</a>
   </div>
 </div>
 
