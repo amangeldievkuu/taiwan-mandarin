@@ -1,6 +1,6 @@
 // The study path, dictionary and readers, from the generated content files (the same ones the web
-// app serves). Words and readers are loaded at startup; dictionary shards on first use. The
-// Vietnamese files give the AI features their Vietnamese glosses.
+// app serves). Words and readers are loaded at startup; dictionary shards on first use. Each other
+// language's files give the AI features their glosses in it.
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -15,6 +15,7 @@ import {
   type ContentManifest,
   type DictEntry,
   type DictShard,
+  type ForeignLang,
   type Lang,
   type Level,
   type Reader,
@@ -38,8 +39,8 @@ export class ContentService implements OnModuleInit {
   private readers: Reader[] = [];
   /** Shards by language and number ("vi:3"). */
   private shards = new Map<string, DictShard>();
-  /** Vietnamese meanings by word id, when the content has them. */
-  private viGlosses = new Map<string, string>();
+  /** Each other language's meanings by word id, when the content has them. */
+  private glosses = new Map<ForeignLang, Map<string, string>>();
 
   constructor(@Inject(ENV) env: Env) {
     this.contentDir = env.CONTENT_DIR ?? join(WEB_PUBLIC, 'content');
@@ -74,10 +75,15 @@ export class ContentService implements OnModuleInit {
       }
     }
     this.readers = json<Reader[]>('readers.json');
-    if (this.manifest.languages?.includes('vi')) {
+    for (const lang of this.manifest.languages ?? []) {
+      if (lang === 'en') continue;
+      const meanings = new Map<string, string>();
       for (const level of this.manifest.levels)
-        for (const w of json<Word[]>(join('vi', level.file)))
-          if (w.vi) this.viGlosses.set(w.id, w.vi);
+        for (const w of json<Word[]>(join(lang, level.file))) {
+          const meaning = w[lang];
+          if (meaning) meanings.set(w.id, meaning);
+        }
+      this.glosses.set(lang, meanings);
     }
     this.logger.log(
       `Content ${this.manifest.version}: ${this.words.size} words, ${this.readers.length} readers`,
@@ -143,17 +149,17 @@ export class ContentService implements OnModuleInit {
 
   /**
    * A short gloss in the learner's language: the study word's meaning, else the dictionary's first
-   * definitions (for `pinyin` when given). English when there is no Vietnamese for it.
+   * definitions (for `pinyin` when given). English when there is none in the learner's language.
    */
   gloss(
     text: string,
     lang: Lang,
     found: { word?: Word; pinyin?: string } = {},
   ): string | undefined {
-    if (lang === 'vi') {
-      const vi = found.word && this.viGlosses.get(found.word.id);
-      if (vi) return vi;
-      const entries = entriesIn(this.shard(dictShardOf(text), 'vi'), text).filter((e) => !e.en);
+    if (lang !== 'en') {
+      const meaning = found.word && this.glosses.get(lang)?.get(found.word.id);
+      if (meaning) return meaning;
+      const entries = entriesIn(this.shard(dictShardOf(text), lang), text).filter((e) => !e.en);
       const entry = entries.find((e) => e.p === found.pinyin) ?? entries[0];
       if (entry) return entry.d.slice(0, 2).join('; ');
     }
