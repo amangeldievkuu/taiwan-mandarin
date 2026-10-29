@@ -1,6 +1,6 @@
 // Sino-Vietnamese (Hán-Việt) readings from data/hanviet.json, one per character as Mandarin reads
 // it: "國" → "quốc"; "好|hao3" → "hảo", "好|hao4" → "hiếu" where the readings differ; null where a
-// character has none worth showing (particles such as 喔). Written by translate-vi.ts.
+// character has none worth showing (particles such as 喔). Written by translate.ts.
 
 import { existsSync, readFileSync } from 'node:fs';
 import { splitSyllables } from '@taiwan-mandarin/shared';

@@ -305,7 +305,7 @@ is missing, the English shows with a small EN tag.
   121 curated words, are written by hand or with AI.
 - **Readers** carry a hand-written `vi` block (title, summary, translation, glossary).
 - **Examples, gap glosses and Hán-Việt readings** are written with OpenAI:
-  `npm run translate-vi -w @taiwan-mandarin/content -- --only examples|hanviet|glosses` (after a
+  `npm run translate -w @taiwan-mandarin/content -- --lang vi --only examples|hanviet|glosses` (after a
   build; `--limit 100` writes a sample first). See `data/generated/README.md`.
 - **AI features** take the language with each request: Explain and Talk answer, gloss and correct
   in it. API errors carry a code that the app shows in the learner's language.

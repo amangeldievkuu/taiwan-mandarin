@@ -11,7 +11,7 @@
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "examples": "node --conditions=source src/generate-examples.ts",
-    "translate-vi": "node --conditions=source src/translate-vi.ts"
+    "translate": "node --conditions=source src/translate.ts"
   },
   "dependencies": {
     "@taiwan-mandarin/shared": "*",

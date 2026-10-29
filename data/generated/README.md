@@ -13,7 +13,7 @@
 ## Vietnamese
 
 Vietnamese meanings come from CVDICT (CC-CEDICT translated, downloaded at build). What it lacks
-is written with OpenAI by `npm run translate-vi -w @taiwan-mandarin/content -- --only <mode>`.
+is written with OpenAI by `npm run translate -w @taiwan-mandarin/content -- --lang vi --only <mode>`.
 Run it after a build, then build again:
 
 - `examples-vi.jsonl` (`--only examples`): Vietnamese translations of example sentences

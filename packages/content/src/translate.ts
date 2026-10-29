@@ -1,14 +1,16 @@
-// Writes the Vietnamese that CVDICT doesn't give, with OpenAI (structured outputs, 50 items per
-// request, a few requests at a time). Each mode reads the built Vietnamese content, so build first;
-// results are appended or merged as they come, so an interrupted run just continues next time.
+// Writes a language's content that its dictionary doesn't give (all of it, for a language without
+// one), with OpenAI (structured outputs, 50 items per request, a few requests at a time). Each mode
+// reads the language's built content, so build first; results are appended or merged as they come,
+// so an interrupted run just continues next time.
 //
-//   npm run translate-vi -w @taiwan-mandarin/content -- --only examples --limit 100
+//   npm run translate -w @taiwan-mandarin/content -- --lang vi --only examples --limit 100
 //
-//   examples  example sentences → data/generated/examples-vi.jsonl ({ zh, vi })
-//   hanviet   every character's Sino-Vietnamese reading → data/hanviet.json, checked against
-//             Unihan's kVietnamese (data/generated/hanviet-unihan-diffs.txt lists disagreements)
-//   glosses   words with no Vietnamese meaning → data/generated/glosses-vi.jsonl ({ id, vi });
-//             run it after a build that has the other two
+//   examples  example sentences → data/generated/examples-<lang>.jsonl ({ zh, <lang> })
+//   glosses   words with no meaning in the language → data/generated/glosses-<lang>.jsonl
+//             ({ id, <lang> }); for Vietnamese, run it after a build that has the other two
+//   hanviet   Vietnamese only: every character's Sino-Vietnamese reading → data/hanviet.json,
+//             checked against Unihan's kVietnamese (data/generated/hanviet-unihan-diffs.txt lists
+//             disagreements)
 //
 // The key comes from apps/api/.env (or the environment). The model is --model, else
 // OPENAI_EXAMPLES_MODEL, else OPENAI_MODEL; the reasoning effort --effort, else low.
@@ -24,15 +26,14 @@ import {
   splitSyllables,
   toToneMarked,
   type ContentManifest,
+  type ForeignLang,
   type Reader,
   type Word,
 } from '@taiwan-mandarin/shared';
 import { checkText } from '@taiwan-mandarin/shared/taiwan-standard';
 import { z } from 'zod';
-import { contentLanguage, type ContentLanguage } from './languages.ts';
+import { CONTENT_LANGUAGES, type ContentLanguage } from './languages.ts';
 import { DATA, OUT, ROOT } from './paths.ts';
-
-const VI = contentLanguage('vi') as ContentLanguage;
 
 const apiEnv = join(ROOT, 'apps/api/.env');
 if (existsSync(apiEnv)) process.loadEnvFile(apiEnv);
@@ -42,9 +43,47 @@ if (!process.env['OPENAI_API_KEY']) {
 }
 const setting = (name: string) => process.env[name]?.trim() || undefined;
 
+// ---- each language's instructions ----
+
+interface Prompts {
+  /** Instructions for translating example sentences ("number | Chinese | English" lines). */
+  examples: string;
+  /** Instructions for writing glosses (`glossLine` lines). */
+  glosses: string;
+  /** A word's line for the glosses prompt. */
+  glossLine: (w: Word) => string;
+  /** Longest gloss kept, in characters. */
+  glossLength: number;
+}
+
+const VIETNAMESE_STYLE = `- Natural, everyday Vietnamese as people in Vietnam say it today; neutral register.
+- Taiwan context: 臺北 Đài Bắc, 高雄 Cao Hùng, 臺中 Đài Trung, 臺南 Đài Nam, 花蓮 Hoa Liên, 桃園 Đào Viên; 捷運 tàu điện MRT, 高鐵 tàu cao tốc, 機車 xe máy, 便利商店 cửa hàng tiện lợi, 夜市 chợ đêm, 塊/元 (money) đồng (Đài tệ).
+- No pinyin and no Chinese characters in the Vietnamese.`;
+
+const PROMPTS: { [L in ForeignLang]?: Prompts } = {
+  vi: {
+    examples: `You translate example sentences for Vietnamese speakers learning Taiwan Mandarin (臺灣華語). Each line is "number | Chinese | English".
+
+- Translate the Chinese, keeping its meaning, tone and register. The English is only a reference; where it differs from the Chinese, follow the Chinese.
+- Western names as in the English (Tom, Mary); Chinese names in their Hán-Việt reading (王 Vương, 小明 Tiểu Minh).
+${VIETNAMESE_STYLE}
+Answer every number with its Vietnamese sentence.`,
+    glosses: `You write Vietnamese flashcard glosses for words of Taiwan Mandarin (臺灣華語), like the entries of a good Chinese–Vietnamese dictionary. Each line is "number | word | pinyin | English gloss".
+
+- One to four senses a learner needs, most common first, separated by "; ", at most about 100 characters.
+- Follow Taiwan usage. The English gloss is a reference for the intended sense.
+- A verb as a verb, a noun as a noun; a measure word as "lượng từ cho …".
+${VIETNAMESE_STYLE}
+Answer every number with its gloss.`,
+    glossLine: (w) => `${w.hanzi} | ${toToneMarked(w.pinyin)} | ${w.en}`,
+    glossLength: 120,
+  },
+};
+
 const MODES = ['examples', 'hanviet', 'glosses'] as const;
 const { values: args } = parseArgs({
   options: {
+    lang: { type: 'string' },
     only: { type: 'string' },
     limit: { type: 'string', default: '100000' },
     model: {
@@ -55,9 +94,19 @@ const { values: args } = parseArgs({
     concurrency: { type: 'string', default: '4' },
   },
 });
+const found = CONTENT_LANGUAGES.find((l) => l.lang === args.lang && PROMPTS[l.lang]);
+if (!found) {
+  console.error(`Choose a language: --lang ${CONTENT_LANGUAGES.map((l) => l.lang).join(' | ')}`);
+  process.exit(1);
+}
+const language: ContentLanguage = found;
+const { lang } = language;
+const prompts = PROMPTS[lang] as Prompts;
 const mode = MODES.find((m) => m === args.only);
-if (!mode) {
-  console.error(`Choose what to translate: --only ${MODES.join(' | ')}`);
+if (!mode || (mode === 'hanviet' && !language.hanViet)) {
+  console.error(
+    `Choose what to translate: --only ${MODES.filter((m) => m !== 'hanviet' || language.hanViet).join(' | ')}`,
+  );
   process.exit(1);
 }
 const EFFORTS = ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'] as const;
@@ -69,17 +118,17 @@ if (!effort) {
 const model = args.model ?? 'gpt-6-luna';
 const limit = Number(args.limit);
 
-// ---- the built Vietnamese content ----
+// ---- the language's built content ----
 
 const contentFile = <T>(file: string) =>
   JSON.parse(readFileSync(join(OUT.content, file), 'utf8')) as T;
 const manifest = contentFile<ContentManifest>('manifest.json');
-if (!manifest.languages?.includes('vi')) {
+if (!manifest.languages?.includes(lang)) {
   console.error('Build the content first: npm run build -w @taiwan-mandarin/content');
   process.exit(1);
 }
-const words = manifest.levels.flatMap((l) => contentFile<Word[]>(`vi/${l.file}`));
-const readers = contentFile<Reader[]>('vi/readers.json');
+const words = manifest.levels.flatMap((l) => contentFile<Word[]>(`${lang}/${l.file}`));
+const readers = contentFile<Reader[]>(`${lang}/readers.json`);
 
 const readJsonl = <T>(path: string): T[] =>
   existsSync(path)
@@ -88,10 +137,6 @@ const readJsonl = <T>(path: string): T[] =>
         .filter(Boolean)
         .map((line) => JSON.parse(line) as T)
     : [];
-
-const VIETNAMESE_STYLE = `- Natural, everyday Vietnamese as people in Vietnam say it today; neutral register.
-- Taiwan context: 臺北 Đài Bắc, 高雄 Cao Hùng, 臺中 Đài Trung, 臺南 Đài Nam, 花蓮 Hoa Liên, 桃園 Đào Viên; 捷運 tàu điện MRT, 高鐵 tàu cao tốc, 機車 xe máy, 便利商店 cửa hàng tiện lợi, 夜市 chợ đêm, 塊/元 (money) đồng (Đài tệ).
-- No pinyin and no Chinese characters in the Vietnamese.`;
 
 // ---- one batch job, whatever the mode ----
 
@@ -178,31 +223,26 @@ async function runJob<Item>(job: Job<Item>): Promise<void> {
   );
 }
 
-/** Vietnamese text we can store: no Simplified or Mainland Chinese slipped in, sensible length. */
+/** Text we can store: no Simplified or Mainland Chinese slipped in, sensible length. */
 const usable = (text: string | null, where: string, maxLength: number): text is string =>
   !!text && text.length <= maxLength && checkText({ text, where }).length === 0;
 
 // ---- examples ----
 
 function examplesJob(): Job<{ zh: string; en: string }> {
-  const done = new Set(readJsonl<{ zh: string }>(VI.examples).map((e) => e.zh));
+  const done = new Set(readJsonl<{ zh: string }>(language.examples).map((e) => e.zh));
   const todo = new Map<string, { zh: string; en: string }>();
   for (const w of words)
     for (const e of w.examples ?? [])
-      if (!e.vi && !done.has(e.zh) && !todo.has(e.zh)) todo.set(e.zh, { zh: e.zh, en: e.en });
+      if (!e[lang] && !done.has(e.zh) && !todo.has(e.zh)) todo.set(e.zh, { zh: e.zh, en: e.en });
   return {
     label: 'examples',
     items: [...todo.values()],
-    instructions: `You translate example sentences for Vietnamese speakers learning Taiwan Mandarin (臺灣華語). Each line is "number | Chinese | English".
-
-- Translate the Chinese, keeping its meaning, tone and register. The English is only a reference; where it differs from the Chinese, follow the Chinese.
-- Western names as in the English (Tom, Mary); Chinese names in their Hán-Việt reading (王 Vương, 小明 Tiểu Minh).
-${VIETNAMESE_STYLE}
-Answer every number with its Vietnamese sentence.`,
+    instructions: prompts.examples,
     line: (e) => `${e.zh} | ${e.en}`,
-    keep: (e, vi) => {
-      if (!usable(vi, `vi-example:${e.zh}`, Math.max(160, e.zh.length * 8))) return false;
-      appendFileSync(VI.examples, JSON.stringify({ zh: e.zh, vi }) + '\n');
+    keep: (e, text) => {
+      if (!usable(text, `${lang}-example:${e.zh}`, Math.max(160, e.zh.length * 8))) return false;
+      appendFileSync(language.examples, JSON.stringify({ zh: e.zh, [lang]: text }) + '\n');
       done.add(e.zh);
       return true;
     },
@@ -212,21 +252,15 @@ Answer every number with its Vietnamese sentence.`,
 // ---- glosses ----
 
 function glossesJob(): Job<Word> {
-  const done = new Set(readJsonl<{ id: string }>(VI.glosses).map((g) => g.id));
+  const done = new Set(readJsonl<{ id: string }>(language.glosses).map((g) => g.id));
   return {
     label: 'glosses',
-    items: words.filter((w) => !w.vi && w.en && !done.has(w.id)),
-    instructions: `You write Vietnamese flashcard glosses for words of Taiwan Mandarin (臺灣華語), like the entries of a good Chinese–Vietnamese dictionary. Each line is "number | word | pinyin | English gloss".
-
-- One to four senses a learner needs, most common first, separated by "; ", at most about 100 characters.
-- Follow Taiwan usage. The English gloss is a reference for the intended sense.
-- A verb as a verb, a noun as a noun; a measure word as "lượng từ cho …".
-${VIETNAMESE_STYLE}
-Answer every number with its gloss.`,
-    line: (w) => `${w.hanzi} | ${toToneMarked(w.pinyin)} | ${w.en}`,
-    keep: (w, vi) => {
-      if (!usable(vi, `vi-gloss:${w.id}`, 120)) return false;
-      appendFileSync(VI.glosses, JSON.stringify({ id: w.id, vi }) + '\n');
+    items: words.filter((w) => !w[lang] && w.en && !done.has(w.id)),
+    instructions: prompts.glosses,
+    line: prompts.glossLine,
+    keep: (w, text) => {
+      if (!usable(text, `${lang}-gloss:${w.id}`, prompts.glossLength)) return false;
+      appendFileSync(language.glosses, JSON.stringify({ id: w.id, [lang]: text }) + '\n');
       done.add(w.id);
       return true;
     },
