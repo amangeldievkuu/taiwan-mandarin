@@ -1,5 +1,5 @@
 <!--
-  The pot at the end of the road, where 墨 is headed: a Taiwan cherry (台灣山櫻花) in a celadon
+  The pot at the end of the road, where 墨 is headed: a Taiwan cherry (臺灣山櫻花) in a celadon
   pot that grows with the scroll. The trunk, reddish with the bands cherry bark has, rises as far
   as the page has got; every TOCFL level reached puts out a branch hung with deep rose bells, the
   way this cherry flowers on bare wood in late winter; the last one sets a bud, and at the very
