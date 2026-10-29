@@ -19,11 +19,17 @@ export type ForeignLang = Exclude<Lang, 'en'>;
 export const FOREIGN_LANGS = LANG_IDS.filter((l): l is ForeignLang => l !== 'en');
 
 /**
- * Latin text without accents, lowercase, for matching what a learner types without them:
- * "Học sinh" → "hoc sinh", "đi" → "di", "nǚ" → "nu".
+ * Text without accents, lowercase, for matching what a learner types without them:
+ * "Học sinh" → "hoc sinh", "đi" → "di", "nǚ" → "nu", "ёлка" → "елка". Russian й stays a letter of
+ * its own ("мой" is not "мои").
  */
 export const foldLatin = (text: string): string =>
-  text.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').replace(/đ/g, 'd');
+  text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/(?<!и)\p{M}/gu, '')
+    .normalize('NFC')
+    .replace(/đ/g, 'd');
 
 // Breve (ă), circumflex (â ê ô), tilde, hook above, horn (ơ ư), dot below: marks pinyin never uses.
 const VIETNAMESE_MARKS = /[\u0302\u0303\u0306\u0309\u031b\u0323]|đ/iu;

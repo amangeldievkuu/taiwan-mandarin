@@ -96,7 +96,7 @@
                 <span class="started" style:transform="translateX({share * 100 - 100}%)"></span>
               </div>
               <small class="tabular">
-                {t().path.words(formatNumber(s.started), formatNumber(meta?.count ?? 0))}
+                {t().path.words(s.started, meta?.count ?? 0)}
                 {#if meta && meta.tbcl > 0 && meta.tocfl > 0}· {t().path.tocfl(
                     formatNumber(meta.tocfl),
                   )}{/if}

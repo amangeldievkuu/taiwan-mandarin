@@ -6,6 +6,7 @@ import { LEVELS, TOPICS, type Level, type TopicId } from '@taiwan-mandarin/share
 import { ERRORS, SCENARIOS, type ApiErrorCode, type ScenarioId } from '@taiwan-mandarin/shared/api';
 import type { ClientErrorCode } from '../api';
 import type { RouteName } from '../router.svelte';
+import { formatNumber } from './locale.svelte';
 
 const byId = <K extends string>(rows: readonly { id: K; en: string }[]) =>
   Object.fromEntries(rows.map((r) => [r.id, r.en])) as Record<K, string>;
@@ -302,7 +303,7 @@ export const en = {
       'every night.',
     fitting: 'Fitting…',
     fitNow: 'Fit to my reviews now',
-    fittedTo: (reviews: string) => `Fitted to your ${reviews} reviews.`,
+    fittedTo: (reviews: number) => `Fitted to your ${formatNumber(reviews)} reviews.`,
     api: 'API access',
     deleteConfirm: 'Delete the account and all synced data? This device keeps its local copy.',
     deleting: 'Deleting…',
@@ -497,7 +498,8 @@ export const en = {
       "Taiwan's official exam path, Novice to Level 6. Words come from the TOCFL 8,000-word list " +
       'and the NAER 《臺灣華語文能力基準》; switch on the levels you want new cards from.',
     bands: ['Novice', 'Band A', 'Band B', 'Band C'],
-    words: (started: string, total: string) => `${started} / ${total} words`,
+    words: (started: number, total: number) =>
+      `${formatNumber(started)} / ${formatNumber(total)} words`,
     tocfl: (n: string) => `${n} TOCFL`,
     activeTitle: 'New cards come from this level',
     inactiveTitle: 'Study new words from this level',
@@ -519,7 +521,7 @@ export const en = {
     deck: 'My deck',
     topic: 'Topic',
     allTopics: 'All topics',
-    count: (n: string) => `${n} words`,
+    count: (n: number) => `${formatNumber(n)} words`,
     addFirst: 'Add first 50 to my deck',
     loadFailed: "Couldn't load this. Check your connection and try again.",
     noMatch: 'No words match.',

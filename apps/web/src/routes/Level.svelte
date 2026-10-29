@@ -19,7 +19,7 @@
   import WordDetail from '../ui/WordDetail.svelte';
   import { content } from '../lib/content.svelte';
   import { glossOf } from '../lib/i18n/content';
-  import { formatNumber, t } from '../lib/i18n/index.svelte';
+  import { t } from '../lib/i18n/index.svelte';
   import { router } from '../lib/router.svelte';
   import { store } from '../lib/store.svelte';
   import { LEVEL_SEAL } from './Path.svelte';
@@ -227,7 +227,7 @@
   <div class="split" class:with-detail={wide}>
     <div class="list-col">
       <div class="count">
-        <span class="tabular">{t().level.count(formatNumber(filtered.length))}</span>
+        <span class="tabular">{t().level.count(filtered.length)}</span>
         {#if status === 'new' && filtered.length}
           <button type="button" class="link" onclick={addAllShown}>{t().level.addFirst}</button>
         {/if}

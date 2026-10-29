@@ -9,6 +9,9 @@ describe('foldLatin', () => {
     ['ĐÀI LOAN', 'dai loan'],
     ['nǚ', 'nu'],
     ['xiè xie', 'xie xie'],
+    ['Ёлка', 'елка'],
+    ['мой', 'мой'],
+    ['ЧАЙ', 'чай'],
   ])('%s → %s', (text, folded) => expect(foldLatin(text)).toBe(folded));
 });
 

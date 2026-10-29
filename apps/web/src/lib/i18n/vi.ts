@@ -1,6 +1,7 @@
 // The app's words in Vietnamese (tiếng Việt), key for key with en.ts.
 
 import type { Messages } from './en';
+import { formatNumber } from './locale.svelte';
 
 export const vi: Messages = {
   app: {
@@ -326,7 +327,7 @@ export const vi: Messages = {
       'hệ thống sẽ điều chỉnh lại.',
     fitting: 'Đang điều chỉnh…',
     fitNow: 'Điều chỉnh theo lượt ôn của tôi ngay',
-    fittedTo: (reviews) => `Đã điều chỉnh theo ${reviews} lượt ôn của bạn.`,
+    fittedTo: (reviews) => `Đã điều chỉnh theo ${formatNumber(reviews)} lượt ôn của bạn.`,
     api: 'Truy cập API',
     deleteConfirm: 'Xóa tài khoản và mọi dữ liệu đã đồng bộ? Thiết bị này vẫn giữ bản sao cục bộ.',
     deleting: 'Đang xóa…',
@@ -554,7 +555,7 @@ export const vi: Messages = {
       'Lộ trình thi chính thức của Đài Loan, từ Dự bị đến Cấp 6. Từ vựng lấy từ danh sách 8.000 ' +
       'từ của TOCFL và 《臺灣華語文能力基準》 của NAER; bật những cấp độ bạn muốn lấy thẻ mới.',
     bands: ['Dự bị', 'Bậc A', 'Bậc B', 'Bậc C'],
-    words: (started, total) => `${started} / ${total} từ`,
+    words: (started, total) => `${formatNumber(started)} / ${formatNumber(total)} từ`,
     tocfl: (n) => `${n} TOCFL`,
     activeTitle: 'Thẻ mới được lấy từ cấp độ này',
     inactiveTitle: 'Học từ mới của cấp độ này',
@@ -576,7 +577,7 @@ export const vi: Messages = {
     deck: 'Bộ thẻ của tôi',
     topic: 'Chủ đề',
     allTopics: 'Mọi chủ đề',
-    count: (n) => `${n} từ`,
+    count: (n) => `${formatNumber(n)} từ`,
     addFirst: 'Thêm 50 từ đầu vào bộ thẻ',
     loadFailed: 'Không tải được. Hãy kiểm tra kết nối rồi thử lại.',
     noMatch: 'Không có từ nào khớp.',

@@ -8,7 +8,7 @@
   import TokensSection from '../ui/account/TokensSection.svelte';
   import { authMessage } from '../ui/account/errors';
   import { api } from '../lib/api';
-  import { formatNumber, t } from '../lib/i18n/index.svelte';
+  import { t } from '../lib/i18n/index.svelte';
   import { router } from '../lib/router.svelte';
   import { store } from '../lib/store.svelte';
   import { account } from '../lib/sync.svelte';
@@ -40,7 +40,7 @@
         body: { utcOffsetMinutes: -new Date().getTimezoneOffset() },
       });
       await account.sync();
-      fsrsMessage = { text: t().account.fittedTo(formatNumber(result.reviewCount)), ok: true };
+      fsrsMessage = { text: t().account.fittedTo(result.reviewCount), ok: true };
     } catch (e) {
       fsrsMessage = { text: authMessage(e), ok: false };
     } finally {

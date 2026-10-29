@@ -4,21 +4,15 @@
 
 import type { Lang } from '@taiwan-mandarin/shared';
 import { en, type Messages } from './en';
+import { formatNumber, locale } from './locale.svelte';
 import { vi } from './vi';
 
-export const locale = $state<{ lang: Lang; hanViet: boolean }>({ lang: 'en', hanViet: true });
+export { formatNumber, intlLocale, locale } from './locale.svelte';
 
 const CATALOGS: Record<Lang, Messages> = { en, vi };
 
 /** The words of the current language. */
 export const t = (): Messages => CATALOGS[locale.lang];
-
-/** The locale for dates and numbers. English uses British conventions (21 October). */
-export const intlLocale = (): string => (locale.lang === 'vi' ? 'vi-VN' : 'en-GB');
-
-/** A number as the language writes it: "1,000" / "1.000". */
-export const formatNumber = (n: number, options?: Intl.NumberFormatOptions): string =>
-  n.toLocaleString(locale.lang === 'vi' ? 'vi-VN' : 'en-US', options);
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
