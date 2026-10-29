@@ -106,7 +106,7 @@ export function migrate(raw: SnapshotV1 | Snapshot, legacyIds: Record<string, st
     if (id) cards[id] = { card: record.card, updatedAt: record.updatedAt };
   }
   const settings: Partial<Settings> & { meaning?: string } = { ...raw.settings };
-  delete settings.meaning; // Kyrgyz / English meanings: the app is English-only now
+  delete settings.meaning; // Kyrgyz / English meanings: Kyrgyz is gone
   return {
     version: 2,
     settings: { ...DEFAULT_SETTINGS, ...settings },
@@ -115,6 +115,15 @@ export function migrate(raw: SnapshotV1 | Snapshot, legacyIds: Record<string, st
     daily: raw.daily,
     updatedAt: raw.updatedAt,
   };
+}
+
+/**
+ * The account's settings over this device's. A key the account's copy lacks was written by an
+ * older app: language and Hán-Việt keep this device's value (rather than resetting it to English),
+ * anything else its default.
+ */
+export function mergeSettings(local: Settings, incoming: Partial<Settings>): Settings {
+  return { ...DEFAULT_SETTINGS, language: local.language, hanViet: local.hanViet, ...incoming };
 }
 
 /** Dates come back as strings from JSON; normalize them to Date objects. */

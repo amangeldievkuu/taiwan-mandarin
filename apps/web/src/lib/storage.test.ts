@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createEmptyCard } from 'ts-fsrs';
-import { migrate } from './storage';
+import { DEFAULT_SETTINGS } from '@taiwan-mandarin/shared';
+import { mergeSettings, migrate } from './storage';
 
 describe('migrate', () => {
   it('maps v1 slug ids to TOCFL ids, drops unknown words and the meaning setting', () => {
@@ -48,5 +49,26 @@ describe('migrate', () => {
       {},
     );
     expect(migrate(v2, {})).toBe(v2);
+  });
+});
+
+describe('mergeSettings', () => {
+  const local = { ...DEFAULT_SETTINGS, language: 'vi' as const, hanViet: false, newPerDay: 30 };
+
+  it("takes the account's copy", () => {
+    const merged = mergeSettings(local, { ...DEFAULT_SETTINGS, language: 'en', newPerDay: 5 });
+    expect(merged.language).toBe('en');
+    expect(merged.newPerDay).toBe(5);
+  });
+
+  it("keeps this device's language when an older app wrote the account's copy", () => {
+    const older = { phonetics: 'pinyin' as const, levels: ['L1' as const] };
+    expect(mergeSettings(local, older)).toEqual({
+      ...DEFAULT_SETTINGS,
+      language: 'vi',
+      hanViet: false,
+      phonetics: 'pinyin',
+      levels: ['L1'],
+    });
   });
 });

@@ -6,6 +6,7 @@ import { z } from 'zod';
 import type { DayActivity } from '../activity.ts';
 import type { Level } from '../content/types.ts';
 import { canonicalTimeZone, isTimeZone } from '../days.ts';
+import { LANG_IDS } from '../lang.ts';
 
 /** An IANA time zone ("Asia/Taipei"): where the learner's calendar days begin and end. */
 export const TimeZoneSchema = z
@@ -27,7 +28,15 @@ export const LevelSchema = z.enum([
   'L6',
 ] as const satisfies readonly Level[]);
 
+export const LangSchema = z.enum(LANG_IDS);
+
+/**
+ * Settings as synced. Keys added later are optional: an older app sends settings without them, and
+ * a default here would store that copy as the newest and reset the learner's other devices.
+ */
 export const SettingsSchema = z.object({
+  language: LangSchema.optional(),
+  hanViet: z.boolean().optional(),
   phonetics: z.enum(['zhuyin', 'pinyin', 'both']),
   glyphStyle: z.enum(['kai', 'sans']),
   theme: z.enum(['auto', 'light', 'dark']),

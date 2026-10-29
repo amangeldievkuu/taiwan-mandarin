@@ -39,9 +39,11 @@ import {
   type ActivityState,
 } from './activity';
 import { content } from './content.svelte';
+import { devLanguage } from './i18n/detect';
 import { toasts } from './toast.svelte';
 import {
   BrowserStorage,
+  mergeSettings,
   migrate,
   type CardRecord,
   type Daily,
@@ -164,6 +166,9 @@ class Store {
         if (snapshot.sync) this.syncState = snapshot.sync;
         if (stored.version !== 2) await this.flush();
       }
+      // Development only: ?lang=vi shows the app in another language without changing settings.
+      const forced = devLanguage();
+      if (forced) this.settings.language = forced;
       await this.loadActivity(stored && 'activity' in stored ? stored.activity : undefined);
       this.configureFsrs();
       await this.fillMissingLevels();
@@ -472,7 +477,7 @@ class Store {
       if (!local || local.updatedAt <= record.updatedAt) this.cards[id] = record;
     }
     if (remote.settings && remote.settings.updatedAt > this.syncState.settingsUpdatedAt) {
-      this.settings = { ...DEFAULT_SETTINGS, ...remote.settings.value };
+      this.settings = mergeSettings(this.settings, remote.settings.value);
       this.syncState.settingsUpdatedAt = remote.settings.updatedAt;
     }
     if (remote.deck && remote.deck.updatedAt > this.syncState.deckUpdatedAt) {

@@ -1,12 +1,17 @@
 // User settings, shared by the web app and the API.
 
 import type { Level } from './content/types.ts';
+import type { Lang } from './lang.ts';
 
 export type Phonetics = 'zhuyin' | 'pinyin' | 'both';
 export type GlyphStyle = 'kai' | 'sans';
 export type Theme = 'auto' | 'light' | 'dark';
 
 export interface Settings {
+  /** The learner's language: interface, meanings, translations and AI replies. */
+  language: Lang;
+  /** Show Sino-Vietnamese readings (國家 quốc gia) when the language is Vietnamese. */
+  hanViet: boolean;
   phonetics: Phonetics;
   glyphStyle: GlyphStyle;
   theme: Theme;
@@ -18,6 +23,8 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  language: 'en',
+  hanViet: true,
   phonetics: 'zhuyin',
   glyphStyle: 'kai',
   theme: 'auto',

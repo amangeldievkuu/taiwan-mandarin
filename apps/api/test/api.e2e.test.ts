@@ -358,6 +358,33 @@ describe('sync', () => {
       .send({ since: 0, cards: [], reviews: [], settings: settings(5, 100) });
     expect(res.body.settings.value.newPerDay).toBe(20);
   });
+
+  it('syncs the language, and takes settings from apps that predate it', async () => {
+    const { token } = await signUp();
+    const auth = { authorization: `Bearer ${token}` };
+    const value = {
+      phonetics: 'zhuyin',
+      glyphStyle: 'kai',
+      theme: 'auto',
+      newPerDay: 10,
+      levels: ['N1'],
+      retention: 0.9,
+    };
+    const sync = (settings: object) =>
+      request(http).post('/v1/sync').set(auth).send({ since: 0, cards: [], reviews: [], settings });
+
+    const vi = await sync({ value: { ...value, language: 'vi', hanViet: false }, updatedAt: 100 });
+    expect(vi.body.settings.value).toMatchObject({ language: 'vi', hanViet: false });
+
+    // An older app sends no language: stored as it is, not reset to English.
+    const older = await sync({ value: { ...value, newPerDay: 12 }, updatedAt: 200 });
+    expect(older.status).toBe(200);
+    expect(older.body.settings.value.newPerDay).toBe(12);
+    expect('language' in older.body.settings.value).toBe(false);
+
+    const unknown = await sync({ value: { ...value, language: 'fr' }, updatedAt: 300 });
+    expect(unknown.status).toBe(400);
+  });
 });
 
 describe('activity', () => {

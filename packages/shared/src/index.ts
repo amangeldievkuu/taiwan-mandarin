@@ -1,5 +1,6 @@
 export * from './phonetics.ts';
 export * from './partial-json.ts';
+export * from './lang.ts';
 export * from './settings.ts';
 export * from './content/types.ts';
 export * from './content/topics.ts';
