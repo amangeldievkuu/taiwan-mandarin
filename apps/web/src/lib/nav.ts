@@ -1,6 +1,7 @@
 // Which way a page change goes. The router uses it to slide pages (deeper pages in from the
 // right, back out again, tabs cross-fade), and 墨 to choose how to turn up on the new page: it
-// steps over between tabs, drips down into a deeper page, and hops back up when you go back.
+// steps over between tabs, comes down a rope into a deeper page, and climbs up one when you go
+// back.
 
 import type { RouteName } from './router.svelte';
 
@@ -50,13 +51,13 @@ const TAB_OF: Partial<Record<RouteName, RouteName>> = {
 export const tabIndex = (name: RouteName): number => TAB_ORDER.indexOf(TAB_OF[name] ?? name);
 
 export type Entrance =
-  { kind: 'walk'; from: 'left' | 'right' } | { kind: 'drop' } | { kind: 'rise' };
+  { kind: 'walk'; from: 'left' | 'right' } | { kind: 'rappel' } | { kind: 'climb' };
 
-/** How 墨 arrives on `to` from `from`: stepping in from the side the new tab is on, dripping
-    down into a deeper page, or hopping up on the way back. */
+/** How 墨 arrives on `to` from `from`: stepping in from the side the new tab is on, down a
+    rope into a deeper page, or climbing up one on the way back. */
 export function entranceFor(from: RouteName, to: RouteName): Entrance {
   const kind = navKind(from, to);
-  if (kind === 'forward') return { kind: 'drop' };
-  if (kind === 'back') return { kind: 'rise' };
+  if (kind === 'forward') return { kind: 'rappel' };
+  if (kind === 'back') return { kind: 'climb' };
   return { kind: 'walk', from: tabIndex(to) >= tabIndex(from) ? 'right' : 'left' };
 }

@@ -21,12 +21,12 @@ describe('entranceFor', () => {
 
   it('counts a page under a tab as that tab', () => {
     // The reader sits under Read, which is left of the Dictionary.
-    expect(entranceFor('dict', 'reader')).toEqual({ kind: 'drop' });
+    expect(entranceFor('dict', 'reader')).toEqual({ kind: 'rappel' });
     expect(entranceFor('me-settings', 'me-about')).toEqual({ kind: 'walk', from: 'right' });
   });
 
-  it('drips down into a deeper page and hops back up', () => {
-    expect(entranceFor('path', 'level')).toEqual({ kind: 'drop' });
-    expect(entranceFor('level', 'path')).toEqual({ kind: 'rise' });
+  it('rappels down into a deeper page and climbs back up', () => {
+    expect(entranceFor('path', 'level')).toEqual({ kind: 'rappel' });
+    expect(entranceFor('level', 'path')).toEqual({ kind: 'climb' });
   });
 });

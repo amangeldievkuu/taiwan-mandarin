@@ -2,7 +2,7 @@
   墨 (Mo), a drop of ink with legs, drawn in outline. It drips onto the page, walks while the
   page scrolls, faces the way it is going, sits down to say something when the scrolling stops,
   and dozes off after a while. Tap it and it hops. The parent sets `--dir` and the classes
-  walking / sitting / sleepy / fast (see lib/walk.ts), airborne (dropping in or hopping) and hush
+  walking / sitting / sleepy / fast (see lib/walk.ts), hanging and climbing (on a rope) and hush
   (sitting without a word); everything else is CSS on the SVG.
 -->
 <script module lang="ts">
@@ -298,13 +298,26 @@
     rotate: -70deg;
   }
 
-  /* In the air (dropping in, hopping up or away): legs dangling apart. */
-  :global(.airborne) .leg-a {
+  /* Hanging on a rope: legs dangling apart. */
+  :global(.hanging) .leg-a {
     rotate: 18deg;
   }
 
-  :global(.airborne) .leg-b {
+  :global(.hanging) .leg-b {
     rotate: -18deg;
+  }
+
+  /* Climbing a rope: the legs kick in turn, pushing off it. */
+  :global(.climbing) .leg-a {
+    animation:
+      ink 0.4s var(--ease-out) 0.5s forwards,
+      step 0.25s ease-in-out infinite alternate;
+  }
+
+  :global(.climbing) .leg-b {
+    animation:
+      ink 0.4s var(--ease-out) 0.5s forwards,
+      step 0.25s ease-in-out infinite alternate-reverse;
   }
 
   /* Dozing: eyes shut, z's float up. */

@@ -1,25 +1,34 @@
 // How 墨 turns up on a new page, as Web Animations on the companion's elements: a few steps in
-// from the side the new tab is on, a drip down into a deeper page, or a hop up on the way back.
-// Each one stays a short way from 墨's perch and fades in, so it never crosses the page you are
-// reading; a newer entrance cancels an older one mid-way.
+// from the side the new tab is on, down a short rope into a deeper page, or climbing up one on
+// the way back. The rope hangs from a little way above 墨's perch (its top end fades out), so
+// nothing crosses the page you are reading; a newer entrance cancels an older one mid-way.
 
 import type { Entrance } from './nav';
 
 export interface Rig {
   /** Carries 墨 along: moved and faded by the entrances. */
   mover: HTMLElement;
+  /** The rope above 墨's perch; it shows while it has `data-kind`, and stays put while 墨 moves. */
+  cord: HTMLElement;
   /** 墨 itself, squashed when it lands. */
   body: HTMLElement;
 }
+
+/** How far above the perch the rope hangs from. */
+const ROPE = 96;
+
+const EASE_OUT = 'cubic-bezier(0.22, 0.8, 0.24, 1)';
+const EASE_IN = 'cubic-bezier(0.5, 0, 0.75, 0)';
 
 let live: Animation[] = [];
 let generation = 0;
 
 /** Stops whatever entrance is running and puts 墨 back at its perch. */
-export function stopAll(): void {
+export function stopAll(rig?: Rig): void {
   generation++;
   for (const animation of live) animation.cancel();
   live = [];
+  if (rig) delete rig.cord.dataset['kind'];
 }
 
 /** Runs one animation; resolves true when it finished, false when something newer stopped it. */
@@ -35,8 +44,39 @@ async function run(el: HTMLElement, keyframes: Keyframe[], options: KeyframeAnim
   return mine === generation;
 }
 
-const EASE_OUT = 'cubic-bezier(0.22, 0.8, 0.24, 1)';
-const EASE_IN = 'cubic-bezier(0.5, 0, 0.75, 0)';
+/** A moment on the rope: 墨 `y` px below its perch, and how visible 墨 and the rope are. */
+interface Stop {
+  y?: number;
+  opacity?: number;
+  rope?: number;
+  offset?: number;
+  easing?: string;
+}
+
+/**
+ * Moves 墨 along the rope. The rope's top stays where it hangs from and its bottom end follows
+ * 墨's head, so it is stretched to match 墨 (on the compositor, in step with it).
+ */
+async function onRope(rig: Rig, stops: Stop[], options: KeyframeAnimationOptions) {
+  rig.cord.style.setProperty('--cord', `${ROPE}px`);
+  rig.cord.dataset['kind'] = 'rope';
+  const timing = (s: Stop): Keyframe => ({
+    ...(s.offset !== undefined && { offset: s.offset }),
+    ...(s.easing !== undefined && { easing: s.easing }),
+  });
+  const mo = stops.map((s) => ({
+    ...timing(s),
+    ...(s.y !== undefined && { transform: `translateY(${s.y}px)` }),
+    ...(s.opacity !== undefined && { opacity: s.opacity }),
+  }));
+  const rope = stops.map((s) => ({
+    ...timing(s),
+    ...(s.y !== undefined && { transform: `scaleY(${(ROPE + s.y) / ROPE})` }),
+    ...(s.rope !== undefined && { opacity: s.rope }),
+  }));
+  const done = await Promise.all([run(rig.mover, mo, options), run(rig.cord, rope, options)]);
+  return done.every(Boolean);
+}
 
 const land = (rig: Rig) =>
   run(
@@ -49,6 +89,20 @@ const land = (rig: Rig) =>
     ],
     { duration: 380, easing: 'ease-out' },
   );
+
+/** Lets go: the rope zips back up to where it hangs from. */
+async function zipUp(rig: Rig): Promise<boolean> {
+  const zipped = await run(
+    rig.cord,
+    [
+      { transform: 'scaleY(1)', opacity: 1 },
+      { transform: 'scaleY(0)', opacity: 0 },
+    ],
+    { duration: 300, delay: 80, easing: EASE_IN },
+  );
+  if (zipped) delete rig.cord.dataset['kind'];
+  return zipped;
+}
 
 /** A few steps in from the left or the right, slowing to a stop at the perch. */
 function walkIn(rig: Rig, from: 'left' | 'right'): Promise<boolean> {
@@ -64,54 +118,68 @@ function walkIn(rig: Rig, from: 'left' | 'right'): Promise<boolean> {
   );
 }
 
-/** Drips down the last little way onto the perch and splats. */
-async function dropIn(rig: Rig): Promise<boolean> {
-  const dropped = await run(
-    rig.mover,
+/** Slides down the rope onto the perch, brakes with a couple of bounces, and lands. */
+async function rappel(rig: Rig): Promise<boolean> {
+  const down = await onRope(
+    rig,
     [
-      { transform: 'translateY(-28px)', opacity: 0 },
-      { opacity: 1, offset: 0.35 },
-      { transform: 'none', opacity: 1 },
+      { y: -64, opacity: 0, rope: 0, easing: 'cubic-bezier(0.45, 0, 0.7, 1)' },
+      { opacity: 1, rope: 1, offset: 0.18 },
+      { y: 6, offset: 0.6, easing: 'ease-out' },
+      { y: -4, offset: 0.76, easing: 'ease-in-out' },
+      { y: 1.5, offset: 0.89, easing: 'ease-in-out' },
+      { y: 0, opacity: 1, rope: 1 },
     ],
-    { duration: 320, easing: EASE_IN },
+    { duration: 850 },
   );
-  // Sits down as it splats, rather than after.
-  if (dropped) void land(rig);
-  return dropped;
+  if (!down) return false;
+  void land(rig);
+  return zipUp(rig);
 }
 
-/** Hops up from just below the perch and lands on it. */
-async function riseIn(rig: Rig): Promise<boolean> {
-  const risen = await run(
-    rig.mover,
+/** Climbs up the rope from just below the perch, pull by pull, and hops onto it. */
+async function climbIn(rig: Rig): Promise<boolean> {
+  const up = await onRope(
+    rig,
     [
-      { transform: 'translateY(16px)', opacity: 0, easing: EASE_OUT },
-      { transform: 'translateY(-8px)', opacity: 1, offset: 0.55, easing: EASE_IN },
-      { transform: 'none', opacity: 1 },
+      { y: 32, opacity: 0, rope: 0, easing: EASE_OUT },
+      { opacity: 1, rope: 1, offset: 0.15 },
+      { y: 21, offset: 0.26 },
+      { y: 21, offset: 0.36, easing: EASE_OUT },
+      { y: 10, offset: 0.62 },
+      { y: 10, offset: 0.7, easing: EASE_OUT },
+      { y: -3, offset: 0.92, easing: 'ease-in' },
+      { y: 0, opacity: 1, rope: 1 },
     ],
-    { duration: 440 },
+    { duration: 1000 },
   );
-  if (risen) void land(rig);
-  return risen;
+  if (!up) return false;
+  void land(rig);
+  return zipUp(rig);
 }
 
 /** Brings 墨 onto the page the way `entrance` says; true once it is sitting at its perch. */
 export function arrive(rig: Rig, entrance: Entrance): Promise<boolean> {
-  stopAll();
+  stopAll(rig);
   if (entrance.kind === 'walk') return walkIn(rig, entrance.from);
-  if (entrance.kind === 'drop') return dropIn(rig);
-  return riseIn(rig);
+  if (entrance.kind === 'rappel') return rappel(rig);
+  return climbIn(rig);
 }
 
-/** Hops up and out of sight; true once 墨 is gone. */
-export function hopAway(rig: Rig): Promise<boolean> {
-  stopAll();
-  return run(
-    rig.mover,
+/** Climbs up the rope and out of sight; true once 墨 is gone. */
+export function climbAway(rig: Rig): Promise<boolean> {
+  stopAll(rig);
+  return onRope(
+    rig,
     [
-      { transform: 'none', opacity: 1 },
-      { transform: 'translateY(-16px)', opacity: 0 },
+      { y: 0, opacity: 1, rope: 0, easing: EASE_OUT },
+      { rope: 1, offset: 0.12 },
+      { y: -14, offset: 0.25 },
+      { y: -14, offset: 0.35, easing: EASE_OUT },
+      { y: -30, offset: 0.62 },
+      { y: -30, opacity: 1, rope: 1, offset: 0.7, easing: EASE_OUT },
+      { y: -48, opacity: 0, rope: 0 },
     ],
-    { duration: 240, easing: EASE_IN, fill: 'forwards' },
+    { duration: 800, fill: 'forwards' },
   );
 }
