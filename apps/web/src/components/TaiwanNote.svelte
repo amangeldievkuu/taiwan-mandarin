@@ -1,24 +1,27 @@
 <script lang="ts">
   import type { Word } from '@taiwan-mandarin/shared';
-  import MixedText from './MixedText.svelte';
+  import Localized from '../ui/Localized.svelte';
+  import { twNoteOf } from '../lib/i18n/content';
+  import { t } from '../lib/i18n/index.svelte';
 
   interface Props {
     word: Word;
   }
 
   let { word }: Props = $props();
+  const note = $derived(twNoteOf(word));
 </script>
 
 {#if word.tw || word.mainland}
   <div class="note">
-    {#if word.tw}
+    {#if note}
       <p class="tw">
         <span class="badge-tw" lang="zh-Hant-TW">臺灣</span>
-        <span><MixedText text={word.tw} /></span>
+        <span><Localized value={note} /></span>
       </p>
     {/if}
     {#if word.mainland}
-      <p class="mainland">Mainland: <span lang="zh-Hant-TW">{word.mainland}</span></p>
+      <p class="mainland">{t().word.mainland}: <span lang="zh-Hant-TW">{word.mainland}</span></p>
     {/if}
   </div>
 {/if}

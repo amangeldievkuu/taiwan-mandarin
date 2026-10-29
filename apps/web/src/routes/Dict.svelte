@@ -1,11 +1,14 @@
 <script lang="ts">
-  import { LEVELS, type DictEntry, type SearchRow } from '@taiwan-mandarin/shared';
+  import { isLevel, type DictEntry, type SearchRow } from '@taiwan-mandarin/shared';
   import Explain from '../ui/Explain.svelte';
   import HanziText from '../ui/HanziText.svelte';
   import Icon from '../ui/Icon.svelte';
+  import Localized from '../ui/Localized.svelte';
   import Reading from '../ui/Reading.svelte';
   import Segmented from '../components/Segmented.svelte';
   import { content } from '../lib/content.svelte';
+  import { definitionsOf } from '../lib/i18n/content';
+  import { t } from '../lib/i18n/index.svelte';
   import { lookup } from '../lib/lookup.svelte';
   import { router } from '../lib/router.svelte';
 
@@ -58,25 +61,25 @@
     if (tab === 'lookup' && matchMedia('(pointer: fine)').matches) input?.focus();
   });
 
-  const levelLabel = (id: string | undefined) => LEVELS.find((l) => l.id === id)?.en;
+  const levelLabel = (id: string | undefined) => (isLevel(id) ? t().levels[id] : undefined);
 </script>
 
 <div class="page">
   <header class="page-head">
     <div>
-      <p class="eyebrow">CC-CEDICT · Taiwan readings</p>
-      <h1 class="title"><span class="zh">字典</span>Dictionary</h1>
+      <p class="eyebrow">{t().dict.eyebrow}</p>
+      <h1 class="title"><span class="zh">字典</span>{t().titles.dict}</h1>
     </div>
   </header>
 
   <div class="tabs">
     <Segmented
-      label="Mode"
+      label={t().dict.mode}
       value={tab}
-      onchange={(t) => (tab = t)}
+      onchange={(next) => (tab = next)}
       options={[
-        { value: 'lookup', label: 'Look up' },
-        { value: 'explain', label: 'Explain a sentence' },
+        { value: 'lookup', label: t().dict.lookUp },
+        { value: 'explain', label: t().today.tiles.explain.title },
       ]}
     />
   </div>
@@ -84,12 +87,12 @@
   {#if tab === 'lookup'}
     <label class="search">
       <Icon name="search" />
-      <span class="visually-hidden">Search</span>
+      <span class="visually-hidden">{t().dict.search}</span>
       <input
         bind:this={input}
         type="search"
         bind:value={query}
-        placeholder="漢字, pinyin (jieyun) or English"
+        placeholder={t().dict.placeholder}
         autocomplete="off"
         autocapitalize="off"
         spellcheck="false"
@@ -99,7 +102,7 @@
 
     {#if long}
       <section class="pasted sheet">
-        <p class="hint">Tap any character to look up the word that starts there.</p>
+        <p class="hint">{t().dict.tapHint}</p>
         <HanziText text={query.trim()} class="pasted-text" />
       </section>
     {/if}
@@ -107,28 +110,30 @@
     {#if !query.trim()}
       <div class="empty">
         <span class="hanzi" lang="zh-Hant-TW">查</span>
-        Search 125,000 entries with Taiwan readings.<br />Type characters, pinyin without tones, or
-        English.
+        {t().dict.empty}<br />{t().dict.emptyHow}
       </div>
     {:else if long}
       <!-- A pasted sentence: tap through it above. -->
     {:else if !searching && failed}
-      <p class="empty" role="alert">
-        Couldn't load the dictionary. Check your connection and try again.
-      </p>
+      <p class="empty" role="alert">{t().dict.loadFailed}</p>
     {:else if !searching && results.length === 0 && exact.length === 0}
-      <p class="empty"><span class="hanzi" lang="zh-Hant-TW">無</span>Nothing found.</p>
+      <p class="empty"><span class="hanzi" lang="zh-Hant-TW">無</span>{t().dict.nothing}</p>
     {:else}
       {#if exact.length}
-        <h2 class="section-title">Dictionary</h2>
+        <h2 class="section-title">{t().titles.dict}</h2>
         <ul class="list">
           {#each exact.slice(0, 5) as entry, i (i)}
+            {@const defs = definitionsOf(entry)}
             <li>
               <button type="button" class="row" onclick={() => void lookup.openWord(entry.t)}>
                 <span class="w-hanzi hanzi" lang="zh-Hant-TW">{entry.t}</span>
                 <span class="row-main">
                   <Reading pinyin={entry.p} />
-                  <span class="row-sub">{entry.d.slice(0, 3).join('; ')}</span>
+                  <span class="row-sub"
+                    ><Localized
+                      value={{ text: defs.list.slice(0, 3).join('; '), lang: defs.lang }}
+                    /></span
+                  >
                 </span>
               </button>
             </li>
@@ -136,9 +141,9 @@
         </ul>
       {/if}
       {#if results.length}
-        <h2 class="section-title">In the study path</h2>
+        <h2 class="section-title">{t().dict.inPath}</h2>
         <ul class="list">
-          {#each results as [id, hanzi, , en] (id)}
+          {#each results as [id, hanzi, , gloss] (id)}
             {@const level = content.word(id)?.level}
             <li>
               <a
@@ -148,7 +153,7 @@
               >
                 <span class="w-hanzi hanzi" lang="zh-Hant-TW">{hanzi}</span>
                 <span class="row-main">
-                  <span class="row-sub en">{en}</span>
+                  <span class="row-sub en">{gloss}</span>
                 </span>
                 {#if level}<span class="level-tag">{levelLabel(level)}</span>{/if}
                 <svg class="chevron" viewBox="0 0 8 14" aria-hidden="true"

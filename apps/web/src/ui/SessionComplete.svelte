@@ -10,7 +10,7 @@
   import { celebrate as party } from '../lib/celebrate.svelte';
   import { feedback } from '../lib/feedback.svelte';
   import { router } from '../lib/router.svelte';
-  import { formatInterval } from '../lib/i18n/index.svelte';
+  import { formatInterval, t } from '../lib/i18n/index.svelte';
   import type { SessionStats } from '../lib/store.svelte';
 
   interface Props {
@@ -41,7 +41,7 @@
   <span class="stamp" class:celebrate bind:this={seal}><Seal text="完" size={92} /></span>
   <h1 class="hanzi" lang="zh-Hant-TW">今天完成了</h1>
   <p class="sub">
-    {stats.reviewed ? 'All done for today. Nicely studied!' : 'Nothing to study right now.'}
+    {stats.reviewed ? t().session.done : t().session.nothing}
   </p>
 
   {#if stats.reviewed}
@@ -51,36 +51,36 @@
     </p>
     <dl class="tiles">
       <div class="tile enter" style:--i={2}>
-        <dt>Reviews</dt>
+        <dt>{t().session.reviews}</dt>
         <dd><Counter value={stats.reviewed} from={0} /></dd>
       </div>
       <div class="tile enter" style:--i={3}>
-        <dt>New words</dt>
+        <dt>{t().session.newWords}</dt>
         <dd><Counter value={stats.learned} from={0} /></dd>
       </div>
       <div class="tile enter" style:--i={4}>
-        <dt>Remembered</dt>
+        <dt>{t().session.remembered}</dt>
         <dd><Counter value={remembered} from={0} />%</dd>
       </div>
     </dl>
   {/if}
 
-  <section class="bowl sheet enter" style:--i={5} aria-label="Your streak">
+  <section class="bowl sheet enter" style:--i={5} aria-label={t().session.streak}>
     <StreakPlant
       bowl={streak.current}
       crack={streak.crack}
       fresh={streak.mendedToday}
       size={92}
-      label="Your streak plant: {streak.count} days"
+      label={t().today.plant(streak.count)}
     />
     <div class="bowl-body">
-      <strong>{streak.count}-day streak</strong>
+      <strong>{t().today.bowl.streak(streak.count)}</strong>
       <span
         >{streak.mendedToday
-          ? 'Mended with gold today.'
+          ? t().session.mendedToday
           : streak.seams
-            ? `${streak.seams} gold ${streak.seams === 1 ? 'seam' : 'seams'} so far.`
-            : 'Come back tomorrow to keep it growing.'}</span
+            ? t().session.seams(streak.seams)
+            : t().session.comeBack}</span
       >
       <WeekStrip week={streak.week} />
     </div>
@@ -88,12 +88,14 @@
 
   {#if nextDue}
     <p class="next">
-      Next review in {formatInterval(Math.max(0, nextDue.getTime() - Date.now()))}
+      {t().session.nextReview(formatInterval(Math.max(0, nextDue.getTime() - Date.now())))}
     </p>
   {/if}
   <div class="actions enter" style:--i={6}>
-    <a class="btn primary" href={router.href('/read')} onclick={router.link}>Read a story</a>
-    <a class="btn quiet" href={router.href('/path')} onclick={router.link}>Browse the path</a>
+    <a class="btn primary" href={router.href('/read')} onclick={router.link}
+      >{t().today.readStory}</a
+    >
+    <a class="btn quiet" href={router.href('/path')} onclick={router.link}>{t().session.browse}</a>
   </div>
 </div>
 

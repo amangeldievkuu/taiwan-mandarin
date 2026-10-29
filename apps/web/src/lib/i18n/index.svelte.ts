@@ -6,7 +6,7 @@ import type { Lang } from '@taiwan-mandarin/shared';
 import { en, type Messages } from './en';
 import { vi } from './vi';
 
-export const locale = $state<{ lang: Lang }>({ lang: 'en' });
+export const locale = $state<{ lang: Lang; hanViet: boolean }>({ lang: 'en', hanViet: true });
 
 const CATALOGS: Record<Lang, Messages> = { en, vi };
 

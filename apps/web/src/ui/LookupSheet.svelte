@@ -1,11 +1,15 @@
 <script lang="ts">
   // Dictionary entry for the tapped word: bottom sheet on phones, floating panel on wider screens.
-  import { LEVELS, type DictEntry } from '@taiwan-mandarin/shared';
+  import { isLevel, type DictEntry } from '@taiwan-mandarin/shared';
   import { MediaQuery } from 'svelte/reactivity';
+  import HanViet from './HanViet.svelte';
   import Icon from './Icon.svelte';
+  import Localized from './Localized.svelte';
   import Reading from './Reading.svelte';
   import Skeleton from './Skeleton.svelte';
   import { content } from '../lib/content.svelte';
+  import { definitionsOf, type Localized as Text } from '../lib/i18n/content';
+  import { t } from '../lib/i18n/index.svelte';
   import { lookup } from '../lib/lookup.svelte';
   import { router } from '../lib/router.svelte';
   import { canSpeak, speak } from '../lib/speech';
@@ -25,7 +29,16 @@
     });
   });
 
-  const levelLabel = (id: string) => LEVELS.find((l) => l.id === id)?.en ?? id;
+  const levelLabel = (id: string) => (isLevel(id) ? t().levels[id] : id);
+
+  /** The first definitions of a reading's entries, each in its own language. */
+  const definitions = (list: DictEntry[]): Text[] =>
+    list
+      .flatMap((e) => {
+        const { list: defs, lang } = definitionsOf(e);
+        return defs.map((text) => ({ text, lang }));
+      })
+      .slice(0, 8);
 
   function status(wordId: string | undefined): 'studying' | 'deck' | 'new' | null {
     if (!wordId) return null;
@@ -81,7 +94,7 @@
   <button
     class="scrim"
     type="button"
-    aria-label="Close"
+    aria-label={t().common.close}
     onclick={() => lookup.close()}
     transition:fade
   ></button>
@@ -102,11 +115,21 @@
       <span id="lookup-word" class="word hanzi" lang="zh-Hant-TW">{lookup.word}</span>
       <div class="tools">
         {#if canSpeak}
-          <button type="button" class="tool" aria-label="Listen" onclick={() => speak(lookup.word)}>
+          <button
+            type="button"
+            class="tool"
+            aria-label={t().word.listen}
+            onclick={() => speak(lookup.word)}
+          >
             <Icon name="speaker" />
           </button>
         {/if}
-        <button type="button" class="tool" aria-label="Close" onclick={() => lookup.close()}>
+        <button
+          type="button"
+          class="tool"
+          aria-label={t().common.close}
+          onclick={() => lookup.close()}
+        >
           <Icon name="close" />
         </button>
       </div>
@@ -117,12 +140,12 @@
     {/if}
 
     {#if lookup.loading}
-      <div class="loading" aria-label="Looking up">
+      <div class="loading" aria-label={t().lookup.lookingUp}>
         <Skeleton width="40%" height="20px" />
         <Skeleton lines={3} height="14px" />
       </div>
     {:else if groups.length === 0}
-      <p class="muted">Not in the dictionary.</p>
+      <p class="muted">{t().lookup.notFound}</p>
     {:else}
       <div class="entries">
         {#each groups as { head, list }, i (i)}
@@ -130,27 +153,30 @@
           <section class="entry">
             <div class="entry-head">
               <Reading pinyin={head.p} />
-              {#if head.l}<span class="level-tag" title="TOCFL path">{levelLabel(head.l)}</span
+              {#if head.l}<span class="level-tag" title={t().lookup.tocfl}
+                  >{levelLabel(head.l)}</span
                 >{/if}
             </div>
+            <HanViet reading={head.h} />
             <ol>
-              {#each list.flatMap((e) => e.d).slice(0, 8) as def, j (j)}
-                <li>{def}</li>
+              {#each definitions(list) as def, j (j)}
+                <li><Localized value={def} /></li>
               {/each}
             </ol>
             {#if head.c}<p class="cl">
-                Measure word <span lang="zh-Hant-TW" class="hanzi">{head.c}</span>
+                {t().word.measureWord} <span lang="zh-Hant-TW" class="hanzi">{head.c}</span>
               </p>{/if}
             {#if head.w}
               <div class="actions">
                 {#if st === 'new'}
                   <button type="button" class="btn seal small" onclick={() => add(head)}>
-                    <Icon name="plus" size={16} /> Add to my deck
+                    <Icon name="plus" size={16} />
+                    {t().word.add}
                   </button>
                 {:else if st === 'deck'}
-                  <span class="state"><Icon name="check" size={16} /> In your deck</span>
+                  <span class="state"><Icon name="check" size={16} /> {t().word.inDeck}</span>
                 {:else}
-                  <span class="state"><Icon name="check" size={16} /> Studying</span>
+                  <span class="state"><Icon name="check" size={16} /> {t().word.studying}</span>
                 {/if}
                 <a
                   class="btn quiet small"
@@ -158,7 +184,7 @@
                   onclick={(e) => {
                     lookup.close();
                     router.link(e);
-                  }}>Details</a
+                  }}>{t().lookup.details}</a
                 >
               </div>
             {/if}

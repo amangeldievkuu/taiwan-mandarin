@@ -1,6 +1,6 @@
 <script lang="ts">
-  // Kyrgyz/English text with embedded Chinese: tags each Chinese run as zh-Hant-TW so Taiwan
-  // glyph forms render even when the surrounding text is in another language.
+  // Text in the learner's language with Chinese in it: tags each Chinese run as zh-Hant-TW so
+  // Taiwan glyph forms render even when the surrounding text is in another language.
   interface Props {
     text: string;
   }

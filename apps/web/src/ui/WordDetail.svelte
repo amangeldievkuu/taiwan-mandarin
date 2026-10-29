@@ -1,15 +1,18 @@
 <script lang="ts">
-  import { LEVELS, TOPIC_BY_ID, type Word } from '@taiwan-mandarin/shared';
+  import { LEVELS, type Word } from '@taiwan-mandarin/shared';
   import HanziText from './HanziText.svelte';
   import Icon from './Icon.svelte';
   import Reading from './Reading.svelte';
   import StrokeWriter from '../components/StrokeWriter.svelte';
   import TaiwanNote from '../components/TaiwanNote.svelte';
   import WordGlyphs, { fitSize } from '../components/WordGlyphs.svelte';
+  import HanViet from './HanViet.svelte';
+  import Localized from './Localized.svelte';
   import Speak from './Speak.svelte';
+  import { glossOf, translationOf } from '../lib/i18n/content';
   import { lookup } from '../lib/lookup.svelte';
   import { canSpeak, speak } from '../lib/speech';
-  import { formatInterval } from '../lib/i18n/index.svelte';
+  import { formatInterval, t } from '../lib/i18n/index.svelte';
   import { store } from '../lib/store.svelte';
 
   interface Props {
@@ -21,7 +24,6 @@
   let { word, compact = false }: Props = $props();
 
   const level = $derived(LEVELS.find((l) => l.id === word.level));
-  const topic = $derived(TOPIC_BY_ID.get(word.topic));
   const record = $derived(store.cards[word.id]);
   const inDeck = $derived(store.inDeck(word.id));
   const chars = $derived([...new Set([...word.hanzi].filter((c) => /\p{Script=Han}/u.test(c)))]);
@@ -35,22 +37,27 @@
       compact ? '420px' : 'min(100vw - 2 * var(--gutter), 640px) - 24px',
     ),
   );
-  const POS: Record<string, string> = {
-    N: 'noun', V: 'verb', Vi: 'verb', Vs: 'stative verb', Vst: 'stative verb', Vp: 'process verb', Vpt: 'process verb',
-    'V-sep': 'separable verb', 'Vs-sep': 'separable verb', 'Vp-sep': 'separable verb', Vaux: 'auxiliary',
-    Adv: 'adverb', Conj: 'conjunction', Prep: 'preposition', Ptc: 'particle', M: 'measure word', Det: 'determiner',
+  type Pos = keyof ReturnType<typeof t>['word']['pos'];
+  const POS: Record<string, Pos> = {
+    N: 'noun', V: 'verb', Vi: 'verb', Vs: 'stative', Vst: 'stative', Vp: 'process', Vpt: 'process',
+    'V-sep': 'separable', 'Vs-sep': 'separable', 'Vp-sep': 'separable', Vaux: 'auxiliary',
+    Adv: 'adverb', Conj: 'conjunction', Prep: 'preposition', Ptc: 'particle', M: 'measure', Det: 'determiner',
     'Vs-attr': 'attributive', 'Vs-pred': 'predicative',
   }; // prettier-ignore
-  const posLabel = $derived(
-    word.pos
-      ? [...new Set(word.pos.split('/').map((p) => POS[p.trim()] ?? p.trim()))].join(', ')
-      : undefined,
-  );
+  const posLabel = $derived.by(() => {
+    if (!word.pos) return undefined;
+    const names = t().word.pos;
+    const labels = word.pos.split('/').map((p) => {
+      const tag = POS[p.trim()];
+      return tag ? names[tag] : p.trim();
+    });
+    return [...new Set(labels)].join(', ');
+  });
 
   function due(): string {
     if (!record) return '';
     const ms = record.card.due.getTime() - Date.now();
-    return ms <= 0 ? 'due now' : `next review in ${formatInterval(ms)}`;
+    return ms <= 0 ? t().word.dueNow : t().word.nextReview(formatInterval(ms));
   }
 </script>
 
@@ -60,55 +67,63 @@
       <WordGlyphs {word} {size} phonetics={store.settings.phonetics} />
     </div>
     {#if canSpeak}
-      <button type="button" class="speak" aria-label="Listen" onclick={() => speak(word.hanzi)}>
+      <button
+        type="button"
+        class="speak"
+        aria-label={t().word.listen}
+        onclick={() => speak(word.hanzi)}
+      >
         <Icon name="speaker" size={22} />
       </button>
     {/if}
   </header>
 
   <div class="tags">
-    {#if level}<span class="level-tag">{level.en} · {level.cefr}</span>{/if}
+    {#if level}<span class="level-tag">{t().levels[level.id]} · {level.cefr}</span>{/if}
     {#if posLabel}<span class="tag">{posLabel}</span>{/if}
-    {#if topic && topic.id !== 'core'}<span class="tag">{topic.en}</span>{/if}
-    {#if word.src === 'tbcl'}<span class="tag" title="Listed by the NAER 《臺灣華語文能力基準》"
-        >NAER list</span
+    {#if word.topic !== 'core'}<span class="tag">{t().topics[word.topic]}</span>{/if}
+    {#if word.src === 'tbcl'}<span class="tag" title={t().word.naerTitle}>{t().word.naerList}</span
       >{/if}
   </div>
 
-  <p class="meaning">{word.en || '—'}</p>
-  {#if word.cl}<p class="cl">Measure word <HanziText text={word.cl} /></p>{/if}
+  <p class="meaning">
+    {#if word.en}<Localized value={glossOf(word)} />{:else}—{/if}
+  </p>
+  <HanViet reading={word.hv} />
+  {#if word.cl}<p class="cl">{t().word.measureWord} <HanziText text={word.cl} /></p>{/if}
   {#if word.variants?.length}
-    <p class="cl">Also written <HanziText text={word.variants.join('、')} /></p>
+    <p class="cl">{t().word.alsoWritten} <HanziText text={word.variants.join('、')} /></p>
   {/if}
-  {#if word.readingUnverified}<p class="cl warn">
-      Reading not yet checked against the MOE dictionary.
-    </p>{/if}
+  {#if word.readingUnverified}<p class="cl warn">{t().word.unverified}</p>{/if}
   <TaiwanNote {word} />
 
   <div class="status">
     {#if record}
-      <span class="state"><Icon name="check" size={16} /> Studying · {due()}</span>
+      <span class="state"><Icon name="check" size={16} /> {t().word.studying} · {due()}</span>
       <button
         type="button"
         class="btn quiet small"
         onclick={() => store.setSuspended(word.id, !record.suspended)}
       >
-        {record.suspended ? 'Resume' : 'Suspend'}
+        {record.suspended ? t().word.resume : t().word.suspend}
       </button>
     {:else if inDeck}
-      <span class="state"><Icon name="check" size={16} /> In your deck</span>
+      <span class="state"><Icon name="check" size={16} /> {t().word.inDeck}</span>
       <button type="button" class="btn quiet small" onclick={() => store.removeFromDeck(word.id)}
-        >Remove</button
+        >{t().word.remove}</button
       >
     {:else}
       <button type="button" class="btn seal small" onclick={() => store.addToDeck(word)}>
-        <Icon name="plus" size={16} /> Add to my deck
+        <Icon name="plus" size={16} />
+        {t().word.add}
       </button>
     {/if}
   </div>
 
   {#if word.examples?.length}
-    <h3 class="section-title">Examples <span class="zh" lang="zh-Hant-TW">例句</span></h3>
+    <h3 class="section-title">
+      {t().word.examples} <span class="zh" lang="zh-Hant-TW">例句</span>
+    </h3>
     <ul class="examples">
       {#each word.examples as example, i (i)}
         <li>
@@ -118,7 +133,7 @@
               <button
                 type="button"
                 class="mini"
-                aria-label="Listen to the sentence"
+                aria-label={t().word.listenSentence}
                 onclick={() => speak(example.zh)}
               >
                 <Icon name="speaker" size={18} />
@@ -126,7 +141,7 @@
             {/if}
           </div>
           <Reading pinyin={example.pinyin} text={example.zh} wordLengths={example.wordLengths} />
-          <p class="ex-en">{example.en}</p>
+          <p class="ex-en"><Localized value={translationOf(example)} /></p>
           <p class="ex-src">
             {#if example.source === 'tatoeba' && example.ref}
               <a
@@ -134,17 +149,19 @@
                 target="_blank"
                 rel="noopener">Tatoeba #{example.ref}</a
               >
-            {:else if example.source === 'ai'}Written for this app{/if}
+            {:else if example.source === 'ai'}{t().word.writtenForApp}{/if}
           </p>
         </li>
       {/each}
     </ul>
   {/if}
 
-  <h3 class="section-title">Say it <span class="zh" lang="zh-Hant-TW">發音</span></h3>
+  <h3 class="section-title">{t().word.sayIt} <span class="zh" lang="zh-Hant-TW">發音</span></h3>
   <Speak target={word.hanzi} pinyin={word.pinyin} />
 
-  <h3 class="section-title">Characters <span class="zh" lang="zh-Hant-TW">字</span></h3>
+  <h3 class="section-title">
+    {t().word.characters} <span class="zh" lang="zh-Hant-TW">字</span>
+  </h3>
   <div class="chars">
     {#each chars as char (char)}
       <button

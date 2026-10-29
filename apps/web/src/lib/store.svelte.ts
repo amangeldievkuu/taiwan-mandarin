@@ -374,11 +374,12 @@ class Store {
   /** Shows the app, and loads its content, in the learner's language. */
   private applyLanguage(): void {
     locale.lang = this.settings.language;
+    locale.hanViet = this.settings.hanViet;
   }
 
   async updateSettings(patch: Partial<Settings>): Promise<void> {
     this.settings = { ...this.settings, ...patch };
-    if (patch.language !== undefined) this.applyLanguage();
+    if (patch.language !== undefined || patch.hanViet !== undefined) this.applyLanguage();
     this.syncState.settingsUpdatedAt = Date.now();
     if (patch.retention !== undefined) this.configureFsrs();
     this.changed();

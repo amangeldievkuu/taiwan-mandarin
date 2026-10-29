@@ -2,12 +2,8 @@
   type Mode = 'recognize' | 'recall' | 'listen';
   const MODE_KEY = 'taiwan-mandarin:study-mode';
   const MODES: Mode[] = ['recognize', 'recall', 'listen'];
-  /** What each mode asks of the learner; shown on the control and on the card itself. */
-  const MODE_INFO: Record<Mode, { zh: string; en: string; hint: string }> = {
-    recognize: { zh: '認字', en: 'Recognise', hint: 'See the word, recall the meaning' },
-    recall: { zh: '回想', en: 'Recall', hint: 'See the meaning, recall the word' },
-    listen: { zh: '聽力', en: 'Listen', hint: 'Hear the word, recall it' },
-  };
+  /** Each mode's Chinese name; its name and what it asks of the learner are in the catalog. */
+  const MODE_ZH: Record<Mode, string> = { recognize: '認字', recall: '回想', listen: '聽力' };
 
   function savedMode(): Mode {
     try {
@@ -23,7 +19,7 @@
   // The study session: one card at a time on a little stack. Reveal it (tap, Space, or the
   // button), grade it, and it flies off (left for Again, right for Good: the direction tells the
   // grade, every grade gets the same energy and XP) while the next card rises from the stack.
-  import { LEVELS, XP } from '@taiwan-mandarin/shared';
+  import { XP } from '@taiwan-mandarin/shared';
   import { tick, untrack } from 'svelte';
   import HanziText from '../ui/HanziText.svelte';
   import Icon from '../ui/Icon.svelte';
@@ -35,7 +31,10 @@
   import { celebrate } from '../lib/celebrate.svelte';
   import { companion } from '../lib/companion.svelte';
   import { feedback } from '../lib/feedback.svelte';
-  import { formatInterval } from '../lib/i18n/index.svelte';
+  import { glossOf, translationOf } from '../lib/i18n/content';
+  import { formatInterval, t } from '../lib/i18n/index.svelte';
+  import HanViet from '../ui/HanViet.svelte';
+  import Localized from '../ui/Localized.svelte';
   import { lookup } from '../lib/lookup.svelte';
   import { flipFrom } from '../lib/motion';
   import { router } from '../lib/router.svelte';
@@ -45,12 +44,14 @@
   import { toasts } from '../lib/toast.svelte';
   import { cardIn, cardOut, flipIn, rise } from '../lib/transitions';
 
-  const GRADE_INFO: Record<Grade, { label: string; zh: string; color: string; key: string }> = {
-    [Rating.Again]: { label: 'Again', zh: '再來', color: 'var(--again)', key: '1' },
-    [Rating.Hard]: { label: 'Hard', zh: '困難', color: 'var(--hard)', key: '2' },
-    [Rating.Good]: { label: 'Good', zh: '記得', color: 'var(--good)', key: '3' },
-    [Rating.Easy]: { label: 'Easy', zh: '簡單', color: 'var(--easy)', key: '4' },
+  type GradeName = keyof ReturnType<typeof t>['study']['grades'];
+  const GRADE_INFO: Record<Grade, { name: GradeName; zh: string; color: string; key: string }> = {
+    [Rating.Again]: { name: 'again', zh: '再來', color: 'var(--again)', key: '1' },
+    [Rating.Hard]: { name: 'hard', zh: '困難', color: 'var(--hard)', key: '2' },
+    [Rating.Good]: { name: 'good', zh: '記得', color: 'var(--good)', key: '3' },
+    [Rating.Easy]: { name: 'easy', zh: '簡單', color: 'var(--easy)', key: '4' },
   };
+  const modeInfo = $derived(t().study.modes);
 
   let mode = $state<Mode>(savedMode());
   $effect(() => {
@@ -64,7 +65,7 @@
   const word = $derived(store.current);
   const settings = $derived(store.settings);
   const isNew = $derived(word ? !store.cards[word.id] : false);
-  const level = $derived(word ? LEVELS.find((l) => l.id === word.level) : undefined);
+  const level = $derived(word ? t().levels[word.level] : undefined);
   const example = $derived(word?.examples?.[0]);
   const size = $derived(
     word
@@ -146,7 +147,7 @@
     if (!halfway && total >= 8 && store.progress >= 0.5 && store.queue.length) {
       halfway = true;
       toasts.show(
-        { kind: 'info', title: '一半了！ Halfway there', body: 'Keep going, you are doing great.' },
+        { kind: 'info', title: `一半了！ ${t().study.halfway}`, body: t().study.halfwayBody },
         2600,
       );
     }
@@ -205,11 +206,11 @@
           class="chip mode-chip"
           aria-haspopup="menu"
           aria-expanded={modeOpen}
-          aria-label="Study mode: {MODE_INFO[mode].en}"
+          aria-label={t().study.modeIs(modeInfo[mode].name)}
           onclick={() => (modeOpen = !modeOpen)}
         >
-          <span class="hanzi" lang="zh-Hant-TW">{MODE_INFO[mode].zh}</span>
-          {MODE_INFO[mode].en}
+          <span class="hanzi" lang="zh-Hant-TW">{MODE_ZH[mode]}</span>
+          {modeInfo[mode].name}
           <svg class="chevron down" viewBox="0 0 8 14" aria-hidden="true"
             ><path d="M1 5l3 3 3-3" /></svg
           >
@@ -218,10 +219,10 @@
           <button
             type="button"
             class="mode-scrim"
-            aria-label="Close"
+            aria-label={t().common.close}
             onclick={() => (modeOpen = false)}
           ></button>
-          <div class="mode-menu sheet" role="menu" aria-label="Study mode" in:rise={{ y: -6 }}>
+          <div class="mode-menu sheet" role="menu" aria-label={t().study.mode} in:rise={{ y: -6 }}>
             {#each MODES as m (m)}
               <button
                 type="button"
@@ -230,8 +231,8 @@
                 aria-checked={mode === m}
                 onclick={() => pickMode(m)}
               >
-                <span class="mode-zh hanzi" lang="zh-Hant-TW">{MODE_INFO[m].zh}</span>
-                <span class="mode-en">{MODE_INFO[m].en}<small>{MODE_INFO[m].hint}</small></span>
+                <span class="mode-zh hanzi" lang="zh-Hant-TW">{MODE_ZH[m]}</span>
+                <span class="mode-en">{modeInfo[m].name}<small>{modeInfo[m].hint}</small></span>
                 {#if mode === m}<Icon name="check" size={18} />{/if}
               </button>
             {/each}
@@ -241,27 +242,29 @@
       <!-- Tablets and desktops: the control inline. -->
       <div class="mode-inline">
         <Segmented
-          label="Study mode"
+          label={t().study.mode}
           value={mode}
           onchange={pickMode}
           options={MODES.map((m) => ({
             value: m,
-            label: MODE_INFO[m].zh,
-            sub: MODE_INFO[m].en,
+            label: MODE_ZH[m],
+            sub: modeInfo[m].name,
             lang: 'zh-Hant-TW',
           }))}
         />
       </div>
-      <span class="mode-hint">{MODE_INFO[mode].hint}</span>
+      <span class="mode-hint">{modeInfo[mode].hint}</span>
     </div>
     {#if word}
       <div class="counters">
         {#key store.sessionXp}<span
             class="session-xp"
-            aria-label="{store.sessionXp} XP this session"
+            aria-label={t().study.sessionXp(store.sessionXp)}
             ><span aria-hidden="true">✦</span> {store.sessionXp}</span
           >{/key}
-        <span class="left tabular" aria-label="{remaining} cards left">{remaining} left</span>
+        <span class="left tabular" aria-label={t().study.cardsLeft(remaining)}
+          >{t().study.left(remaining)}</span
+        >
       </div>
     {/if}
   </header>
@@ -291,27 +294,28 @@
           out:cardOut={{ grade: exitGrade }}
         >
           <div class="meta">
-            {#if isNew}<span class="new">New</span>{/if}
-            {#if level}<span class="level-tag">{level.en}</span>{/if}
+            {#if isNew}<span class="new">{t().study.new}</span>{/if}
+            {#if level}<span class="level-tag">{level}</span>{/if}
             {#if word.tw}<span class="badge-tw" lang="zh-Hant-TW">臺灣</span>{/if}
-            <span class="level-tag mode-tag {mode}" title={MODE_INFO[mode].hint}>
-              <span class="hanzi" lang="zh-Hant-TW">{MODE_INFO[mode].zh}</span>
-              {MODE_INFO[mode].en}
+            <span class="level-tag mode-tag {mode}" title={modeInfo[mode].hint}>
+              <span class="hanzi" lang="zh-Hant-TW">{MODE_ZH[mode]}</span>
+              {modeInfo[mode].name}
             </span>
           </div>
 
           <div class="face">
             {#if mode === 'recall' && !store.revealed}
-              <p class="prompt">{word.en}</p>
+              <p class="prompt"><Localized value={glossOf(word)} /></p>
               {#if word.cl}<p class="prompt-sub">
-                  measure word <span class="hanzi" lang="zh-Hant-TW">{word.cl}</span>
+                  {t().study.measureWordInline}
+                  <span class="hanzi" lang="zh-Hant-TW">{word.cl}</span>
                 </p>{/if}
-              <p class="prompt-sub tap">Tap to see the word</p>
+              <p class="prompt-sub tap">{t().study.tapToSee}</p>
             {:else if mode === 'listen' && !store.revealed}
               <button
                 type="button"
                 class="listen"
-                aria-label="Play again"
+                aria-label={t().study.playAgain}
                 onclick={(e) => {
                   e.stopPropagation();
                   speak(word.hanzi);
@@ -319,7 +323,7 @@
               >
                 <Icon name="speaker" size={40} />
               </button>
-              <p class="prompt-sub">Tap to hear it again</p>
+              <p class="prompt-sub">{t().study.tapToHear}</p>
             {:else if mode === 'recognize'}
               <div class="glyphs" bind:this={glyphs}>
                 <WordGlyphs {word} {size} phonetics={settings.phonetics} show={store.revealed} />
@@ -333,9 +337,10 @@
 
           {#if store.revealed}
             <div class="answer">
-              <p class="meaning enter" style:--i={0}>{word.en}</p>
+              <p class="meaning enter" style:--i={0}><Localized value={glossOf(word)} /></p>
+              <div class="enter" style:--i={1}><HanViet reading={word.hv} /></div>
               {#if word.cl}<p class="cl enter" style:--i={1}>
-                  Measure word <span class="hanzi" lang="zh-Hant-TW">{word.cl}</span>
+                  {t().word.measureWord} <span class="hanzi" lang="zh-Hant-TW">{word.cl}</span>
                 </p>{/if}
               <div class="enter" style:--i={1}><TaiwanNote {word} /></div>
               {#if example}
@@ -347,7 +352,7 @@
                     text={example.zh}
                     wordLengths={example.wordLengths}
                   />
-                  <p class="example-en">{example.en}</p>
+                  <p class="example-en"><Localized value={translationOf(example)} /></p>
                 </div>
               {/if}
               <div class="answer-tools enter" style:--i={3}>
@@ -355,7 +360,7 @@
                   <button
                     type="button"
                     class="tool"
-                    aria-label="Play pronunciation"
+                    aria-label={t().word.playPronunciation}
                     aria-keyshortcuts="r"
                     onclick={(e) => {
                       e.stopPropagation();
@@ -368,7 +373,7 @@
                 <a
                   class="tool"
                   href={router.href(`/word/${encodeURIComponent(word.id)}`)}
-                  aria-label="Word details"
+                  aria-label={t().word.details}
                   onclick={(e) => {
                     e.stopPropagation();
                     router.link(e);
@@ -399,7 +404,7 @@
             >
               <span class="rate-zh" lang="zh-Hant-TW">{GRADE_INFO[g].zh}</span>
               <span class="rate-label"
-                >{GRADE_INFO[g].label} · {formatInterval(store.intervals[g])}</span
+                >{t().study.grades[GRADE_INFO[g].name]} · {formatInterval(store.intervals[g])}</span
               >
               <kbd class="key">{GRADE_INFO[g].key}</kbd>
             </button>
@@ -414,7 +419,7 @@
           disabled={cooling}
           onclick={reveal}
         >
-          Show answer <kbd class="key">Space</kbd>
+          {t().study.showAnswer} <kbd class="key">{t().study.space}</kbd>
         </button>
       {/if}
     </div>

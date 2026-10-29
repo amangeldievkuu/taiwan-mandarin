@@ -36,7 +36,7 @@ describe('catalogs', () => {
 
   it('are translated', () => {
     // Words that are the same in both languages.
-    const same = new Set(['haha', '10,000 XP', 'XP', 'TOCFL', 'MRT', 'Email', 'OK']);
+    const same = new Set(['haha', 'XP', 'TOCFL', 'MRT', 'Email', 'OK', 'Space']);
     const english = new Map(strings(en));
     const untranslated = strings(vi)
       .filter(([path, text]) => english.get(path) === text && !same.has(text))
