@@ -352,15 +352,15 @@ describe('Hán-Việt', () => {
   const table: HanVietTable = new Map([
     [
       '好',
-      new Map([
+      new Map<string, string | null>([
         ['hao3', 'hảo'],
         ['hao4', 'hiếu'],
       ]),
     ],
-    ['朋', new Map([['', 'bằng']])],
-    ['友', new Map([['you3', 'hữu']])],
-    ['喔', new Map([['', null]])],
-    ['人', new Map([['', 'nhân']])],
+    ['朋', new Map<string, string | null>([['', 'bằng']])],
+    ['友', new Map<string, string | null>([['you3', 'hữu']])],
+    ['喔', new Map<string, string | null>([['', null]])],
+    ['人', new Map<string, string | null>([['', 'nhân']])],
   ]);
 
   it('reads a character as the word reads it', () => {
