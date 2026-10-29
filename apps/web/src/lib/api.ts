@@ -2,7 +2,7 @@
 // httpOnly cookie. A token about to expire is renewed before a request, and a 401 triggers one
 // silent refresh and a retry; a second 401 means the session is gone.
 
-import type { AuthResponse } from '@taiwan-mandarin/shared/api';
+import type { ApiErrorCode, AuthResponse, ErrorParams } from '@taiwan-mandarin/shared/api';
 
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api';
 /** Long enough for an AI answer: the server gives up first (45 s, plus one retry). */
@@ -17,6 +17,10 @@ const REFRESH_TIMEOUT_MS = 20_000;
 /** Renew the access token this long before it expires, rather than letting a request fail first. */
 const RENEW_AHEAD_MS = 60_000;
 
+/** Failures of the app's own, with no answer from the server to say what went wrong. */
+export type ClientErrorCode =
+  'offline' | 'serverTimeout' | 'noStreams' | 'streamStalled' | 'signedOut';
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -25,9 +29,24 @@ export class ApiError extends Error {
   ) {
     super(message);
   }
+
+  /** The server's code for the error (or the app's own), for showing it in the learner's language. */
+  get code(): ApiErrorCode | ClientErrorCode | undefined {
+    const code = (this.body as { code?: unknown } | undefined)?.code;
+    return typeof code === 'string' ? (code as ApiErrorCode | ClientErrorCode) : undefined;
+  }
+
+  get params(): ErrorParams | undefined {
+    return (this.body as { params?: ErrorParams } | undefined)?.params;
+  }
 }
 
+/** An error of the app's own: English for logs, a code for the learner's language. */
+const clientError = (status: number, code: ClientErrorCode, message: string) =>
+  new ApiError(status, message, { code });
+
 export const OFFLINE_MESSAGE = "Can't reach the server.";
+const offline = () => clientError(0, 'offline', OFFLINE_MESSAGE);
 
 let accessToken: string | null = null;
 /** When the access token expires (ms since epoch); 0 when unknown. */
@@ -59,7 +78,7 @@ export function sessionFresh(): boolean {
 /** Network failures (no connection, DNS, a dropped socket) as one readable error. */
 function asApiError(e: unknown): ApiError {
   if (e instanceof ApiError) return e;
-  if (e instanceof TypeError) return new ApiError(0, OFFLINE_MESSAGE);
+  if (e instanceof TypeError) return offline();
   return new ApiError(0, e instanceof Error ? e.message : String(e));
 }
 
@@ -79,7 +98,7 @@ export function refreshSession(): Promise<AuthResponse | null> {
         signal: timeout.signal,
       });
     } catch {
-      throw new ApiError(0, OFFLINE_MESSAGE);
+      throw offline();
     } finally {
       clearTimeout(timer);
     }
@@ -87,7 +106,7 @@ export function refreshSession(): Promise<AuthResponse | null> {
       setSession(null);
       return null;
     }
-    if (!response.ok) throw new ApiError(response.status, OFFLINE_MESSAGE);
+    if (!response.ok) throw clientError(response.status, 'offline', OFFLINE_MESSAGE);
     const session = (await response.json()) as AuthResponse;
     setSession(session.accessToken, session.expiresIn);
     onSession?.(session);
@@ -120,7 +139,7 @@ type Init = Omit<RequestInit, 'body'> & {
 function signedOut(): never {
   setSession(null);
   onSignedOut?.();
-  throw new ApiError(401, 'Signed out');
+  throw clientError(401, 'signedOut', 'Signed out');
 }
 
 /** fetch with the session: one refresh and retry on 401; an ApiError for any other failure. */
@@ -156,7 +175,7 @@ async function send(path: string, init: Init = {}): Promise<Response> {
     }
   } catch (e) {
     if (timeout.signal.aborted && !signal?.aborted) {
-      throw new ApiError(0, 'The server took too long to answer. Try again.');
+      throw clientError(0, 'serverTimeout', 'The server took too long to answer. Try again.');
     }
     if (signal?.aborted) throw e;
     throw asApiError(e);
@@ -203,7 +222,7 @@ export async function* apiStream<T>(
       headers: { accept: 'application/x-ndjson' },
     });
     const reader = response.body?.getReader();
-    if (!reader) throw new ApiError(0, 'This browser cannot read streamed answers.');
+    if (!reader) throw clientError(0, 'noStreams', 'This browser cannot read streamed answers.');
     const decoder = new TextDecoder();
     let buffer = '';
     try {
@@ -227,7 +246,7 @@ export async function* apiStream<T>(
     }
   } catch (e) {
     if (idle.signal.aborted && !options.signal?.aborted) {
-      throw new ApiError(0, 'The answer stopped arriving. Try again.');
+      throw clientError(0, 'streamStalled', 'The answer stopped arriving. Try again.');
     }
     throw e;
   } finally {

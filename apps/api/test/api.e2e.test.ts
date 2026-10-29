@@ -181,6 +181,8 @@ describe('auth', () => {
       .send({ email: 'someone@example.com', password: 'short' });
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Use at least 8 characters for the password');
+    // With a code, so the app can say it in the learner's language.
+    expect(res.body.code).toBe('passwordTooShort');
   });
 
   it('keeps the session when two tabs refresh with the same cookie at once', async () => {

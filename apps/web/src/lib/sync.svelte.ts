@@ -25,6 +25,7 @@ import {
   setSession,
 } from './api';
 import type { CardRecord } from './storage';
+import { errorText } from './i18n/errors';
 import { t } from './i18n/index.svelte';
 import { store } from './store.svelte';
 import { toasts } from './toast.svelte';
@@ -276,7 +277,7 @@ class Account {
       this.lastSync = new Date();
     } catch (e) {
       // A 401 here already signed the learner out (see api.ts); the status line says so.
-      this.error = e instanceof Error ? e.message : String(e);
+      this.error = errorText(e);
     } finally {
       this.syncing = false;
     }

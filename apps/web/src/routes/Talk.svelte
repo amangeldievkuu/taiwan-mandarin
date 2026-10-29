@@ -34,6 +34,7 @@
   import { api } from '../lib/api';
   import { companion } from '../lib/companion.svelte';
   import { content } from '../lib/content.svelte';
+  import { errorText } from '../lib/i18n/errors';
   import { intlLocale, locale, t } from '../lib/i18n/index.svelte';
   import { lookup } from '../lib/lookup.svelte';
   import { canSpeak, speak, stopSpeaking } from '../lib/speech';
@@ -142,7 +143,7 @@
       void scrollDown();
     } catch (e) {
       if (mine !== session) return;
-      error = e instanceof Error ? e.message : String(e);
+      error = errorText(e);
       if (pending) {
         messages = messages.filter((m) => m.id !== pending.id);
         draft = message;
@@ -184,7 +185,7 @@
       summary = res.summary;
       void scrollDown();
     } catch (e) {
-      if (mine === session) error = e instanceof Error ? e.message : String(e);
+      if (mine === session) error = errorText(e);
     } finally {
       if (mine === session) loading = false;
     }
@@ -213,7 +214,7 @@
       refresh();
       void scrollDown();
     } catch (e) {
-      if (mine === session) error = e instanceof Error ? e.message : String(e);
+      if (mine === session) error = errorText(e);
     } finally {
       if (mine === session) ending = false;
     }
@@ -228,7 +229,7 @@
       await api(`/v1/ai/talk/${id}`, { method: 'DELETE' });
     } catch (e) {
       recent = before;
-      listError = e instanceof Error ? e.message : String(e);
+      listError = errorText(e);
     }
   }
 

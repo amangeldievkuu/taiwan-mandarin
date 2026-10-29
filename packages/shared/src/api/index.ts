@@ -7,6 +7,9 @@ import type { DayActivity } from '../activity.ts';
 import type { Level } from '../content/types.ts';
 import { canonicalTimeZone, isTimeZone } from '../days.ts';
 import { LANG_IDS } from '../lang.ts';
+import { ERRORS, type ApiErrorCode } from './errors.ts';
+
+export * from './errors.ts';
 
 /** An IANA time zone ("Asia/Taipei"): where the learner's calendar days begin and end. */
 export const TimeZoneSchema = z
@@ -47,37 +50,29 @@ export const SettingsSchema = z.object({
 
 // ---- Auth ----
 
-const email = z.email('Enter a valid email address').max(254, 'That email is too long');
-const newPassword = z
-  .string()
-  .min(8, 'Use at least 8 characters for the password')
-  .max(200, 'That password is too long');
+const email = z.email(ERRORS.invalidEmail).max(254, ERRORS.emailTooLong);
+const newPassword = z.string().min(8, ERRORS.passwordTooShort).max(200, ERRORS.passwordTooLong);
 
 export const RegisterSchema = z.object({
   email,
   password: newPassword,
-  displayName: z
-    .string()
-    .trim()
-    .min(1, 'Enter a name, or leave it empty')
-    .max(60, 'That name is too long')
-    .optional(),
+  displayName: z.string().trim().min(1, ERRORS.nameEmpty).max(60, ERRORS.nameTooLong).optional(),
 });
 export type RegisterBody = z.infer<typeof RegisterSchema>;
 
 export const LoginSchema = z.object({
   email,
-  password: z.string().min(1, 'Enter your password').max(200, 'That password is too long'),
+  password: z.string().min(1, ERRORS.passwordMissing).max(200, ERRORS.passwordTooLong),
 });
 export type LoginBody = z.infer<typeof LoginSchema>;
 
 export const ChangePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, 'Enter your current password').max(200),
+    currentPassword: z.string().min(1, ERRORS.currentPasswordMissing).max(200),
     newPassword,
   })
   .refine((b) => b.newPassword !== b.currentPassword, {
-    message: 'The new password is the same as the current one',
+    message: ERRORS.samePassword,
     path: ['newPassword'],
   });
 export type ChangePasswordBody = z.infer<typeof ChangePasswordSchema>;
@@ -233,7 +228,7 @@ export const ExplainRequestSchema = z
     /** The learner's language: translation, glosses and notes come in it. */
     lang: LangSchema.default('en'),
   })
-  .refine((r) => r.text || r.image, { message: 'Send text or an image' });
+  .refine((r) => r.text || r.image, { message: ERRORS.textOrImage });
 export type ExplainRequest = z.infer<typeof ExplainRequestSchema>;
 
 export interface ExplainToken {
@@ -272,7 +267,7 @@ export type ExplainStreamEvent =
   | { type: 'token'; index: number; token: ExplainToken }
   | { type: 'ping' }
   | { type: 'done'; result: ExplainResult }
-  | { type: 'error'; status: number; message: string };
+  | { type: 'error'; status: number; message: string; code?: ApiErrorCode };
 
 // ---- AI: conversation practice ----
 

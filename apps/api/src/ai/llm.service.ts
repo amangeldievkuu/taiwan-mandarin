@@ -27,6 +27,7 @@ import {
   type Effort,
   type Env,
 } from '../config/env.js';
+import { apiError, type ApiErrorCode } from '@taiwan-mandarin/shared/api';
 
 export type { AiFeature, Effort };
 
@@ -204,7 +205,7 @@ export class LlmService implements OnModuleInit {
         const response = await client.responses.parse(this.params(request, s));
         this.logUsage(request.feature, s, started, response);
         if (response.status === 'incomplete') {
-          throw new BadGatewayException('The AI answer was cut off. Try again.');
+          throw new BadGatewayException(apiError('aiCutOff'));
         }
         if (response.output_parsed == null) {
           throw new UnprocessableEntityException(
@@ -341,51 +342,53 @@ export class LlmService implements OnModuleInit {
     const what = `${feature} ${s.model} effort=${s.effort}`;
     const after = seconds(performance.now() - started);
     // Development shows OpenAI's own words; production keeps them in the log.
-    const detail = (message: string, e: Error) =>
-      this.env.NODE_ENV === 'production' ? message : `${message} (OpenAI: ${e.message})`;
+    const detail = (code: ApiErrorCode, e: Error) => {
+      const body = apiError(code);
+      return this.env.NODE_ENV === 'production'
+        ? body
+        : { ...body, message: `${body.message} (OpenAI: ${e.message})` };
+    };
 
     if (error instanceof StreamStalled || error instanceof OpenAI.APIConnectionTimeoutError) {
       this.logger.warn(`${what}: no answer after ${after} (OPENAI_TIMEOUT_MS)`);
-      return new GatewayTimeoutException('The AI took too long. Try again.');
+      return new GatewayTimeoutException(apiError('aiTimeout'));
     }
     if (error instanceof OpenAI.APIConnectionError) {
       this.logger.warn(`${what}: can't reach OpenAI: ${error.message}`);
-      return new BadGatewayException("Couldn't reach the AI service. Try again.");
+      return new BadGatewayException(apiError('aiUnreachable'));
     }
     if (error instanceof OpenAI.RateLimitError) {
       if (error.code === 'insufficient_quota') {
         this.logger.error(`OpenAI account is out of credit (insufficient_quota): ${error.message}`);
-        return new ServiceUnavailableException(detail("The AI isn't available right now.", error));
+        return new ServiceUnavailableException(detail('aiUnavailable', error));
       }
       this.logger.warn(`${what}: rate limited after ${after}`);
-      return new ServiceUnavailableException('The AI is busy right now. Try again in a minute.');
+      return new ServiceUnavailableException(apiError('aiBusy'));
     }
     if (
       error instanceof OpenAI.AuthenticationError ||
       error instanceof OpenAI.PermissionDeniedError
     ) {
       this.logger.error(`OpenAI rejected OPENAI_API_KEY (${error.status}): ${error.message}`);
-      return new ServiceUnavailableException(
-        detail('AI features are not set up correctly on this server.', error),
-      );
+      return new ServiceUnavailableException(detail('aiMisconfigured', error));
     }
     if (error instanceof OpenAI.NotFoundError) {
       this.logger.error(`${what}: unknown model, check ${s.modelVar}: ${error.message}`);
-      return new BadGatewayException(detail('The AI service failed. Try again.', error));
+      return new BadGatewayException(detail('aiFailed', error));
     }
     if (error instanceof OpenAI.BadRequestError) {
       const param = error.param ? ` (${error.param})` : '';
       this.logger.error(`${what}: OpenAI rejected the request${param}: ${error.message}`);
       if (/image/i.test(`${error.param ?? ''} ${error.message}`)) {
-        return new BadRequestException("The photo couldn't be read. Try another one.");
+        return new BadRequestException(apiError('photoUnreadable'));
       }
-      return new BadGatewayException(detail('The AI service failed. Try again.', error));
+      return new BadGatewayException(detail('aiFailed', error));
     }
     if (error instanceof OpenAI.APIError) {
       this.logger.warn(
         `${what}: OpenAI API error ${error.status} after ${after}: ${error.message}`,
       );
-      return new BadGatewayException('The AI service failed. Try again.');
+      return new BadGatewayException(apiError('aiFailed'));
     }
     return error;
   }

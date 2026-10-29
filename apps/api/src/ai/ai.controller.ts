@@ -18,6 +18,7 @@ import { ApiBearerAuth, ApiOperation, ApiProduces, ApiQuery, ApiTags } from '@ne
 import { Throttle } from '@nestjs/throttler';
 import { LANG_IDS, type Lang } from '@taiwan-mandarin/shared';
 import {
+  apiError,
   ExplainRequestSchema,
   LangSchema,
   TalkRequestSchema,
@@ -155,9 +156,7 @@ export class AiController {
   /** Before charging the quota: a server without OpenAI answers 503 and keeps the learner's quota. */
   private requireAi(): void {
     if (!this.llm.available) {
-      throw new ServiceUnavailableException(
-        'AI features are not set up on this server (OPENAI_API_KEY).',
-      );
+      throw new ServiceUnavailableException(apiError('aiNotSetUp'));
     }
   }
 }

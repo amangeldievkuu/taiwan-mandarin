@@ -9,6 +9,7 @@
   import Reading from './Reading.svelte';
   import SignInPrompt from './SignInPrompt.svelte';
   import { ApiError, apiStream } from '../lib/api';
+  import { errorText } from '../lib/i18n/errors';
   import { locale, t } from '../lib/i18n/index.svelte';
   import { photoToBase64 } from '../lib/image';
   import { canSpeak, speak } from '../lib/speech';
@@ -68,11 +69,12 @@
         else if (event.type === 'translation') view.translation = event.text;
         else if (event.type === 'token') view.tokens.push(event.token);
         else if (event.type === 'done') view = { ...event.result, done: true };
-        else if (event.type === 'error') throw new ApiError(event.status, event.message);
+        else if (event.type === 'error')
+          throw new ApiError(event.status, event.message, { code: event.code });
       }
       if (view && !view.done && !mine.signal.aborted) error = t().explain.stoppedEarly;
     } catch (e) {
-      if (!mine.signal.aborted) error = e instanceof Error ? e.message : String(e);
+      if (!mine.signal.aborted) error = errorText(e);
     } finally {
       if (controller === mine) {
         controller = null;

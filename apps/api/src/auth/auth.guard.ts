@@ -18,6 +18,7 @@ import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { sha256 } from './crypto.js';
+import { apiError } from '@taiwan-mandarin/shared/api';
 
 export interface AuthUser {
   id: string;
@@ -66,7 +67,7 @@ export class AuthGuard implements CanActivate {
     try {
       payload = await this.jwt.verifyAsync<typeof payload>(token);
     } catch {
-      throw new UnauthorizedException('Session expired');
+      throw new UnauthorizedException(apiError('sessionExpired'));
     }
     // Ended since it was issued (password changed, signed out everywhere), or the account is gone.
     const user = await this.db.user.findUnique({
@@ -75,7 +76,7 @@ export class AuthGuard implements CanActivate {
     });
     const issuedAt = payload.iatMs ?? (payload.iat ?? 0) * 1000;
     if (!user || (user.sessionsValidFrom && issuedAt < user.sessionsValidFrom.getTime())) {
-      throw new UnauthorizedException('Session expired');
+      throw new UnauthorizedException(apiError('sessionExpired'));
     }
     request.user = { id: payload.sub, via: 'session' };
     return true;

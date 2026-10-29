@@ -29,6 +29,7 @@ import type {
 } from '@taiwan-mandarin/shared/api';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { randomToken, sha256 } from './crypto.js';
+import { apiError } from '@taiwan-mandarin/shared/api';
 
 export const ACCESS_TTL_SECONDS = 15 * 60;
 export const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -63,7 +64,7 @@ export class AuthService {
   async register(body: RegisterBody, userAgent?: string): Promise<Session> {
     const email = body.email.toLowerCase();
     if (await this.db.user.findUnique({ where: { email } })) {
-      throw new ConflictException('An account with this email already exists');
+      throw new ConflictException(apiError('emailTaken'));
     }
     const user = await this.db.user.create({
       data: {
@@ -81,18 +82,18 @@ export class AuthService {
     const ok = await argon2
       .verify(user?.passwordHash ?? (await DUMMY_HASH), body.password)
       .catch(() => false);
-    if (!user || !ok) throw new UnauthorizedException('Wrong email or password');
+    if (!user || !ok) throw new UnauthorizedException(apiError('wrongLogin'));
     return this.issue(user, randomUUID(), userAgent);
   }
 
   async refresh(token: string | undefined, userAgent?: string): Promise<Session> {
-    if (!token) throw new UnauthorizedException('Not signed in');
+    if (!token) throw new UnauthorizedException(apiError('notSignedIn'));
     const stored = await this.db.refreshToken.findUnique({
       where: { tokenHash: sha256(token) },
       include: { user: true },
     });
     if (!stored || stored.expiresAt < new Date())
-      throw new UnauthorizedException('Session expired');
+      throw new UnauthorizedException(apiError('sessionExpired'));
     this.sweep(stored.userId);
     if (!stored.revokedAt) {
       // Revoke and replace in one transaction: a parallel refresh with the same cookie waits on
@@ -120,7 +121,7 @@ export class AuthService {
       where: { family: stored.family, revokedAt: null },
       data: { revokedAt: new Date() },
     });
-    throw new UnauthorizedException('Session expired');
+    throw new UnauthorizedException(apiError('sessionExpired'));
   }
 
   /**
@@ -177,7 +178,7 @@ export class AuthService {
     const user = await this.db.user.findUnique({ where: { id: userId } });
     if (!user) throw new UnauthorizedException();
     const ok = await argon2.verify(user.passwordHash, body.currentPassword).catch(() => false);
-    if (!ok) throw new ForbiddenException('The current password is wrong');
+    if (!ok) throw new ForbiddenException(apiError('wrongPassword'));
     await this.db.user.update({
       where: { id: userId },
       data: {

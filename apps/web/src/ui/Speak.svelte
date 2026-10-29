@@ -6,6 +6,7 @@
   import type { PronounceResult, SyllableResult } from '@taiwan-mandarin/shared/api';
   import Icon from './Icon.svelte';
   import { api } from '../lib/api';
+  import { errorText } from '../lib/i18n/errors';
   import { t } from '../lib/i18n/index.svelte';
   import { recorder, toWav } from '../lib/recorder.svelte';
   import { canSpeak, speak } from '../lib/speech';
@@ -50,7 +51,7 @@
         body: { audio: btoa(binary), target, ...(pinyin ? { pinyin } : {}) },
       });
     } catch (e) {
-      error = e instanceof Error ? e.message : String(e);
+      error = errorText(e);
     } finally {
       checking = false;
     }

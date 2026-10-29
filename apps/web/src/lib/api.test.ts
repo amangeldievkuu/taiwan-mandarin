@@ -130,3 +130,13 @@ describe('api', () => {
     });
   });
 });
+
+describe('error codes', () => {
+  it('come from the server’s body, or the app’s own failure', () => {
+    expect(new ApiError(400, 'x', { message: 'x', code: 'wrongLogin' }).code).toBe('wrongLogin');
+    expect(new ApiError(429, 'x', { code: 'dailyLimit', params: { limit: 5 } }).params).toEqual({
+      limit: 5,
+    });
+    expect(new ApiError(500, 'x').code).toBeUndefined();
+  });
+});

@@ -15,6 +15,7 @@ import {
 } from '@nestjs/common';
 import OpenAI, { toFile } from 'openai';
 import { ENV, type Env } from '../config/env.js';
+import { apiError } from '@taiwan-mandarin/shared/api';
 
 export interface Transcript {
   text: string;
@@ -90,14 +91,14 @@ export class WhisperService implements OnModuleInit {
     } catch (error) {
       if (error instanceof OpenAI.APIConnectionTimeoutError) {
         this.logger.warn(`transcribe ${this.model}: timed out (OPENAI_TIMEOUT_MS)`);
-        throw new GatewayTimeoutException('Speech recognition took too long. Try again.');
+        throw new GatewayTimeoutException(apiError('speechTimeout'));
       }
       if (error instanceof OpenAI.RateLimitError) {
-        throw new ServiceUnavailableException('Speech recognition is busy. Try again in a minute.');
+        throw new ServiceUnavailableException(apiError('speechBusy'));
       }
       if (error instanceof OpenAI.APIError) {
         this.logger.warn(`transcribe ${this.model}: error ${error.status}: ${error.message}`);
-        throw new BadGatewayException('Speech recognition failed. Try again.');
+        throw new BadGatewayException(apiError('speechFailed'));
       }
       throw error;
     }

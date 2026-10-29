@@ -23,6 +23,7 @@ import {
   type Word,
 } from '@taiwan-mandarin/shared';
 import {
+  apiError,
   SCENARIOS,
   SettingsSchema,
   type ScenarioId,
@@ -236,9 +237,9 @@ export class TalkService {
       this.vocabulary(userId),
     ]);
     if (request.conversationId && !conversation)
-      throw new NotFoundException('No such conversation');
+      throw new NotFoundException(apiError('conversationMissing'));
     if (conversation && conversation.userId !== userId) throw new ForbiddenException();
-    if (conversation?.endedAt) throw new ConflictException('This conversation has ended.');
+    if (conversation?.endedAt) throw new ConflictException(apiError('conversationEnded'));
     const scenario = (conversation?.scenario as ScenarioId | undefined) ?? request.scenario;
 
     const history = [...(conversation?.messages ?? [])].reverse();
@@ -411,7 +412,7 @@ export class TalkService {
       where: { id },
       include: { messages: { orderBy: { createdAt: 'asc' } } },
     });
-    if (!conversation) throw new NotFoundException('No such conversation');
+    if (!conversation) throw new NotFoundException(apiError('conversationMissing'));
     if (conversation.userId !== userId) throw new ForbiddenException();
     return conversation;
   }

@@ -18,6 +18,7 @@ import { z } from 'zod';
 import { ContentService } from '../content/content.service.js';
 import { LlmService, type LlmContent, type StructuredRequest } from './llm.service.js';
 import { EXACT_TEXT, PINYIN_FORMAT, TAIWAN_STYLE } from './taiwan-style.js';
+import { apiError } from '@taiwan-mandarin/shared/api';
 
 // Keys in the order the answer streams: what the learner wants first comes first.
 const Token = z.object({
@@ -161,7 +162,7 @@ export class ExplainService {
           notes: [],
         };
         if (!answer.translation && !answer.tokens.length) {
-          throw new BadGatewayException('The AI answer was cut off. Try again.');
+          throw new BadGatewayException(apiError('aiCutOff'));
         }
         yield { type: 'done', result: this.enrich(answer, typed, { cut: true, lang }) };
         return;

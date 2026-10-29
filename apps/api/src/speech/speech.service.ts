@@ -22,6 +22,7 @@ import { toTaiwanCharacters } from '@taiwan-mandarin/shared/taiwan-standard';
 import { ContentService } from '../content/content.service.js';
 import { readWav } from './wav.js';
 import { WhisperService, type Transcript } from './whisper.service.js';
+import { apiError } from '@taiwan-mandarin/shared/api';
 
 const HAN = /\p{Script=Han}/u;
 const toneless = (p: string) => p.replace(/[1-5]/g, '');
@@ -79,15 +80,14 @@ export class SpeechService {
     try {
       pcm = readWav(wav);
     } catch (e) {
-      throw new BadRequestException(e instanceof Error ? e.message : 'Unreadable audio');
+      const body = apiError('audioUnreadable');
+      throw new BadRequestException(e instanceof Error ? { ...body, message: e.message } : body);
     }
     if (pcm.samples.length / pcm.sampleRate > 15)
-      throw new BadRequestException('Keep recordings under 15 seconds');
+      throw new BadRequestException(apiError('recordingTooLong'));
     this.target(request);
     if (peak(pcm.samples) < SILENCE) {
-      throw new BadRequestException(
-        "Didn't catch any speech. Try again a little closer to the microphone.",
-      );
+      throw new BadRequestException(apiError('noSpeech'));
     }
     await charge();
 

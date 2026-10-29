@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { dayKeyIn } from '@taiwan-mandarin/shared';
 import { ENV, type Env } from '../config/env.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { apiError } from '@taiwan-mandarin/shared/api';
 
 export type QuotaKind = 'ai' | 'speech';
 
@@ -38,7 +39,7 @@ export class QuotaService {
     });
     if (row.count > this.limit(kind)) {
       throw new HttpException(
-        `Daily limit reached (${this.limit(kind)}). It resets tomorrow.`,
+        apiError('dailyLimit', { limit: this.limit(kind) }),
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }

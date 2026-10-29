@@ -4,6 +4,7 @@
 
 import { HttpException, Logger } from '@nestjs/common';
 import type { Response } from 'express';
+import { apiError, type ApiErrorCode, type ExplainStreamEvent } from '@taiwan-mandarin/shared/api';
 
 const logger = new Logger('Ndjson');
 
@@ -46,10 +47,11 @@ export async function writeNdjson(
   }
 }
 
-function errorEvent(error: unknown): { type: 'error'; status: number; message: string } {
+function errorEvent(error: unknown): ExplainStreamEvent & { type: 'error' } {
   if (error instanceof HttpException) {
     const body = error.getResponse();
-    const message = typeof body === 'string' ? body : (body as { message?: unknown }).message;
+    const { message, code } =
+      typeof body === 'string' ? { message: body, code: undefined } : (body as ErrorBody);
     return {
       type: 'error',
       status: error.getStatus(),
@@ -58,8 +60,14 @@ function errorEvent(error: unknown): { type: 'error'; status: number; message: s
         : typeof message === 'string'
           ? message
           : error.message,
+      ...(code ? { code } : {}),
     };
   }
   logger.error(error instanceof Error ? (error.stack ?? error.message) : String(error));
-  return { type: 'error', status: 500, message: 'Something went wrong. Try again.' };
+  return { type: 'error', status: 500, ...apiError('unexpected') };
+}
+
+interface ErrorBody {
+  message?: unknown;
+  code?: ApiErrorCode;
 }

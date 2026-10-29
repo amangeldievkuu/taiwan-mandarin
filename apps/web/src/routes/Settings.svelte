@@ -7,6 +7,7 @@
   import { api } from '../lib/api';
   import { companion } from '../lib/companion.svelte';
   import { feedback } from '../lib/feedback.svelte';
+  import { errorText } from '../lib/i18n/errors';
   import { t } from '../lib/i18n/index.svelte';
   import { store } from '../lib/store.svelte';
   import { account } from '../lib/sync.svelte';
@@ -35,7 +36,7 @@
       await store.resetProgress();
       confirmReset = false;
     } catch (e) {
-      resetError = e instanceof Error ? e.message : String(e);
+      resetError = errorText(e);
     } finally {
       resetting = false;
     }

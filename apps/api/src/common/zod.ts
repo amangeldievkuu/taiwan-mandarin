@@ -3,6 +3,7 @@
 
 import { applyDecorators, BadRequestException, Body, type PipeTransform } from '@nestjs/common';
 import { ApiBody } from '@nestjs/swagger';
+import { errorCodeOf } from '@taiwan-mandarin/shared/api';
 import { z } from 'zod';
 
 export class ZodPipe<T extends z.ZodType> implements PipeTransform<unknown, z.infer<T>> {
@@ -15,8 +16,11 @@ export class ZodPipe<T extends z.ZodType> implements PipeTransform<unknown, z.in
         path: i.path.join('.'),
         message: i.message,
       }));
-      // The first problem, so a form can show it as it is; the schemas word their own messages.
-      throw new BadRequestException({ message: issues[0]?.message ?? 'Invalid request', issues });
+      // The first problem, so a form can show it as it is; the schemas word their own messages,
+      // and the shared ones have a code an app can show in its language.
+      const message = issues[0]?.message ?? 'Invalid request';
+      const code = errorCodeOf(message);
+      throw new BadRequestException({ message, ...(code ? { code } : {}), issues });
     }
     return result.data;
   }

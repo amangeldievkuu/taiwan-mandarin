@@ -3,7 +3,8 @@
 // plurals its own way. Chinese stays in the components: it is what the learner learns.
 
 import { LEVELS, TOPICS, type Level, type TopicId } from '@taiwan-mandarin/shared';
-import { SCENARIOS, type ScenarioId } from '@taiwan-mandarin/shared/api';
+import { ERRORS, SCENARIOS, type ApiErrorCode, type ScenarioId } from '@taiwan-mandarin/shared/api';
+import type { ClientErrorCode } from '../api';
 import type { RouteName } from '../router.svelte';
 
 const byId = <K extends string>(rows: readonly { id: K; en: string }[]) =>
@@ -375,6 +376,15 @@ export const en = {
     sessionEnded: 'Your session ended. Sign in again.',
     server: 'The server had a problem. Try again in a moment.',
     generic: 'Something went wrong.',
+    /** Errors by code: the API's ("{limit}" is filled in) and the app's own. */
+    codes: {
+      ...ERRORS,
+      offline: "Can't reach the server.",
+      serverTimeout: 'The server took too long to answer. Try again.',
+      noStreams: 'This browser cannot read streamed answers.',
+      streamStalled: 'The answer stopped arriving. Try again.',
+      signedOut: 'Signed out',
+    } as Record<ApiErrorCode | ClientErrorCode, string>,
   },
 
   study: {
