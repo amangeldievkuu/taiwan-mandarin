@@ -84,6 +84,15 @@
         ]}
       />
     </SettingRow>
+    {#if store.settings.language === 'vi'}
+      <SettingRow label={t().settings.hanViet} hint={t().settings.hanVietHint}>
+        <Switch
+          checked={store.settings.hanViet}
+          label={t().settings.hanViet}
+          onchange={(hanViet) => store.updateSettings({ hanViet })}
+        />
+      </SettingRow>
+    {/if}
     <SettingRow label={t().settings.theme} stacked>
       <Segmented
         label={t().settings.theme}

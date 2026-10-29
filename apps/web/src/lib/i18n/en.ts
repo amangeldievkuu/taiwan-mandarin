@@ -242,6 +242,8 @@ export const en = {
     characterStyle: 'Character style',
     kai: 'Kai',
     sans: 'Sans',
+    hanViet: 'Sino-Vietnamese readings',
+    hanVietHint: 'Shown under the meaning: 國家 quốc gia',
     theme: 'Theme',
     auto: 'Auto',
     light: 'Light',

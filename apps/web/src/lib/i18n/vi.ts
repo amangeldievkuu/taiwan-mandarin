@@ -264,6 +264,8 @@ export const vi: Messages = {
     characterStyle: 'Kiểu chữ Hán',
     kai: 'Chữ Khải',
     sans: 'Không chân',
+    hanViet: 'Âm Hán-Việt',
+    hanVietHint: 'Hiện dưới nghĩa của từ: 國家 quốc gia',
     theme: 'Giao diện',
     auto: 'Tự động',
     light: 'Sáng',

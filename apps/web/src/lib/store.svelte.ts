@@ -375,6 +375,7 @@ class Store {
   private applyLanguage(): void {
     locale.lang = this.settings.language;
     locale.hanViet = this.settings.hanViet;
+    content.setLanguage(this.settings.language);
   }
 
   async updateSettings(patch: Partial<Settings>): Promise<void> {
