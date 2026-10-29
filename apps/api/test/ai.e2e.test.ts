@@ -133,6 +133,27 @@ describe('explain', () => {
     expect(calls.at(-1)?.system).toContain('first language is English');
   });
 
+  it('explains in Russian when asked', async () => {
+    if (!(await hasContent())) return;
+    calls.length = 0;
+    replies = [
+      {
+        source: '垃圾不落地',
+        translation: 'Не бросай мусор на землю',
+        tokens: [{ text: '垃圾', pinyin: 'le4 se4', gloss: null, note: null }],
+        grammar: [],
+        notes: [],
+      },
+    ];
+    const res = await request(http)
+      .post('/v1/ai/explain')
+      .set(auth())
+      .send({ text: '垃圾不落地', lang: 'ru' });
+    expect(res.status).toBe(200);
+    expect(calls.at(-1)?.system).toContain('first language is Russian');
+    expect(res.body.tokens[0].gloss).toBeTruthy();
+  });
+
   it('falls back to its own segmentation when the model’s tokens don’t match', async () => {
     if (!(await hasContent())) return;
     replies = [

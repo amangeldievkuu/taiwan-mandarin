@@ -47,7 +47,7 @@ const PhotoAnswer = z.object({
 type Answer = z.infer<typeof TextAnswer> & { source?: string };
 
 /** The learner's language as the instructions name it. */
-const LANGUAGE: Record<Lang, string> = { en: 'English', vi: 'Vietnamese' };
+const LANGUAGE: Record<Lang, string> = { en: 'English', vi: 'Vietnamese', ru: 'Russian' };
 
 const system = (
   language: string,
@@ -65,7 +65,11 @@ What to return:
 - notes: up to four short notes in ${language}: register and politeness, what kind of text it is, cultural context, and Taiwan-specific usage. If the text is in Simplified characters or uses Mainland wording, say so and give the Taiwan form.`;
 
 /** Built once per language and kept identical, so the provider can cache the prompt. */
-const SYSTEM: Record<Lang, string> = { en: system(LANGUAGE.en), vi: system(LANGUAGE.vi) };
+const SYSTEM: Record<Lang, string> = {
+  en: system(LANGUAGE.en),
+  vi: system(LANGUAGE.vi),
+  ru: system(LANGUAGE.ru),
+};
 
 /** The Taiwan-standard warnings, in the learner's language. */
 const WARNINGS: Record<
@@ -88,6 +92,12 @@ const WARNINGS: Record<
     form: (expected) => `Đài Loan viết là “${expected}”`,
     term: (term, taiwan) => `Từ của Đại lục: ${term}; Đài Loan dùng ${taiwan}`,
     cut: 'Câu trả lời bị cắt ngắn; những từ cuối lấy từ từ điển.',
+  },
+  ru: {
+    yours: 'Твой текст',
+    form: (expected) => `На Тайване пишут «${expected}»`,
+    term: (term, taiwan) => `Слово материкового Китая: ${term}; на Тайване говорят ${taiwan}`,
+    cut: 'Ответ оборвался; последние слова взяты из словаря.',
   },
 };
 

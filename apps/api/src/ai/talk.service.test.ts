@@ -26,6 +26,8 @@ describe('RULES', () => {
     expect(RULES.vi).toContain('translation: natural Vietnamese');
     expect(RULES.vi).toContain('If they write Vietnamese, English or pinyin');
     expect(RULES.vi).toContain('one or two short Vietnamese sentences');
+    expect(RULES.ru).toContain('translation: natural Russian');
+    expect(RULES.ru).toContain('If they write Russian, English or pinyin');
   });
 
   it('stay the same for every turn, so the provider can cache them', () => {

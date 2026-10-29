@@ -41,6 +41,25 @@ describe('searchRows', () => {
     expect(ids(searchRows(vietnamese, 'học sinh'.normalize('NFD')))).toEqual(['學生']);
   });
 
+  const russian = indexRows([
+    ['茶', '茶', 'cha', 'чай'],
+    ['聖誕樹', '聖誕樹', 'shengdanshu', 'новогодняя ёлка'],
+    ['學生', '學生', 'xuesheng', 'студент; ученик'],
+    ['我的', '我的', 'wode', 'мой'],
+  ]);
+
+  it('reads Russian as meanings, never as pinyin', () => {
+    expect(ids(searchRows(russian, 'чай'))).toEqual(['茶']);
+    expect(ids(searchRows(russian, 'Студент'))).toEqual(['學生']);
+  });
+
+  it('matches ё and е either way, and keeps й a letter of its own', () => {
+    expect(ids(searchRows(russian, 'ёлка'))).toEqual(['聖誕樹']);
+    expect(ids(searchRows(russian, 'елка'))).toEqual(['聖誕樹']);
+    expect(ids(searchRows(russian, 'мой'))).toEqual(['我的']);
+    expect(ids(searchRows(russian, 'мои'))).toEqual([]);
+  });
+
   it('finds the Sino-Vietnamese reading last', () => {
     expect(ids(searchRows(vietnamese, 'bang huu'))).toEqual(['朋友']);
     expect(ids(searchRows(vietnamese, 'quoc gia'))).toEqual(['國家']);

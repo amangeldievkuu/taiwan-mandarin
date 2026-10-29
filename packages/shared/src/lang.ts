@@ -1,11 +1,12 @@
 // The learner's language: the interface, word meanings, translations and AI replies are in it.
 // Chinese is what they learn, so it is never one of these.
 
-export type Lang = 'en' | 'vi';
+export type Lang = 'en' | 'vi' | 'ru';
 
 export const LANGS: readonly { id: Lang; name: string }[] = [
   { id: 'en', name: 'English' },
   { id: 'vi', name: 'Tiếng Việt' },
+  { id: 'ru', name: 'Русский' },
 ];
 
 export const LANG_IDS = LANGS.map((l) => l.id) as [Lang, ...Lang[]];
@@ -31,9 +32,10 @@ export const foldLatin = (text: string): string =>
     .normalize('NFC')
     .replace(/đ/g, 'd');
 
-// Breve (ă), circumflex (â ê ô), tilde, hook above, horn (ơ ư), dot below: marks pinyin never uses.
-const VIETNAMESE_MARKS = /[\u0302\u0303\u0306\u0309\u031b\u0323]|đ/iu;
+// Breve (ă), circumflex (â ê ô), tilde, hook above, horn (ơ ư), dot below on a Latin letter: marks
+// pinyin never uses.
+const VIETNAMESE_MARKS = /\p{Script=Latin}[\u0302\u0303\u0306\u0309\u031b\u0323]|đ/iu;
 
-/** Text that can only be Vietnamese, not pinyin ("bạn", "đi", "ăn"; not "ban", "nǚ", "mā"). */
+/** Text that can only be Vietnamese, not pinyin ("bạn", "đi", "ăn"; not "ban", "nǚ", "mā", "мой"). */
 export const looksVietnamese = (text: string): boolean =>
   VIETNAMESE_MARKS.test(text.normalize('NFD'));

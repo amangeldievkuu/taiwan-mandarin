@@ -76,7 +76,7 @@ const PARTNERS: Record<ScenarioId, string> = {
 };
 
 /** The learner's language as the instructions name it. */
-const LANGUAGE: Record<Lang, string> = { en: 'English', vi: 'Vietnamese' };
+const LANGUAGE: Record<Lang, string> = { en: 'English', vi: 'Vietnamese', ru: 'Russian' };
 
 // The same for every learner and turn in a language, so it heads the prompt (the cacheable part).
 const rules = (
@@ -102,7 +102,11 @@ correction (about the learner's last message only):
 
 If there is no learner message yet, open the conversation as your character would.`;
 
-export const RULES: Record<Lang, string> = { en: rules(LANGUAGE.en), vi: rules(LANGUAGE.vi) };
+export const RULES: Record<Lang, string> = {
+  en: rules(LANGUAGE.en),
+  vi: rules(LANGUAGE.vi),
+  ru: rules(LANGUAGE.ru),
+};
 
 // Sent after the learner's "（我要走了。）" when they end the conversation.
 const CLOSING = `The learner is ending the conversation now. Say goodbye as your character would, in one short, warm sentence with known words, and do not ask anything. correction: null.`;

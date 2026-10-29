@@ -11,7 +11,7 @@ export function detectLanguage(preferred: readonly string[]): Lang {
   return 'en';
 }
 
-/** A first visit's language: the browser's, when it prefers Vietnamese to English. */
+/** A first visit's language: the browser's, when it prefers Vietnamese or Russian to English. */
 export const firstRunLanguage = (): Lang =>
   typeof navigator === 'undefined'
     ? 'en'

@@ -19,7 +19,7 @@ describe('looksVietnamese', () => {
   it.each(['ăn', 'đi', 'Đài', 'bạn', 'học', 'người', 'mỹ', 'phở', 'cũng'])('%s: yes', (text) =>
     expect(looksVietnamese(text)).toBe(true),
   );
-  it.each(['ban', 'nǚ', 'mā', 'xiè', 'jie yun', 'lüè', 'cafe'])('%s: no', (text) =>
+  it.each(['ban', 'nǚ', 'mā', 'xiè', 'jie yun', 'lüè', 'cafe', 'мой', 'чай'])('%s: no', (text) =>
     expect(looksVietnamese(text)).toBe(false),
   );
 });
@@ -27,6 +27,7 @@ describe('looksVietnamese', () => {
 describe('isLang', () => {
   it('accepts the app languages only', () => {
     expect(isLang('vi')).toBe(true);
+    expect(isLang('ru')).toBe(true);
     expect(isLang('en')).toBe(true);
     expect(isLang('fr')).toBe(false);
     expect(isLang(undefined)).toBe(false);

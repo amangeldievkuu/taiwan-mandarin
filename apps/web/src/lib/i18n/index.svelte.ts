@@ -5,11 +5,12 @@
 import type { Lang } from '@taiwan-mandarin/shared';
 import { en, type Messages } from './en';
 import { formatNumber, locale } from './locale.svelte';
+import { ru } from './ru';
 import { vi } from './vi';
 
 export { formatNumber, intlLocale, locale } from './locale.svelte';
 
-const CATALOGS: Record<Lang, Messages> = { en, vi };
+const CATALOGS: Record<Lang, Messages> = { en, vi, ru };
 
 /** The words of the current language. */
 export const t = (): Messages => CATALOGS[locale.lang];

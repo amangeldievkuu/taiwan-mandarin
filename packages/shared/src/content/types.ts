@@ -221,10 +221,15 @@ export interface ReaderToken {
   g?: string;
   /** `g` in Vietnamese (Vietnamese files). */
   gv?: string;
+  /** `g` in Russian (Russian files). */
+  gr?: string;
 }
 
 /** The field of a reader token that holds `g` in each other language. */
-export const TOKEN_GLOSS = { vi: 'gv' } as const satisfies Record<ForeignLang, keyof ReaderToken>;
+export const TOKEN_GLOSS = { vi: 'gv', ru: 'gr' } as const satisfies Record<
+  ForeignLang,
+  keyof ReaderToken
+>;
 
 /** A reader as built; each other language's files add its title, summary and translation. */
 export interface Reader

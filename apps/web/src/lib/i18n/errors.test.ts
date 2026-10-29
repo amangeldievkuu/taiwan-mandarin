@@ -17,6 +17,8 @@ describe('errorText', () => {
     expect(errorText(new ApiError(0, "Can't reach the server.", { code: 'offline' }))).toBe(
       'Không kết nối được máy chủ.',
     );
+    locale.lang = 'ru';
+    expect(errorText(limit)).toBe('Дневной лимит исчерпан (5). Завтра он обновится.');
   });
 
   it('falls back to plain words for server failures, else the server’s own', () => {

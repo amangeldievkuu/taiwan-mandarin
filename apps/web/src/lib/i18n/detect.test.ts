@@ -7,6 +7,8 @@ describe('detectLanguage', () => {
     [['vi'], 'vi'],
     [['en-US', 'vi'], 'en'],
     [['fr-FR', 'vi-VN'], 'vi'],
+    [['ru-RU', 'en'], 'ru'],
+    [['en-US', 'ru'], 'en'],
     [['zh-TW', 'ja'], 'en'],
     [[], 'en'],
   ])('%j → %s', (preferred, lang) => expect(detectLanguage(preferred)).toBe(lang));

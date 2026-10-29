@@ -7,7 +7,7 @@ import { ru } from './ru';
 import { vi } from './vi';
 
 /** Every catalog but the English one it follows. */
-const OTHERS: [string, Messages][] = [
+const OTHERS: [Lang, Messages][] = [
   ['vi', vi],
   ['ru', ru],
 ];
@@ -43,7 +43,7 @@ describe('catalogs', () => {
     expect(shape(catalog)).toEqual(shape(en));
   });
 
-  it.each([['en', en] as [string, Messages], ...OTHERS])(
+  it.each([['en', en] as [Lang, Messages], ...OTHERS])(
     'have no empty strings in %s',
     (_, catalog) => {
       for (const [path, text] of strings(catalog)) expect(text.trim(), path).not.toBe('');
@@ -66,16 +66,16 @@ describe('catalogs', () => {
 
 describe('formatInterval', () => {
   it.each<[number, Record<Lang, string>]>([
-    [30_000, { en: '<1m', vi: '<1 ph' }],
-    [10 * 60_000, { en: '10m', vi: '10 ph' }],
-    [3 * 3_600_000, { en: '3h', vi: '3 giờ' }],
-    [86_400_000, { en: '1d', vi: '1 ngày' }],
-    [4 * 86_400_000, { en: '4d', vi: '4 ngày' }],
-    [62 * 86_400_000, { en: '2mo', vi: '2 th' }],
-    [548 * 86_400_000, { en: '1.5y', vi: '1,5 năm' }],
-    [59.6 * 60_000, { en: '1h', vi: '1 giờ' }],
-    [23.6 * 3_600_000, { en: '1d', vi: '1 ngày' }],
-    [29.7 * 86_400_000, { en: '1mo', vi: '1 th' }],
+    [30_000, { en: '<1m', vi: '<1 ph', ru: '<1 мин' }],
+    [10 * 60_000, { en: '10m', vi: '10 ph', ru: '10 мин' }],
+    [3 * 3_600_000, { en: '3h', vi: '3 giờ', ru: '3 ч' }],
+    [86_400_000, { en: '1d', vi: '1 ngày', ru: '1 дн' }],
+    [4 * 86_400_000, { en: '4d', vi: '4 ngày', ru: '4 дн' }],
+    [62 * 86_400_000, { en: '2mo', vi: '2 th', ru: '2 мес' }],
+    [548 * 86_400_000, { en: '1.5y', vi: '1,5 năm', ru: '1,5 г.' }],
+    [59.6 * 60_000, { en: '1h', vi: '1 giờ', ru: '1 ч' }],
+    [23.6 * 3_600_000, { en: '1d', vi: '1 ngày', ru: '1 дн' }],
+    [29.7 * 86_400_000, { en: '1mo', vi: '1 th', ru: '1 мес' }],
   ])('%d ms → %o', (ms, expected) => {
     for (const [lang, text] of Object.entries(expected)) {
       locale.lang = lang as Lang;

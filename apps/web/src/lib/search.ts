@@ -1,6 +1,7 @@
 // Finding study-path words by characters, toneless pinyin or meaning. Typed without accents, a
 // meaning matches loosely ("hoc sinh" finds "học sinh"); typed with them, exactly ("bạn" finds
-// 朋友, not 班 ban). Text that can only be Vietnamese is never read as pinyin.
+// 朋友, not 班 ban). Russian matches ё and е either way ("елка" and "ёлка"). Text that can only be
+// Vietnamese, and Russian, is never read as pinyin.
 
 import { foldLatin, looksVietnamese, plainPinyin, type SearchRow } from '@taiwan-mandarin/shared';
 
@@ -56,7 +57,8 @@ export function searchRows(index: SearchIndex, query: string, limit = 40): Searc
     const plain = looksVietnamese(q) ? '' : plainPinyin(q);
     const typed = q.normalize('NFC').toLowerCase();
     const folded = foldLatin(q);
-    const accented = folded !== typed;
+    // Latin accents tell Vietnamese words apart; Russian's ё is often written е.
+    const accented = /\p{Script=Latin}/u.test(q) && folded !== typed;
     const glosses = accented ? index.glosses : index.folded;
     const hanViet = accented ? index.hanViet : index.hanVietFolded;
     const word = accented ? typed : folded;

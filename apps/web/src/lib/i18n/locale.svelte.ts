@@ -9,6 +9,7 @@ export const locale = $state<{ lang: Lang; hanViet: boolean }>({ lang: 'en', han
 const INTL: Record<Lang, { dates: string; numbers: string }> = {
   en: { dates: 'en-GB', numbers: 'en-US' },
   vi: { dates: 'vi-VN', numbers: 'vi-VN' },
+  ru: { dates: 'ru-RU', numbers: 'ru-RU' },
 };
 
 /** The locale for dates. */
