@@ -25,6 +25,7 @@ import {
   setSession,
 } from './api';
 import type { CardRecord } from './storage';
+import { t } from './i18n/index.svelte';
 import { store } from './store.svelte';
 import { toasts } from './toast.svelte';
 
@@ -152,8 +153,8 @@ class Account {
     if (was) {
       toasts.show({
         kind: 'info',
-        title: 'Signed out',
-        body: 'Your session ended. Sign in again to keep syncing.',
+        title: t().sync.signedOut,
+        body: t().sync.signedOutBody,
       });
     }
   }

@@ -540,6 +540,79 @@ export const en = {
 
   chips: (days: number, seams: number, xp: number) =>
     `${days}-day streak${seams ? `, ${seams} gold seams` : ''}, ${xp} XP`,
+
+  read: {
+    eyebrow: 'Graded reading',
+    intro:
+      'Short texts about everyday life in Taiwan, written for each TOCFL level. Tap any word to ' +
+      'see it in the dictionary and add it to your deck.',
+    loadFailed: "Couldn't load the readers.",
+    none: 'No readers yet.',
+    draft: 'Draft',
+    draftTitle: 'Written with AI, not yet reviewed',
+    length: (chars: number, minutes: number) => `${chars} 字 · ~${minutes} min`,
+    knownTitle: "Words you've started studying",
+    known: (percent: number) => `${percent}% known`,
+  },
+
+  reader: {
+    draft: 'Draft, not yet reviewed',
+    readings: 'Readings',
+    stop: 'Stop',
+    newToYou: 'new to you',
+    aboveLevel: 'above this level',
+    /** The button that shows a paragraph's translation: the language it is in. */
+    translation: 'English',
+    listenParagraph: 'Listen to this paragraph',
+    missing: "This reader doesn't exist.",
+  },
+
+  explain: {
+    label: 'Chinese text to explain',
+    placeholder: 'Paste Chinese text: a sign, a menu, a LINE message…',
+    photoAlt: 'Selected sign or menu',
+    removePhoto: 'Remove photo',
+    photo: 'Photo',
+    explain: 'Explain',
+    signIn:
+      'Sign in to get an AI breakdown with translation, grammar and notes. Without an account ' +
+      'you can still tap through the text word by word.',
+    stoppedEarly: 'The answer stopped early. Try again.',
+    readingPhoto: 'Reading the photo…',
+    translating: 'Translating…',
+    wordByWord: 'Word by word',
+    deck: 'Deck',
+    grammar: 'Grammar',
+    notes: 'Notes',
+    check: (warnings: string) => `Taiwan-standard check: ${warnings}`,
+    footnote: 'AI explanation. Readings come from the TOCFL lists and dictionary where possible.',
+  },
+
+  speak: {
+    /** Tone names, 1st to 4th and neutral (5). */
+    tones: ['1st', '2nd', '3rd', '4th', 'neutral'],
+    notHeard: 'Not heard',
+    heard: (syllable: string) => `Heard ${syllable}`,
+    sounded: (heard: string, needed: string) => `Sounded ${heard}, needs ${needed}`,
+    unclear: 'Tone unclear',
+    neutral: 'Neutral tone',
+    good: 'Good',
+    record: 'Record',
+    playMine: 'Play mine',
+    unsupported: "Recording isn't available in this browser.",
+    signIn: 'Sign in to get your syllables and tones checked.',
+    listening: 'Listening…',
+    heardLabel: 'Heard',
+    legend: 'Dashed: the tone you need. Solid: your pitch. Tone checks are approximate.',
+    blocked: 'Microphone access was blocked. Allow it in your browser settings to record.',
+  },
+
+  sync: {
+    signedOut: 'Signed out',
+    signedOutBody: 'Your session ended. Sign in again to keep syncing.',
+    saveFailed: "Couldn't save that answer",
+    saveFailedBody: 'The browser refused to store it. Check free space on this device.',
+  },
 };
 
 export type Messages = typeof en;

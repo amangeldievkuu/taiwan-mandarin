@@ -2,13 +2,14 @@
   // Paste a sign, menu or message from Taiwan (or take a photo of it): translation, word-by-word
   // breakdown with Taiwan readings, grammar and usage notes, streamed in as the AI writes them.
   // Signed out, text can still be tapped through word by word.
-  import { LEVELS, type Level } from '@taiwan-mandarin/shared';
+  import { isLevel, type Level } from '@taiwan-mandarin/shared';
   import type { ExplainResult, ExplainStreamEvent } from '@taiwan-mandarin/shared/api';
   import HanziText from './HanziText.svelte';
   import Icon from './Icon.svelte';
   import Reading from './Reading.svelte';
   import SignInPrompt from './SignInPrompt.svelte';
   import { ApiError, apiStream } from '../lib/api';
+  import { locale, t } from '../lib/i18n/index.svelte';
   import { photoToBase64 } from '../lib/image';
   import { canSpeak, speak } from '../lib/speech';
   import { store } from '../lib/store.svelte';
@@ -57,6 +58,7 @@
         {
           ...(typed ? { text: typed } : {}),
           ...(photo ? { image: { data: photo.data, mediaType: photo.mediaType } } : {}),
+          lang: locale.lang,
         },
         { signal: mine.signal },
       );
@@ -68,8 +70,7 @@
         else if (event.type === 'done') view = { ...event.result, done: true };
         else if (event.type === 'error') throw new ApiError(event.status, event.message);
       }
-      if (view && !view.done && !mine.signal.aborted)
-        error = 'The answer stopped early. Try again.';
+      if (view && !view.done && !mine.signal.aborted) error = t().explain.stoppedEarly;
     } catch (e) {
       if (!mine.signal.aborted) error = e instanceof Error ? e.message : String(e);
     } finally {
@@ -86,7 +87,7 @@
     busy = false;
   }
 
-  const levelLabel = (id?: string) => LEVELS.find((l) => l.id === id)?.en;
+  const levelLabel = (id?: string) => (isLevel(id) ? t().levels[id] : undefined);
   const status = (id?: string) =>
     !id ? null : store.cards[id] ? 'studying' : store.inDeck(id) ? 'deck' : 'new';
 </script>
@@ -96,16 +97,16 @@
     <textarea
       bind:value={text}
       rows="3"
-      aria-label="Chinese text to explain"
-      placeholder="Paste Chinese text: a sign, a menu, a LINE message…"
+      aria-label={t().explain.label}
+      placeholder={t().explain.placeholder}
       lang="zh-Hant-TW"></textarea>
     {#if photo}
       <div class="photo">
-        <img src={photo.preview} alt="Selected sign or menu" />
+        <img src={photo.preview} alt={t().explain.photoAlt} />
         <button
           type="button"
           class="remove"
-          aria-label="Remove photo"
+          aria-label={t().explain.removePhoto}
           onclick={() => (photo = null)}
         >
           <Icon name="close" size={16} />
@@ -122,12 +123,14 @@
         onchange={pick}
       />
       <button type="button" class="btn quiet small" onclick={() => fileInput?.click()}>
-        <Icon name="camera" size={18} /> Photo
+        <Icon name="camera" size={18} />
+        {t().explain.photo}
       </button>
       {#if account.user}
         {#if busy}
           <button type="button" class="btn quiet small" onclick={stop}>
-            <Icon name="close" size={18} /> Stop
+            <Icon name="close" size={18} />
+            {t().reader.stop}
           </button>
         {:else}
           <button
@@ -136,7 +139,8 @@
             disabled={!text.trim() && !photo}
             onclick={explain}
           >
-            <Icon name="sparkle" size={18} /> Explain
+            <Icon name="sparkle" size={18} />
+            {t().explain.explain}
           </button>
         {/if}
       {/if}
@@ -144,10 +148,7 @@
   </div>
 
   {#if !account.user && account.checked}
-    <SignInPrompt
-      seal="解"
-      text="Sign in to get an AI breakdown with translation, grammar and notes. Without an account you can still tap through the text word by word."
-    />
+    <SignInPrompt seal="解" text={t().explain.signIn} />
   {/if}
   {#if error}<p class="error" role="alert">{error}</p>{/if}
 
@@ -159,13 +160,13 @@
           {#if view.source}
             <HanziText text={view.source} class="source-zh" />
           {:else}
-            <p class="waiting">Reading the photo…</p>
+            <p class="waiting">{t().explain.readingPhoto}</p>
           {/if}
           {#if canSpeak && view.source}
             <button
               type="button"
               class="tool"
-              aria-label="Listen"
+              aria-label={t().word.listen}
               onclick={() => view && speak(view.source)}
             >
               <Icon name="speaker" />
@@ -175,12 +176,14 @@
         {#if view.translation}
           <p class="translation">{view.translation}</p>
         {:else if busy}
-          <p class="translation waiting">Translating…</p>
+          <p class="translation waiting">{t().explain.translating}</p>
         {/if}
       </div>
 
       {#if words.length || busy}
-        <h3 class="section-title">Word by word <span class="zh" lang="zh-Hant-TW">逐詞</span></h3>
+        <h3 class="section-title">
+          {t().explain.wordByWord} <span class="zh" lang="zh-Hant-TW">逐詞</span>
+        </h3>
       {/if}
       <ol class="tokens">
         {#each words as token, i (i)}
@@ -201,7 +204,8 @@
                       token.wordId &&
                       store.addToDeck({ id: token.wordId, level: token.level as Level })}
                   >
-                    <Icon name="plus" size={14} /> Deck
+                    <Icon name="plus" size={14} />
+                    {t().explain.deck}
                   </button>
                 {:else}
                   <span class="have"><Icon name="check" size={14} /></span>
@@ -219,7 +223,9 @@
       </ol>
 
       {#if view.grammar.length}
-        <h3 class="section-title">Grammar <span class="zh" lang="zh-Hant-TW">語法</span></h3>
+        <h3 class="section-title">
+          {t().explain.grammar} <span class="zh" lang="zh-Hant-TW">語法</span>
+        </h3>
         <ul class="list notes">
           {#each view.grammar as g, i (i)}
             <li class="row">
@@ -232,23 +238,23 @@
         </ul>
       {/if}
       {#if view.notes.length}
-        <h3 class="section-title">Notes <span class="zh" lang="zh-Hant-TW">說明</span></h3>
+        <h3 class="section-title">
+          {t().explain.notes} <span class="zh" lang="zh-Hant-TW">說明</span>
+        </h3>
         <ul class="list notes">
           {#each view.notes as note, i (i)}<li class="row">{note}</li>{/each}
         </ul>
       {/if}
       {#if view.warnings.length}
-        <p class="footnote">Taiwan-standard check: {view.warnings.join(' · ')}</p>
+        <p class="footnote">{t().explain.check(view.warnings.join(' · '))}</p>
       {/if}
       {#if view.done}
-        <p class="footnote">
-          AI explanation. Readings come from the TOCFL lists and dictionary where possible.
-        </p>
+        <p class="footnote">{t().explain.footnote}</p>
       {/if}
     </article>
   {:else if text.trim() && !busy}
     <div class="sheet tap">
-      <p class="hint">Tap any character to look up the word that starts there.</p>
+      <p class="hint">{t().dict.tapHint}</p>
       <HanziText text={text.trim()} class="tap-text" />
     </div>
   {/if}

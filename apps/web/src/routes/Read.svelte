@@ -1,8 +1,11 @@
 <script lang="ts">
   import Loading from '../ui/Loading.svelte';
-  import { LEVELS, TOPIC_BY_ID, type Reader } from '@taiwan-mandarin/shared';
+  import { LEVELS, type Reader } from '@taiwan-mandarin/shared';
+  import Localized from '../ui/Localized.svelte';
   import Seal from '../ui/Seal.svelte';
   import { content } from '../lib/content.svelte';
+  import { readerSummaryOf, readerTitleOf } from '../lib/i18n/content';
+  import { t } from '../lib/i18n/index.svelte';
   import { router } from '../lib/router.svelte';
   import { store } from '../lib/store.svelte';
   import { LEVEL_SEAL } from './Path.svelte';
@@ -34,25 +37,22 @@
 <div class="page">
   <header class="page-head">
     <div>
-      <p class="eyebrow">Graded reading · 分級閱讀</p>
-      <h1 class="title"><span class="zh">閱讀</span>Read</h1>
+      <p class="eyebrow">{t().read.eyebrow} · 分級閱讀</p>
+      <h1 class="title"><span class="zh">閱讀</span>{t().titles.read}</h1>
     </div>
   </header>
-  <p class="intro">
-    Short texts about everyday life in Taiwan, written for each TOCFL level. Tap any word to see it
-    in the dictionary and add it to your deck.
-  </p>
+  <p class="intro">{t().read.intro}</p>
 
   {#if failed}
-    <p class="empty">Couldn't load the readers.</p>
+    <p class="empty">{t().read.loadFailed}</p>
   {:else if readers === null}
     <Loading />
   {:else if readers.length === 0}
-    <p class="empty"><span class="hanzi" lang="zh-Hant-TW">書</span>No readers yet.</p>
+    <p class="empty"><span class="hanzi" lang="zh-Hant-TW">書</span>{t().read.none}</p>
   {:else}
     {#each groups as { level, items } (level.id)}
       <h2 class="section-title">
-        {level.en} · {level.cefr} <span class="zh" lang="zh-Hant-TW">{level.zh}</span>
+        {t().levels[level.id]} · {level.cefr} <span class="zh" lang="zh-Hant-TW">{level.zh}</span>
       </h2>
       <div class="grid">
         {#each items as reader (reader.id)}
@@ -65,22 +65,25 @@
             <div class="story-top">
               <Seal text={LEVEL_SEAL[reader.level]} size={34} outline />
               <span class="topic">
-                {#if reader.draft}<span class="draft" title="Written with AI, not yet reviewed"
-                    >Draft</span
+                {#if reader.draft}<span class="draft" title={t().read.draftTitle}
+                    >{t().read.draft}</span
                   >{/if}
-                {TOPIC_BY_ID.get(reader.topic)?.en}
+                {t().topics[reader.topic]}
               </span>
             </div>
             <h3 class="story-zh hanzi" lang="zh-Hant-TW">{reader.title}</h3>
-            <p class="story-en">{reader.titleEn}</p>
-            <p class="summary">{reader.summary}</p>
+            <p class="story-en"><Localized value={readerTitleOf(reader)} /></p>
+            <p class="summary"><Localized value={readerSummaryOf(reader)} /></p>
             <div class="story-foot">
               <span class="tabular"
-                >{reader.charCount} 字 · ~{Math.max(1, Math.round(reader.charCount / 150))} min</span
+                >{t().read.length(
+                  reader.charCount,
+                  Math.max(1, Math.round(reader.charCount / 150)),
+                )}</span
               >
-              <span class="known tabular" title="Words you've started studying">
+              <span class="known tabular" title={t().read.knownTitle}>
                 <span class="meter"><span style:width="{share * 100}%"></span></span>
-                {Math.round(share * 100)}% known
+                {t().read.known(Math.round(share * 100))}
               </span>
             </div>
           </a>

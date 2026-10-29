@@ -1,6 +1,8 @@
 // Microphone recording with MediaRecorder. Safari records AAC/MP4, Chrome Opus/WebM; `toWav`
 // decodes either into 16 kHz mono PCM so the server never needs ffmpeg.
 
+import { t } from './i18n/index.svelte';
+
 class Recorder {
   recording = $state(false);
   /** Waiting for the microphone (the permission prompt may be open). */
@@ -29,7 +31,7 @@ class Recorder {
         audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 },
       });
     } catch {
-      this.error = 'Microphone access was blocked. Allow it in your browser settings to record.';
+      this.error = t().speak.blocked;
       return;
     } finally {
       this.starting = false;

@@ -6,6 +6,7 @@
   import type { PronounceResult, SyllableResult } from '@taiwan-mandarin/shared/api';
   import Icon from './Icon.svelte';
   import { api } from '../lib/api';
+  import { t } from '../lib/i18n/index.svelte';
   import { recorder, toWav } from '../lib/recorder.svelte';
   import { canSpeak, speak } from '../lib/speech';
   import { account } from '../lib/sync.svelte';
@@ -20,8 +21,6 @@
   let checking = $state(false);
   let result = $state<PronounceResult | null>(null);
   let error = $state<string | null>(null);
-
-  const TONE_NAMES = ['', '1st', '2nd', '3rd', '4th', 'neutral'];
 
   async function toggle() {
     if (recorder.recording) {
@@ -68,13 +67,14 @@
   });
 
   function message(s: SyllableResult): string {
-    if (s.sound === 'missing') return 'Not heard';
-    if (s.sound === 'wrong') return `Heard ${s.heard ?? '?'}`;
+    const say = t().speak;
+    if (s.sound === 'missing') return say.notHeard;
+    if (s.sound === 'wrong') return say.heard(s.heard ?? '?');
     if (s.tone === 'wrong' && s.heardTone) {
-      return `Sounded ${TONE_NAMES[s.heardTone]}, needs ${TONE_NAMES[s.expectedTone]}`;
+      return say.sounded(say.tones[s.heardTone - 1] ?? '', say.tones[s.expectedTone - 1] ?? '');
     }
-    if (s.tone === 'unclear') return 'Tone unclear';
-    return s.tone === 'neutral' ? 'Neutral tone' : 'Good';
+    if (s.tone === 'unclear') return say.unclear;
+    return s.tone === 'neutral' ? say.neutral : say.good;
   }
 
   /** SVG path through normalized points (0–1) in a 60×32 box. */
@@ -95,7 +95,8 @@
   <div class="controls">
     {#if canSpeak}
       <button type="button" class="btn quiet small" onclick={() => speak(target)}>
-        <Icon name="speaker" size={18} /> Listen
+        <Icon name="speaker" size={18} />
+        {t().word.listen}
       </button>
     {/if}
     {#if recorder.supported}
@@ -105,33 +106,37 @@
         disabled={checking || recorder.starting}
         onclick={toggle}
       >
-        {#if recorder.recording}<Icon name="pause" size={18} /> Stop{:else}<Icon
+        {#if recorder.recording}<Icon name="pause" size={18} /> {t().reader.stop}{:else}<Icon
             name="mic"
             size={18}
           />
-          Record{/if}
+          {t().speak.record}{/if}
       </button>
       {#if audioUrl && !recorder.recording}
         <button type="button" class="btn quiet small" onclick={playMine}>
-          <Icon name="play" size={18} /> Play mine
+          <Icon name="play" size={18} />
+          {t().speak.playMine}
         </button>
       {/if}
     {:else}
-      <span class="hint">Recording isn't available in this browser.</span>
+      <span class="hint">{t().speak.unsupported}</span>
     {/if}
   </div>
   {#if recorder.error}<p class="hint">{recorder.error}</p>{/if}
   {#if !account.user && account.checked}
-    <p class="hint">Sign in to get your syllables and tones checked.</p>
+    <p class="hint">{t().speak.signIn}</p>
   {/if}
-  {#if checking}<p class="hint">Listening…</p>{/if}
+  {#if checking}<p class="hint">{t().speak.listening}</p>{/if}
   {#if error}<p class="hint error">{error}</p>{/if}
 
   {#if result}
     <div class="result">
       <div class="score">
         <strong class="tabular">{result.score}</strong>
-        <span>Heard: <span class="hanzi" lang="zh-Hant-TW">{result.transcript || '—'}</span></span>
+        <span
+          >{t().speak.heardLabel}:
+          <span class="hanzi" lang="zh-Hant-TW">{result.transcript || '—'}</span></span
+        >
       </div>
       <ul class="syllables">
         {#each result.syllables as s, i (i)}
@@ -154,7 +159,7 @@
           </li>
         {/each}
       </ul>
-      <p class="hint">Dashed: the tone you need. Solid: your pitch. Tone checks are approximate.</p>
+      <p class="hint">{t().speak.legend}</p>
     </div>
   {/if}
 </div>

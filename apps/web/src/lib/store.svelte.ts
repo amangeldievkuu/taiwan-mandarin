@@ -40,7 +40,7 @@ import {
 } from './activity';
 import { content } from './content.svelte';
 import { devLanguage } from './i18n/detect';
-import { locale } from './i18n/index.svelte';
+import { locale, t } from './i18n/index.svelte';
 import { toasts } from './toast.svelte';
 import {
   BrowserStorage,
@@ -346,8 +346,8 @@ class Store {
       .catch(() =>
         toasts.show({
           kind: 'info',
-          title: "Couldn't save that answer",
-          body: 'The browser refused to store it. Check free space on this device.',
+          title: t().sync.saveFailed,
+          body: t().sync.saveFailedBody,
         }),
       );
     this.activity = countReview(this.activity, review);

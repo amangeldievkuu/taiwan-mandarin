@@ -563,4 +563,76 @@ export const vi: Messages = {
   },
 
   chips: (days, seams, xp) => `Chuỗi ${days} ngày${seams ? `, ${seams} đường vàng` : ''}, ${xp} XP`,
+
+  read: {
+    eyebrow: 'Đọc theo trình độ',
+    intro:
+      'Những bài đọc ngắn về đời sống thường ngày ở Đài Loan, viết riêng cho từng cấp độ TOCFL. ' +
+      'Chạm vào từ bất kỳ để xem trong từ điển và thêm vào bộ thẻ.',
+    loadFailed: 'Không tải được các bài đọc.',
+    none: 'Chưa có bài đọc nào.',
+    draft: 'Bản nháp',
+    draftTitle: 'Viết bằng AI, chưa được duyệt',
+    length: (chars, minutes) => `${chars} 字 · ~${minutes} phút`,
+    knownTitle: 'Những từ bạn đã bắt đầu học',
+    known: (percent) => `đã biết ${percent}%`,
+  },
+
+  reader: {
+    draft: 'Bản nháp, chưa được duyệt',
+    readings: 'Phiên âm',
+    stop: 'Dừng',
+    newToYou: 'từ mới với bạn',
+    aboveLevel: 'trên cấp độ này',
+    translation: 'Tiếng Việt',
+    listenParagraph: 'Nghe đoạn này',
+    missing: 'Bài đọc này không tồn tại.',
+  },
+
+  explain: {
+    label: 'Đoạn tiếng Trung cần giải thích',
+    placeholder: 'Dán đoạn tiếng Trung: biển hiệu, thực đơn, tin nhắn LINE…',
+    photoAlt: 'Biển hiệu hoặc thực đơn đã chọn',
+    removePhoto: 'Bỏ ảnh',
+    photo: 'Ảnh',
+    explain: 'Giải thích',
+    signIn:
+      'Đăng nhập để AI phân tích câu: bản dịch, ngữ pháp và ghi chú. Không có tài khoản, bạn ' +
+      'vẫn có thể chạm vào từng từ để tra.',
+    stoppedEarly: 'Câu trả lời dừng giữa chừng. Hãy thử lại.',
+    readingPhoto: 'Đang đọc ảnh…',
+    translating: 'Đang dịch…',
+    wordByWord: 'Từng từ',
+    deck: 'Bộ thẻ',
+    grammar: 'Ngữ pháp',
+    notes: 'Ghi chú',
+    check: (warnings) => `Kiểm tra chuẩn Đài Loan: ${warnings}`,
+    footnote: 'Giải thích bằng AI. Cách đọc lấy từ danh sách TOCFL và từ điển khi có thể.',
+  },
+
+  speak: {
+    tones: ['thanh 1', 'thanh 2', 'thanh 3', 'thanh 4', 'thanh nhẹ'],
+    notHeard: 'Không nghe thấy',
+    heard: (syllable) => `Nghe thành ${syllable}`,
+    sounded: (heard, needed) => `Nghe như ${heard}, cần ${needed}`,
+    unclear: 'Thanh điệu chưa rõ',
+    neutral: 'Thanh nhẹ',
+    good: 'Tốt',
+    record: 'Ghi âm',
+    playMine: 'Nghe lại giọng mình',
+    unsupported: 'Trình duyệt này không hỗ trợ ghi âm.',
+    signIn: 'Đăng nhập để được kiểm tra âm tiết và thanh điệu.',
+    listening: 'Đang nghe…',
+    heardLabel: 'Nghe được',
+    legend:
+      'Nét đứt: thanh điệu cần có. Nét liền: cao độ giọng bạn. Kiểm tra thanh điệu chỉ mang tính tương đối.',
+    blocked: 'Quyền dùng micro đã bị chặn. Hãy cho phép trong cài đặt trình duyệt để ghi âm.',
+  },
+
+  sync: {
+    signedOut: 'Đã đăng xuất',
+    signedOutBody: 'Phiên đăng nhập đã hết. Hãy đăng nhập lại để tiếp tục đồng bộ.',
+    saveFailed: 'Không lưu được câu trả lời đó',
+    saveFailedBody: 'Trình duyệt từ chối lưu. Hãy kiểm tra dung lượng trống trên thiết bị này.',
+  },
 };

@@ -9,7 +9,10 @@
     type ReaderToken,
   } from '@taiwan-mandarin/shared';
   import Icon from '../ui/Icon.svelte';
+  import Localized from '../ui/Localized.svelte';
   import { content } from '../lib/content.svelte';
+  import { readerTitleOf, readerTranslationOf, tokenGlossOf } from '../lib/i18n/content';
+  import { t } from '../lib/i18n/index.svelte';
   import { lookup } from '../lib/lookup.svelte';
   import { canSpeak, speak, stopSpeaking } from '../lib/speech';
   import { store } from '../lib/store.svelte';
@@ -65,7 +68,7 @@
   }
 
   function open(token: ReaderToken) {
-    void lookup.openWord(token.t, token.g);
+    void lookup.openWord(token.t, tokenGlossOf(token)?.text);
   }
 
   const paragraphText = (p: ReaderToken[]) => p.map((t) => t.t).join('');
@@ -92,14 +95,15 @@
   {#if reader}
     <header class="head">
       <p class="eyebrow">
-        {level?.en} · {level?.cefr}
-        {#if reader.draft}· <span class="draft">Draft, not yet reviewed</span>{/if}
+        {level ? t().levels[level.id] : ''} · {level?.cefr}
+        {#if reader.draft}· <span class="draft">{t().reader.draft}</span>{/if}
       </p>
       <h1 class="r-title hanzi" lang="zh-Hant-TW">{reader.title}</h1>
-      <p class="r-sub">{reader.titleEn}</p>
+      <p class="r-sub"><Localized value={readerTitleOf(reader)} /></p>
       <div class="toolbar">
         <button type="button" class="chip" aria-pressed={ruby} onclick={() => (ruby = !ruby)}>
-          <span lang="zh-Hant-TW" class="hanzi">注音</span> Readings
+          <span lang="zh-Hant-TW" class="hanzi">注音</span>
+          {t().reader.readings}
         </button>
         {#if canSpeak}
           <button
@@ -109,12 +113,14 @@
             onclick={() => play(0)}
           >
             <Icon name={playing !== null ? 'pause' : 'play'} size={16} />
-            {playing !== null ? 'Stop' : 'Listen'}
+            {playing !== null ? t().reader.stop : t().word.listen}
           </button>
         {/if}
         <span class="legend">
-          <span class="sample new"></span> new to you
-          <span class="sample glossed">字</span> above this level
+          <span class="sample new"></span>
+          {t().reader.newToYou}
+          <span class="sample glossed">字</span>
+          {t().reader.aboveLevel}
         </span>
       </div>
     </header>
@@ -141,33 +147,35 @@
                       >{/each}{:else}{token.t}{/if}</span
                 >{:else}{token.t}{/if}{/each}
           </p>
-          <div class="para-tools" lang="en">
+          <div class="para-tools">
             <button
               type="button"
               class="mini"
               onclick={() => (showTranslation[i] = !showTranslation[i])}
             >
-              {showTranslation[i] ? 'Hide' : 'English'}
+              {showTranslation[i] ? t().auth.hide : t().reader.translation}
             </button>
             {#if canSpeak}
               <button
                 type="button"
                 class="mini"
-                aria-label="Listen to this paragraph"
+                aria-label={t().reader.listenParagraph}
                 onclick={() => speak(paragraphText(paragraph), { rate: 0.8 })}
               >
                 <Icon name="speaker" size={16} />
               </button>
             {/if}
           </div>
-          {#if showTranslation[i]}<p class="translation" lang="en">{reader.translation[i]}</p>{/if}
+          {#if showTranslation[i]}<p class="translation">
+              <Localized value={readerTranslationOf(reader, i)} />
+            </p>{/if}
         </div>
       {/each}
     </article>
   {:else if missing}
-    <p class="empty">This reader doesn't exist.</p>
+    <p class="empty">{t().reader.missing}</p>
   {:else if failed}
-    <p class="empty" role="alert">Couldn't load this. Check your connection and try again.</p>
+    <p class="empty" role="alert">{t().level.loadFailed}</p>
   {:else}
     <Loading />
   {/if}
