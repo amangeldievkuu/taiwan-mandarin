@@ -1,5 +1,7 @@
 <script lang="ts">
   // A password input with a show/hide toggle, so a long passphrase can be checked before sending.
+  import { t } from '../../lib/i18n/index.svelte';
+
   interface Props {
     id: string;
     label: string;
@@ -30,8 +32,8 @@
       type="button"
       class="toggle"
       aria-pressed={shown}
-      aria-label={shown ? 'Hide password' : 'Show password'}
-      onclick={() => (shown = !shown)}>{shown ? 'Hide' : 'Show'}</button
+      aria-label={shown ? t().auth.hidePassword : t().auth.showPassword}
+      onclick={() => (shown = !shown)}>{shown ? t().auth.hide : t().auth.show}</button
     >
   </span>
   {#if hint}<small>{hint}</small>{/if}

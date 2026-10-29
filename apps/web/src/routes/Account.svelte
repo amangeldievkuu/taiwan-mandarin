@@ -8,6 +8,7 @@
   import TokensSection from '../ui/account/TokensSection.svelte';
   import { authMessage } from '../ui/account/errors';
   import { api } from '../lib/api';
+  import { formatNumber, t } from '../lib/i18n/index.svelte';
   import { router } from '../lib/router.svelte';
   import { store } from '../lib/store.svelte';
   import { account } from '../lib/sync.svelte';
@@ -39,10 +40,7 @@
         body: { utcOffsetMinutes: -new Date().getTimezoneOffset() },
       });
       await account.sync();
-      fsrsMessage = {
-        text: `Fitted to your ${result.reviewCount.toLocaleString()} reviews.`,
-        ok: true,
-      };
+      fsrsMessage = { text: t().account.fittedTo(formatNumber(result.reviewCount)), ok: true };
     } catch (e) {
       fsrsMessage = { text: authMessage(e), ok: false };
     } finally {
@@ -69,35 +67,30 @@
 </script>
 
 <div class="page">
-  <SubpageHead title="Account" zh="帳號" />
+  <SubpageHead title={t().titles['me-account']} zh="帳號" />
 
   {#if !account.checked}
-    <p class="muted">Starting…</p>
+    <p class="muted">{t().account.starting}</p>
   {:else if !account.user}
     <AuthForm onsignedin={signedIn} />
     {#if ios && !standalone}
-      <p class="footnote">
-        Added to the Home Screen, the app keeps its own sign-in, separate from Safari.
-      </p>
+      <p class="footnote">{t().account.homeScreen}</p>
     {/if}
   {:else}
     <ProfileCard />
 
-    <h2 class="section-title">Security <span class="zh" lang="zh-Hant-TW">安全</span></h2>
+    <h2 class="section-title">
+      {t().account.security} <span class="zh" lang="zh-Hant-TW">安全</span>
+    </h2>
     <PasswordSection />
 
-    <h2 class="section-title">Memory model <span class="zh" lang="zh-Hant-TW">記憶</span></h2>
+    <h2 class="section-title">
+      {t().account.memoryModel} <span class="zh" lang="zh-Hant-TW">記憶</span>
+    </h2>
     <div class="sheet block">
-      <p>
-        {#if store.syncState.fsrsWeights}
-          Your scheduler uses FSRS parameters fitted to your own review history.
-        {:else}
-          After about 400 reviews, the scheduler can be fitted to how you remember. It refits every
-          night.
-        {/if}
-      </p>
+      <p>{store.syncState.fsrsWeights ? t().account.fitted : t().account.notFitted}</p>
       <button type="button" class="btn quiet small" disabled={optimizing} onclick={optimize}>
-        {optimizing ? 'Fitting…' : 'Fit to my reviews now'}
+        {optimizing ? t().account.fitting : t().account.fitNow}
       </button>
       {#if fsrsMessage}
         <p class={fsrsMessage.ok ? 'fine' : 'error'} role={fsrsMessage.ok ? 'status' : 'alert'}>
@@ -106,27 +99,29 @@
       {/if}
     </div>
 
-    <h2 class="section-title">API access <span class="zh" lang="zh-Hant-TW">應用程式</span></h2>
+    <h2 class="section-title">
+      {t().account.api} <span class="zh" lang="zh-Hant-TW">應用程式</span>
+    </h2>
     <TokensSection />
 
     <div class="danger">
       {#if confirmDelete}
-        <span>Delete the account and all synced data? This device keeps its local copy.</span>
+        <span>{t().account.deleteConfirm}</span>
         {#if deleteError}<span class="error" role="alert">{deleteError}</span>{/if}
         <span class="buttons">
           <button
             type="button"
             class="btn quiet small"
             disabled={deleting}
-            onclick={() => (confirmDelete = false)}>Cancel</button
+            onclick={() => (confirmDelete = false)}>{t().common.cancel}</button
           >
           <button type="button" class="btn seal small" disabled={deleting} onclick={deleteAccount}
-            >{deleting ? 'Deleting…' : 'Delete account'}</button
+            >{deleting ? t().account.deleting : t().account.delete}</button
           >
         </span>
       {:else}
         <button type="button" class="link" onclick={() => (confirmDelete = true)}
-          >Delete account…</button
+          >{t().account.deleteMenu}</button
         >
       {/if}
     </div>

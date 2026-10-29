@@ -10,23 +10,23 @@
   import StatChips from '../ui/StatChips.svelte';
   import WeekStrip from '../ui/WeekStrip.svelte';
   import { content } from '../lib/content.svelte';
+  import { intlLocale, t } from '../lib/i18n/index.svelte';
   import { router } from '../lib/router.svelte';
   import { cardCounts } from '../lib/stats';
   import { store } from '../lib/store.svelte';
 
   const now = new Date();
   const hour = now.getHours();
-  const greeting =
+  const greeting = $derived(
     hour < 11
-      ? { zh: '早安', en: 'Good morning' }
+      ? { zh: '早安', text: t().today.morning }
       : hour < 18
-        ? { zh: '午安', en: 'Good afternoon' }
-        : { zh: '晚安', en: 'Good evening' };
-  const dateLabel = now.toLocaleDateString('en-GB', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
+        ? { zh: '午安', text: t().today.afternoon }
+        : { zh: '晚安', text: t().today.evening },
+  );
+  const dateLabel = $derived(
+    now.toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long' }),
+  );
 
   const remaining = $derived(store.queue.length);
   // Reviews today on every device (once synced), not only this one.
@@ -44,85 +44,43 @@
 
   const streak = $derived(store.streak);
   const weekday = (date: string) =>
-    new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'long' });
+    new Date(`${date}T12:00:00`).toLocaleDateString(intlLocale(), { weekday: 'long' });
   /** What the plant card says: always an invitation, never a scolding. */
   const bowlText = $derived.by((): { title: string; body: string } => {
     const s = streak;
+    const say = t().today.bowl;
     const last = s.shelf.at(-1);
-    if (!s.current && !last) {
-      return {
-        title: 'Plant your first seed',
-        body: 'Study today and a plum tree (梅) starts to grow. A missed day doesn’t break it: come back within three days and the pot is mended with gold (金繼).',
-      };
-    }
-    if (!s.current) {
-      return {
-        title: 'Plant a new seed',
-        body: `Your ${last?.days}-day plant is in your garden, gold and all. Study today to grow a new one.`,
-      };
-    }
-    if (s.mendedToday) {
-      return {
-        title: 'Mended with gold',
-        body: `You came back and the crack turned to gold. ${s.count} days of growing.`,
-      };
-    }
+    if (!s.current && !last) return { title: say.firstTitle, body: say.firstBody };
+    if (!s.current) return { title: say.newTitle, body: say.newBody(last?.days ?? 0) };
+    if (s.mendedToday) return { title: say.mendedTitle, body: say.mendedBody(s.count) };
     if (s.practicedToday) {
       return {
-        title: `${s.count}-day streak`,
-        body: s.seams
-          ? `Watered for today, with ${s.seams} gold ${s.seams === 1 ? 'seam' : 'seams'} so far.`
-          : 'Watered for today. See you tomorrow.',
+        title: say.streak(s.count),
+        body: s.seams ? say.wateredSeams(s.seams) : say.watered,
       };
     }
     if (s.crack && s.mendBy) {
-      return s.mendBy === store.today
-        ? {
-            title: 'Your plant needs water',
-            body: 'Last day: study today and the crack turns to gold.',
-          }
-        : {
-            title: 'Your plant needs water',
-            body: `Study by ${weekday(s.mendBy)} and the missed ${s.crack === 1 ? 'day turns' : 'days turn'} to gold.`,
-          };
+      return {
+        title: say.thirsty,
+        body: s.mendBy === store.today ? say.lastDay : say.mendBy(weekday(s.mendBy), s.crack),
+      };
     }
-    return { title: `${s.count}-day streak`, body: 'Study today to help your plant grow.' };
+    return { title: say.streak(s.count), body: say.grow };
   });
 
   interface Tile {
     href: string;
     icon: IconName;
     zh: string;
-    title: string;
-    text: string;
+    /** Its title and text in the catalog. */
+    key: 'read' | 'talk' | 'explain';
     tint: string;
   }
 
   const EXPLORE: Tile[] = [
-    {
-      href: '/read',
-      icon: 'read',
-      zh: '讀',
-      title: 'Graded reading',
-      text: "Short stories about Taiwan life. Tap any word you don't know.",
-      tint: 'var(--sky)',
-    },
-    {
-      href: '/talk',
-      icon: 'talk',
-      zh: '談',
-      title: 'Conversation',
-      text: 'Chat in Taiwan Mandarin using only words you know.',
-      tint: 'var(--jade)',
-    },
-    {
-      href: '/dict?explain=1',
-      icon: 'sparkle',
-      zh: '解',
-      title: 'Explain a sentence',
-      text: 'Paste a sign, menu or message and get a word-by-word breakdown.',
-      tint: 'var(--gold)',
-    },
+    { href: '/read', icon: 'read', zh: '讀', key: 'read', tint: 'var(--sky)' },
+    { href: '/talk', icon: 'talk', zh: '談', key: 'talk', tint: 'var(--jade)' },
+    { href: '/dict?explain=1', icon: 'sparkle', zh: '解', key: 'explain', tint: 'var(--gold)' },
   ];
 </script>
 
@@ -130,44 +88,45 @@
   <header class="page-head">
     <div>
       <p class="eyebrow">{dateLabel}</p>
-      <h1 class="title"><span class="zh">{greeting.zh}</span>{greeting.en}</h1>
+      <h1 class="title"><span class="zh">{greeting.zh}</span>{greeting.text}</h1>
     </div>
     <StatChips />
   </header>
 
   <section class="hero sheet enter">
-    <Ring value={ringValue} size={148} stroke={12} label="{doneToday} done, {remaining} left today">
+    <Ring value={ringValue} size={148} stroke={12} label={t().today.ring(doneToday, remaining)}>
       <div class="ring-center">
         {#if remaining === 0 && doneToday > 0}
           <span class="ring-done"><Icon name="check" size={36} /></span>
-          <small>all done</small>
+          <small>{t().today.allDone}</small>
         {:else}
           <strong><Counter value={remaining} from={0} /></strong>
-          <small>{remaining === 1 ? 'card' : 'cards'} left</small>
+          <small>{t().today.cardsLeft(remaining)}</small>
         {/if}
       </div>
     </Ring>
     <div class="hero-body">
       {#if remaining > 0}
-        <h2>Today's practice</h2>
+        <h2>{t().today.practice}</h2>
         <p class="hero-sub">
-          <span><b class="tabular">{dueNow}</b> to review</span>
-          <span><b class="tabular">{fresh}</b> new {fresh === 1 ? 'word' : 'words'}</span>
+          <span><b class="tabular">{dueNow}</b> {t().today.toReview}</span>
+          <span><b class="tabular">{fresh}</b> {t().today.newWords(fresh)}</span>
         </p>
         <a class="btn primary start" href={router.href('/study')} onclick={router.link}>
-          {doneToday > 0 ? 'Continue' : 'Start studying'}
+          {doneToday > 0 ? t().today.continue : t().today.start}
           <Icon name="forward" size={18} />
         </a>
       {:else}
         <h2 class="hanzi done-zh" lang="zh-Hant-TW">今天完成了</h2>
-        <p class="hero-sub">
-          All done for today. {doneToday ? `${doneToday} reviews.` : ''} Read something or look around
-          the dictionary.
-        </p>
-        <a class="btn quiet" href={router.href('/read')} onclick={router.link}>Read a story</a>
+        <p class="hero-sub">{t().today.doneBody(doneToday)}</p>
+        <a class="btn quiet" href={router.href('/read')} onclick={router.link}
+          >{t().today.readStory}</a
+        >
       {/if}
       {#if store.xp.today}
-        <span class="xp-today"><span aria-hidden="true">✦</span> +{store.xp.today} XP today</span>
+        <span class="xp-today"
+          ><span aria-hidden="true">✦</span> {t().today.xpToday(store.xp.today)}</span
+        >
       {/if}
     </div>
   </section>
@@ -183,7 +142,7 @@
       crack={streak.crack}
       fresh={streak.mendedToday}
       size={104}
-      label="Your streak plant: {streak.count} days"
+      label={t().today.plant(streak.count)}
     />
     <div class="bowl-body">
       <strong>{bowlText.title}</strong>
@@ -193,11 +152,10 @@
   </a>
 
   <h2 class="section-title">
-    <span>Your path <span class="zh" lang="zh-Hant-TW">學習路徑</span></span>
+    <span>{t().today.yourPath} <span class="zh" lang="zh-Hant-TW">學習路徑</span></span>
     <a class="see-all" href={router.href('/path')} onclick={router.link}
-      >All levels <svg class="chevron" viewBox="0 0 8 14" aria-hidden="true"
-        ><path d="M1 1l6 6-6 6" /></svg
-      ></a
+      >{t().today.allLevels}
+      <svg class="chevron" viewBox="0 0 8 14" aria-hidden="true"><path d="M1 1l6 6-6 6" /></svg></a
     >
   </h2>
   {#if current}
@@ -210,7 +168,7 @@
       <Seal text={current.zh.slice(0, 2)} size={54} />
       <div class="level-body">
         <div class="level-name">
-          <strong>{current.en}</strong>
+          <strong>{t().levels[current.id]}</strong>
           <span class="level-tag">{current.cefr}</span>
           <span class="level-zh" lang="zh-Hant-TW">{current.zh}</span>
         </div>
@@ -229,7 +187,7 @@
               100}%)"
           ></span>
         </div>
-        <small class="tabular">{levelLearned} of {levelWords.length} words started</small>
+        <small class="tabular">{t().today.wordsStarted(levelLearned, levelWords.length)}</small>
       </div>
       <svg class="chevron" viewBox="0 0 8 14" aria-hidden="true"><path d="M1 1l6 6-6 6" /></svg>
     </a>
@@ -238,19 +196,21 @@
   <div class="facts">
     <div class="fact enter" style:--i={3}>
       <strong><Counter value={counts.learned} from={0} /></strong>
-      <span>words learned</span>
+      <span>{t().today.learned}</span>
     </div>
     <div class="fact enter" style:--i={4}>
       <strong><Counter value={counts.mature} from={0} /></strong>
-      <span>well remembered</span>
+      <span>{t().today.mature}</span>
     </div>
     <div class="fact enter" style:--i={5}>
       <strong><Counter value={store.deck.length} from={0} /></strong>
-      <span>in your deck</span>
+      <span>{t().today.deck}</span>
     </div>
   </div>
 
-  <h2 class="section-title">Explore <span class="zh" lang="zh-Hant-TW">探索</span></h2>
+  <h2 class="section-title">
+    {t().today.explore} <span class="zh" lang="zh-Hant-TW">探索</span>
+  </h2>
   <div class="explore">
     {#each EXPLORE as tile, i (tile.href)}
       <a
@@ -262,8 +222,8 @@
       >
         <span class="tile-icon"><Icon name={tile.icon} size={22} /></span>
         <span class="tile-zh hanzi" lang="zh-Hant-TW">{tile.zh}</span>
-        <strong>{tile.title}</strong>
-        <span class="tile-text">{tile.text}</span>
+        <strong>{t().today.tiles[tile.key].title}</strong>
+        <span class="tile-text">{t().today.tiles[tile.key].text}</span>
       </a>
     {/each}
   </div>

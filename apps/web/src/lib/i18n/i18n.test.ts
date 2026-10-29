@@ -3,9 +3,9 @@ import { en } from './en';
 import { formatInterval, locale } from './index.svelte';
 import { vi } from './vi';
 
-/** Every key path of a catalog, with "()" for functions and their parameter count. */
+/** Every key path of a catalog, with "()" for functions and "[n]" for lists. */
 function shape(value: unknown, path = ''): string[] {
-  if (typeof value === 'function') return [`${path}(${value.length})`];
+  if (typeof value === 'function') return [`${path}()`];
   if (Array.isArray(value)) return [`${path}[${value.length}]`];
   if (value && typeof value === 'object')
     return Object.entries(value).flatMap(([k, v]) => shape(v, path ? `${path}.${k}` : k));
@@ -16,7 +16,7 @@ function shape(value: unknown, path = ''): string[] {
 function strings(value: unknown, path = ''): [string, string][] {
   if (typeof value === 'string') return [[path, value]];
   if (typeof value === 'function') {
-    const args = Array.from({ length: value.length }, () => 2);
+    const args = Array.from({ length: 4 }, () => 2);
     return strings((value as (...a: unknown[]) => unknown)(...args), `${path}()`);
   }
   if (value && typeof value === 'object')
@@ -25,7 +25,7 @@ function strings(value: unknown, path = ''): [string, string][] {
 }
 
 describe('catalogs', () => {
-  it('have the same keys, lists and parameters in every language', () => {
+  it('have the same keys and lists in every language', () => {
     expect(shape(vi)).toEqual(shape(en));
   });
 

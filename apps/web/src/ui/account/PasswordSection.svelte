@@ -2,6 +2,7 @@
   // Change the password (with a confirmation field) or sign out on every device.
   import PasswordField from './PasswordField.svelte';
   import { authMessage } from './errors';
+  import { t } from '../../lib/i18n/index.svelte';
   import { account } from '../../lib/sync.svelte';
 
   let changing = $state(false);
@@ -15,7 +16,7 @@
     event.preventDefault();
     passwordMessage = null;
     if (newPassword !== confirmPassword) {
-      passwordMessage = { text: 'The two new passwords are not the same.', ok: false };
+      passwordMessage = { text: t().auth.mismatch, ok: false };
       return;
     }
     passwordBusy = true;
@@ -23,7 +24,7 @@
       await account.changePassword({ currentPassword, newPassword });
       currentPassword = newPassword = confirmPassword = '';
       changing = false;
-      passwordMessage = { text: 'Password changed. Your other devices are signed out.', ok: true };
+      passwordMessage = { text: t().auth.changed, ok: true };
     } catch (e) {
       passwordMessage = { text: authMessage(e, 'password'), ok: false };
     } finally {
@@ -53,29 +54,29 @@
     <form onsubmit={changePassword}>
       <PasswordField
         id="current-password"
-        label="Current password"
+        label={t().auth.current}
         autocomplete="current-password"
         bind:value={currentPassword}
       />
       <PasswordField
         id="new-password"
-        label="New password"
+        label={t().auth.new}
         autocomplete="new-password"
         minlength={8}
-        hint="At least 8 characters."
+        hint={t().auth.newHint}
         bind:value={newPassword}
       />
       <PasswordField
         id="confirm-password"
-        label="New password again"
+        label={t().auth.again}
         autocomplete="new-password"
         minlength={8}
         bind:value={confirmPassword}
       />
-      <p>Changing it signs out your other devices; this one stays signed in.</p>
+      <p>{t().auth.changeNote}</p>
       <div class="actions">
         <button class="btn primary small" type="submit" disabled={passwordBusy}>
-          {passwordBusy ? 'Changing…' : 'Change password'}
+          {passwordBusy ? t().auth.changing : t().auth.change}
         </button>
         <button
           type="button"
@@ -84,15 +85,12 @@
           onclick={() => {
             changing = false;
             passwordMessage = null;
-          }}>Cancel</button
+          }}>{t().common.cancel}</button
         >
       </div>
     </form>
   {:else if confirmEverywhere}
-    <p>
-      Sign out on every device, this one included? Progress already synced stays in your account,
-      and API tokens keep working.
-    </p>
+    <p>{t().auth.everywhereConfirm}</p>
     <div class="actions">
       <button
         type="button"
@@ -100,13 +98,13 @@
         disabled={everywhereBusy}
         onclick={logoutEverywhere}
       >
-        {everywhereBusy ? 'Signing out…' : 'Sign out everywhere'}
+        {everywhereBusy ? t().account.signingOut : t().auth.everywhere}
       </button>
       <button
         type="button"
         class="btn quiet small"
         disabled={everywhereBusy}
-        onclick={() => (confirmEverywhere = false)}>Cancel</button
+        onclick={() => (confirmEverywhere = false)}>{t().common.cancel}</button
       >
     </div>
   {:else}
@@ -117,10 +115,10 @@
         onclick={() => {
           changing = true;
           passwordMessage = null;
-        }}>Change password…</button
+        }}>{t().auth.changeMenu}</button
       >
       <button type="button" class="btn quiet small" onclick={() => (confirmEverywhere = true)}
-        >Sign out everywhere…</button
+        >{t().auth.everywhereMenu}</button
       >
     </div>
   {/if}

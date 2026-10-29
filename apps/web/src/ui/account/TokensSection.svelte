@@ -4,6 +4,7 @@
   import Icon from '../Icon.svelte';
   import { authMessage } from './errors';
   import { api } from '../../lib/api';
+  import { intlLocale, t } from '../../lib/i18n/index.svelte';
   import { account } from '../../lib/sync.svelte';
 
   let tokens = $state<TokenDto[]>([]);
@@ -16,7 +17,7 @@
   $effect(() => {
     if (!account.user) return;
     void api<TokenDto[]>('/v1/me/tokens').then(
-      (t) => (tokens = t),
+      (list) => (tokens = list),
       (e: unknown) => (error = authMessage(e)),
     );
   });
@@ -64,45 +65,45 @@
 
 <div class="sheet block">
   <p>
-    Personal access tokens let other apps read your words, cards and stats through the
-    <a href="/api/docs" target="_blank" rel="noopener">public API</a>.
+    {t().tokens.intro}
+    <a href="/api/docs" target="_blank" rel="noopener">{t().tokens.publicApi}</a>.
   </p>
   {#if newToken}
     <div class="new-token" role="status">
-      <span>Copy it now, it won't be shown again:</span>
+      <span>{t().tokens.copyNow}</span>
       <code>{newToken.token}</code>
       <button type="button" class="btn quiet small" onclick={copy}>
-        {copied ? 'Copied' : 'Copy'}
+        {copied ? t().tokens.copied : t().tokens.copy}
       </button>
     </div>
   {/if}
   <form class="token-form" onsubmit={createToken}>
     <input
-      aria-label="Token name"
-      placeholder="Token name, e.g. Anki export"
+      aria-label={t().tokens.name}
+      placeholder={t().tokens.placeholder}
       bind:value={tokenName}
       maxlength="60"
     />
     <button class="btn quiet small" type="submit" disabled={busy || !tokenName.trim()}
-      >{busy ? 'Creating…' : 'Create'}</button
+      >{busy ? t().tokens.creating : t().tokens.create}</button
     >
   </form>
   {#if error}<p class="error" role="alert">{error}</p>{/if}
   {#if tokens.length}
     <ul class="tokens">
-      {#each tokens as t (t.id)}
+      {#each tokens as token (token.id)}
         <li>
-          <span><strong>{t.name}</strong> <code>{t.prefix}…</code></span>
+          <span><strong>{token.name}</strong> <code>{token.prefix}…</code></span>
           <small
-            >{t.lastUsedAt
-              ? `used ${new Date(t.lastUsedAt).toLocaleDateString()}`
-              : 'never used'}</small
+            >{token.lastUsedAt
+              ? t().tokens.used(new Date(token.lastUsedAt).toLocaleDateString(intlLocale()))
+              : t().tokens.neverUsed}</small
           >
           <button
             type="button"
             class="icon-btn"
-            aria-label="Revoke {t.name}"
-            onclick={() => revoke(t.id)}
+            aria-label={t().tokens.revoke(token.name)}
+            onclick={() => revoke(token.id)}
           >
             <Icon name="trash" size={18} />
           </button>

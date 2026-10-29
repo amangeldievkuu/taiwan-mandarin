@@ -1,18 +1,25 @@
 <script lang="ts">
   // The signed-in account: who, the sync state in plain words, sync now and sign out.
   import { authMessage } from './errors';
+  import { intlLocale, t } from '../../lib/i18n/index.svelte';
   import { account } from '../../lib/sync.svelte';
 
   let signingOut = $state(false);
   let error = $state<string | null>(null);
 
   const status = $derived.by(() => {
-    if (account.syncing) return 'Syncing…';
-    if (account.verifying) return 'Checking your session…';
-    if (account.error) return `Sync failed: ${authMessage(new Error(account.error))}`;
-    if (account.lastSync)
-      return `Synced ${account.lastSync.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    return 'Not synced yet';
+    const say = t().account;
+    if (account.syncing) return say.syncingNow;
+    if (account.verifying) return say.checking;
+    if (account.error) return say.syncFailed(authMessage(new Error(account.error)));
+    if (account.lastSync) {
+      const time = account.lastSync.toLocaleTimeString(intlLocale(), {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      return say.synced(time);
+    }
+    return say.notSynced;
   });
 
   async function signOut() {
@@ -47,10 +54,10 @@
         disabled={account.syncing || signingOut}
         onclick={() => account.sync()}
       >
-        Sync now
+        {t().account.syncNow}
       </button>
       <button type="button" class="btn quiet small" disabled={signingOut} onclick={signOut}>
-        {signingOut ? 'Signing out…' : 'Sign out'}
+        {signingOut ? t().account.signingOut : t().account.signOut}
       </button>
     </div>
     {#if error}<p class="error" role="alert">{error}</p>{/if}

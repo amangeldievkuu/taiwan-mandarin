@@ -7,6 +7,7 @@
   import { api } from '../lib/api';
   import { companion } from '../lib/companion.svelte';
   import { feedback } from '../lib/feedback.svelte';
+  import { t } from '../lib/i18n/index.svelte';
   import { store } from '../lib/store.svelte';
   import { account } from '../lib/sync.svelte';
 
@@ -42,53 +43,69 @@
 </script>
 
 <div class="page">
-  <SubpageHead title="Settings" zh="設定" />
+  <SubpageHead title={t().titles['me-settings']} zh="設定" />
 
-  <h2 class="section-title">Reading <span class="zh" lang="zh-Hant-TW">閱讀</span></h2>
+  <h2 class="section-title">
+    {t().settings.reading} <span class="zh" lang="zh-Hant-TW">閱讀</span>
+  </h2>
   <div class="sheet group">
-    <SettingRow label="Phonetics" hint="Shown beside every character" stacked>
+    <SettingRow label={t().settings.phonetics} hint={t().settings.phoneticsHint} stacked>
       <Segmented
-        label="Phonetics"
+        label={t().settings.phonetics}
         value={store.settings.phonetics}
         onchange={(phonetics) => store.updateSettings({ phonetics })}
         options={[
-          { value: 'zhuyin', label: '注音', sub: 'Zhuyin', lang: 'zh-Hant-TW' },
+          { value: 'zhuyin', label: '注音', sub: t().settings.zhuyin, lang: 'zh-Hant-TW' },
           { value: 'pinyin', label: 'Pinyin' },
-          { value: 'both', label: 'Both' },
+          { value: 'both', label: t().settings.both },
         ]}
       />
     </SettingRow>
-    <SettingRow label="Characters" hint="Brush-style Kai, or a plain sans" stacked>
+    <SettingRow label={t().settings.characters} hint={t().settings.charactersHint} stacked>
       <Segmented
-        label="Character style"
+        label={t().settings.characterStyle}
         value={store.settings.glyphStyle}
         onchange={(glyphStyle) => store.updateSettings({ glyphStyle })}
         options={[
-          { value: 'kai', label: '楷書', sub: 'Kai', lang: 'zh-Hant-TW', font: 'var(--font-kai)' },
-          { value: 'sans', label: '黑體', sub: 'Sans', lang: 'zh-Hant-TW', font: 'var(--font-ui)' },
+          {
+            value: 'kai',
+            label: '楷書',
+            sub: t().settings.kai,
+            lang: 'zh-Hant-TW',
+            font: 'var(--font-kai)',
+          },
+          {
+            value: 'sans',
+            label: '黑體',
+            sub: t().settings.sans,
+            lang: 'zh-Hant-TW',
+            font: 'var(--font-ui)',
+          },
         ]}
       />
     </SettingRow>
-    <SettingRow label="Theme" stacked>
+    <SettingRow label={t().settings.theme} stacked>
       <Segmented
-        label="Theme"
+        label={t().settings.theme}
         value={store.settings.theme}
         onchange={(theme) => store.updateSettings({ theme })}
         options={[
-          { value: 'auto', label: 'Auto' },
-          { value: 'light', label: 'Light' },
-          { value: 'dark', label: 'Dark' },
+          { value: 'auto', label: t().settings.auto },
+          { value: 'light', label: t().settings.light },
+          { value: 'dark', label: t().settings.dark },
         ]}
       />
     </SettingRow>
   </div>
 
-  <h2 class="section-title">Studying <span class="zh" lang="zh-Hant-TW">學習</span></h2>
+  <h2 class="section-title">
+    {t().settings.studying} <span class="zh" lang="zh-Hant-TW">學習</span>
+  </h2>
   <div class="sheet group">
     <SettingRow
-      label="New words per day"
+      label={t().settings.newPerDay}
       value={String(newPerDay)}
-      hint="Reviews come first; new words are added up to this many. 0 pauses new words."
+      hint={t().settings.newPerDayHint}
       stacked
     >
       <input
@@ -96,15 +113,15 @@
         min="0"
         max="50"
         step="1"
-        aria-label="New words per day"
+        aria-label={t().settings.newPerDay}
         bind:value={newPerDay}
         onchange={() => store.updateSettings({ newPerDay })}
       />
     </SettingRow>
     <SettingRow
-      label="Target memory"
+      label={t().settings.memory}
       value="{Math.round(retention * 100)}%"
-      hint="How well you want to remember a word when it comes up. Higher means more reviews."
+      hint={t().settings.memoryHint}
       stacked
     >
       <input
@@ -112,64 +129,61 @@
         min="0.8"
         max="0.97"
         step="0.01"
-        aria-label="Target memory"
+        aria-label={t().settings.memory}
         bind:value={retention}
         onchange={() => store.updateSettings({ retention })}
       />
     </SettingRow>
   </div>
 
-  <h2 class="section-title">Feedback <span class="zh" lang="zh-Hant-TW">提示</span></h2>
+  <h2 class="section-title">
+    {t().settings.feedback} <span class="zh" lang="zh-Hant-TW">提示</span>
+  </h2>
   <div class="sheet group">
-    <SettingRow label="Sound effects" hint="Chimes when you answer and finish (this device)">
+    <SettingRow label={t().settings.sound} hint={t().settings.soundHint}>
       <Switch
         checked={feedback.sound}
-        label="Sound effects"
+        label={t().settings.sound}
         onchange={(on) => feedback.setSound(on)}
       />
     </SettingRow>
     {#if feedback.canVibrate}
-      <SettingRow label="Vibration" hint="A little buzz on each answer (this device)">
+      <SettingRow label={t().settings.vibration} hint={t().settings.vibrationHint}>
         <Switch
           checked={feedback.haptics}
-          label="Vibration"
+          label={t().settings.vibration}
           onchange={(on) => feedback.setHaptics(on)}
         />
       </SettingRow>
     {/if}
-    <SettingRow
-      label="墨 on every page"
-      hint="The ink drop that comes along with you (this device)"
-    >
+    <SettingRow label={t().settings.companion} hint={t().settings.companionHint}>
       <Switch
         checked={companion.on}
-        label="墨 on every page"
+        label={t().settings.companion}
         onchange={(on) => companion.setOn(on)}
       />
     </SettingRow>
   </div>
 
-  <h2 class="section-title">Data <span class="zh" lang="zh-Hant-TW">資料</span></h2>
+  <h2 class="section-title">{t().settings.data} <span class="zh" lang="zh-Hant-TW">資料</span></h2>
   <div class="sheet data">
-    <p>Today: {todayNew} new · {todayReviews} reviews</p>
+    <p>{t().settings.todayCounts(todayNew, todayReviews)}</p>
     {#if confirmReset}
       <p class="warn">
-        {account.user
-          ? 'This deletes all progress and review history here and in your account. Other devices keep their copy until you reset them too.'
-          : 'This deletes all progress and review history on this device.'}
+        {account.user ? t().settings.resetAccount : t().settings.resetDevice}
       </p>
       {#if resetError}<p class="warn" role="alert">{resetError}</p>{/if}
       <div class="buttons">
         <button type="button" class="btn quiet small" onclick={() => (confirmReset = false)}
-          >Cancel</button
+          >{t().common.cancel}</button
         >
         <button type="button" class="btn seal small" disabled={resetting} onclick={reset}
-          >Delete everything</button
+          >{t().settings.deleteEverything}</button
         >
       </div>
     {:else}
       <button type="button" class="btn quiet small" onclick={() => (confirmReset = true)}
-        >Reset progress…</button
+        >{t().settings.reset}</button
       >
     {/if}
   </div>

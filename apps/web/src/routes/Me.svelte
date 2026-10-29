@@ -7,6 +7,7 @@
   import StreakPlant from '../ui/StreakPlant.svelte';
   import ReviewChart from '../ui/ReviewChart.svelte';
   import WeekStrip from '../ui/WeekStrip.svelte';
+  import { intlLocale, t } from '../lib/i18n/index.svelte';
   import { stageFor } from '../lib/plant-art';
   import { router } from '../lib/router.svelte';
   import {
@@ -36,13 +37,20 @@
   );
 
   const accountSub = $derived.by(() => {
-    if (!account.user) return 'Sign in to keep your progress in sync';
-    if (account.verifying) return `${account.user.email} · checking your session…`;
-    if (account.syncing) return `${account.user.email} · syncing…`;
-    if (account.error) return `${account.user.email} · sync failed`;
-    if (account.lastSync)
-      return `${account.user.email} · synced ${account.lastSync.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    return account.user.email;
+    const say = t().me;
+    if (!account.user) return say.signInSub;
+    const email = account.user.email;
+    if (account.verifying) return say.checking(email);
+    if (account.syncing) return say.syncing(email);
+    if (account.error) return say.syncFailed(email);
+    if (account.lastSync) {
+      const time = account.lastSync.toLocaleTimeString(intlLocale(), {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      return say.synced(email, time);
+    }
+    return email;
   });
 
   interface Row {
@@ -52,57 +60,64 @@
     zh: string;
     sub: string;
   }
-  const rows = $derived<Row[]>([
-    { path: '/me/account', icon: 'me', label: 'Account', zh: '帳號', sub: accountSub },
-    {
-      path: '/me/settings',
-      icon: 'sliders',
-      label: 'Settings',
-      zh: '設定',
-      sub: `${phonetics} · ${store.settings.newPerDay} new a day · ${Math.round(store.settings.retention * 100)}% memory`,
-    },
-    {
-      path: '/me/garden',
-      icon: 'leaf',
-      label: 'Garden & seals',
-      zh: '花園',
-      sub: `${streak.shelf.length} past ${streak.shelf.length === 1 ? 'plant' : 'plants'} · ${sealsEarned} of ${store.seals.length} seals`,
-    },
-    {
-      path: '/me/levels',
-      icon: 'path',
-      label: 'By level',
-      zh: '等級',
-      sub: `${counts.learned} words across ${levelsStarted} ${levelsStarted === 1 ? 'level' : 'levels'}`,
-    },
-    { path: '/me/about', icon: 'info', label: 'About', zh: '關於', sub: 'Sources and licences' },
-  ]);
+  const rows = $derived.by((): Row[] => {
+    const say = t().me;
+    const titles = t().titles;
+    return [
+      { path: '/me/account', icon: 'me', label: titles['me-account'], zh: '帳號', sub: accountSub },
+      {
+        path: '/me/settings',
+        icon: 'sliders',
+        label: titles['me-settings'],
+        zh: '設定',
+        sub: say.settingsSub(
+          phonetics,
+          store.settings.newPerDay,
+          Math.round(store.settings.retention * 100),
+        ),
+      },
+      {
+        path: '/me/garden',
+        icon: 'leaf',
+        label: say.garden,
+        zh: '花園',
+        sub: say.gardenSub(streak.shelf.length, sealsEarned, store.seals.length),
+      },
+      {
+        path: '/me/levels',
+        icon: 'path',
+        label: titles['me-levels'],
+        zh: '等級',
+        sub: say.levelsSub(counts.learned, levelsStarted),
+      },
+      { path: '/me/about', icon: 'info', label: titles['me-about'], zh: '關於', sub: say.aboutSub },
+    ];
+  });
 </script>
 
 <div class="page">
   <header class="page-head">
     <div>
-      <p class="eyebrow">Progress & settings</p>
-      <h1 class="title"><span class="zh">我</span>Me</h1>
+      <p class="eyebrow">{t().me.eyebrow}</p>
+      <h1 class="title"><span class="zh">我</span>{t().titles.me}</h1>
     </div>
   </header>
 
-  <section class="bowl sheet enter" aria-label="Your streak plant">
+  <section class="bowl sheet enter" aria-label={t().celebrate.plant}>
     <StreakPlant
       bowl={streak.current}
       crack={streak.crack}
       fresh={streak.mendedToday}
       size={150}
-      label="Your streak plant: {streak.count} days, {streak.current?.seams.length ?? 0} gold seams"
+      label={t().me.plant(streak.count, streak.current?.seams.length ?? 0)}
     />
     <div class="bowl-body">
       <p class="eyebrow" lang="zh-Hant-TW">
         梅 · {stageFor(streak.current?.days ?? 0).name}
       </p>
-      <strong class="big"><Counter value={streak.count} /> <small>day streak</small></strong>
-      <span class="bowl-meta">
-        Longest {streak.longest} · {streak.seams} gold {streak.seams === 1 ? 'seam' : 'seams'}
-      </span>
+      <strong class="big"><Counter value={streak.count} /> <small>{t().me.dayStreak}</small></strong
+      >
+      <span class="bowl-meta">{t().me.longest(streak.longest, streak.seams)}</span>
       <WeekStrip week={streak.week} mending={streak.crack > 0} />
     </div>
   </section>
@@ -113,27 +128,29 @@
         ><span aria-hidden="true">✦</span> <Counter value={store.xp.total} /></strong
       >
       <span>XP</span>
-      <small>+{store.xp.today} today</small>
+      <small>{t().me.xpToday(store.xp.today)}</small>
     </div>
     <div class="stat sheet enter" style:--i={2}>
       <strong class="big"><Counter value={counts.learned} /></strong>
-      <span>words learned</span>
-      <small>{counts.mature} well remembered</small>
+      <span>{t().today.learned}</span>
+      <small>{t().me.wellRemembered(counts.mature)}</small>
     </div>
     <div class="stat sheet enter" style:--i={3}>
       <strong class="big tabular">{kept === null ? '—' : `${Math.round(kept * 100)}%`}</strong>
-      <span>remembered</span>
-      <small>last 30 days</small>
+      <span>{t().me.remembered}</span>
+      <small>{t().me.last30}</small>
     </div>
   </section>
 
-  <h2 class="section-title">Last 30 days <span class="zh" lang="zh-Hant-TW">複習</span></h2>
+  <h2 class="section-title">
+    {t().me.last30Title} <span class="zh" lang="zh-Hant-TW">複習</span>
+  </h2>
   <div class="sheet chart-card">
     <ReviewChart {days} />
-    <p class="footnote">{last30.reviews} reviews · about {minutes} minutes of study</p>
+    <p class="footnote">{t().me.studied(last30.reviews, minutes)}</p>
   </div>
 
-  <h2 class="section-title">More <span class="zh" lang="zh-Hant-TW">更多</span></h2>
+  <h2 class="section-title">{t().me.more} <span class="zh" lang="zh-Hant-TW">更多</span></h2>
   <ul class="list">
     {#each rows as row (row.path)}
       <li>

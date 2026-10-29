@@ -3,6 +3,7 @@
   import Segmented from '../../components/Segmented.svelte';
   import PasswordField from './PasswordField.svelte';
   import { authMessage } from './errors';
+  import { t } from '../../lib/i18n/index.svelte';
   import { account } from '../../lib/sync.svelte';
 
   interface Props {
@@ -51,24 +52,17 @@
 
 <form class="sheet auth" onsubmit={submit} novalidate={false}>
   <Segmented
-    label="Sign in or create an account"
+    label={t().auth.mode}
     value={mode}
     onchange={switchTo}
     options={[
-      { value: 'login', label: 'Sign in' },
-      { value: 'register', label: 'Create account' },
+      { value: 'login', label: t().auth.signIn },
+      { value: 'register', label: t().auth.create },
     ]}
   />
-  <p class="lead">
-    {#if mode === 'login'}
-      Your progress syncs between your phone, iPad and laptop, and conversation practice, sentence
-      explanations and pronunciation checks become available.
-    {:else}
-      Free. What you have learned on this device is added to the new account.
-    {/if}
-  </p>
+  <p class="lead">{mode === 'login' ? t().auth.leadSignIn : t().auth.leadCreate}</p>
   <label for="auth-email">
-    <span>Email</span>
+    <span>{t().auth.email}</span>
     <input
       id="auth-email"
       name="email"
@@ -84,7 +78,7 @@
   </label>
   {#if mode === 'register'}
     <label for="auth-name">
-      <span>Name <small>optional</small></span>
+      <span>{t().auth.name} <small>{t().auth.optional}</small></span>
       <input
         id="auth-name"
         name="name"
@@ -97,31 +91,31 @@
   {/if}
   <PasswordField
     id="auth-password"
-    label="Password"
+    label={t().auth.password}
     autocomplete={mode === 'login' ? 'current-password' : 'new-password'}
     minlength={mode === 'register' ? 8 : 1}
-    hint={mode === 'register' ? 'At least 8 characters. A few words work well.' : undefined}
+    hint={mode === 'register' ? t().auth.passwordHint : undefined}
     bind:value={password}
   />
   {#if formError}<p class="error" role="alert">{formError}</p>{/if}
   <button class="btn primary submit" type="submit" disabled={busy}>
     {#if busy}
-      {mode === 'login' ? 'Signing in…' : 'Creating your account…'}
+      {mode === 'login' ? t().auth.signingIn : t().auth.creating}
     {:else}
-      {mode === 'login' ? 'Sign in' : 'Create account'}
+      {mode === 'login' ? t().auth.signIn : t().auth.create}
     {/if}
   </button>
   {#if mode === 'login'}
     <p class="fine">
-      No account yet? <button type="button" class="link" onclick={() => switchTo('register')}
-        >Create one</button
-      >. Forgotten your password? There is no reset by email yet: your progress on this device stays
-      yours, and a new account can take it over.
+      {t().auth.noAccount}
+      <button type="button" class="link" onclick={() => switchTo('register')}
+        >{t().auth.createOne}</button
+      >. {t().auth.forgotten}
     </p>
   {:else}
     <p class="fine">
-      Have an account? <button type="button" class="link" onclick={() => switchTo('login')}
-        >Sign in</button
+      {t().auth.haveAccount}
+      <button type="button" class="link" onclick={() => switchTo('login')}>{t().auth.signIn}</button
       >.
     </p>
   {/if}
