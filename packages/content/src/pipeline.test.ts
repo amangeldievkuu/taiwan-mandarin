@@ -453,6 +453,37 @@ describe('Russian content', () => {
     );
     expect(fileReader(read as Reader, ru).ru).toBeUndefined();
   });
+
+  it('needs a gloss in each required language for every glossed word', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'readers-'));
+    const reader = {
+      id: 'truck',
+      level: 'N1',
+      topic: 'daily',
+      title: '垃圾車',
+      titleEn: 'The garbage truck',
+      summary: 'The truck.',
+      paragraphs: ['垃圾車。'],
+      translation: ['The garbage truck.'],
+      ru: { title: 'Мусоровоз', summary: 'Мусоровоз.', translation: ['Мусоровоз.'] },
+    };
+    writeFileSync(join(dir, 'truck.json'), JSON.stringify(reader));
+    const truck = word('垃圾車', 'le4 se4 che1', 'garbage truck', { level: 'L2' });
+    const russian = { lang: 'ru' as const, name: 'Russian', shards: [], required: true };
+    expect(() => readReaders(dir, [...words, truck], [], [russian], 4)).toThrow(
+      /no Russian gloss for 垃圾車/,
+    );
+    writeFileSync(
+      join(dir, 'truck.json'),
+      JSON.stringify({ ...reader, ru: { ...reader.ru, glossary: { 垃圾車: 'мусоровоз' } } }),
+    );
+    const [read] = readReaders(dir, [...words, truck], [], [russian], 4);
+    expect(read?.paragraphs[0]?.[0]).toMatchObject({
+      t: '垃圾車',
+      g: 'garbage truck',
+      gr: 'мусоровоз',
+    });
+  });
 });
 
 describe('Hán-Việt', () => {

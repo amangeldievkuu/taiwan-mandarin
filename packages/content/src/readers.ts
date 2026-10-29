@@ -150,6 +150,10 @@ export function readReaders(
             const text =
               own[token.text] ??
               (gloss ? (word?.[language.lang] ?? definitions(language, token.text)) : undefined);
+            if (gloss && !text && language.required)
+              problems.push(
+                `${file}: no ${language.name} gloss for ${token.text} (add it to the glossary)`,
+              );
             return text ? [[TOKEN_GLOSS[language.lang], text] as const] : [];
           });
           const pinyin =

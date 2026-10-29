@@ -74,7 +74,7 @@ const RU: ContentLanguage = {
   glosses: at('data/generated/glosses-ru.jsonl'),
   examples: at('data/generated/examples-ru.jsonl'),
   wordMeanings: true,
-  readers: 'optional',
+  readers: 'required',
   searchGloss: 100,
 };
 
