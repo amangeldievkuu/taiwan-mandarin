@@ -3,10 +3,14 @@ import type { Lang } from '@taiwan-mandarin/shared';
 import { en, type Messages } from './en';
 import { formatInterval, locale } from './index.svelte';
 import { plural } from './plural';
+import { ru } from './ru';
 import { vi } from './vi';
 
 /** Every catalog but the English one it follows. */
-const OTHERS: [Lang, Messages][] = [['vi', vi]];
+const OTHERS: [string, Messages][] = [
+  ['vi', vi],
+  ['ru', ru],
+];
 
 /** Every key path of a catalog, with "()" for functions and "[n]" for lists. */
 function shape(value: unknown, path = ''): string[] {
@@ -39,7 +43,7 @@ describe('catalogs', () => {
     expect(shape(catalog)).toEqual(shape(en));
   });
 
-  it.each([['en', en] as [Lang, Messages], ...OTHERS])(
+  it.each([['en', en] as [string, Messages], ...OTHERS])(
     'have no empty strings in %s',
     (_, catalog) => {
       for (const [path, text] of strings(catalog)) expect(text.trim(), path).not.toBe('');
@@ -90,7 +94,7 @@ describe('plural', () => {
     [11, 'слов'],
     [21, 'слово'],
     [1.5, 'слова'],
-  ])('ru %d → %s', (n, form) => expect(plural('ru' as Lang, n, forms)).toBe(form));
+  ])('ru %d → %s', (n, form) => expect(plural('ru', n, forms)).toBe(form));
 
   it('falls back to "other"', () => {
     expect(plural('en', 1, { one: 'word', other: 'words' })).toBe('word');
