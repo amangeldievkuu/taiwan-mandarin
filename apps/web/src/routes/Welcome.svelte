@@ -4,6 +4,7 @@
   // that puts out a flowering branch for each level and blooms in full at the end. It sits down and says something when you stop.
   import { LEVELS, type Bowl } from '@taiwan-mandarin/shared';
   import InkBlob, { type Line } from '../ui/landing/InkBlob.svelte';
+  import { t } from '../lib/i18n/index.svelte';
   import RoadPlant from '../ui/landing/RoadPlant.svelte';
   import Icon from '../ui/Icon.svelte';
   import Seal from '../ui/Seal.svelte';
@@ -51,20 +52,22 @@
   });
 
   /** What 墨 says when it sits down: one line for each stretch of the road. */
-  const SAYS: Line[] = [
-    { zh: '你好！', en: 'hello!' },
-    { zh: '出發！', en: 'off we go' },
-    { zh: '一步一步', en: 'step by step' },
-    { zh: '慢慢來', en: 'take it slow' },
-    { zh: '加油！', en: 'keep going' },
-    { zh: '好厲害', en: 'look at you' },
-    { zh: '快到了', en: 'almost there' },
-    { zh: '再一點', en: 'a little more' },
-    { zh: '到了！', en: 'made it' },
+  const SAYS = [
+    '你好！',
+    '出發！',
+    '一步一步',
+    '慢慢來',
+    '加油！',
+    '好厲害',
+    '快到了',
+    '再一點',
+    '到了！',
   ];
-  const says = $derived(
-    blooming ? { zh: '開花了！', en: 'it bloomed' } : SAYS[Math.min(reached, SAYS.length - 1)],
-  );
+  const says = $derived.by((): Line => {
+    if (blooming) return { zh: '開花了！', gloss: t().welcome.bloomed };
+    const i = Math.min(reached, SAYS.length - 1);
+    return { zh: SAYS[i] ?? '', gloss: t().welcome.says[i] ?? '' };
+  });
 
   /** A plant in bloom, for the picture. */
   const bloom: Bowl = {

@@ -34,6 +34,9 @@ export const LEVEL_IDS: readonly Level[] = LEVELS.map((l) => l.id);
 
 export const levelIndex = (level: Level): number => LEVEL_IDS.indexOf(level);
 
+export const isLevel = (value: unknown): value is Level =>
+  typeof value === 'string' && (LEVEL_IDS as readonly string[]).includes(value);
+
 export type TopicId =
   | 'core'
   | 'personal'

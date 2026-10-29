@@ -35,6 +35,7 @@
   import { celebrate } from '../lib/celebrate.svelte';
   import { companion } from '../lib/companion.svelte';
   import { feedback } from '../lib/feedback.svelte';
+  import { formatInterval } from '../lib/i18n/index.svelte';
   import { lookup } from '../lib/lookup.svelte';
   import { flipFrom } from '../lib/motion';
   import { router } from '../lib/router.svelte';
@@ -397,7 +398,9 @@
               onclick={() => grade(g)}
             >
               <span class="rate-zh" lang="zh-Hant-TW">{GRADE_INFO[g].zh}</span>
-              <span class="rate-label">{GRADE_INFO[g].label} · {store.intervals[g]}</span>
+              <span class="rate-label"
+                >{GRADE_INFO[g].label} · {formatInterval(store.intervals[g])}</span
+              >
               <kbd class="key">{GRADE_INFO[g].key}</kbd>
             </button>
           {/each}

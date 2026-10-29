@@ -10,6 +10,7 @@
   import { celebrate } from '../lib/celebrate.svelte';
   import { once, seeded } from '../lib/celebrated';
   import { feedback } from '../lib/feedback.svelte';
+  import { t } from '../lib/i18n/index.svelte';
   import { store } from '../lib/store.svelte';
   import { account } from '../lib/sync.svelte';
   import { toasts } from '../lib/toast.svelte';
@@ -23,10 +24,8 @@
       toasts.show(
         {
           kind: 'mend',
-          title: '金繼 · Mended with gold',
-          body:
-            `You came back, and ${seam.days === 1 ? 'the missed day' : `${seam.days} missed days`} ` +
-            `turned to gold. ${streak.count} days of growing.`,
+          title: `金繼 · ${t().celebrate.mended}`,
+          body: t().celebrate.mendedBody(seam.days, streak.count),
         },
         6500,
       );
@@ -39,14 +38,15 @@
       if (once(`bowl:${bowl.start}`)) {
         toasts.show({
           kind: 'bowl',
-          title: '新芽 · A new sprout',
-          body: 'Your last plant is in your garden, gold and all. This one starts today.',
+          title: `新芽 · ${t().celebrate.sprout}`,
+          body: t().celebrate.sproutBody,
         });
       }
     }
     for (const seal of store.seals) {
       if (seal.progress >= 1 && once(`seal:${seal.id}`)) {
-        toasts.show({ kind: 'seal', title: `New seal · ${seal.en}`, seal: seal.zh });
+        const name = t().seals.names[seal.id] ?? seal.en;
+        toasts.show({ kind: 'seal', title: t().celebrate.newSeal(name), seal: seal.zh });
         feedback.play('stamp');
       }
     }
@@ -83,12 +83,12 @@
           bowl={store.streak.current}
           fresh={store.streak.mendedToday}
           size={64}
-          label="Your streak plant"
+          label={t().celebrate.plant}
         />
       {:else if toast.kind === 'seal' && toast.seal}
         <span class="stamp"><Seal text={toast.seal} size={46} /></span>
       {:else if toast.kind === 'bowl'}
-        <StreakPlant bowl={store.streak.current} size={56} label="A new sprout" />
+        <StreakPlant bowl={store.streak.current} size={56} label={t().celebrate.sprout} />
       {/if}
       <span class="text">
         <strong lang="zh-Hant-TW">{toast.title}</strong>
@@ -97,7 +97,7 @@
       <button
         type="button"
         class="close"
-        aria-label="Dismiss"
+        aria-label={t().app.dismiss}
         onclick={() => toasts.dismiss(toast.id)}>×</button
       >
     </div>

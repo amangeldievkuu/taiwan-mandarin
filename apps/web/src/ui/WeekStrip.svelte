@@ -4,6 +4,7 @@
   // not only its own colour.
   import type { WeekDay } from '@taiwan-mandarin/shared';
   import Icon from './Icon.svelte';
+  import { t } from '../lib/i18n/index.svelte';
 
   interface Props {
     week: WeekDay[];
@@ -14,20 +15,15 @@
   let { week, mending = false }: Props = $props();
 
   const NAMES = ['一', '二', '三', '四', '五', '六', '日'];
-  const EN = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const SAYS: Record<WeekDay['mark'], string> = {
-    done: 'practiced',
-    mended: 'mended with gold',
-    crack: 'missed, can still be mended',
-    empty: 'no practice',
-    today: 'today, not practiced yet',
-    future: 'still to come',
-  };
 </script>
 
-<ol class="week" aria-label="This week">
+<ol class="week" aria-label={t().week.label}>
   {#each week as day, i (day.date)}
-    <li class="day is-{day.mark}" class:current={day.today} aria-label="{EN[i]}: {SAYS[day.mark]}">
+    <li
+      class="day is-{day.mark}"
+      class:current={day.today}
+      aria-label="{t().week.days[i]}: {t().week[day.mark]}"
+    >
       <span class="name" lang="zh-Hant-TW" aria-hidden="true">{NAMES[i]}</span>
       <span class="mark" class:mending={day.mark === 'today' && mending} aria-hidden="true">
         {#if day.mark === 'done'}

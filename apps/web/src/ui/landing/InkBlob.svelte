@@ -8,11 +8,14 @@
 <script module lang="ts">
   export interface Line {
     zh: string;
-    en: string;
+    /** The same in the learner's language. */
+    gloss: string;
   }
 </script>
 
 <script lang="ts">
+  import { t } from '../../lib/i18n/index.svelte';
+
   interface Props {
     /** What 墨 says once it sits down. */
     says?: Line;
@@ -24,13 +27,7 @@
 
   let { says, flip = false, below = false }: Props = $props();
 
-  const TAPS: Line[] = [
-    { zh: '嘿！', en: 'hey!' },
-    { zh: '哈哈', en: 'haha' },
-    { zh: '咚！', en: 'boing' },
-    { zh: '再來！', en: 'again!' },
-    { zh: '好癢', en: 'that tickles' },
-  ];
+  const TAPS = ['嘿！', '哈哈', '咚！', '再來！', '好癢'];
 
   let taps = 0;
   let tapped = $state<Line | null>(null);
@@ -44,7 +41,8 @@
     requestAnimationFrame(() => (hopping = true));
     clearTimeout(hopTimer);
     hopTimer = setTimeout(() => (hopping = false), 700);
-    tapped = TAPS[taps++ % TAPS.length] ?? null;
+    const i = taps++ % TAPS.length;
+    tapped = { zh: TAPS[i] ?? '', gloss: t().taps[i] ?? '' };
     clearTimeout(sayTimer);
     sayTimer = setTimeout(() => (tapped = null), 1800);
   }
@@ -99,7 +97,7 @@
   {#if line}
     <p class="says">
       <span class="zh" lang="zh-Hant-TW">{line.zh}</span>
-      <small>{line.en}</small>
+      <small>{line.gloss}</small>
     </p>
   {/if}
 </div>

@@ -48,31 +48,11 @@ export function preview(card: Card, now: Date): IPreview {
   return scheduler.repeat(card, now);
 }
 
-const MINUTE = 60_000;
-const HOUR = 60 * MINUTE;
-const DAY = 24 * HOUR;
-
-/** 45s → "<1m", 10 min → "10m", 3 h → "3h", 4 days → "4d", 2 months → "2mo", 1.5 years → "1.5y" */
-export function formatInterval(ms: number): string {
-  if (ms < MINUTE) return '<1m';
-  // Each unit rolls over to the next once it would round up to it (59.6 min → "1h", not "60m").
-  const minutes = Math.round(ms / MINUTE);
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.round(ms / HOUR);
-  if (hours < 24) return `${hours}h`;
-  const days = Math.round(ms / DAY);
-  if (days < 30) return `${days}d`;
-  const months = Math.round(ms / DAY / 30);
-  if (months < 12) return `${months}mo`;
-  return `${Number((ms / DAY / 365).toFixed(1))}y`;
-}
-
-export function intervalLabels(result: IPreview, now: Date): Record<Grade, string> {
-  const labels = {} as Record<Grade, string>;
-  for (const grade of GRADES) {
-    labels[grade] = formatInterval(result[grade].card.due.getTime() - now.getTime());
-  }
-  return labels;
+/** How long until each grade's card would be due, in ms (shown with i18n's formatInterval). */
+export function intervalTimes(result: IPreview, now: Date): Record<Grade, number> {
+  const times = {} as Record<Grade, number>;
+  for (const grade of GRADES) times[grade] = result[grade].card.due.getTime() - now.getTime();
+  return times;
 }
 
 function isLearning(card: Card): boolean {

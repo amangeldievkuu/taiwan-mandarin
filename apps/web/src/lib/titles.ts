@@ -1,9 +1,10 @@
 // What a page is called, for back buttons ("‹ Today", "‹ Novice 1", "‹ 你好"): the page's own
 // title, short, in the language it is written in.
 
-import { LEVELS } from '@taiwan-mandarin/shared';
+import { isLevel } from '@taiwan-mandarin/shared';
 import { content } from './content.svelte';
-import type { Route, RouteName } from './router.svelte';
+import { t } from './i18n/index.svelte';
+import type { Route } from './router.svelte';
 
 export interface Title {
   text: string;
@@ -11,35 +12,22 @@ export interface Title {
   lang?: string;
 }
 
-const NAMES: Record<Exclude<RouteName, 'level' | 'word' | 'reader'>, string> = {
-  today: 'Today',
-  study: 'Study',
-  path: 'Path',
-  read: 'Read',
-  dict: 'Dictionary',
-  talk: 'Talk',
-  me: 'Me',
-  'me-account': 'Account',
-  'me-settings': 'Settings',
-  'me-garden': 'Garden',
-  'me-levels': 'By level',
-  'me-about': 'About',
-  welcome: 'Welcome',
-};
-
 export function routeTitle(route: Route): Title {
+  const titles = t().titles;
   switch (route.name) {
-    case 'level':
-      return { text: LEVELS.find((l) => l.id === route.params['level'])?.en ?? 'Level' };
+    case 'level': {
+      const level = route.params['level'];
+      return { text: isLevel(level) ? t().levels[level] : titles.level };
+    }
     case 'word': {
       const hanzi = content.word(route.params['id'] ?? '')?.hanzi;
-      return hanzi ? { text: hanzi, lang: 'zh-Hant-TW' } : { text: 'Word' };
+      return hanzi ? { text: hanzi, lang: 'zh-Hant-TW' } : { text: titles.word };
     }
     case 'reader': {
       const title = content.readerTitle(route.params['id'] ?? '');
-      return title ? { text: title, lang: 'zh-Hant-TW' } : { text: 'Reading' };
+      return title ? { text: title, lang: 'zh-Hant-TW' } : { text: titles.reader };
     }
     default:
-      return { text: NAMES[route.name] };
+      return { text: titles[route.name] };
   }
 }

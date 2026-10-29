@@ -3,6 +3,7 @@
   // little progress bar while on the way.
   import type { SealAward } from '@taiwan-mandarin/shared';
   import Seal from './Seal.svelte';
+  import { t } from '../lib/i18n/index.svelte';
 
   interface Props {
     seals: SealAward[];
@@ -12,15 +13,16 @@
   const earned = $derived(seals.filter((s) => s.progress >= 1).length);
 </script>
 
-<p class="count">{earned} of {seals.length} seals</p>
+<p class="count">{t().seals.count(earned, seals.length)}</p>
 <ul class="album">
   {#each seals as seal, i (seal.id)}
     {@const done = seal.progress >= 1}
+    {@const name = t().seals.names[seal.id] ?? seal.en}
     <li class="item enter" class:done style:--i={i}>
-      <Seal text={seal.zh} size={52} outline={!done} label={seal.en} />
-      <span class="name">{seal.en}</span>
+      <Seal text={seal.zh} size={52} outline={!done} label={name} />
+      <span class="name">{name}</span>
       {#if !done}
-        <span class="progress" aria-label="{Math.round(seal.progress * 100)}% of the way"
+        <span class="progress" aria-label={t().seals.progress(Math.round(seal.progress * 100))}
           ><span style:transform="translateX({seal.progress * 100 - 100}%)"></span></span
         >
       {/if}

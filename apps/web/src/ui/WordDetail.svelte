@@ -9,7 +9,7 @@
   import Speak from './Speak.svelte';
   import { lookup } from '../lib/lookup.svelte';
   import { canSpeak, speak } from '../lib/speech';
-  import { formatInterval } from '../lib/srs';
+  import { formatInterval } from '../lib/i18n/index.svelte';
   import { store } from '../lib/store.svelte';
 
   interface Props {

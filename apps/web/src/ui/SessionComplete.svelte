@@ -10,7 +10,7 @@
   import { celebrate as party } from '../lib/celebrate.svelte';
   import { feedback } from '../lib/feedback.svelte';
   import { router } from '../lib/router.svelte';
-  import { formatInterval } from '../lib/srs';
+  import { formatInterval } from '../lib/i18n/index.svelte';
   import type { SessionStats } from '../lib/store.svelte';
 
   interface Props {

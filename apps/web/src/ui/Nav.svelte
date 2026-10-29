@@ -6,6 +6,7 @@
   import { onMount } from 'svelte';
   import Icon, { type IconName } from './Icon.svelte';
   import Seal from './Seal.svelte';
+  import { t } from '../lib/i18n/index.svelte';
   import { ME_ROUTES, router, type RouteName } from '../lib/router.svelte';
   import { store } from '../lib/store.svelte';
 
@@ -13,7 +14,8 @@
     path: string;
     icon: IconName;
     zh: string;
-    en: string;
+    /** Its name in the learner's language. */
+    name: RouteName;
     /** Routes that highlight this item. */
     match: RouteName[];
     /** Shown in the phone tab bar (six fit, down to a 320px screen). */
@@ -21,20 +23,27 @@
   }
 
   const ITEMS: Item[] = [
-    { path: '/', icon: 'today', zh: '今天', en: 'Today', match: ['today'], phone: true },
-    { path: '/study', icon: 'study', zh: '學習', en: 'Study', match: ['study'], phone: true },
+    { path: '/', icon: 'today', zh: '今天', name: 'today', match: ['today'], phone: true },
+    { path: '/study', icon: 'study', zh: '學習', name: 'study', match: ['study'], phone: true },
     {
       path: '/path',
       icon: 'path',
       zh: '路徑',
-      en: 'Path',
+      name: 'path',
       match: ['path', 'level', 'word'],
       phone: false,
     },
-    { path: '/talk', icon: 'talk', zh: '對話', en: 'Talk', match: ['talk'], phone: true },
-    { path: '/read', icon: 'read', zh: '閱讀', en: 'Read', match: ['read', 'reader'], phone: true },
-    { path: '/dict', icon: 'dict', zh: '字典', en: 'Dictionary', match: ['dict'], phone: true },
-    { path: '/me', icon: 'me', zh: '我', en: 'Me', match: ME_ROUTES, phone: true },
+    { path: '/talk', icon: 'talk', zh: '對話', name: 'talk', match: ['talk'], phone: true },
+    {
+      path: '/read',
+      icon: 'read',
+      zh: '閱讀',
+      name: 'read',
+      match: ['read', 'reader'],
+      phone: true,
+    },
+    { path: '/dict', icon: 'dict', zh: '字典', name: 'dict', match: ['dict'], phone: true },
+    { path: '/me', icon: 'me', zh: '我', name: 'me', match: ME_ROUTES, phone: true },
   ];
   const PHONE = ITEMS.filter((i) => i.phone);
 
@@ -94,16 +103,16 @@
 
 <nav
   class="nav"
-  aria-label="Main"
+  aria-label={t().nav.main}
   style:--rail-i={railIndex}
   style:--phone-i={phoneShown}
   style:--phone-n={PHONE.length}
 >
-  <a class="brand" href={router.href('/')} onclick={router.link} aria-label="臺灣華語 home">
+  <a class="brand" href={router.href('/')} onclick={router.link} aria-label={t().nav.home}>
     <Seal text="華" size={38} />
     <span class="brand-text">
       <span class="brand-zh" lang="zh-Hant-TW">臺灣華語</span>
-      <span class="brand-en">Taiwan Mandarin</span>
+      <span class="brand-en">{t().app.name}</span>
     </span>
   </a>
 
@@ -122,16 +131,16 @@
           class:active={active(item)}
           class:section={phoneIndex < 0 && item.phone && PHONE.indexOf(item) === phoneShown}
           aria-current={active(item) ? 'page' : undefined}
-          title={item.en}
+          title={t().titles[item.name]}
         >
           <span class="glyph">
             <Icon name={item.icon} size={24} />
-            {#if item.path === '/study' && due > 0}<span class="dot" aria-label="{due} due"
+            {#if item.path === '/study' && due > 0}<span class="dot" aria-label={t().nav.due(due)}
               ></span>{/if}
           </span>
           <span class="label">
             <span class="zh" lang="zh-Hant-TW">{item.zh}</span>
-            <span class="en">{item.en}</span>
+            <span class="en">{t().titles[item.name]}</span>
           </span>
           {#if item.path === '/study' && due > 0}
             {#key due}<span class="count tabular">{due}</span>{/key}

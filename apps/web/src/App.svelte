@@ -23,6 +23,7 @@
   import Seal from './ui/Seal.svelte';
   import UpdatePrompt from './ui/UpdatePrompt.svelte';
   import { companion } from './lib/companion.svelte';
+  import { locale, t } from './lib/i18n/index.svelte';
   import { feedback } from './lib/feedback.svelte';
   import { pwa } from './lib/pwa.svelte';
   import { router, viewKey } from './lib/router.svelte';
@@ -53,8 +54,8 @@
     pwa.start(() =>
       toasts.show({
         kind: 'info',
-        title: 'Ready to work offline',
-        body: 'Words you open from now on stay available without a connection.',
+        title: t().app.offlineReady,
+        body: t().app.offlineReadyBody,
       }),
     );
     const stopFeedback = feedback.init();
@@ -67,6 +68,10 @@
 
   /** The browser chrome's colour (status bar, title bar): --paper in each theme. */
   const THEME_COLOR = { light: '#ffffff', dark: '#0f1012' } as const;
+
+  $effect(() => {
+    document.documentElement.lang = locale.lang;
+  });
 
   $effect(() => {
     const root = document.documentElement;
@@ -170,8 +175,10 @@
   <div class="splash">
     <Seal text="華" size={72} />
     {#if store.error}
-      <p>Couldn't load the word lists.<br /><small>{store.error}</small></p>
-      <button class="btn quiet" type="button" onclick={() => location.reload()}>Try again</button>
+      <p>{t().app.loadFailed}<br /><small>{store.error}</small></p>
+      <button class="btn quiet" type="button" onclick={() => location.reload()}
+        >{t().app.tryAgain}</button
+      >
     {/if}
   </div>
 {/if}

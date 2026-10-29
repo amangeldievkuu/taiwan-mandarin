@@ -8,7 +8,7 @@ import {
   buildQueue,
   configureScheduler,
   dayKey,
-  intervalLabels,
+  intervalTimes,
   newCard,
   preview,
   shouldRequeue,
@@ -40,6 +40,7 @@ import {
 } from './activity';
 import { content } from './content.svelte';
 import { devLanguage } from './i18n/detect';
+import { locale } from './i18n/index.svelte';
 import { toasts } from './toast.svelte';
 import {
   BrowserStorage,
@@ -111,7 +112,8 @@ class Store {
   finished = $state(0);
   stats = $state<SessionStats>(emptyStats());
   revealed = $state(false);
-  intervals = $state<Record<Grade, string> | null>(null);
+  /** Time until each grade's next review, in ms. */
+  intervals = $state<Record<Grade, number> | null>(null);
 
   current: Word | undefined = $derived(this.queue[0] ? content.word(this.queue[0]) : undefined);
   progress = $derived(
@@ -169,6 +171,7 @@ class Store {
       // Development only: ?lang=vi shows the app in another language without changing settings.
       const forced = devLanguage();
       if (forced) this.settings.language = forced;
+      this.applyLanguage();
       await this.loadActivity(stored && 'activity' in stored ? stored.activity : undefined);
       this.configureFsrs();
       await this.fillMissingLevels();
@@ -302,7 +305,7 @@ class Store {
     const at = new Date();
     const card = this.cards[id] ? $state.snapshot(this.cards[id].card) : newCard(at);
     this.pending = { preview: preview(card as Card, at), at };
-    this.intervals = intervalLabels(this.pending.preview, at);
+    this.intervals = intervalTimes(this.pending.preview, at);
     this.revealed = true;
   }
 
@@ -368,8 +371,14 @@ class Store {
     return this.storage.reviews(since);
   }
 
+  /** Shows the app, and loads its content, in the learner's language. */
+  private applyLanguage(): void {
+    locale.lang = this.settings.language;
+  }
+
   async updateSettings(patch: Partial<Settings>): Promise<void> {
     this.settings = { ...this.settings, ...patch };
+    if (patch.language !== undefined) this.applyLanguage();
     this.syncState.settingsUpdatedAt = Date.now();
     if (patch.retention !== undefined) this.configureFsrs();
     this.changed();
@@ -478,6 +487,7 @@ class Store {
     }
     if (remote.settings && remote.settings.updatedAt > this.syncState.settingsUpdatedAt) {
       this.settings = mergeSettings(this.settings, remote.settings.value);
+      this.applyLanguage();
       this.syncState.settingsUpdatedAt = remote.settings.updatedAt;
     }
     if (remote.deck && remote.deck.updatedAt > this.syncState.deckUpdatedAt) {

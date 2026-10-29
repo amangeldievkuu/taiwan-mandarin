@@ -7,31 +7,32 @@
 -->
 <script lang="ts">
   import { tick, untrack } from 'svelte';
-  import InkBlob, { type Line } from '../landing/InkBlob.svelte';
+  import InkBlob from '../landing/InkBlob.svelte';
   import { companion } from '../../lib/companion.svelte';
+  import { t } from '../../lib/i18n/index.svelte';
   import { arrive, climbAway, stopAll, type Rig } from '../../lib/entrances';
   import { reduced } from '../../lib/motion';
   import { entranceFor, type Entrance } from '../../lib/nav';
   import { router, viewKey, type RouteName } from '../../lib/router.svelte';
 
-  /** What 墨 says on arriving at each page. */
-  const LINES: Record<RouteName, Line> = {
-    welcome: { zh: '你好！', en: 'hello!' },
-    today: { zh: '早安！', en: 'morning!' },
-    study: { zh: '加油！', en: "you've got this" },
-    path: { zh: '一步一步', en: 'step by step' },
-    level: { zh: '爬山囉', en: 'up we go' },
-    word: { zh: '這個字', en: 'this one' },
-    read: { zh: '讀書囉', en: 'reading time' },
-    reader: { zh: '噓…', en: 'shh…' },
-    dict: { zh: '查一查', en: 'look it up' },
-    talk: { zh: '聊聊吧', en: "let's talk" },
-    me: { zh: '是你！', en: "it's you!" },
-    'me-account': { zh: '歡迎', en: 'welcome' },
-    'me-settings': { zh: '調一調', en: 'tweak away' },
-    'me-garden': { zh: '好漂亮', en: 'how pretty' },
-    'me-levels': { zh: '好多級', en: 'so many levels' },
-    'me-about': { zh: '我是墨', en: "I'm Mo" },
+  /** What 墨 says on arriving at each page (and, under it, in the learner's language). */
+  const LINES: Record<RouteName, string> = {
+    welcome: '你好！',
+    today: '早安！',
+    study: '加油！',
+    path: '一步一步',
+    level: '爬山囉',
+    word: '這個字',
+    read: '讀書囉',
+    reader: '噓…',
+    dict: '查一查',
+    talk: '聊聊吧',
+    me: '是你！',
+    'me-account': '歡迎',
+    'me-settings': '調一調',
+    'me-garden': '好漂亮',
+    'me-levels': '好多級',
+    'me-about': '我是墨',
   };
 
   /** Pages with controls docked at the bottom: 墨 sits up top on these instead. */
@@ -55,7 +56,10 @@
     companion.anchor ? 'anchor' : UP_TOP.has(router.route.name) ? 'top' : 'floor',
   );
   const view = $derived(viewKey(router.route));
-  const line = $derived(LINES[router.route.name]);
+  const line = $derived({
+    zh: LINES[router.route.name],
+    gloss: t().companion[router.route.name],
+  });
 
   // On a perch a page offered: follow its top right-hand corner as the page scrolls or resizes.
   let anchorAt = $state<{ x: number; y: number } | null>(null);

@@ -3,8 +3,7 @@ import {
   advanceQueue,
   buildQueue,
   dayKey,
-  formatInterval,
-  intervalLabels,
+  intervalTimes,
   newCard,
   preview,
   Rating,
@@ -16,23 +15,6 @@ import {
 const now = new Date('2026-10-21T09:00:00');
 const minutes = (n: number) => new Date(now.getTime() + n * 60_000);
 
-describe('formatInterval', () => {
-  it.each([
-    [30_000, '<1m'],
-    [10 * 60_000, '10m'],
-    [3 * 3_600_000, '3h'],
-    [86_400_000, '1d'],
-    [4 * 86_400_000, '4d'],
-    [62 * 86_400_000, '2mo'],
-    [548 * 86_400_000, '1.5y'],
-    [59.6 * 60_000, '1h'],
-    [23.6 * 3_600_000, '1d'],
-    [29.7 * 86_400_000, '1mo'],
-  ])('%d ms → %s', (ms, label) => {
-    expect(formatInterval(ms)).toBe(label);
-  });
-});
-
 describe('scheduling', () => {
   it('previews increasing intervals for a new card', () => {
     const result = preview(newCard(now), now);
@@ -40,7 +22,7 @@ describe('scheduling', () => {
       result[g as 1 | 2 | 3 | 4].card.due.getTime(),
     );
     expect(due).toEqual([...due].sort((a, b) => a - b));
-    expect(intervalLabels(result, now)[Rating.Again]).toBe('1m');
+    expect(intervalTimes(result, now)[Rating.Again]).toBe(60_000);
   });
 
   it('requeues Again and short learning steps, not graduated cards', () => {
