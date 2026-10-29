@@ -473,6 +473,73 @@ export const en = {
     nothing: 'Nothing found.',
     inPath: 'In the study path',
   },
+
+  path: {
+    intro:
+      "Taiwan's official exam path, Novice to Level 6. Words come from the TOCFL 8,000-word list " +
+      'and the NAER 《臺灣華語文能力基準》; switch on the levels you want new cards from.',
+    bands: ['Novice', 'Band A', 'Band B', 'Band C'],
+    words: (started: string, total: string) => `${started} / ${total} words`,
+    tocfl: (n: string) => `${n} TOCFL`,
+    activeTitle: 'New cards come from this level',
+    inactiveTitle: 'Study new words from this level',
+    study: 'Study',
+    footnote:
+      'Level 6 (精通, C2) has no TOCFL list; it uses level 7 of the NAER list. Words marked ' +
+      '"NAER" fill gaps in lower levels and come after the TOCFL words.',
+    levelsFootnote: 'Words started in each level, out of all the words it has.',
+  },
+
+  level: {
+    study: 'Study this level',
+    levels: 'Levels',
+    search: 'Search this level',
+    placeholder: '字, pinyin or English',
+    show: 'Show',
+    all: 'All',
+    notStarted: 'Not started',
+    deck: 'My deck',
+    topic: 'Topic',
+    allTopics: 'All topics',
+    count: (n: string) => `${n} words`,
+    addFirst: 'Add first 50 to my deck',
+    loadFailed: "Couldn't load this. Check your connection and try again.",
+    noMatch: 'No words match.',
+    wellRemembered: 'Well remembered',
+    fromNaer: 'From the NAER list',
+    neighbours: 'Neighbouring levels',
+    previous: 'Previous level',
+    next: 'Next level',
+  },
+
+  garden: {
+    title: 'Your garden',
+    past: 'Past plants, newest first',
+    days: (n: number): string => (n === 1 ? '1 day' : `${n} days`),
+    seams: (n: number) => `${n} gold ${n === 1 ? 'seam' : 'seams'}`,
+    empty:
+      'Nothing on the shelf yet: your first plant is still growing. Plants come here after a ' +
+      'longer break, gold seams and all.',
+    howTitle: 'How your plant grows.',
+    how:
+      "Every day you study waters a plum tree (梅, Taiwan's national flower). Miss a day or two " +
+      'and nothing breaks: come back within three days and the crack in its pot is mended with ' +
+      'gold (金繼, kintsugi), the most beautiful part of the pot. After a longer break the plant ' +
+      'moves here to your garden, gold and all, and a new seed is planted. It becomes a small tree ' +
+      'at 7 days, buds at 30 and blooms at 100.',
+    seals: 'Seals',
+  },
+
+  chart: {
+    label: 'Reviews per day, last 30 days',
+    caption: 'Reviews per day',
+    reviews: (n: number) => `${n} reviews`,
+    day: 'Day',
+    total: 'Total',
+  },
+
+  chips: (days: number, seams: number, xp: number) =>
+    `${days}-day streak${seams ? `, ${seams} gold seams` : ''}, ${xp} XP`,
 };
 
 export type Messages = typeof en;

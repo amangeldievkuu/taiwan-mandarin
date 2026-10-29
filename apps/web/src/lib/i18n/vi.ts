@@ -497,4 +497,70 @@ export const vi: Messages = {
     nothing: 'Không tìm thấy gì.',
     inPath: 'Trong lộ trình học',
   },
+
+  path: {
+    intro:
+      'Lộ trình thi chính thức của Đài Loan, từ Dự bị đến Cấp 6. Từ vựng lấy từ danh sách 8.000 ' +
+      'từ của TOCFL và 《臺灣華語文能力基準》 của NAER; bật những cấp độ bạn muốn lấy thẻ mới.',
+    bands: ['Dự bị', 'Bậc A', 'Bậc B', 'Bậc C'],
+    words: (started, total) => `${started} / ${total} từ`,
+    tocfl: (n) => `${n} TOCFL`,
+    activeTitle: 'Thẻ mới được lấy từ cấp độ này',
+    inactiveTitle: 'Học từ mới của cấp độ này',
+    study: 'Học',
+    footnote:
+      'Cấp 6 (精通, C2) không có danh sách TOCFL; cấp này dùng cấp 7 của danh sách NAER. Những từ ' +
+      'có nhãn "NAER" lấp chỗ trống ở các cấp thấp hơn và được học sau các từ TOCFL.',
+    levelsFootnote: 'Số từ đã bắt đầu ở mỗi cấp độ, trên tổng số từ của cấp đó.',
+  },
+
+  level: {
+    study: 'Học cấp độ này',
+    levels: 'Cấp độ',
+    search: 'Tìm trong cấp độ này',
+    placeholder: '字, pinyin hoặc tiếng Việt',
+    show: 'Hiện',
+    all: 'Tất cả',
+    notStarted: 'Chưa bắt đầu',
+    deck: 'Bộ thẻ của tôi',
+    topic: 'Chủ đề',
+    allTopics: 'Mọi chủ đề',
+    count: (n) => `${n} từ`,
+    addFirst: 'Thêm 50 từ đầu vào bộ thẻ',
+    loadFailed: 'Không tải được. Hãy kiểm tra kết nối rồi thử lại.',
+    noMatch: 'Không có từ nào khớp.',
+    wellRemembered: 'Nhớ chắc',
+    fromNaer: 'Từ danh sách NAER',
+    neighbours: 'Các cấp độ lân cận',
+    previous: 'Cấp trước',
+    next: 'Cấp sau',
+  },
+
+  garden: {
+    title: 'Khu vườn của bạn',
+    past: 'Những cây trước đây, mới nhất trước',
+    days: (n) => `${n} ngày`,
+    seams: (n) => `${n} đường vàng`,
+    empty:
+      'Kệ vẫn còn trống: cây đầu tiên của bạn vẫn đang lớn. Sau một lần nghỉ dài, cây sẽ được ' +
+      'đưa về đây, cùng cả những đường vàng.',
+    howTitle: 'Cây của bạn lớn lên thế nào.',
+    how:
+      'Mỗi ngày bạn học là tưới cho một cây mai (梅, quốc hoa của Đài Loan). Lỡ một hai ngày cũng ' +
+      'không sao: quay lại trong vòng ba ngày, vết nứt trên chậu sẽ được hàn vàng (金繼, kintsugi), ' +
+      'phần đẹp nhất của chiếc chậu. Sau một lần nghỉ dài hơn, cây chuyển về khu vườn này, cùng ' +
+      'những đường vàng, và một hạt giống mới được gieo. Cây thành cây non sau 7 ngày, ra nụ sau ' +
+      '30 ngày và nở hoa sau 100 ngày.',
+    seals: 'Con dấu',
+  },
+
+  chart: {
+    label: 'Lượt ôn mỗi ngày, 30 ngày qua',
+    caption: 'Lượt ôn mỗi ngày',
+    reviews: (n) => `${n} lượt ôn`,
+    day: 'Ngày',
+    total: 'Tổng',
+  },
+
+  chips: (days, seams, xp) => `Chuỗi ${days} ngày${seams ? `, ${seams} đường vàng` : ''}, ${xp} XP`,
 };

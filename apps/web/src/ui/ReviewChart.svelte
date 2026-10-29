@@ -2,6 +2,7 @@
   // Reviews per day for the last 30 days: one series of rounded bars that grow in, today in jade.
   // Hover or tap a day for its again / hard / good / easy breakdown; a table carries the same data
   // for screen readers.
+  import { intlLocale, t } from '../lib/i18n/index.svelte';
   import type { DayStats } from '../lib/stats';
 
   interface Props {
@@ -30,7 +31,10 @@
   const active = $derived(hover === null ? null : days[hover]);
 
   const label = (date: string) =>
-    new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    new Date(`${date}T12:00:00`).toLocaleDateString(intlLocale(), {
+      day: 'numeric',
+      month: 'short',
+    });
 
   /** Bar path with 4px rounded top, square base on the baseline. */
   function bar(x: number, h: number): string {
@@ -46,7 +50,7 @@
   <svg
     viewBox="0 0 {W} {H}"
     role="img"
-    aria-label="Reviews per day, last 30 days"
+    aria-label={t().chart.label}
     onpointerleave={() => (hover = null)}
   >
     {#each [0, top / 2, top] as tick (tick)}
@@ -85,7 +89,7 @@
           y={H - 4}
           text-anchor={i === 0 ? 'start' : i === days.length - 1 ? 'end' : 'middle'}
         >
-          {i === days.length - 1 ? 'Today' : label(days[i].date)}
+          {i === days.length - 1 ? t().titles.today : label(days[i].date)}
         </text>
       {/if}
     {/each}
@@ -96,14 +100,15 @@
       class="tip sheet"
       style:left="{Math.min(84, Math.max(16, ((PAD.left + hover * slot + slot / 2) / W) * 100))}%"
     >
-      <strong>{hover === days.length - 1 ? 'Today' : label(active.date)}</strong>
-      <span class="tabular">{active.total} reviews</span>
+      <strong>{hover === days.length - 1 ? t().titles.today : label(active.date)}</strong>
+      <span class="tabular">{t().chart.reviews(active.total)}</span>
       {#if active.total}
         <span class="breakdown tabular">
-          <span><i style:background="var(--again)"></i>Again {active.again}</span>
-          <span><i style:background="var(--hard)"></i>Hard {active.hard}</span>
-          <span><i style:background="var(--good)"></i>Good {active.good}</span>
-          <span><i style:background="var(--easy)"></i>Easy {active.easy}</span>
+          <span><i style:background="var(--again)"></i>{t().study.grades.again} {active.again}</span
+          >
+          <span><i style:background="var(--hard)"></i>{t().study.grades.hard} {active.hard}</span>
+          <span><i style:background="var(--good)"></i>{t().study.grades.good} {active.good}</span>
+          <span><i style:background="var(--easy)"></i>{t().study.grades.easy} {active.easy}</span>
         </span>
       {/if}
     </div>
@@ -112,9 +117,12 @@
   <!-- A table ignores width: 1px, so a clipping box holds it (it widened phone pages). -->
   <div class="visually-hidden">
     <table>
-      <caption>Reviews per day</caption>
+      <caption>{t().chart.caption}</caption>
       <thead
-        ><tr><th>Day</th><th>Total</th><th>Again</th><th>Hard</th><th>Good</th><th>Easy</th></tr
+        ><tr
+          ><th>{t().chart.day}</th><th>{t().chart.total}</th><th>{t().study.grades.again}</th><th
+            >{t().study.grades.hard}</th
+          ><th>{t().study.grades.good}</th><th>{t().study.grades.easy}</th></tr
         ></thead
       >
       <tbody>

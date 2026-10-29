@@ -3,6 +3,7 @@
   import { LEVEL_IDS, LEVELS, type Level } from '@taiwan-mandarin/shared';
   import SubpageHead from '../ui/SubpageHead.svelte';
   import { content } from '../lib/content.svelte';
+  import { formatNumber, t } from '../lib/i18n/index.svelte';
   import { router } from '../lib/router.svelte';
   import { store } from '../lib/store.svelte';
 
@@ -14,7 +15,7 @@
 </script>
 
 <div class="page">
-  <SubpageHead title="By level" zh="等級" />
+  <SubpageHead title={t().titles['me-levels']} zh="等級" />
 
   <ul class="list">
     {#each LEVELS as level (level.id)}
@@ -23,20 +24,20 @@
       <li>
         <a class="row level-row" href={router.href(`/path/${level.id}`)} onclick={router.link}>
           <span class="lv">
-            <strong>{level.en}</strong>
+            <strong>{t().levels[level.id]}</strong>
             <small>{level.cefr} · <span lang="zh-Hant-TW">{level.zh}</span></small>
           </span>
           <span class="lv-bar" aria-hidden="true"
             ><span style:transform="translateX({(total ? started / total : 0) * 100 - 100}%)"
             ></span></span
           >
-          <span class="row-value">{started} / {total.toLocaleString()}</span>
+          <span class="row-value">{started} / {formatNumber(total)}</span>
           <svg class="chevron" viewBox="0 0 8 14" aria-hidden="true"><path d="M1 1l6 6-6 6" /></svg>
         </a>
       </li>
     {/each}
   </ul>
-  <p class="footnote">Words started in each level, out of all the words it has.</p>
+  <p class="footnote">{t().path.levelsFootnote}</p>
 </div>
 
 <style>

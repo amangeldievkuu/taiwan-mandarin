@@ -2,6 +2,7 @@
   // The streak and XP at a glance: a little sprout in a pot with the days beside it (green once
   // you have practiced today, a gold seam when the pot has one), and the XP total. Both lead to Me.
   import Counter from './Counter.svelte';
+  import { t } from '../lib/i18n/index.svelte';
   import { router } from '../lib/router.svelte';
   import { store } from '../lib/store.svelte';
 
@@ -13,7 +14,7 @@
   class="stat-chips"
   href={router.href('/me')}
   onclick={router.link}
-  aria-label="{streak.count}-day streak{seams ? `, ${seams} gold seams` : ''}, {store.xp.total} XP"
+  aria-label={t().chips(streak.count, seams, store.xp.total)}
 >
   <span
     class="chip plant"

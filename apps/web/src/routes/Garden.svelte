@@ -3,49 +3,46 @@
   import SealAlbum from '../ui/SealAlbum.svelte';
   import StreakPlant from '../ui/StreakPlant.svelte';
   import SubpageHead from '../ui/SubpageHead.svelte';
+  import { intlLocale, t } from '../lib/i18n/index.svelte';
   import { store } from '../lib/store.svelte';
 
   /** Past plants (the shelf of finished streaks), newest first. */
   const shelf = $derived([...store.streak.shelf].reverse());
 
   const short = (date: string) =>
-    new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    new Date(`${date}T12:00:00`).toLocaleDateString(intlLocale(), {
+      day: 'numeric',
+      month: 'short',
+    });
 </script>
 
 <div class="page">
-  <SubpageHead title="Garden & seals" zh="花園" />
+  <SubpageHead title={t().me.garden} zh="花園" />
 
-  <h2 class="section-title">Your garden <span class="zh" lang="zh-Hant-TW">花園</span></h2>
+  <h2 class="section-title">{t().garden.title} <span class="zh" lang="zh-Hant-TW">花園</span></h2>
   <div class="shelf-card sheet">
     {#if shelf.length}
-      <ol class="shelf" aria-label="Past plants, newest first">
+      <ol class="shelf" aria-label={t().garden.past}>
         {#each shelf as bowl, i (bowl.start)}
           <li class="fired enter" style:--i={i}>
-            <StreakPlant {bowl} size={84} label="{bowl.days} days" />
-            <strong>{bowl.days} {bowl.days === 1 ? 'day' : 'days'}</strong>
+            <StreakPlant {bowl} size={84} label={t().garden.days(bowl.days)} />
+            <strong>{t().garden.days(bowl.days)}</strong>
             <small>{short(bowl.start)} – {short(bowl.end)}</small>
-            {#if bowl.seams.length}<small class="gold"
-                >{bowl.seams.length} gold {bowl.seams.length === 1 ? 'seam' : 'seams'}</small
+            {#if bowl.seams.length}<small class="gold">{t().garden.seams(bowl.seams.length)}</small
               >{/if}
           </li>
         {/each}
       </ol>
     {:else}
-      <p class="how empty-shelf">
-        Nothing on the shelf yet: your first plant is still growing. Plants come here after a longer
-        break, gold seams and all.
-      </p>
+      <p class="how empty-shelf">{t().garden.empty}</p>
     {/if}
     <p class="how">
-      <strong>How your plant grows.</strong> Every day you study waters a plum tree (梅, Taiwan's national
-      flower). Miss a day or two and nothing breaks: come back within three days and the crack in its
-      pot is mended with gold (金繼, kintsugi), the most beautiful part of the pot. After a longer break
-      the plant moves here to your garden, gold and all, and a new seed is planted. It becomes a small
-      tree at 7 days, buds at 30 and blooms at 100.
+      <strong>{t().garden.howTitle}</strong>
+      {t().garden.how}
     </p>
   </div>
 
-  <h2 class="section-title">Seals <span class="zh" lang="zh-Hant-TW">印譜</span></h2>
+  <h2 class="section-title">{t().garden.seals} <span class="zh" lang="zh-Hant-TW">印譜</span></h2>
   <div class="sheet seals-card">
     <SealAlbum seals={store.seals} />
   </div>

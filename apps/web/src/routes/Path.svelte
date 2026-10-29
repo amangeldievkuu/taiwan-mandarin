@@ -20,6 +20,7 @@
   import Icon from '../ui/Icon.svelte';
   import Seal from '../ui/Seal.svelte';
   import { content } from '../lib/content.svelte';
+  import { formatNumber, t } from '../lib/i18n/index.svelte';
   import { router } from '../lib/router.svelte';
   import { store } from '../lib/store.svelte';
 
@@ -43,11 +44,12 @@
     void store.updateSettings({ levels: LEVEL_IDS.filter((l) => next.includes(l)) });
   }
 
+  /** The bands, named in the catalog in this order. */
   const BANDS = [
-    { name: 'Novice', zh: '準備級', levels: ['N1', 'N2'] },
-    { name: 'Band A', zh: '入門基礎', levels: ['L1', 'L2'] },
-    { name: 'Band B', zh: '進階高階', levels: ['L3', 'L4'] },
-    { name: 'Band C', zh: '流利精通', levels: ['L5', 'L6'] },
+    { zh: '準備級', levels: ['N1', 'N2'] },
+    { zh: '入門基礎', levels: ['L1', 'L2'] },
+    { zh: '進階高階', levels: ['L3', 'L4'] },
+    { zh: '流利精通', levels: ['L5', 'L6'] },
   ] as const;
 </script>
 
@@ -56,19 +58,18 @@
     <div>
       <BackButton parent="/" optional />
       <p class="eyebrow">TOCFL · 華語文能力測驗</p>
-      <h1 class="title"><span class="zh">路徑</span>Your path</h1>
+      <h1 class="title"><span class="zh">路徑</span>{t().today.yourPath}</h1>
     </div>
   </header>
-  <p class="intro">
-    Taiwan's official exam path, Novice to Level 6. Words come from the TOCFL 8,000-word list and
-    the NAER 《臺灣華語文能力基準》; switch on the levels you want new cards from.
-  </p>
+  <p class="intro">{t().path.intro}</p>
 
-  {#each BANDS as band (band.name)}
-    <h2 class="section-title">{band.name} <span class="zh" lang="zh-Hant-TW">{band.zh}</span></h2>
+  {#each BANDS as band, b (band.zh)}
+    <h2 class="section-title">
+      {t().path.bands[b]} <span class="zh" lang="zh-Hant-TW">{band.zh}</span>
+    </h2>
     <ol class="stations">
       {#each band.levels as id, i (id)}
-        {@const info = LEVELS.find((l) => l.id === id) ?? { en: id, zh: '', cefr: '' }}
+        {@const info = LEVELS.find((l) => l.id === id) ?? { zh: '', cefr: '' }}
         {@const meta = manifest?.levels.find((l) => l.id === id)}
         {@const s = started[id]}
         {@const active = store.settings.levels.includes(id)}
@@ -82,7 +83,7 @@
             {/key}
             <div class="station-body">
               <div class="station-name">
-                <strong>{info.en}</strong>
+                <strong>{t().levels[id]}</strong>
                 <span class="level-tag">{info.cefr}</span>
               </div>
               <span class="station-zh" lang="zh-Hant-TW">{info.zh}</span>
@@ -95,8 +96,10 @@
                 <span class="started" style:transform="translateX({share * 100 - 100}%)"></span>
               </div>
               <small class="tabular">
-                {s.started.toLocaleString()} / {(meta?.count ?? 0).toLocaleString()} words
-                {#if meta && meta.tbcl > 0 && meta.tocfl > 0}· {meta.tocfl.toLocaleString()} TOCFL{/if}
+                {t().path.words(formatNumber(s.started), formatNumber(meta?.count ?? 0))}
+                {#if meta && meta.tbcl > 0 && meta.tocfl > 0}· {t().path.tocfl(
+                    formatNumber(meta.tocfl),
+                  )}{/if}
               </small>
             </div>
             <svg class="chevron" viewBox="0 0 8 14" aria-hidden="true"
@@ -108,23 +111,21 @@
             class="toggle"
             class:on={active}
             aria-pressed={active}
-            title={active ? 'New cards come from this level' : 'Study new words from this level'}
+            title={active ? t().path.activeTitle : t().path.inactiveTitle}
             onclick={() => toggle(id)}
           >
-            {#if active}<Icon name="check" size={16} /> Studying{:else}<Icon
+            {#if active}<Icon name="check" size={16} /> {t().word.studying}{:else}<Icon
                 name="plus"
                 size={16}
-              /> Study{/if}
+              />
+              {t().path.study}{/if}
           </button>
         </li>
       {/each}
     </ol>
   {/each}
 
-  <p class="footnote">
-    Level 6 (精通, C2) has no TOCFL list; it uses level 7 of the NAER list. Words marked "NAER" fill
-    gaps in lower levels and come after the TOCFL words.
-  </p>
+  <p class="footnote">{t().path.footnote}</p>
 </div>
 
 <style>

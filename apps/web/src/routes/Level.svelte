@@ -1,8 +1,10 @@
 <script lang="ts">
   import Loading from '../ui/Loading.svelte';
   import {
+    foldLatin,
     LEVEL_IDS,
     LEVELS,
+    looksVietnamese,
     pinyinWord,
     plainPinyin,
     TOPICS,
@@ -13,8 +15,11 @@
   import BackButton from '../ui/BackButton.svelte';
   import Icon from '../ui/Icon.svelte';
   import Seal from '../ui/Seal.svelte';
+  import Localized from '../ui/Localized.svelte';
   import WordDetail from '../ui/WordDetail.svelte';
   import { content } from '../lib/content.svelte';
+  import { glossOf } from '../lib/i18n/content';
+  import { formatNumber, t } from '../lib/i18n/index.svelte';
   import { router } from '../lib/router.svelte';
   import { store } from '../lib/store.svelte';
   import { LEVEL_SEAL } from './Path.svelte';
@@ -25,9 +30,7 @@
 
   let { level: raw }: Props = $props();
   const level = $derived<Level>(LEVEL_IDS.includes(raw as Level) ? (raw as Level) : 'N1');
-  const info = $derived(
-    LEVELS[LEVEL_IDS.indexOf(level)] ?? { id: level, zh: '', en: level, cefr: '' },
-  );
+  const info = $derived(LEVELS[LEVEL_IDS.indexOf(level)] ?? { id: level, zh: '', cefr: '' });
 
   let loading = $state(true);
   let failed = $state(false);
@@ -49,16 +52,18 @@
   const words = $derived(content.level(level));
   const topicsHere = $derived(TOPICS.filter((t) => words.some((w) => w.topic === t.id)));
 
+  /** Characters, toneless pinyin, or the meaning (accents optional: "hoc" finds "học"). */
   function matches(w: Word, q: string, plain: string): boolean {
     if (!q) return true;
     if (w.hanzi.includes(q) || w.variants?.some((v) => v.includes(q))) return true;
     if (plain && plainPinyin(w.pinyin).startsWith(plain)) return true;
-    return w.en.toLowerCase().includes(q.toLowerCase());
+    return foldLatin(glossOf(w).text).includes(foldLatin(q));
   }
 
   const filtered = $derived.by(() => {
     const q = query.trim();
-    const plain = /[a-z]/i.test(q) ? plainPinyin(q) : '';
+    // Vietnamese ("bạn") is never pinyin, though without its marks it would read as some.
+    const plain = /[a-z]/i.test(q) && !looksVietnamese(q) ? plainPinyin(q) : '';
     return words.filter((w) => {
       if (topic !== 'all' && w.topic !== topic) return false;
       if (status === 'new' && (store.cards[w.id] || store.inDeck(w.id))) return false;
@@ -137,7 +142,7 @@
       <Seal text={LEVEL_SEAL[level]} size={48} />
       <div>
         <p class="eyebrow">{info.cefr} · <span lang="zh-Hant-TW">{info.zh}</span></p>
-        <h1 class="title">{info.en}</h1>
+        <h1 class="title">{t().levels[level]}</h1>
       </div>
     </div>
     <button
@@ -151,14 +156,14 @@
         if (next.length) void store.updateSettings({ levels: next });
       }}
     >
-      {store.settings.levels.includes(level) ? 'Studying' : 'Study this level'}
+      {store.settings.levels.includes(level) ? t().word.studying : t().level.study}
     </button>
   </header>
 
-  <nav class="levels" aria-label="Levels" bind:this={strip}>
+  <nav class="levels" aria-label={t().level.levels} bind:this={strip}>
     <a class="lv all" href={router.href('/path')} onclick={router.link}>
       <Icon name="path" size={18} />
-      <span>All levels</span>
+      <span>{t().today.allLevels}</span>
     </a>
     {#each LEVELS as l (l.id)}
       {@const studying = store.settings.levels.includes(l.id)}
@@ -170,7 +175,7 @@
         onclick={(e) => switchTo(e, l.id)}
       >
         <Seal text={LEVEL_SEAL[l.id]} size={26} outline={!studying} />
-        <span>{l.en}</span>
+        <span>{t().levels[l.id]}</span>
       </a>
     {/each}
   </nav>
@@ -178,16 +183,16 @@
   <div class="tools">
     <label class="search">
       <Icon name="search" />
-      <span class="visually-hidden">Search this level</span>
+      <span class="visually-hidden">{t().level.search}</span>
       <input
         type="search"
-        placeholder="字, pinyin or English"
+        placeholder={t().level.placeholder}
         bind:value={query}
         oninput={() => (limit = 150)}
       />
     </label>
-    <div class="chips" role="group" aria-label="Show">
-      {#each [['all', 'All'], ['new', 'Not started'], ['studying', 'Studying'], ['deck', 'My deck']] as [value, label] (value)}
+    <div class="chips" role="group" aria-label={t().level.show}>
+      {#each [['all', t().level.all], ['new', t().level.notStarted], ['studying', t().word.studying], ['deck', t().level.deck]] as [value, label] (value)}
         <button
           type="button"
           class="chip"
@@ -197,22 +202,22 @@
       {/each}
     </div>
     {#if topicsHere.length > 1}
-      <div class="chips topics" role="group" aria-label="Topic">
+      <div class="chips topics" role="group" aria-label={t().level.topic}>
         <button
           type="button"
           class="chip"
           aria-pressed={topic === 'all'}
-          onclick={() => (topic = 'all')}>All topics</button
+          onclick={() => (topic = 'all')}>{t().level.allTopics}</button
         >
-        {#each topicsHere as t (t.id)}
+        {#each topicsHere as each (each.id)}
           <button
             type="button"
             class="chip"
-            aria-pressed={topic === t.id}
-            onclick={() => (topic = t.id)}
+            aria-pressed={topic === each.id}
+            onclick={() => (topic = each.id)}
           >
-            <span lang="zh-Hant-TW" class="hanzi">{t.zh.split('、')[0]}</span>
-            {t.en}
+            <span lang="zh-Hant-TW" class="hanzi">{each.zh.split('、')[0]}</span>
+            {t().topics[each.id]}
           </button>
         {/each}
       </div>
@@ -222,17 +227,17 @@
   <div class="split" class:with-detail={wide}>
     <div class="list-col">
       <div class="count">
-        <span class="tabular">{filtered.length.toLocaleString()} words</span>
+        <span class="tabular">{t().level.count(formatNumber(filtered.length))}</span>
         {#if status === 'new' && filtered.length}
-          <button type="button" class="link" onclick={addAllShown}>Add first 50 to my deck</button>
+          <button type="button" class="link" onclick={addAllShown}>{t().level.addFirst}</button>
         {/if}
       </div>
       {#if loading && words.length === 0}
         <Loading />
       {:else if failed && words.length === 0}
-        <p class="empty" role="alert">Couldn't load this. Check your connection and try again.</p>
+        <p class="empty" role="alert">{t().level.loadFailed}</p>
       {:else if filtered.length === 0}
-        <p class="empty"><span class="hanzi" lang="zh-Hant-TW">無</span>No words match.</p>
+        <p class="empty"><span class="hanzi" lang="zh-Hant-TW">無</span>{t().level.noMatch}</p>
       {:else}
         <ul class="list words">
           {#each shown as w (w.id)}
@@ -247,18 +252,18 @@
                 <span class="w-hanzi hanzi" lang="zh-Hant-TW">{w.hanzi}</span>
                 <span class="row-main">
                   <span class="w-pinyin">{pinyinLine(w)}</span>
-                  <span class="row-sub">{w.en}</span>
+                  <span class="row-sub"><Localized value={glossOf(w)} /></span>
                 </span>
                 {#if card}
                   <span
                     class="dot"
                     class:mature={card.card.stability >= 21}
-                    title={card.card.stability >= 21 ? 'Well remembered' : 'Studying'}
+                    title={card.card.stability >= 21 ? t().level.wellRemembered : t().word.studying}
                   ></span>
                 {:else if store.inDeck(w.id)}
-                  <span class="dot deck" title="In your deck"></span>
+                  <span class="dot deck" title={t().word.inDeck}></span>
                 {/if}
-                {#if w.src === 'tbcl'}<span class="src" title="From the NAER list">NAER</span>{/if}
+                {#if w.src === 'tbcl'}<span class="src" title={t().level.fromNaer}>NAER</span>{/if}
               </a>
             </li>
           {/each}
@@ -266,7 +271,7 @@
         {#if shown.length < filtered.length}<div bind:this={sentinel} class="sentinel"></div>{/if}
       {/if}
       {#if shown.length >= filtered.length}
-        <nav class="pager" aria-label="Neighbouring levels">
+        <nav class="pager" aria-label={t().level.neighbours}>
           {#if prevLevel}
             <a
               class="pager-link sheet pressable"
@@ -274,7 +279,10 @@
               onclick={(e) => switchTo(e, prevLevel.id)}
             >
               <Icon name="back" />
-              <span><small>Previous level</small><strong>{prevLevel.en}</strong></span>
+              <span
+                ><small>{t().level.previous}</small><strong>{t().levels[prevLevel.id]}</strong
+                ></span
+              >
             </a>
           {/if}
           {#if nextLevel}
@@ -283,7 +291,8 @@
               href={router.href(`/path/${nextLevel.id}`)}
               onclick={(e) => switchTo(e, nextLevel.id)}
             >
-              <span><small>Next level</small><strong>{nextLevel.en}</strong></span>
+              <span><small>{t().level.next}</small><strong>{t().levels[nextLevel.id]}</strong></span
+              >
               <Icon name="forward" />
             </a>
           {/if}

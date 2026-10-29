@@ -4,6 +4,7 @@
   import { untrack } from 'svelte';
   import { cubicOut } from 'svelte/easing';
   import { Tween } from 'svelte/motion';
+  import { formatNumber } from '../lib/i18n/index.svelte';
   import { reduced } from '../lib/motion';
 
   interface Props {
@@ -18,7 +19,7 @@
     value,
     from,
     duration = 700,
-    format = (n) => Math.round(n).toLocaleString('en-US'),
+    format = (n) => formatNumber(Math.round(n)),
   }: Props = $props();
 
   const tween = new Tween(
