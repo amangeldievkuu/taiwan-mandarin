@@ -3,7 +3,9 @@
 // the same clean-up as CC-CEDICT's. Measure words ("LT:") and Taiwan readings come from CC-CEDICT.
 
 import { readFileSync } from 'node:fs';
+import type { ForeignLang } from '@taiwan-mandarin/shared';
 import { cleanDefinition, type CedictEntry } from './cedict.ts';
+import type { GlossRules } from './lexicon.ts';
 
 const LINE = /^(\S+ \S+ \[[^\]]*\]) \/(.*)\/$/;
 
@@ -39,18 +41,39 @@ export function readCvdict(path: string): Map<string, string[]> {
   return map;
 }
 
-/** Gives CC-CEDICT entries their Vietnamese definitions. Returns how many CVDICT has. */
-export function attachVietnamese(
+/**
+ * Gives CC-CEDICT entries their definitions in `lang` from a translation keyed like CC-CEDICT's
+ * lines (CVDICT). Returns how many it has.
+ */
+export function attachTranslations(
   cedict: readonly CedictEntry[],
-  cvdict: ReadonlyMap<string, string[]>,
+  lang: ForeignLang,
+  translated: ReadonlyMap<string, string[]>,
 ): number {
   let found = 0;
   for (const e of cedict) {
-    const vi = cvdict.get(e.key);
-    if (vi) {
-      e.vi = vi;
+    const defs = translated.get(e.key);
+    if (defs) {
+      e.tr = { ...e.tr, [lang]: defs };
       found++;
     }
   }
   return found;
 }
+
+/** CVDICT's wording of the senses flashcards leave out (see `CEDICT_RULES` in lexicon.ts). */
+export const CVDICT_RULES: GlossRules = {
+  // "họ Tán", "biến thể (cũ) của", "dùng trong", "xem (thêm)", "viết tắt của", "cũng viết là",
+  // "(cũ)". A surname is "họ" + a capitalized name ("họ hàng" is a word: relatives).
+  skip: /^(họ (hai chữ |kép )?\p{Lu}|biến thể (cũ |cổ )?(của|cho) |\(cổ\) biến thể|chữ cổ của |dùng trong |xem |viết tắt (của|cho) |cũng (được )?viết |\((cũ|cổ)\) |\(cách (nói|gọi) cũ\))/iu,
+  generalMeasureWord: [
+    /^\(lượng từ dùng trước danh từ không có lượng từ cụ thể\)$/,
+    'lượng từ chung',
+  ],
+  notASense: /^(cũng (đọc|phát âm)|cũng (được )?viết|xem thêm|viết tắt)/i,
+  // English's "(of sb or sth) to be at" is "(ai đó hoặc cái gì đó) ở (vị trí)": a meaning, not a
+  // note.
+  noteOnly: /^\((?!(ai|cái|vật|người|của|về|đối với) ).*\)$/u,
+  // Vietnamese takes more letters to say the same, so its glosses get a little more room.
+  length: { sense: 56, total: 100 },
+};

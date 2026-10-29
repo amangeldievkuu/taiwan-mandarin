@@ -2,7 +2,7 @@
 // dictionary's own "Taiwan pr." readings, and rewrites cross-references to Traditional only.
 
 import { readFileSync } from 'node:fs';
-import { parseSyllable, pinyinWord } from '@taiwan-mandarin/shared';
+import { parseSyllable, pinyinWord, type ForeignLang } from '@taiwan-mandarin/shared';
 
 export interface CedictEntry {
   /** The line's own key, "學生 学生 [xue2 sheng5]": exact, case and all, for joining CVDICT. */
@@ -17,8 +17,8 @@ export interface CedictEntry {
   classifiers: string[];
   /** Capitalized reading: a name or place. */
   proper: boolean;
-  /** Vietnamese definitions from CVDICT, cleaned the same way (see cvdict.ts). */
-  vi?: string[];
+  /** Definitions in other languages, from CC-CEDICT's translations (CVDICT), cleaned the same way. */
+  tr?: Partial<Record<ForeignLang, string[]>>;
 }
 
 /** "xia4hai2" / "Tai2 wan1" / "lu:4" → "xia4 hai2" / "tai2 wan1" / "lü4" */

@@ -22,10 +22,11 @@ import {
 } from '@taiwan-mandarin/shared';
 import { checkVocab, formatIssues } from '@taiwan-mandarin/shared/taiwan-standard';
 import { charReadings, readCedict, syllableInventory } from './cedict.ts';
-import { attachVietnamese, readCvdict } from './cvdict.ts';
+import { attachTranslations } from './cvdict.ts';
 import { buildDictionary } from './dictionary.ts';
 import { charHanViet, hanViet, readHanViet } from './hanviet.ts';
 import { pickExamples, readTatoeba } from './examples.ts';
+import { CONTENT_LANGUAGES } from './languages.ts';
 import { buildLexicon } from './lexicon.ts';
 import { readFrequencyRanks, readNaer, readTocfl } from './lists.ts';
 import { DATA, OUT, RAW, ROOT } from './paths.ts';
@@ -59,9 +60,12 @@ const cedict = readCedict(RAW.cedict);
 const ctx = { inventory: syllableInventory(cedict), readings: charReadings(cedict) };
 done(`${cedict.length} entries`);
 
-done = step('CVDICT');
-const translated = attachVietnamese(cedict, readCvdict(RAW.cvdict));
-done(`${translated} of ${cedict.length} entries in Vietnamese`);
+for (const { lang, name, dictionary } of CONTENT_LANGUAGES) {
+  if (!dictionary) continue;
+  done = step(dictionary.name);
+  const translated = attachTranslations(cedict, lang, dictionary.read(dictionary.path));
+  done(`${translated} of ${cedict.length} entries in ${name}`);
+}
 
 done = step('word lists');
 const tocfl = readTocfl(RAW.tocfl);

@@ -90,7 +90,7 @@ export function buildDictionary(
       add(
         e.trad,
         { t: e.trad, p: pinyin, d: e.defs, ...(word ? { w: word.id, l: word.level } : {}) },
-        e.vi,
+        e.tr?.vi,
         e.proper,
       );
       continue;
@@ -104,7 +104,7 @@ export function buildDictionary(
         ...(e.classifiers.length ? { c: e.classifiers.join(' ') } : {}),
         ...(word ? { w: word.id, l: word.level } : {}),
       },
-      e.vi,
+      e.tr?.vi,
       e.proper,
     );
     // Also findable by the Taiwan form when CC-CEDICT spells it differently (臺/台, 裡/裏).
@@ -112,7 +112,7 @@ export function buildDictionary(
       add(
         e.trad,
         { t: e.trad, p: pinyin, d: e.defs, ...(word ? { w: word.id, l: word.level } : {}) },
-        e.vi,
+        e.tr?.vi,
         e.proper,
       );
     }

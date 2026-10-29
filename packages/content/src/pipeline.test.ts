@@ -9,7 +9,12 @@ import { citationTones, parseForms, pinyinVariants, readForm, zhuyinVariants } f
 import { alignPinyin, type PinyinContext } from './pinyin.ts';
 import { buildDictionary, taiwanCharReadings } from './dictionary.ts';
 import { readReaders } from './readers.ts';
-import { attachVietnamese, isTaiwanReadingNote, parseCvdictLine } from './cvdict.ts';
+import {
+  attachTranslations,
+  CVDICT_RULES,
+  isTaiwanReadingNote,
+  parseCvdictLine,
+} from './cvdict.ts';
 import { charHanViet, hanViet, type HanVietTable } from './hanviet.ts';
 import { fold, gloss, studyGloss } from './lexicon.ts';
 
@@ -221,8 +226,8 @@ describe('CVDICT (Vietnamese)', () => {
       (l) => parseCedictLine(l) ?? [],
     );
     const cvdict = cvdictOf(['和 和 [He2] /họ [He2]/', '和 和 [he2] /và/']);
-    expect(attachVietnamese(cedict, cvdict)).toBe(2);
-    expect(cedict.map((e) => e.vi)).toEqual([['họ Hé'], ['và']]);
+    expect(attachTranslations(cedict, 'vi', cvdict)).toBe(2);
+    expect(cedict.map((e) => e.tr?.vi)).toEqual([['họ Hé'], ['và']]);
   });
 
   it('drops measure words and Taiwan readings however they are worded', () => {
@@ -260,20 +265,20 @@ describe('CVDICT (Vietnamese)', () => {
       '行 行 [hang2] /hàng; dòng/nghề/',
       '行 行 [xing2] /đi; đến/có khả năng/',
     ]);
-    attachVietnamese(cedict, cvdict);
+    attachTranslations(cedict, 'vi', cvdict);
     const dict = new Map([[fold('行'), cedict]]);
     expect(gloss('行', 'xing2', dict)).toMatchObject({
       en: 'to walk; to go; capable',
-      vi: 'đi; đến; có khả năng',
+      tr: { vi: 'đi; đến; có khả năng' },
     });
-    expect(gloss('行', 'hang2', dict)?.vi).toBe('hàng; dòng; nghề');
-    expect(studyGloss(['họ Tán', 'họ hàng', 'biến thể của 臺 (tái)', 'xem thêm 得罪'], 'vi')).toBe(
-      'họ Tán; họ hàng; biến thể của 臺 (tái)',
-    );
+    expect(gloss('行', 'hang2', dict)?.tr.vi).toBe('hàng; dòng; nghề');
+    expect(
+      studyGloss(['họ Tán', 'họ hàng', 'biến thể của 臺 (tái)', 'xem thêm 得罪'], CVDICT_RULES),
+    ).toBe('họ Tán; họ hàng; biến thể của 臺 (tái)');
     expect(
       studyGloss(
         ['tồn tại; còn sống', '(ai đó hoặc cái gì đó) ở (vị trí)', '(văn học) khổ (sở)'],
-        'vi',
+        CVDICT_RULES,
       ),
     ).toBe('tồn tại; còn sống; (ai đó hoặc cái gì đó) ở (vị trí)');
   });
@@ -286,7 +291,7 @@ describe('Vietnamese content', () => {
     '台灣 台湾 [Tai2 wan1] /variant of 臺灣|台湾[Tai2 wan1]/',
   ].flatMap((l) => parseCedictLine(l) ?? []);
   const vi = new Map<string, string[]>([['垃圾 垃圾 [la1 ji1]', ['rác']]]);
-  attachVietnamese(cedict, vi);
+  attachTranslations(cedict, 'vi', vi);
   const word = (hanzi: string, pinyin: string, en: string, extra: Partial<Word> = {}): Word => ({
     id: hanzi,
     hanzi,
