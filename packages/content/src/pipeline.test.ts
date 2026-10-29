@@ -10,6 +10,7 @@ import { alignPinyin, type PinyinContext } from './pinyin.ts';
 import { buildDictionary, taiwanCharReadings } from './dictionary.ts';
 import { readReaders } from './readers.ts';
 import { attachVietnamese, isTaiwanReadingNote, parseCvdictLine } from './cvdict.ts';
+import { charHanViet, hanViet, type HanVietTable } from './hanviet.ts';
 import { fold, gloss, studyGloss } from './lexicon.ts';
 
 const LINES = [
@@ -344,5 +345,37 @@ describe('Vietnamese content', () => {
       JSON.stringify({ ...reader, vi: { ...reader.vi, translation: [] } }),
     );
     expect(() => readReaders(dir, words, shards, viShards, 4)).toThrow(/Vietnamese translation/);
+  });
+});
+
+describe('Hán-Việt', () => {
+  const table: HanVietTable = new Map([
+    [
+      '好',
+      new Map([
+        ['hao3', 'hảo'],
+        ['hao4', 'hiếu'],
+      ]),
+    ],
+    ['朋', new Map([['', 'bằng']])],
+    ['友', new Map([['you3', 'hữu']])],
+    ['喔', new Map([['', null]])],
+    ['人', new Map([['', 'nhân']])],
+  ]);
+
+  it('reads a character as the word reads it', () => {
+    expect(charHanViet(table, '好', 'hao3')).toBe('hảo');
+    expect(charHanViet(table, '好', 'hao4')).toBe('hiếu');
+    // A neutral tone takes the same syllable's reading in any tone.
+    expect(charHanViet(table, '友', 'you5')).toBe('hữu');
+    expect(charHanViet(table, '喔', 'o1')).toBeNull();
+    expect(charHanViet(table, '嗎', 'ma5')).toBeUndefined();
+  });
+
+  it('reads words, or gives up on any character without a reading', () => {
+    expect(hanViet(table, '朋友', 'peng2 you5')).toBe('bằng hữu');
+    expect(hanViet(table, '好人', 'hao3 ren2')).toBe('hảo nhân');
+    expect(hanViet(table, '好嗎', 'hao3 ma5')).toBeUndefined();
+    expect(hanViet(table, '好喔', 'hao3 o1')).toBeUndefined();
   });
 });

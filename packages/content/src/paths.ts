@@ -21,6 +21,7 @@ export const DATA = {
   aiGlosses: at('data/generated/glosses-ai.jsonl'),
   aiGlossesVi: at('data/generated/glosses-vi.jsonl'),
   viExamples: at('data/generated/examples-vi.jsonl'),
+  hanviet: at('data/hanviet.json'),
   readers: at('data/readers'),
 };
 

@@ -26,6 +26,8 @@ export const taiwanCharReadings = taiwanReading;
 export function buildDictionary(
   cedict: readonly CedictEntry[],
   words: readonly Word[],
+  /** A headword's Sino-Vietnamese reading, for the Vietnamese shards. */
+  hanViet: (hanzi: string, pinyin: string) => string | undefined = () => undefined,
 ): { shards: DictShard[]; viShards: DictShard[]; maxLength: number; entries: number } {
   // Study-path words by folded written form (headword and variants).
   const byForm = new Map<string, Word[]>();
@@ -61,7 +63,12 @@ export function buildDictionary(
   const twin = new WeakMap<DictEntry, DictEntry>();
   const add = (head: string, entry: DictEntry, vi: string[] | undefined, proper = false) => {
     rank.set(entry, entry.l ? levelIndex(entry.l) : proper ? 30 : 20);
-    twin.set(entry, vi?.length ? { ...entry, d: vi } : { ...entry, en: 1 });
+    const h = hanViet(entry.t, entry.p);
+    twin.set(entry, {
+      ...entry,
+      ...(vi?.length ? { d: vi } : { en: 1 }),
+      ...(h ? { h } : {}),
+    });
     const shard = shards[dictShardOf(head)] as DictShard;
     (shard[head] ??= []).push(entry);
   };

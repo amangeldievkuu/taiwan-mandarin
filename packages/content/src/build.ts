@@ -24,6 +24,7 @@ import { checkVocab, formatIssues } from '@taiwan-mandarin/shared/taiwan-standar
 import { charReadings, readCedict, syllableInventory } from './cedict.ts';
 import { attachVietnamese, readCvdict } from './cvdict.ts';
 import { buildDictionary } from './dictionary.ts';
+import { charHanViet, hanViet, readHanViet } from './hanviet.ts';
 import { pickExamples, readTatoeba } from './examples.ts';
 import { buildLexicon } from './lexicon.ts';
 import { readFrequencyRanks, readNaer, readTocfl } from './lists.ts';
@@ -93,8 +94,27 @@ done(
   `${words.length} words ${JSON.stringify(report.bySource)}, ${words.filter((w) => !w.en).length} without gloss, ${words.filter((w) => !w.vi).length} without a Vietnamese one`,
 );
 
+done = step('Hán-Việt');
+const hanVietTable = readHanViet(DATA.hanviet);
+const hanVietMissing = new Set<string>();
+for (const w of words) {
+  const hv = hanViet(hanVietTable, w.hanzi, w.pinyin);
+  if (hv) w.hv = hv;
+  const syllables = w.pinyin.split(' ');
+  [...w.hanzi].forEach((char, i) => {
+    if (
+      /\p{Script=Han}/u.test(char) &&
+      charHanViet(hanVietTable, char, syllables[i] ?? '') === undefined
+    )
+      hanVietMissing.add(char);
+  });
+}
+done(`${words.filter((w) => w.hv).length} words, ${hanVietMissing.size} characters missing`);
+
 done = step('dictionary');
-const dictionary = buildDictionary(cedict, words);
+const dictionary = buildDictionary(cedict, words, (hanzi, pinyin) =>
+  hanViet(hanVietTable, hanzi, pinyin),
+);
 done(`${dictionary.entries} entries, longest ${dictionary.maxLength}`);
 
 done = step('examples');
@@ -291,6 +311,12 @@ writeFileSync(
       .filter((w) => !w.vi)
       .map((w) => `${w.id}\t${w.pinyin}\t${w.level}\t${w.en}`)
       .join('\n') +
+    '\n',
+);
+writeFileSync(
+  join(ROOT, 'data/generated/hanviet-missing.txt'),
+  '# Characters of study words with no Hán-Việt reading in data/hanviet.json\n' +
+    [...hanVietMissing].join('') +
     '\n',
 );
 writeFileSync(

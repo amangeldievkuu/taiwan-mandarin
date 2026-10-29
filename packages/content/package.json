@@ -10,7 +10,8 @@
     "ensure": "node --conditions=source src/ensure.ts",
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "examples": "node --conditions=source src/generate-examples.ts"
+    "examples": "node --conditions=source src/generate-examples.ts",
+    "translate-vi": "node --conditions=source src/translate-vi.ts"
   },
   "dependencies": {
     "@taiwan-mandarin/shared": "*",
