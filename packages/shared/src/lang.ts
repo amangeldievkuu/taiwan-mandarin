@@ -13,6 +13,11 @@ export const LANG_IDS = LANGS.map((l) => l.id) as [Lang, ...Lang[]];
 export const isLang = (value: unknown): value is Lang =>
   typeof value === 'string' && (LANG_IDS as string[]).includes(value);
 
+/** A language with its own content files beside the English ones (content/vi/, dict/vi/). */
+export type ForeignLang = Exclude<Lang, 'en'>;
+
+export const FOREIGN_LANGS = LANG_IDS.filter((l): l is ForeignLang => l !== 'en');
+
 /**
  * Latin text without accents, lowercase, for matching what a learner types without them:
  * "Học sinh" → "hoc sinh", "đi" → "di", "nǚ" → "nu".

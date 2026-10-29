@@ -4,19 +4,17 @@
 // Readings from the MOE 《重編國語辭典修訂本》, checked against moedict.tw (see README).
 // pinyin: numbered, one syllable per character, citation tones, 5 = neutral.
 
-import type { Level } from './types.ts';
+import { FOREIGN_LANGS, type ForeignLang } from '../lang.ts';
+import { twKey, type Level, type Meanings, type TaiwanNotes } from './types.ts';
 
-export interface CuratedWord {
+/** A starter word, with its meaning and Taiwan note in each other language (`vi`, `twVi`). */
+export interface CuratedWord extends Meanings, TaiwanNotes {
   /** Id used before the TOCFL import; kept so saved progress can be migrated. */
   legacyId: string;
   hanzi: string;
   pinyin: string;
   en: string;
-  /** Vietnamese meaning. */
-  vi?: string;
   tw?: string;
-  /** `tw` in Vietnamese. */
-  twVi?: string;
   mainland?: string;
   readingUnverified?: boolean;
   /** Path level for words that are in neither official list. */
@@ -174,9 +172,12 @@ const ROWS: Row[] = [
   ['ma', '嗎', 'ma5', 'question particle'],
 ];
 
+/** A language's meanings, and its Taiwan notes, by headword. */
+type Translations = Readonly<Record<string, string | [meaning: string, tw: string]>>;
+
 /** Vietnamese meanings, and the Taiwan notes in Vietnamese, by headword. */
 // prettier-ignore
-const VI: Readonly<Record<string, string | [vi: string, twVi: string]>> = {
+const VI: Translations = {
   你好: 'xin chào',
   您好: 'xin chào (lịch sự)',
   你好嗎: 'bạn khỏe không?',
@@ -300,15 +301,25 @@ const VI: Readonly<Record<string, string | [vi: string, twVi: string]>> = {
   嗎: 'trợ từ nghi vấn',
 };
 
-export const CURATED: readonly CuratedWord[] = ROWS.map(([legacyId, hanzi, pinyin, en, extra]) => {
-  const vi = VI[hanzi];
-  return {
-    legacyId,
-    hanzi,
-    pinyin,
-    en,
-    ...(typeof vi === 'string' ? { vi } : vi ? { vi: vi[0], twVi: vi[1] } : {}),
-    level: LEVELS[hanzi],
-    ...extra,
-  };
-});
+/** The languages with hand-written meanings for the starter words. */
+export const TRANSLATIONS: { readonly [L in ForeignLang]?: Translations } = { vi: VI };
+
+/** A starter word's meaning and Taiwan note in each language that has them. */
+const translated = (hanzi: string): Meanings & TaiwanNotes =>
+  Object.assign(
+    {},
+    ...FOREIGN_LANGS.map((lang) => {
+      const t = TRANSLATIONS[lang]?.[hanzi];
+      return typeof t === 'string' ? { [lang]: t } : t ? { [lang]: t[0], [twKey(lang)]: t[1] } : {};
+    }),
+  ) as Meanings & TaiwanNotes;
+
+export const CURATED: readonly CuratedWord[] = ROWS.map(([legacyId, hanzi, pinyin, en, extra]) => ({
+  legacyId,
+  hanzi,
+  pinyin,
+  en,
+  ...translated(hanzi),
+  level: LEVELS[hanzi],
+  ...extra,
+}));

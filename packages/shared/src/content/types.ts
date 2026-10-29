@@ -1,10 +1,27 @@
 // Content types, shared by the web app, the content pipeline and the API.
 
-import type { Lang } from '../lang.ts';
+import type { ForeignLang, Lang } from '../lang.ts';
 //
 // Each language has its own content files: English in content/ and dict/, Vietnamese in content/vi/
-// and dict/vi/. A Vietnamese file is the English one plus the fields marked "Vietnamese files", so a
-// learner loads one set or the other.
+// and dict/vi/, and so on. A language's file is the English one plus that language's fields (named
+// by its code: `vi`, `viSource`, `twVi`), so a learner loads one set or the other.
+
+/** Where a meaning in another language comes from: hand-written, CVDICT (CC-CEDICT translated), or written with AI. */
+export type MeaningSource = 'curated' | 'cvdict' | 'ai';
+
+/** A word's meaning in each other language (that language's files; missing → show `en`). */
+export type Meanings = { [L in ForeignLang]?: string };
+
+/** Where each language's meaning comes from (`viSource`). */
+export type MeaningSources = { [L in ForeignLang as `${L}Source`]?: MeaningSource };
+
+/** `tw` in each other language (`twVi`). */
+export type TaiwanNotes = { [L in ForeignLang as `tw${Capitalize<L>}`]?: string };
+
+export const sourceKey = <L extends ForeignLang>(lang: L): `${L}Source` => `${lang}Source`;
+
+export const twKey = <L extends ForeignLang>(lang: L): `tw${Capitalize<L>}` =>
+  `tw${lang.charAt(0).toUpperCase()}${lang.slice(1)}` as `tw${Capitalize<L>}`;
 
 /**
  * Study path, following the TOCFL bands. N1–L5 come from the official 《華語八千詞表》;
@@ -63,7 +80,8 @@ export interface Topic {
   en: string;
 }
 
-export interface Example {
+/** An example sentence; each other language's files add its translation (`vi`; missing → show `en`). */
+export interface Example extends Meanings {
   zh: string;
   /** Numbered pinyin for the Chinese characters of `zh`, one syllable each, in order. */
   pinyin: string;
@@ -73,14 +91,12 @@ export interface Example {
    */
   wordLengths?: number[];
   en: string;
-  /** Vietnamese translation (Vietnamese files; missing → show `en`). */
-  vi?: string;
   source: 'tatoeba' | 'ai' | 'curated';
   /** Source id, e.g. the Tatoeba sentence number. */
   ref?: string;
 }
 
-export interface Word {
+export interface Word extends Meanings, MeaningSources, TaiwanNotes {
   /** The headword, or "headword~reading" when the same characters have several readings. */
   id: string;
   hanzi: string;
@@ -101,14 +117,8 @@ export interface Word {
   cl?: string;
   examples?: Example[];
   glossSource: 'cedict' | 'curated' | 'ai' | 'none';
-  /** Vietnamese meaning (Vietnamese files; missing → show `en`). */
-  vi?: string;
-  /** Where `vi` comes from: hand-written, CVDICT (CC-CEDICT translated), or written with AI. */
-  viSource?: 'curated' | 'cvdict' | 'ai';
   /** Note about Taiwan usage; marks the word as Taiwan-specific. */
   tw?: string;
-  /** `tw` in Vietnamese (Vietnamese files). */
-  twVi?: string;
   /** Sino-Vietnamese (Hán-Việt) reading, "quốc gia" for 國家 (Vietnamese files). */
   hv?: string;
   /** Mainland equivalent (in Traditional characters), shown only as a labeled note. */
@@ -150,7 +160,7 @@ export interface DictEntry {
   p: string;
   /** Definitions, in the file's language. */
   d: string[];
-  /** Vietnamese files: CVDICT lacks the entry, so `d` is the English. */
+  /** Another language's files: it has no definitions for the entry, so `d` is the English. */
   en?: 1;
   /** Sino-Vietnamese reading (Vietnamese files). */
   h?: string;
@@ -169,8 +179,11 @@ export const DICT_SHARDS = 128;
 
 export const dictShardOf = (text: string): number => (text.codePointAt(0) ?? 0) % DICT_SHARDS;
 
-/** A graded reader as authored in data/readers/<id>.json. */
-export interface ReaderSource {
+/**
+ * A graded reader as authored in data/readers/<id>.json, with its title, summary, translation and
+ * glossary in each other language (`vi`; the build says which are required).
+ */
+export interface ReaderSource extends Partial<Record<ForeignLang, ReaderTranslation>> {
   id: string;
   level: Level;
   topic: TopicId;
@@ -183,8 +196,6 @@ export interface ReaderSource {
   translation: string[];
   /** Glosses for words above the reader's level, by written form. */
   glossary?: Record<string, string>;
-  /** Vietnamese title, summary, translation and glossary. */
-  vi: ReaderTranslation;
   /** Written with AI and not yet reviewed by a person. */
   draft?: boolean;
 }
@@ -212,9 +223,14 @@ export interface ReaderToken {
   gv?: string;
 }
 
-export interface Reader extends Omit<ReaderSource, 'paragraphs' | 'glossary' | 'vi'> {
-  /** Vietnamese files. */
-  vi?: Omit<ReaderTranslation, 'glossary'>;
+/** The field of a reader token that holds `g` in each other language. */
+export const TOKEN_GLOSS = { vi: 'gv' } as const satisfies Record<ForeignLang, keyof ReaderToken>;
+
+/** A reader as built; each other language's files add its title, summary and translation. */
+export interface Reader
+  extends
+    Omit<ReaderSource, 'paragraphs' | 'glossary' | ForeignLang>,
+    Partial<Record<ForeignLang, Omit<ReaderTranslation, 'glossary'>>> {
   paragraphs: ReaderToken[][];
   /** Number of distinct study-path words. */
   wordCount: number;

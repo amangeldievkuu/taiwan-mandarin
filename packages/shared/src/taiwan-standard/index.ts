@@ -4,7 +4,8 @@
 
 import { Converter } from 'opencc-js/cn2t';
 import { splitSyllables } from '../phonetics.ts';
-import type { Topic, Word } from '../content/types.ts';
+import { sourceKey, twKey, type Topic, type Word } from '../content/types.ts';
+import { FOREIGN_LANGS } from '../lang.ts';
 import { ALLOWLIST, OPENCC_OVERREACH, type AllowEntry } from './allowlist.ts';
 import { MAINLAND_READINGS, MAINLAND_TERMS } from './denylist.ts';
 
@@ -139,15 +140,24 @@ export function vocabTexts(words: readonly Word[], topics: readonly Topic[]): Te
       // CC-CEDICT glosses are reference text quoting other forms; only our own glosses are checked.
       ...(w.glossSource === 'cedict' ? [] : [{ text: w.en, where: `vocab:${w.id}.en` }]),
       // CVDICT is CC-CEDICT translated, so the same goes for its Vietnamese.
-      ...(w.vi && w.viSource !== 'cvdict' ? [{ text: w.vi, where: `vocab:${w.id}.vi` }] : []),
+      ...FOREIGN_LANGS.flatMap((l) => {
+        const text = w[l];
+        return text && w[sourceKey(l)] !== 'cvdict' ? [{ text, where: `vocab:${w.id}.${l}` }] : [];
+      }),
       ...(w.tw ? [{ text: w.tw, where: `vocab:${w.id}.tw` }] : []),
-      ...(w.twVi ? [{ text: w.twVi, where: `vocab:${w.id}.twVi` }] : []),
+      ...FOREIGN_LANGS.flatMap((l) => {
+        const text = w[twKey(l)];
+        return text ? [{ text, where: `vocab:${w.id}.${twKey(l)}` }] : [];
+      }),
       ...(w.mainland
         ? [{ text: w.mainland, where: `vocab:${w.id}.mainland`, mainland: true }]
         : []),
       ...(w.examples ?? []).flatMap((e, i) => [
         { text: e.zh, where: `vocab:${w.id}.examples.${i}` },
-        ...(e.vi ? [{ text: e.vi, where: `vocab:${w.id}.examples.${i}.vi` }] : []),
+        ...FOREIGN_LANGS.flatMap((l) => {
+          const text = e[l];
+          return text ? [{ text, where: `vocab:${w.id}.examples.${i}.${l}` }] : [];
+        }),
       ]),
     ]),
   ];

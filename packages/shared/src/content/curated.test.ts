@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { splitSyllables, toZhuyin } from '../phonetics.ts';
-import { CURATED } from './curated.ts';
+import { twKey } from './types.ts';
+import { CURATED, TRANSLATIONS } from './curated.ts';
+import type { ForeignLang } from '../lang.ts';
 
 describe('curated starter words', () => {
   it('have unique legacy ids and headwords', () => {
@@ -14,12 +16,15 @@ describe('curated starter words', () => {
     expect(word.en.trim()).not.toBe('');
   });
 
-  it('have Vietnamese for every meaning and Taiwan note', () => {
-    for (const word of CURATED) {
-      expect(word.vi?.trim(), word.hanzi).toBeTruthy();
-      expect(Boolean(word.twVi), `${word.hanzi} twVi`).toBe(Boolean(word.tw));
-    }
-  });
+  it.each(Object.keys(TRANSLATIONS) as ForeignLang[])(
+    'have %s for every meaning and Taiwan note',
+    (lang) => {
+      for (const word of CURATED) {
+        expect(word[lang]?.trim(), `${word.hanzi} ${lang}`).toBeTruthy();
+        expect(Boolean(word[twKey(lang)]), `${word.hanzi} ${twKey(lang)}`).toBe(Boolean(word.tw));
+      }
+    },
+  );
 
   it('use Taiwan readings', () => {
     const pinyin = (hanzi: string) => CURATED.find((w) => w.hanzi === hanzi)?.pinyin;
