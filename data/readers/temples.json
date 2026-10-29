@@ -26,5 +26,22 @@
     "擲筊": "to throw divination blocks",
     "大甲": "Dajia (a district of Taichung)",
     "遶境": "(religious) procession around the territory"
+  },
+  "vi": {
+    "title": "Văn hóa đền miếu",
+    "summary": "Mẹ Tổ, Thổ Địa, xin keo và cuộc tuần du ở Đại Giáp.",
+    "translation": [
+      "Đi trên đường phố Đài Loan, thường có thể thấy những ngôi miếu lớn nhỏ.",
+      "Trong miếu thờ đủ các vị thần, chẳng hạn Mẹ Tổ (Mazu) phù hộ người đi biển bình an, và ông Thổ Địa cai quản đất đai.",
+      "Nhiều người khi gặp kỳ thi, đi tìm việc hay thấy trong người không khỏe, sẽ đến miếu thắp hương, cầu thần linh phù hộ.",
+      "Có người còn rút quẻ hoặc xin keo, mong nhận được chỉ dẫn của thần linh.",
+      "Mỗi năm vào tháng Ba âm lịch, cuộc tuần du của Mẹ Tổ Đại Giáp thu hút hàng chục vạn tín đồ cùng đi bộ, trở thành một trong những hoạt động tôn giáo náo nhiệt nhất Đài Loan.",
+      "Với nhiều người Đài Loan, miếu không chỉ là trung tâm tín ngưỡng, mà còn là nơi quan trọng trong đời sống cộng đồng."
+    ],
+    "glossary": {
+      "擲筊": "xin keo (gieo hai mảnh gỗ để hỏi ý thần)",
+      "大甲": "Đại Giáp (một quận của Đài Trung)",
+      "遶境": "rước kiệu tuần du (đi vòng quanh địa phận)"
+    }
   }
 }

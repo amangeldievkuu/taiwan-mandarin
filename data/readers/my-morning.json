@@ -15,5 +15,14 @@
     "At seven in the morning I get up. I drink a cup of coffee and eat a piece of bread.",
     "My home is in Taipei. I take the MRT to school.",
     "I am a student. I really like my school, and I like my teacher too."
-  ]
+  ],
+  "vi": {
+    "title": "Buổi sáng của tôi",
+    "summary": "Một bạn học sinh ở Đài Bắc bắt đầu ngày mới.",
+    "translation": [
+      "Bảy giờ sáng, tôi thức dậy. Tôi uống một ly cà phê, ăn một cái bánh mì.",
+      "Nhà tôi ở Đài Bắc. Tôi đi tàu điện MRT đến trường.",
+      "Tôi là học sinh. Tôi rất thích trường của tôi, cũng thích giáo viên của tôi."
+    ]
+  }
 }

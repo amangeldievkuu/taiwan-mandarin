@@ -27,5 +27,23 @@
     "達悟族": "the Tao (Yami) people",
     "豐年祭": "harvest festival",
     "拼板舟": "plank boat (Tao canoe)"
+  },
+  "vi": {
+    "title": "Văn hóa các dân tộc bản địa",
+    "summary": "Mười sáu dân tộc, lễ hội của họ, và sự hồi sinh của tiếng mẹ đẻ.",
+    "translation": [
+      "Đài Loan hiện có mười sáu dân tộc bản địa được chính quyền công nhận, mỗi tộc người đều có ngôn ngữ, truyền thống và lễ hội riêng.",
+      "Chẳng hạn, lễ hội mùa màng của người Amis là nghi lễ quan trọng để tạ ơn linh hồn tổ tiên và mừng được mùa, còn người Tao thì nổi tiếng với chiếc thuyền ván ghép truyền thống.",
+      "Trước đây, dưới ảnh hưởng của chính sách đồng hóa, nhiều ngôn ngữ bản địa đứng trước nguy cơ biến mất.",
+      "Vài chục năm gần đây, khi xã hội ngày càng coi trọng đa văn hóa, quyền của các dân tộc bản địa dần được bảo đảm, việc dạy tiếng dân tộc cũng bắt đầu được đưa vào trường học.",
+      "Ngày càng nhiều người trẻ trở về bộ lạc, qua âm nhạc, nghệ thuật và du lịch để tìm hiểu lại và truyền lại văn hóa của mình.",
+      "Tìm hiểu lịch sử các dân tộc bản địa là một phần không thể thiếu để hiểu mảnh đất Đài Loan."
+    ],
+    "glossary": {
+      "阿美族": "người Amis",
+      "達悟族": "người Tao (Yami)",
+      "豐年祭": "lễ hội mùa màng",
+      "拼板舟": "thuyền ván ghép (thuyền của người Tao)"
+    }
   }
 }

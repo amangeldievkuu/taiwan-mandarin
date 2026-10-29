@@ -21,5 +21,17 @@
     "The day before, everyone goes to the supermarket to buy water, instant noodles and bread.",
     "Some people watch TV at home; some sleep.",
     "A day off is nice, but typhoons are dangerous, so it's best not to go out."
-  ]
+  ],
+  "vi": {
+    "title": "Ngày bão",
+    "summary": "Gió, mưa và \"ngày nghỉ bão\" nổi tiếng.",
+    "translation": [
+      "Vào mùa hè, Đài Loan thường có bão.",
+      "Khi bão đến, gió rất mạnh, mưa cũng rất to.",
+      "Nếu bão quá lớn, chính quyền sẽ cho \"nghỉ bão\": học sinh không phải đi học, nhiều người cũng không phải đi làm.",
+      "Một ngày trước kỳ nghỉ bão, mọi người đi siêu thị mua nước, mì ăn liền và bánh mì.",
+      "Có người ở nhà xem tivi, có người ở nhà ngủ.",
+      "Được nghỉ thì vui thật, nhưng bão cũng rất nguy hiểm, tốt nhất là đừng ra ngoài."
+    ]
+  }
 }

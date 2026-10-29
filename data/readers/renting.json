@@ -21,5 +21,17 @@
     "In the end I found a room with a shared bathroom. The landlord is nice: eight thousand a month, utilities extra.",
     "I have to share the bathroom, but it's close to school, only five minutes on foot.",
     "On moving day, my roommate even treated me to dinner."
-  ]
+  ],
+  "vi": {
+    "title": "Thuê nhà",
+    "summary": "Đi học xa, tìm một phòng gần trường.",
+    "translation": [
+      "Sau khi sang Đài Loan du học, tôi cần thuê nhà gần trường.",
+      "Tôi tìm rất nhiều phòng trên mạng, cũng đi xem vài căn.",
+      "Có phòng rất rẻ nhưng quá nhỏ; có phòng vừa rộng vừa đẹp nhưng tiền thuê quá đắt.",
+      "Cuối cùng, tôi tìm được một phòng dùng chung nhà vệ sinh, chủ nhà rất tốt, tám nghìn đồng một tháng, tiền điện nước tính riêng.",
+      "Tuy phải dùng chung phòng tắm với người khác, nhưng gần trường lắm, đi bộ chỉ mất năm phút.",
+      "Hôm chuyển nhà, bạn cùng phòng còn mời tôi một bữa tối."
+    ]
+  }
 }

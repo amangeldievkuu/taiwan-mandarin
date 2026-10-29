@@ -24,5 +24,20 @@
   ],
   "glossary": {
     "不在籍投票": "absentee voting"
+  },
+  "vi": {
+    "title": "Ngày bầu cử",
+    "summary": "Xe vận động, về quê bỏ phiếu và đêm kiểm phiếu.",
+    "translation": [
+      "Ở Đài Loan, cứ bốn năm lại tổ chức bầu cử tổng thống một lần.",
+      "Vài tháng trước bầu cử, trên phố đâu đâu cũng là biển quảng cáo và cờ của các ứng cử viên, xe vận động cũng đi khắp hang cùng ngõ hẻm phát loa.",
+      "Nhiều người trẻ đặc biệt từ nơi khác trở về nơi đăng ký hộ khẩu để bỏ phiếu, vì hiện nay Đài Loan vẫn chưa có chế độ bỏ phiếu vắng mặt.",
+      "Ngày bỏ phiếu, cử tri mang chứng minh thư và con dấu cá nhân đến điểm bỏ phiếu, đóng dấu lên lá phiếu.",
+      "Tối đến lúc kiểm phiếu, mọi người ngồi trước tivi theo dõi số phiếu mới nhất.",
+      "Dù kết quả thế nào, hoàn thành cuộc bầu cử một cách hòa bình chính là giá trị quan trọng của một xã hội dân chủ."
+    ],
+    "glossary": {
+      "不在籍投票": "bỏ phiếu vắng mặt"
+    }
   }
 }

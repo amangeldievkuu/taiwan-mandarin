@@ -25,5 +25,21 @@
   "glossary": {
     "九二一大地震": "the 921 earthquake (21 Sept 1999)",
     "耐震": "earthquake-resistant"
+  },
+  "vi": {
+    "title": "Động đất",
+    "summary": "Sống trên ranh giới mảng kiến tạo, từ trận 921 đến cảnh báo trên điện thoại.",
+    "translation": [
+      "Đài Loan nằm ở nơi giao nhau của hai mảng kiến tạo, nên động đất xảy ra rất thường xuyên, một năm có thể lên đến hàng nghìn trận.",
+      "Phần lớn các trận động đất rất nhỏ, người ta hầu như không cảm thấy, nhưng thỉnh thoảng cũng có những trận lớn gây thiệt hại nghiêm trọng.",
+      "Trận động đất 921 năm 1999 đã cướp đi sinh mạng của hơn hai nghìn người, đến nay vẫn là nỗi đau trong lòng nhiều người.",
+      "Từ đó về sau, chính quyền nâng cao tiêu chuẩn chống động đất của các công trình, trường học cũng định kỳ tổ chức diễn tập phòng chống thiên tai.",
+      "Bây giờ, vài giây trước khi động đất đến, điện thoại sẽ phát cảnh báo cấp quốc gia, để mọi người có thời gian tự bảo vệ mình.",
+      "Khi động đất xảy ra, quan trọng nhất là \"nằm xuống, che chắn, giữ chặt\", đừng vội chạy ra ngoài."
+    ],
+    "glossary": {
+      "九二一大地震": "trận động đất 921 (ngày 21/9/1999)",
+      "耐震": "chống động đất"
+    }
   }
 }

@@ -1,6 +1,6 @@
 // Graded readers: data/readers/<id>.json → paragraphs split into words with readings, linked to
 // study-path words so the app can mark known words and add unknown ones with one tap. A reader's
-// optional `vi` block carries its Vietnamese title, summary, translation and glossary.
+// `vi` block carries its Vietnamese title, summary, translation and glossary.
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -81,11 +81,15 @@ export function readReaders(
       if (source.translation.length !== source.paragraphs.length) {
         throw new Error(`${file}: one translation per paragraph`);
       }
-      if (source.vi && source.vi.translation.length !== source.paragraphs.length) {
+      if (!source.vi) throw new Error(`${file}: no Vietnamese (a "vi" block)`);
+      if (source.vi.translation.length !== source.paragraphs.length) {
         throw new Error(`${file}: one Vietnamese translation per paragraph`);
       }
       const glossary = source.glossary ?? {};
-      const viGlossary = source.vi?.glossary ?? {};
+      const viGlossary = source.vi.glossary ?? {};
+      const untranslated = Object.keys(glossary).filter((form) => !viGlossary[form]);
+      if (untranslated.length)
+        throw new Error(`${file}: no Vietnamese glossary entry for ${untranslated.join(' ')}`);
       const issues = [
         source.title,
         ...source.paragraphs,
@@ -143,15 +147,11 @@ export function readReaders(
         titleEn: source.titleEn,
         summary: source.summary,
         translation: source.translation,
-        ...(source.vi
-          ? {
-              vi: {
-                title: source.vi.title,
-                summary: source.vi.summary,
-                translation: source.vi.translation,
-              },
-            }
-          : {}),
+        vi: {
+          title: source.vi.title,
+          summary: source.vi.summary,
+          translation: source.vi.translation,
+        },
         paragraphs,
         wordCount: seen.size,
         charCount,

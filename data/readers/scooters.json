@@ -24,5 +24,20 @@
   ],
   "glossary": {
     "兩段式左轉": "two-stage left turn (scooters wait in a box to turn left)"
+  },
+  "vi": {
+    "title": "Đi xe máy",
+    "summary": "\"Biển xe máy\", mũ bảo hiểm và luật rẽ trái hai bước.",
+    "translation": [
+      "Ở Đài Loan, khắp hang cùng ngõ hẻm đâu đâu cũng thấy xe máy.",
+      "Vì xe máy rẻ, tiện, lại dễ đậu xe, nên nhiều người đi làm và học sinh đều đi xe máy.",
+      "Giờ đi làm và tan tầm, các ngã tư thường chật kín xe máy, giống như một \"biển xe máy\".",
+      "Đi xe máy nhất định phải đội mũ bảo hiểm, cũng phải chú ý luật rẽ trái hai bước.",
+      "Khi trời mưa, mọi người mặc áo mưa vào rồi vẫn chạy xe ra đường.",
+      "Xe máy tuy tiện, nhưng ô nhiễm không khí và an toàn giao thông cũng là những vấn đề mọi người quan tâm."
+    ],
+    "glossary": {
+      "兩段式左轉": "rẽ trái hai bước (xe máy đợi trong ô vuông rồi mới rẽ trái)"
+    }
   }
 }

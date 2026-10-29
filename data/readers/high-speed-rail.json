@@ -24,5 +24,20 @@
   ],
   "glossary": {
     "左營站": "Zuoying Station (Kaohsiung's HSR station)"
+  },
+  "vi": {
+    "title": "Đi tàu cao tốc về nhà",
+    "summary": "Dịp Tết, ai cũng tranh mua vé về miền Nam.",
+    "translation": [
+      "Dịp Tết, nhiều người về quê ở miền Nam, nên vé tàu cao tốc thường bán hết rất nhanh.",
+      "Năm nay tôi đặt vé trên mạng sớm hai tuần, cuối cùng cũng mua được vé ngày trước đêm giao thừa.",
+      "Từ Đài Bắc đến Cao Hùng, đi tàu cao tốc chỉ mất khoảng một tiếng rưỡi, nhanh hơn lái xe nhiều.",
+      "Trong toa tàu vừa yên tĩnh vừa sạch sẽ, tôi vừa ăn cơm hộp vừa ngắm đồng ruộng ngoài cửa sổ.",
+      "Đến ga Tả Doanh, bố đã đợi tôi ở cửa ra.",
+      "Tuy giá vé không rẻ, nhưng tiết kiệm được nhiều thời gian, tôi thấy rất đáng."
+    ],
+    "glossary": {
+      "左營站": "ga Tả Doanh (ga tàu cao tốc của Cao Hùng)"
+    }
   }
 }

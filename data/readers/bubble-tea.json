@@ -25,5 +25,21 @@
   "glossary": {
     "樹薯粉": "tapioca starch",
     "官司": "lawsuit (打官司 to go to court)"
+  },
+  "vi": {
+    "title": "Chuyện trà sữa trân châu",
+    "summary": "Ai phát minh ra nó, trân châu làm bằng gì, và gọi món thế nào.",
+    "translation": [
+      "Trà sữa trân châu là một trong những thức uống nổi tiếng nhất của Đài Loan, bây giờ ở đâu trên thế giới cũng mua được.",
+      "Về chuyện ai phát minh ra trà sữa trân châu, có hai cách nói khác nhau: một quán ở Đài Trung, một quán ở Đài Nam, hai bên còn từng ra tòa vì chuyện này.",
+      "Trân châu làm từ bột sắn, ăn vào dai dai, rất có độ nhai.",
+      "Khi gọi đồ uống ở Đài Loan, nhân viên thường hỏi bạn độ ngọt và lượng đá, chẳng hạn \"nửa đường ít đá\" hay \"không đường không đá\".",
+      "Có người lo uống quá nhiều đồ uống có đường không tốt cho sức khỏe, nên ngày càng nhiều người chọn ít đường hoặc không đường.",
+      "Dù thế nào đi nữa, trà sữa trân châu đã trở thành biểu tượng văn hóa của Đài Loan."
+    ],
+    "glossary": {
+      "樹薯粉": "bột sắn (bột năng)",
+      "官司": "vụ kiện (打官司: ra tòa)"
+    }
   }
 }

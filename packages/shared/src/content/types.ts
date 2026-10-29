@@ -181,7 +181,7 @@ export interface ReaderSource {
   /** Glosses for words above the reader's level, by written form. */
   glossary?: Record<string, string>;
   /** Vietnamese title, summary, translation and glossary. */
-  vi?: ReaderTranslation;
+  vi: ReaderTranslation;
   /** Written with AI and not yet reviewed by a person. */
   draft?: boolean;
 }

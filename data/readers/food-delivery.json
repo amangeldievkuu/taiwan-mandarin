@@ -26,5 +26,22 @@
     "承攬人員": "contractor (not an employee)",
     "勞健保": "labor and national health insurance",
     "職災": "occupational injury"
+  },
+  "vi": {
+    "title": "Ứng dụng giao đồ ăn",
+    "summary": "Tiện cho khách hàng, và những câu hỏi khó về người giao hàng.",
+    "translation": [
+      "Trên đường phố Đài Bắc, đâu đâu cũng thấy người giao hàng mặc đồng phục màu sáng, đeo thùng giữ nhiệt cỡ lớn.",
+      "Sự phát triển của các nền tảng giao đồ ăn đã thay đổi rất nhiều thói quen ăn uống của người Đài Loan: chỉ cần động ngón tay, món ăn nóng hổi sẽ được giao tận cửa.",
+      "Với người tiêu dùng, giao đồ ăn giúp tiết kiệm thời gian; còn với nhà hàng, đó là thêm một kênh bán hàng.",
+      "Tuy nhiên, điều kiện lao động của người giao hàng lại gây không ít tranh cãi. Vì phần lớn họ bị xem là người nhận khoán chứ không phải nhân viên, nên thường thiếu bảo hiểm lao động, bảo hiểm y tế và bảo hiểm tai nạn lao động đầy đủ.",
+      "Ngoài ra, để nhận thêm vài đơn, có người giao hàng chạy ẩu trên đường, làm tăng nguy cơ tai nạn giao thông.",
+      "Làm sao cân bằng giữa sự tiện lợi và công bằng đã trở thành vấn đề mà chính quyền và các nền tảng phải nhìn thẳng."
+    ],
+    "glossary": {
+      "承攬人員": "người nhận khoán (không phải nhân viên)",
+      "勞健保": "bảo hiểm lao động và bảo hiểm y tế",
+      "職災": "tai nạn lao động"
+    }
   }
 }

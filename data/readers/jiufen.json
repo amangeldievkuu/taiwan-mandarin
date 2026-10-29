@@ -28,5 +28,24 @@
     "悲情城市": "A City of Sadness (1989 film by Hou Hsiao-hsien)",
     "小上海": "\"Little Shanghai\"",
     "小香港": "\"Little Hong Kong\""
+  },
+  "vi": {
+    "title": "Ký ức phố núi Cửu Phần",
+    "summary": "Vàng, suy tàn, một bộ phim, và cái giá của du lịch.",
+    "translation": [
+      "Cửu Phần, nằm ở quận Thụy Phương, thành phố Tân Bắc, từng một thời cực thịnh nhờ khai thác mỏ vàng; trên phố tửu quán san sát, được gọi là \"Tiểu Thượng Hải\", \"Tiểu Hồng Kông\".",
+      "Khi mạch quặng cạn kiệt, Cửu Phần dần suy tàn vào thập niên 1970, dân cư bỏ đi rất nhiều, phố núi có thời chìm vào im lặng.",
+      "Mãi đến khi bộ phim \"Thành phố bi tình\" quay tại đây, Cửu Phần mới lại được cả thế giới chú ý, bỗng chốc trở thành điểm du lịch nổi tiếng.",
+      "Ngày nay, hai bên con đường bậc thang Thụ Kỳ quanh co là những quán trà nằm xen kẽ; khi đêm xuống, đèn lồng đỏ treo cao, thu hút vô số du khách dừng chân.",
+      "Tuy nhiên, dòng người du lịch cũng mang đến những vấn đề như tắc đường, thương mại hóa và chất lượng cuộc sống của người dân đi xuống.",
+      "Giữa phát triển du lịch và gìn giữ nét đặc sắc địa phương, Cửu Phần vẫn đang tìm câu trả lời của riêng mình."
+    ],
+    "glossary": {
+      "瑞芳": "Thụy Phương (một quận của Tân Bắc)",
+      "豎崎路": "đường Thụ Kỳ, con phố bậc thang nổi tiếng của Cửu Phần",
+      "悲情城市": "Thành phố bi tình (phim năm 1989 của Hầu Hiếu Hiền)",
+      "小上海": "\"Tiểu Thượng Hải\"",
+      "小香港": "\"Tiểu Hồng Kông\""
+    }
   }
 }

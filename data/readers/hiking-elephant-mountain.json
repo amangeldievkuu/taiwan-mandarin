@@ -23,5 +23,20 @@
   "glossary": {
     "象山": "Elephant Mountain, a hill in Taipei's Xinyi District",
     "臺北一〇一": "Taipei 101 (skyscraper)"
+  },
+  "vi": {
+    "title": "Cuối tuần đi leo núi",
+    "summary": "Leo núi Tượng Sơn ngắm tòa tháp Taipei 101.",
+    "translation": [
+      "Cuối tuần này trời đẹp, tôi và bạn đi leo núi Tượng Sơn.",
+      "Núi Tượng Sơn không cao lắm, nhưng có rất nhiều bậc thang, chúng tôi leo mất nửa tiếng.",
+      "Lên đến đỉnh, chúng tôi có thể nhìn thấy tòa tháp Taipei 101.",
+      "Phong cảnh rất đẹp, chúng tôi chụp rất nhiều ảnh.",
+      "Xuống núi xong, chúng tôi đi ăn mì bò, vừa mệt vừa vui."
+    ],
+    "glossary": {
+      "象山": "núi Tượng Sơn, một ngọn đồi ở quận Tín Nghĩa, Đài Bắc",
+      "臺北一〇一": "Taipei 101 (tòa nhà chọc trời)"
+    }
   }
 }

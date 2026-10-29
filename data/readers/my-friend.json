@@ -20,5 +20,18 @@
   ],
   "glossary": {
     "小明": "Xiaoming (a name)"
+  },
+  "vi": {
+    "title": "Bạn của tôi",
+    "summary": "Làm quen với Tiểu Minh, người thích trà và đồ ăn Đài Loan.",
+    "translation": [
+      "Đây là bạn tôi, Tiểu Minh. Cậu ấy là người Đài Loan.",
+      "Tiểu Minh hai mươi tuổi. Cậu ấy rất cao, cũng rất đẹp trai.",
+      "Cậu ấy thích uống trà, không thích uống cà phê.",
+      "Chúng tôi thường cùng nhau ăn tối. Tiểu Minh nói: \"Đồ ăn Đài Loan ngon lắm!\""
+    ],
+    "glossary": {
+      "小明": "Tiểu Minh (tên người)"
+    }
   }
 }

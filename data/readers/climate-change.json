@@ -26,5 +26,22 @@
     "分區供水": "water rationing by district",
     "淨零排放": "net-zero emissions",
     "一蹴可幾": "achieved in one step (idiom)"
+  },
+  "vi": {
+    "title": "Biến đổi khí hậu và Đài Loan",
+    "summary": "Hạn hán, lũ lụt, bờ biển sụt lún và con đường đến phát thải ròng bằng không.",
+    "translation": [
+      "Tác động của biến đổi khí hậu đối với Đài Loan không còn là lời tiên đoán xa xôi, mà là hiện thực cấp bách ngay trước mắt.",
+      "Những năm gần đây, mưa cực đoan và hạn hán kéo dài xen kẽ nhau; năm 2021 còn xảy ra trận hạn hán nghiêm trọng nhất trong nửa thế kỷ, một số khu vực buộc phải cấp nước luân phiên theo vùng.",
+      "Vì địa hình Đài Loan dốc, sông ngòi ngắn, nước mưa thường nhanh chóng đổ ra biển, khó tích trữ hiệu quả, nên việc quản lý tài nguyên nước càng đặc biệt gian nan.",
+      "Mặt khác, mực nước biển dâng đe dọa các vùng trũng thấp ven biển phía tây nam, tình trạng sụt lún đất càng khiến người dân ở đó khổ sở vì ngập lụt.",
+      "Để ứng phó với những thách thức này, chính quyền đề ra lộ trình phát thải ròng bằng không vào năm 2050, tích cực phát triển điện gió ngoài khơi và điện mặt trời.",
+      "Tuy nhiên, chuyển đổi năng lượng liên quan đến cơ cấu công nghiệp, sử dụng đất đai và sự đồng thuận xã hội, tuyệt đối không thể một sớm một chiều, vẫn cần toàn dân cùng tham gia."
+    ],
+    "glossary": {
+      "分區供水": "cấp nước luân phiên theo vùng",
+      "淨零排放": "phát thải ròng bằng không",
+      "一蹴可幾": "một bước là xong (thành ngữ)"
+    }
   }
 }

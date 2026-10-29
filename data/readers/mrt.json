@@ -19,5 +19,16 @@
     "On the MRT you can't eat or drink.",
     "Many people look at their phones on the train; some are sleeping.",
     "I like using an EasyCard because it's fast, and you can also buy things at convenience stores with it."
-  ]
+  ],
+  "vi": {
+    "title": "Đi tàu điện MRT",
+    "summary": "Đi lại ở Đài Bắc, và những quy định trên tàu.",
+    "translation": [
+      "Tàu điện MRT ở Đài Bắc rất tiện, cũng rất sạch.",
+      "Ngày nào tôi cũng đi MRT đi làm, từ nhà đến công ty chỉ mất hai mươi phút.",
+      "Trên tàu MRT không được ăn, cũng không được uống gì.",
+      "Nhiều người trên tàu xem điện thoại, có người thì ngủ.",
+      "Tôi thích dùng thẻ EasyCard vì rất nhanh, lại còn mua đồ được ở cửa hàng tiện lợi."
+    ]
+  }
 }

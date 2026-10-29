@@ -17,5 +17,15 @@
     "There are lots of people at the night market, and lots of things too.",
     "I bought a bubble milk tea, and Mom bought a fried chicken cutlet.",
     "The bubble tea is tasty and the chicken is delicious. We are both very happy."
-  ]
+  ],
+  "vi": {
+    "title": "Đi chợ đêm",
+    "summary": "Trà sữa trân châu và gà rán cùng mẹ.",
+    "translation": [
+      "Tối nay, tôi và mẹ đi chợ đêm.",
+      "Chợ đêm rất đông người, đồ cũng rất nhiều.",
+      "Tôi mua một ly trà sữa trân châu, mẹ mua một miếng gà rán.",
+      "Trà sữa trân châu rất ngon, gà rán cũng rất ngon. Hai mẹ con đều rất vui."
+    ]
+  }
 }
