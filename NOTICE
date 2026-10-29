@@ -24,9 +24,15 @@ CVDICT (Từ điển Hán Việt CVDICT) 1.0.1
 
 Tatoeba example sentences
   © Tatoeba contributors, https://tatoeba.org — Creative Commons Attribution 2.0 France.
-  Each example links to its source sentence. The Vietnamese translations of these sentences
-  (data/generated/examples-vi.jsonl) are written for this app and are a derivative work under the
-  same license.
+  Each example links to its source sentence. The Vietnamese and Russian translations of these
+  sentences (data/generated/examples-vi.jsonl, data/generated/examples-ru.jsonl) are written for
+  this app and are a derivative work under the same license.
+
+Russian meanings
+  Written for this app with AI, translating from the Chinese with CC-CEDICT's English as a
+  reference (data/generated/glosses-ru.jsonl). They and the Russian content files
+  (apps/web/public/content/ru, apps/web/public/dict/ru) are a derivative work of CC-CEDICT under
+  Creative Commons Attribution-ShareAlike 4.0.
 
 Unicode Unihan database
   © Unicode, Inc., Unicode License v3. Used only to check the Sino-Vietnamese readings in

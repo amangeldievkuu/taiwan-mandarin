@@ -30,3 +30,15 @@ Run it after a build, then build again:
 
 Hand-written Vietnamese lives with the English: the curated words (`curated.ts`) and the readers
 (`data/readers/*.json`, a `vi` block).
+
+## Russian
+
+Russian has no dictionary to start from, so everything but the curated words and the readers is
+written with OpenAI by `npm run translate -w @taiwan-mandarin/content -- --lang ru --only <mode>`:
+
+- `glosses-ru.jsonl` (`--only glosses`): the Russian meaning of every word without a curated one
+  (`{ id, ru }`), translated from the Chinese with the English gloss, part of speech, measure words
+  and CC-CEDICT senses as a reference; the build marks them `ruSource: "ai"`.
+- `examples-ru.jsonl` (`--only examples`): Russian translations of example sentences
+  (`{ zh, ru }`), like the Vietnamese ones.
+- `no-gloss-ru.tsv`: words still without a Russian meaning after a build.

@@ -9,9 +9,9 @@ Learn Taiwan Mandarin along Taiwan's official exam path. The app covers TOCFL No
 - example sentences, stroke order and stats
 
 It is an offline-first PWA for phone, iPad and desktop, with an optional sync backend. The app speaks
-**English or Vietnamese** (Tiếng Việt): menus, word meanings, example and reader translations and
-the AI's replies all follow the language, and in Vietnamese words also show their Sino-Vietnamese
-(Hán-Việt) reading (國家 quốc gia). See [Languages](#languages).
+**English, Vietnamese or Russian** (Tiếng Việt, Русский): menus, word meanings, example and reader
+translations and the AI's replies all follow the language, and in Vietnamese words also show their
+Sino-Vietnamese (Hán-Việt) reading (國家 quốc gia). See [Languages](#languages).
 
 | Today                                        | Study (iPad)                                  | Reader (phone, dark)                         |
 | -------------------------------------------- | --------------------------------------------- | -------------------------------------------- |
@@ -287,16 +287,21 @@ About section and in `NOTICE`.
 
 ## Languages
 
-The interface is in typed catalogs, `apps/web/src/lib/i18n/en.ts` and `vi.ts` (same keys, checked
-by svelte-check and a test). Chinese stays in the components. The language is a synced setting,
-`language`; a first visit follows the browser, and the welcome page and Settings switch it. In
-development, `?lang=vi` shows Vietnamese without changing settings.
+The interface is in typed catalogs, `apps/web/src/lib/i18n/en.ts`, `vi.ts` and `ru.ts` (same keys,
+checked by svelte-check and a test; words after numbers take each language's plural forms through
+`plural.ts`). Chinese stays in the components. The language is a synced setting, `language`; a
+first visit follows the browser, and the welcome page and Settings switch it. In development,
+`?lang=vi` or `?lang=ru` shows that language without changing settings.
 
-Content has a set of files per language. English is `content/` and `dict/`; Vietnamese is
-`content/vi/` and `dict/vi/`, the same files with Vietnamese added (`vi`, `twVi`, `hv` on words,
-`vi` on examples and readers, Vietnamese definitions in the dictionary with `en: 1` where CVDICT
-has none). A learner loads one set, so English learners download nothing extra. Where Vietnamese
-is missing, the English shows with a small EN tag.
+Content has a set of files per language (`packages/content/src/languages.ts`). English is
+`content/` and `dict/`; Vietnamese is `content/vi/` and `dict/vi/`, the same files with Vietnamese
+added (`vi`, `viSource`, `twVi`, `hv` on words, `vi` on examples and readers, `gv` on reader words,
+Vietnamese definitions in the dictionary with `en: 1` where CVDICT has none); Russian is
+`content/ru/` and `dict/ru/` likewise (`ru`, `ruSource`, `twRu`, `gr`). A learner loads one set, so
+English learners download nothing extra. Where a translation is missing, the English shows with a
+small EN tag.
+
+### Vietnamese
 
 - **Meanings** come from CVDICT, CC-CEDICT translated into Vietnamese line by line (122,591
   entries, CC BY-SA 4.0). Its own repository is gone, so `fetch` downloads the unchanged 1.0.1 file
@@ -307,11 +312,28 @@ is missing, the English shows with a small EN tag.
 - **Examples, gap glosses and Hán-Việt readings** are written with OpenAI:
   `npm run translate -w @taiwan-mandarin/content -- --lang vi --only examples|hanviet|glosses` (after a
   build; `--limit 100` writes a sample first). See `data/generated/README.md`.
+
+### Russian
+
+There is no openly licensed Chinese–Russian dictionary, so:
+
+- **Meanings** of the 121 curated words are written by hand, and those of the rest of the path
+  with OpenAI (`npm run translate -w @taiwan-mandarin/content -- --lang ru --only glosses`),
+  translated from the Chinese with the word's English gloss and CC-CEDICT senses as a reference.
+  In the dictionary a study word's own entry shows its Russian meaning; other entries stay English.
+- **Examples** are translated with OpenAI too (`--only examples`).
+- **Readers** carry a `ru` block written for the app (title, summary, translation, glossary).
+  Its glossary also covers the glossed words outside the study path, which have no Russian
+  definitions to fall back on.
+- Search reads Russian as a meaning, never as pinyin, and matches ё and е either way.
+
+### Both
+
 - **AI features** take the language with each request: Explain and Talk answer, gloss and correct
   in it. API errors carry a code that the app shows in the learner's language.
 
 Existing checkouts need the new source once: `npm run content` (or `npm run fetch -w
-@taiwan-mandarin/content`); `content:ensure` rebuilds content that predates Vietnamese.
+@taiwan-mandarin/content`); `content:ensure` rebuilds content that predates one of the languages.
 
 ## Taiwan standard (臺灣華語)
 

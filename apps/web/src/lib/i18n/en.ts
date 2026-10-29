@@ -290,6 +290,8 @@ export const en = {
     cvdict: "Phong Phan's Vietnamese translation of CC-CEDICT, and meanings written for this app.",
     hanViet: 'Sino-Vietnamese readings',
     hanVietSource: 'written for this app, checked against Unicode Unihan.',
+    russian: 'Russian meanings and translations',
+    russianSource: 'written for this app with AI, from the Chinese, with CC-CEDICT as a reference.',
   },
 
   account: {

@@ -42,6 +42,7 @@
       {t().about.vietnamese}: CVDICT (CC BY-SA 4.0), {t().about.cvdict}
     </p>
     <p>{t().about.hanViet}: {t().about.hanVietSource}</p>
+    <p>{t().about.russian}: {t().about.russianSource}</p>
     <p>{t().about.strokeOrder}: Make Me a Hanzi (Arphic Public License).</p>
     <p>{t().about.fonts}: LXGW WenKai TC, Nunito (OFL).</p>
   </div>

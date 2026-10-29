@@ -313,6 +313,8 @@ export const vi: Messages = {
       'bản dịch tiếng Việt của CC-CEDICT do Phong Phan thực hiện, và các nghĩa viết riêng cho ứng dụng này.',
     hanViet: 'Âm Hán-Việt',
     hanVietSource: 'viết cho ứng dụng này, đối chiếu với Unicode Unihan.',
+    russian: 'Nghĩa và bản dịch tiếng Nga',
+    russianSource: 'viết cho ứng dụng này bằng AI, dịch từ tiếng Trung, tham khảo CC-CEDICT.',
   },
 
   account: {

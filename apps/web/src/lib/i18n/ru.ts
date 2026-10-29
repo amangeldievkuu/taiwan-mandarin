@@ -46,15 +46,16 @@ export const ru: Messages = {
     due: (n) => `${n} к повторению`,
   },
 
+  // A no-break space keeps the number with its word, in titles too.
   levels: {
-    N1: 'Начальный 1',
-    N2: 'Начальный 2',
-    L1: 'Уровень 1',
-    L2: 'Уровень 2',
-    L3: 'Уровень 3',
-    L4: 'Уровень 4',
-    L5: 'Уровень 5',
-    L6: 'Уровень 6',
+    N1: 'Начальный\u00a01',
+    N2: 'Начальный\u00a02',
+    L1: 'Уровень\u00a01',
+    L2: 'Уровень\u00a02',
+    L3: 'Уровень\u00a03',
+    L4: 'Уровень\u00a04',
+    L5: 'Уровень\u00a05',
+    L6: 'Уровень\u00a06',
   },
   topics: {
     core: 'Основные слова',
@@ -118,13 +119,14 @@ export const ru: Messages = {
     future: 'ещё впереди',
   },
 
+  // Number and unit stay together (a no-break space), as Russian typesetting has them.
   interval: {
-    underMinute: '<1 мин',
-    minutes: (n) => `${n} мин`,
-    hours: (n) => `${n} ч`,
-    days: (n) => `${n} дн`,
-    months: (n) => `${n} мес`,
-    years: (n) => `${n} г.`,
+    underMinute: '<1\u00a0мин',
+    minutes: (n) => `${n}\u00a0мин`,
+    hours: (n) => `${n}\u00a0ч`,
+    days: (n) => `${n}\u00a0дн`,
+    months: (n) => `${n}\u00a0мес`,
+    years: (n) => `${n}\u00a0г.`,
   },
 
   seals: {
@@ -331,6 +333,8 @@ export const ru: Messages = {
     cvdict: 'вьетнамский перевод CC-CEDICT (Phong Phan) и значения, написанные для приложения.',
     hanViet: 'Сино-вьетнамские чтения',
     hanVietSource: 'написаны для приложения и сверены с Unicode Unihan.',
+    russian: 'Русские значения и переводы',
+    russianSource: 'написаны для приложения с помощью ИИ, с китайского, со справкой по CC-CEDICT.',
   },
 
   account: {
@@ -561,8 +565,8 @@ export const ru: Messages = {
   dict: {
     eyebrow: 'CC-CEDICT · тайваньские чтения',
     mode: 'Режим',
-    lookUp: 'Разбор текста',
-    search: 'Поиск',
+    lookUp: 'Поиск',
+    search: 'Искать в словаре',
     placeholder: '漢字, пиньинь (jieyun) или по-русски',
     tapHint: 'Нажми на любой иероглиф, чтобы найти слово, которое с него начинается.',
     empty: 'Поиск по 125 000 статей с тайваньскими чтениями.',
@@ -591,7 +595,7 @@ export const ru: Messages = {
   },
 
   level: {
-    study: 'Учить этот уровень',
+    study: 'Учить уровень',
     levels: 'Уровни',
     search: 'Поиск по уровню',
     placeholder: '字, пиньинь или по-русски',
