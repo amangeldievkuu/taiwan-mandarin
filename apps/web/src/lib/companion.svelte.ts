@@ -1,7 +1,7 @@
 // Where 墨 (the ink drop that keeps you company) sits on the page in front of you. By default
 // that is the bottom-right corner, on top of the tab bar. A page with something better to sit
 // on marks it with `use:perch` (Study's progress bar); a page with no room to spare uses
-// `use:stepAway` (an open conversation), and 墨 climbs out of sight until it is gone. Whether
+// `use:stepAway` (an open conversation), and 墨 hops out of sight until it is gone. Whether
 // 墨 comes along at all is a per-device choice in Settings.
 
 import { SvelteSet } from 'svelte/reactivity';

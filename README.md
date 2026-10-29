@@ -50,8 +50,8 @@ hanging rose bells for every level and blooms in full at the end, when a white-e
 it sways, drops petals, and has a gold seam drawn down it (and sits down to say something when the
 scrolling stops). After that 墨 comes along through the app: it sits in a corner of every page (on
 Study, on the progress bar), says a word about where you are, and arrives in a way that fits the
-move: it walks over between tabs, rappels down a rope into a deeper page, and swings in on a thread
-when you go back. It can be turned off in Settings (per device).
+move, close to its corner: it steps over between tabs, drips down into a deeper page, and hops back
+up when you go back. It can be turned off in Settings (per device).
 
 ## Layout
 

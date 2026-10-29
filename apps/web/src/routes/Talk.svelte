@@ -352,7 +352,7 @@
       {#if status}<p class="footnote">{t().talk.usage(status.used, status.limit)}</p>{/if}
     {/if}
   {:else}
-    <!-- No corner to spare in a conversation: 墨 climbs out of the way until you leave it. -->
+    <!-- No corner to spare in a conversation: 墨 hops out of the way until you leave it. -->
     <header class="chat-head" use:companion.stepAway>
       <button type="button" class="back" onclick={leave} aria-label={t().talk.back}
         ><Icon name="back" /></button

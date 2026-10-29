@@ -1,16 +1,16 @@
 <!--
   墨 on every page. It sits in the bottom-right corner on top of the tab bar (up top on pages
   with controls docked at the bottom, or on whatever a page offers it with `use:perch`), and
-  every time the page changes it turns up in a way that fits the move: it walks over from the
-  side the new tab is on, rappels down a rope into a deeper page, and swings in on a thread when
-  you go back. Then it says a word about where you are, and dozes off if you leave it be.
+  every time the page changes it turns up in a way that fits the move, close to its corner: a few
+  steps in from the side the new tab is on, a drip down into a deeper page, a hop up when you go
+  back. Then it says a word about where you are, and dozes off if you leave it be.
 -->
 <script lang="ts">
   import { tick, untrack } from 'svelte';
   import InkBlob from '../landing/InkBlob.svelte';
   import { companion } from '../../lib/companion.svelte';
   import { t } from '../../lib/i18n/index.svelte';
-  import { arrive, climbAway, stopAll, type Rig } from '../../lib/entrances';
+  import { arrive, hopAway, stopAll, type Rig } from '../../lib/entrances';
   import { reduced } from '../../lib/motion';
   import { entranceFor, type Entrance } from '../../lib/nav';
   import { router, viewKey, type RouteName } from '../../lib/router.svelte';
@@ -41,15 +41,14 @@
   const DOZE_MS = 20_000;
 
   let mover = $state<HTMLElement>();
-  let cord = $state<HTMLElement>();
   let body = $state<HTMLElement>();
 
-  let pose = $state<'sitting' | 'walking' | 'hanging'>('sitting');
+  let pose = $state<'sitting' | 'walking' | 'airborne'>('sitting');
   /** Which way 墨 faces: 1 right, -1 left (towards the page, from its corner). */
   let dir = $state(-1);
   let quiet = $state(true);
   let sleepy = $state(false);
-  /** Climbed out of sight (a page asked for room). */
+  /** Hopped out of sight (a page asked for room). */
   let gone = $state(false);
 
   const place = $derived(
@@ -106,7 +105,7 @@
     dozeTimer = setTimeout(() => (sleepy = true), DOZE_MS);
   }
 
-  const rig = (): Rig | null => (mover && cord && body ? { mover, cord, body } : null);
+  const rig = (): Rig | null => (mover && body ? { mover, body } : null);
 
   async function enter(entrance: Entrance) {
     if (companion.away) return;
@@ -127,7 +126,7 @@
       pose = 'walking';
       dir = entrance.from === 'left' ? 1 : -1;
     } else {
-      pose = 'hanging';
+      pose = 'airborne';
     }
     if (await arrive(parts, entrance)) settle();
   }
@@ -141,8 +140,8 @@
       gone = true;
       return;
     }
-    pose = 'hanging';
-    if (await climbAway(parts)) gone = true;
+    pose = 'airborne';
+    if (await hopAway(parts)) gone = true;
   }
 
   // A new page: 墨 comes along. (On the first one it just drips in.)
@@ -157,20 +156,19 @@
     });
   });
 
-  // A page wants the room: climb away, and come back down the rope once it is gone.
+  // A page wants the room: hop out of sight, and drip back in once it is gone.
   $effect(() => {
     const away = companion.away;
     untrack(() => {
       if (away) void leave();
-      else if (gone) void enter({ kind: 'rappel' });
+      else if (gone) void enter({ kind: 'drop' });
     });
   });
 
   $effect(() => () => {
     clearTimeout(sayTimer);
     clearTimeout(dozeTimer);
-    const parts = rig();
-    if (parts) stopAll(parts);
+    stopAll();
   });
 </script>
 
@@ -178,7 +176,7 @@
   class="companion {place}"
   class:walking={pose === 'walking'}
   class:sitting={pose === 'sitting'}
-  class:hanging={pose === 'hanging'}
+  class:airborne={pose === 'airborne'}
   class:hush={quiet}
   class:sleepy
   class:gone
@@ -187,7 +185,6 @@
   style:top={place === 'anchor' && anchorAt ? `${anchorAt.y}px` : null}
 >
   <div class="mover" bind:this={mover}>
-    <span class="cord" bind:this={cord}></span>
     <div class="body" bind:this={body}>
       <InkBlob says={line} flip below={place === 'top'} />
     </div>
@@ -244,30 +241,5 @@
 
   .body {
     transform-origin: 50% 100%;
-  }
-
-  /* The rope (rappelling, climbing away) or the thread (swinging in) up to the top of the
-     screen, from the curl on 墨's head. */
-  .cord {
-    position: absolute;
-    left: calc(50% - 1px);
-    bottom: calc(100% - 3px);
-    display: none;
-    width: 2px;
-    height: var(--cord, 0px);
-    transform-origin: 50% 0;
-    border-radius: 1px;
-  }
-
-  .cord:global([data-kind='rope']) {
-    display: block;
-    background: repeating-linear-gradient(to bottom, var(--ink) 0 4px, var(--ink-2) 4px 6px);
-  }
-
-  .cord:global([data-kind='thread']) {
-    display: block;
-    left: calc(50% - 0.5px);
-    width: 1px;
-    background: var(--ink-3);
   }
 </style>
