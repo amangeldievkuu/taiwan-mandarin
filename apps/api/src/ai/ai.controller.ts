@@ -9,14 +9,17 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
   Res,
   ServiceUnavailableException,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiProduces, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiProduces, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import { LANG_IDS, type Lang } from '@taiwan-mandarin/shared';
 import {
   ExplainRequestSchema,
+  LangSchema,
   TalkRequestSchema,
   type ExplainRequest,
   type ExplainResult,
@@ -29,7 +32,7 @@ import type { Response } from 'express';
 import type { z } from 'zod';
 import { AuthGuard, CurrentUser, type AuthUser } from '../auth/auth.guard.js';
 import { writeNdjson } from '../common/ndjson.js';
-import { ApiZodBody, ZodBody } from '../common/zod.js';
+import { ApiZodBody, ZodBody, ZodPipe } from '../common/zod.js';
 import { LlmService } from './llm.service.js';
 import { ExplainService } from './explain.service.js';
 import { QuotaService } from './quota.service.js';
@@ -120,9 +123,11 @@ export class AiController {
   @HttpCode(200)
   @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @ApiOperation({ summary: 'End a conversation: a goodbye from the partner, then a summary' })
+  @ApiQuery({ name: 'lang', required: false, enum: LANG_IDS })
   end(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
+    @Query('lang', new ZodPipe(LangSchema.default('en'))) lang: Lang,
   ): Promise<TalkEndResponse> {
     // The goodbye uses one AI message when there is one left today; without it the chat still ends.
     const mayClose = () =>
@@ -134,7 +139,7 @@ export class AiController {
           throw error;
         },
       );
-    return this.talker.end(user.id, id, mayClose);
+    return this.talker.end(user.id, id, mayClose, lang);
   }
 
   @Delete('talk/:id')

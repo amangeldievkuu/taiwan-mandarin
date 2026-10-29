@@ -107,6 +107,32 @@ describe('explain', () => {
     expect(res.body.warnings).toEqual([]);
   });
 
+  it('explains in Vietnamese when asked, with Vietnamese glosses from the content', async () => {
+    if (!(await hasContent())) return;
+    calls.length = 0;
+    replies = [
+      {
+        source: '垃圾不落地',
+        translation: 'Không để rác rơi xuống đất',
+        tokens: [{ text: '垃圾', pinyin: 'le4 se4', gloss: null, note: null }],
+        grammar: [],
+        notes: [],
+      },
+    ];
+    const res = await request(http)
+      .post('/v1/ai/explain')
+      .set(auth())
+      .send({ text: '垃圾不落地', lang: 'vi' });
+    expect(res.status).toBe(200);
+    expect(calls.at(-1)?.system).toContain('first language is Vietnamese');
+    const [trash] = res.body.tokens;
+    expect(trash.gloss).toBe('rác');
+    // English stays the default.
+    replies = [{ ...(replies[0] as object), translation: 'Keep trash off the ground' }];
+    await request(http).post('/v1/ai/explain').set(auth()).send({ text: '垃圾不落地' });
+    expect(calls.at(-1)?.system).toContain('first language is English');
+  });
+
   it('falls back to its own segmentation when the model’s tokens don’t match', async () => {
     if (!(await hasContent())) return;
     replies = [
@@ -330,12 +356,13 @@ describe('talk', () => {
       .send({ conversationId: id, message: '我要珍珠奶茶' });
 
     calls.length = 0;
-    replies = [{ reply: '謝謝，再見！', translation: 'Thanks, bye!', correction: null }];
-    const ended = await request(http).post(`/v1/ai/talk/${id}/end`).set(auth());
+    replies = [{ reply: '謝謝，再見！', translation: 'Cảm ơn, tạm biệt!', correction: null }];
+    const ended = await request(http).post(`/v1/ai/talk/${id}/end?lang=vi`).set(auth());
     expect(ended.status).toBe(200);
     // The goodbye comes from the partner, told the learner is leaving.
     expect(calls).toHaveLength(1);
     expect(calls[0]?.messages.at(-1)?.role).toBe('developer');
+    expect(calls[0]?.system).toContain('Their first language is Vietnamese.');
     expect(ended.body.message).toMatchObject({ role: 'assistant', content: '謝謝，再見！' });
     expect(ended.body.summary).toMatchObject({ sent: 1, corrected: 1 });
     expect(ended.body.endedAt).toEqual(expect.any(String));

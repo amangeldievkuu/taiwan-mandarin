@@ -2,7 +2,8 @@
 // knows (their studied cards plus Novice 1, and Novice 2 so there is enough to talk with),
 // corrects the learner's messages, and sounds like Taiwan. Each reply is checked: more than two
 // words beyond that vocabulary, or Mainland wording, trigger one rewrite; words the learner hasn't
-// met yet in the conversation are returned as "new words" for the UI to highlight.
+// met yet in the conversation are returned as "new words" for the UI to highlight. Translations and
+// corrections come in the learner's language (English or Vietnamese).
 
 import { randomUUID } from 'node:crypto';
 import {
@@ -13,7 +14,14 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { LEVELS, levelIndex, sameWordForms, type Level, type Word } from '@taiwan-mandarin/shared';
+import {
+  LEVELS,
+  levelIndex,
+  sameWordForms,
+  type Lang,
+  type Level,
+  type Word,
+} from '@taiwan-mandarin/shared';
 import {
   SCENARIOS,
   SettingsSchema,
@@ -34,7 +42,7 @@ import { formalTai, TAIWAN_STYLE } from './taiwan-style.js';
 
 const ReplySchema = z.object({
   reply: z.string().describe('Your next line in the conversation, in Chinese'),
-  translation: z.string().describe('English translation of your reply'),
+  translation: z.string().describe("Translation of your reply in the learner's language"),
   correction: z
     .object({
       corrected: z
@@ -42,7 +50,7 @@ const ReplySchema = z.object({
         .describe("The learner's message, corrected and in natural Taiwan Mandarin"),
       explanation: z
         .string()
-        .describe('One or two short English sentences on what changed and why'),
+        .describe("One or two short sentences in the learner's language on what changed and why"),
     })
     .nullable()
     .describe("Null when the learner's last message was fine (or there was none)"),
@@ -66,8 +74,13 @@ const PARTNERS: Record<ScenarioId, string> = {
   free: 'You are a friendly Taiwanese friend chatting about everyday life.',
 };
 
-// The same for every learner and turn, so it heads the prompt (the cacheable part).
-const RULES = `You are a conversation partner for someone learning Taiwan Mandarin.
+/** The learner's language as the instructions name it. */
+const LANGUAGE: Record<Lang, string> = { en: 'English', vi: 'Vietnamese' };
+
+// The same for every learner and turn in a language, so it heads the prompt (the cacheable part).
+const rules = (
+  language: string,
+) => `You are a conversation partner for someone learning Taiwan Mandarin. Their first language is ${language}.
 
 ${TAIWAN_STYLE}
 
@@ -76,17 +89,19 @@ How to talk, most important first:
 - Follow the conversation. Remember everything the learner has told you, never ask again what they already answered, and move the scenario forward one step each turn towards its natural end (they get their ticket, their drink, their directions). Never repeat what you already told them unless they ask. When they only agree (好, 對, 是), take the next step instead: ask the next thing your character needs to know (which train, how many tickets, hot or cold), show them where to go, or wrap up.
 - Keep it short: one or two short sentences, with at most one question, usually at the end. This is casual speech, so write 台 (台北, 台灣), not 臺.
 - Use words from the learner's vocabulary below, plus numbers, names and punctuation. When the scenario needs a word they don't know yet (火車, 票, 大杯), use it anyway, at most one or two per reply: the app shows its meaning, and that is how they learn. Never bend what you mean to avoid a word.
-- If the learner's message is unclear, guess what they most likely meant and carry on, or ask one simple question about it. If they write English or pinyin, answer in Chinese and show how to say it.
-- translation: natural English for your reply.
+- If the learner's message is unclear, guess what they most likely meant and carry on, or ask one simple question about it. If they write ${language === 'English' ? 'English' : `${language}, English`} or pinyin, answer in Chinese and show how to say it.
+- translation: natural ${language} for your reply.
 
 correction (about the learner's last message only):
 - Correct it when it is ungrammatical, means something other than what they clearly meant, uses Mainland wording, or is not how a Taiwanese speaker would say it. That includes answering a yes/no question with 是 or 是的 when Mandarin repeats the verb (你要坐車嗎？ → 要。 你有錢嗎？ → 有。).
 - corrected: the whole message as a Taiwanese speaker would say it, fully correct and natural. It is never limited by the learner's vocabulary.
 - Change only what needs changing. Keep 台 or 臺 as the learner wrote it, and ignore spacing and full-width or half-width punctuation.
-- explanation: one or two short English sentences on what changed and why. Never mention the learner's vocabulary.
+- explanation: one or two short ${language} sentences on what changed and why. Never mention the learner's vocabulary.
 - null when the message is fine, or when the only differences would be the ones you ignore.
 
 If there is no learner message yet, open the conversation as your character would.`;
+
+export const RULES: Record<Lang, string> = { en: rules(LANGUAGE.en), vi: rules(LANGUAGE.vi) };
 
 // Sent after the learner's "（我要走了。）" when they end the conversation.
 const CLOSING = `The learner is ending the conversation now. Say goodbye as your character would, in one short, warm sentence with known words, and do not ask anything. correction: null.`;
@@ -208,8 +223,9 @@ export class TalkService {
 
   async talk(
     userId: string,
-    request: { conversationId?: string; scenario: ScenarioId; message: string },
+    request: { conversationId?: string; scenario: ScenarioId; message: string; lang?: Lang },
   ): Promise<TalkResponse> {
+    const lang = request.lang ?? 'en';
     const [conversation, vocabulary] = await Promise.all([
       request.conversationId
         ? this.db.conversation.findUnique({
@@ -227,8 +243,8 @@ export class TalkService {
 
     const history = [...(conversation?.messages ?? [])].reverse();
     const messages = this.turns(history, request.message || '（請開始對話。）');
-    const system = this.system(scenario, vocabulary);
-    const call = (turns: LlmMessage[]) => this.reply(userId, system, turns);
+    const system = this.system(scenario, vocabulary, lang);
+    const call = (turns: LlmMessage[]) => this.reply(userId, system, turns, lang);
     const seen = this.seenIn(history, request.message);
 
     const recent = history
@@ -237,7 +253,7 @@ export class TalkService {
       .map((m) => m.content);
 
     let answer = await call(messages);
-    let check = this.check(answer, vocabulary, seen);
+    let check = this.check(answer, vocabulary, seen, lang);
     const repeated = recent.some((earlier) => repeats(answer.reply, earlier));
     if (check.beyond.length > 2 || check.mainland.length || repeated) {
       // One rewrite: the model sees its first attempt and what to change about it.
@@ -257,7 +273,7 @@ export class TalkService {
         { role: 'assistant', content: JSON.stringify(answer) },
         { role: 'developer', content: `Write your reply again. ${note}` },
       ]);
-      check = this.check(answer, vocabulary, seen);
+      check = this.check(answer, vocabulary, seen, lang);
     }
     // The model sometimes "corrects" by adding a full stop; that isn't worth flagging.
     if (answer.correction && essence(answer.correction.corrected) === essence(request.message))
@@ -321,6 +337,7 @@ export class TalkService {
     userId: string,
     id: string,
     mayClose: () => Promise<boolean>,
+    lang: Lang = 'en',
   ): Promise<TalkEndResponse> {
     const conversation = await this.owned(userId, id);
     if (conversation.endedAt) {
@@ -337,16 +354,18 @@ export class TalkService {
         const vocabulary = await this.vocabulary(userId);
         const answer = await this.reply(
           userId,
-          this.system(conversation.scenario as ScenarioId, vocabulary),
+          this.system(conversation.scenario as ScenarioId, vocabulary, lang),
           [
             ...this.turns(conversation.messages.slice(-MAX_HISTORY), '（我要走了。）'),
             { role: 'developer', content: CLOSING },
           ],
+          lang,
         );
         const check = this.check(
           { ...answer, correction: null },
           vocabulary,
           this.seenIn(conversation.messages),
+          lang,
         );
         closing = {
           id: randomUUID(),
@@ -398,9 +417,9 @@ export class TalkService {
   }
 
   /** The partner's instructions: the rules, this learner's vocabulary, and the scenario. */
-  private system(scenario: ScenarioId, vocabulary: Vocabulary): string {
+  private system(scenario: ScenarioId, vocabulary: Vocabulary, lang: Lang): string {
     const info = SCENARIOS.find((s) => s.id === scenario);
-    return `${RULES}\n\n${vocabulary.prompt}\n\nScenario: ${info?.en} (${info?.zh}). ${PARTNERS[scenario]}`;
+    return `${RULES[lang]}\n\n${vocabulary.prompt}\n\nScenario: ${info?.en} (${info?.zh}). ${PARTNERS[scenario]}`;
   }
 
   /** Stored messages (oldest first) as model turns, ending with the learner's `prompt`. */
@@ -417,7 +436,7 @@ export class TalkService {
     ];
   }
 
-  private reply(userId: string, system: string, turns: LlmMessage[]) {
+  private reply(userId: string, system: string, turns: LlmMessage[], lang: Lang) {
     return this.llm.structured({
       feature: 'talk',
       schema: ReplySchema,
@@ -425,7 +444,7 @@ export class TalkService {
       system,
       messages: turns,
       maxTokens: 4000,
-      cacheKey: `talk:${userId}`,
+      cacheKey: `talk:${userId}:${lang}`,
     });
   }
 
@@ -465,7 +484,12 @@ export class TalkService {
    * Words in the reply new to the learner, those beyond what the partner may use, and Mainland
    * wording in the answer. Words already met in the conversation (`seen`) are neither.
    */
-  check(answer: Reply, vocabulary: Vocabulary, seen: (text: string) => boolean = () => false) {
+  check(
+    answer: Reply,
+    vocabulary: Vocabulary,
+    seen: (text: string) => boolean = () => false,
+    lang: Lang = 'en',
+  ) {
     const unknown = new Map<string, NonNullable<TalkMessage['newWords']>[number]>();
     const beyond = new Set<string>();
     const has = (words: Set<string>, text: string) =>
@@ -477,14 +501,16 @@ export class TalkService {
       if (!token.han || NUMBERS.test(token.text) || seen(token.text)) continue;
       if (!has(vocabulary.allowed, token.text)) beyond.add(token.text);
       if (has(vocabulary.known, token.text)) continue;
+      const pinyin = token.word?.pinyin ?? token.entry?.p;
+      const gloss =
+        token.word || token.entry
+          ? this.content.gloss(token.text, lang, { word: token.word, pinyin })
+          : undefined;
       unknown.set(token.text, {
         text: token.text,
-        ...(token.word
-          ? { pinyin: token.word.pinyin, gloss: token.word.en, wordId: token.word.id }
-          : {}),
-        ...(!token.word && token.entry
-          ? { pinyin: token.entry.p, gloss: token.entry.d.slice(0, 2).join('; ') }
-          : {}),
+        ...(pinyin ? { pinyin } : {}),
+        ...(gloss ? { gloss } : {}),
+        ...(token.word ? { wordId: token.word.id } : {}),
       });
     }
     const mainland = [

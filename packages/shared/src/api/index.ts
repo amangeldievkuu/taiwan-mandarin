@@ -230,6 +230,8 @@ export const ExplainRequestSchema = z
         data: z.string().max(7_000_000),
       })
       .optional(),
+    /** The learner's language: translation, glosses and notes come in it. */
+    lang: LangSchema.default('en'),
   })
   .refine((r) => r.text || r.image, { message: 'Send text or an image' });
 export type ExplainRequest = z.infer<typeof ExplainRequestSchema>;
@@ -291,6 +293,8 @@ export const TalkRequestSchema = z.object({
   scenario: z.enum(SCENARIOS.map((s) => s.id) as [ScenarioId, ...ScenarioId[]]).default('free'),
   /** The learner's message; empty to let the partner open the conversation. */
   message: z.string().trim().max(500).default(''),
+  /** The learner's language: translations and corrections come in it. */
+  lang: LangSchema.default('en'),
 });
 export type TalkRequest = z.input<typeof TalkRequestSchema>;
 

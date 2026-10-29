@@ -1,5 +1,6 @@
 // The study path, dictionary and readers, from the generated content files (the same ones the web
-// app serves). Words and readers are loaded at startup; dictionary shards on first use.
+// app serves). Words and readers are loaded at startup; dictionary shards on first use. The
+// Vietnamese files give the AI features their Vietnamese glosses.
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -14,6 +15,7 @@ import {
   type ContentManifest,
   type DictEntry,
   type DictShard,
+  type Lang,
   type Level,
   type Reader,
   type Token,
@@ -34,7 +36,10 @@ export class ContentService implements OnModuleInit {
   /** Every written form (headword and same-length variants) → words, lowest level first. */
   private byForm = new Map<string, Word[]>();
   private readers: Reader[] = [];
-  private shards = new Map<number, DictShard>();
+  /** Shards by language and number ("vi:3"). */
+  private shards = new Map<string, DictShard>();
+  /** Vietnamese meanings by word id, when the content has them. */
+  private viGlosses = new Map<string, string>();
 
   constructor(@Inject(ENV) env: Env) {
     this.contentDir = env.CONTENT_DIR ?? join(WEB_PUBLIC, 'content');
@@ -69,6 +74,11 @@ export class ContentService implements OnModuleInit {
       }
     }
     this.readers = json<Reader[]>('readers.json');
+    if (this.manifest.languages?.includes('vi')) {
+      for (const level of this.manifest.levels)
+        for (const w of json<Word[]>(join('vi', level.file)))
+          if (w.vi) this.viGlosses.set(w.id, w.vi);
+    }
     this.logger.log(
       `Content ${this.manifest.version}: ${this.words.size} words, ${this.readers.length} readers`,
     );
@@ -115,18 +125,42 @@ export class ContentService implements OnModuleInit {
     };
   }
 
-  private shard(index: number): DictShard {
-    let shard = this.shards.get(index);
+  private shard(index: number, lang: Lang = 'en'): DictShard {
+    const own = lang !== 'en' && this.manifest?.languages?.includes(lang);
+    const key = `${own ? lang : 'en'}:${index}`;
+    let shard = this.shards.get(key);
     if (!shard) {
-      const file = join(this.dictDir, `${index}.json`);
+      const file = join(this.dictDir, own ? lang : '', `${index}.json`);
       shard = existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as DictShard) : {};
-      this.shards.set(index, shard);
+      this.shards.set(key, shard);
     }
     return shard;
   }
 
   lookup(headword: string): DictEntry[] {
     return headword ? entriesIn(this.shard(dictShardOf(headword)), headword) : [];
+  }
+
+  /**
+   * A short gloss in the learner's language: the study word's meaning, else the dictionary's first
+   * definitions (for `pinyin` when given). English when there is no Vietnamese for it.
+   */
+  gloss(
+    text: string,
+    lang: Lang,
+    found: { word?: Word; pinyin?: string } = {},
+  ): string | undefined {
+    if (lang === 'vi') {
+      const vi = found.word && this.viGlosses.get(found.word.id);
+      if (vi) return vi;
+      const entries = entriesIn(this.shard(dictShardOf(text), 'vi'), text).filter((e) => !e.en);
+      const entry = entries.find((e) => e.p === found.pinyin) ?? entries[0];
+      if (entry) return entry.d.slice(0, 2).join('; ');
+    }
+    if (found.word) return found.word.en;
+    const entries = this.lookup(text);
+    const entry = entries.find((e) => e.p === found.pinyin) ?? entries[0];
+    return entry?.d.slice(0, 2).join('; ');
   }
 
   /** Splits Chinese text into dictionary words. */

@@ -21,7 +21,15 @@ export interface TextEntry {
 export interface Issue {
   where: string;
   text: string;
+  /** In English, for reports. */
   problem: string;
+  /** What is wrong, for wording it in another language. */
+  kind: 'form' | 'term' | 'reading';
+  /** form: the text in Taiwan forms and wording. */
+  expected?: string;
+  /** term: the Mainland word, and the Taiwan word for it. */
+  term?: string;
+  taiwan?: string;
 }
 
 /** Simplified → Traditional (Taiwan) characters only. */
@@ -61,15 +69,30 @@ export function checkText(entry: TextEntry, allowlist = ALLOWLIST): Issue[] {
   if (!CJK.test(entry.text)) return [];
   const text = mask(entry, allowlist);
   const issues: Issue[] = [];
-  const report = (problem: string) =>
-    issues.push({ where: entry.where, text: entry.text, problem });
+  const at = { where: entry.where, text: entry.text };
 
   const converted = entry.mainland ? toTwChars(text) : toTwPhrases(text);
-  if (converted !== text) report(`not Taiwan standard, expected "${unmask(converted, allowlist)}"`);
+  if (converted !== text) {
+    const expected = unmask(converted, allowlist);
+    issues.push({
+      ...at,
+      kind: 'form',
+      expected,
+      problem: `not Taiwan standard, expected "${expected}"`,
+    });
+  }
 
   if (!entry.mainland) {
     for (const [term, taiwan] of Object.entries(MAINLAND_TERMS)) {
-      if (text.includes(term)) report(`Mainland word ${term}; Taiwan uses ${taiwan}`);
+      if (text.includes(term)) {
+        issues.push({
+          ...at,
+          kind: 'term',
+          term,
+          taiwan,
+          problem: `Mainland word ${term}; Taiwan uses ${taiwan}`,
+        });
+      }
     }
   }
   return issues;
@@ -86,6 +109,7 @@ export function checkReading(word: Pick<Word, 'id' | 'hanzi' | 'pinyin'>): Issue
           {
             where: `vocab:${word.id}.pinyin`,
             text: `${word.hanzi} ${word.pinyin}`,
+            kind: 'reading' as const,
             problem: `${char} ${syllable} is a Mainland reading; Taiwan reads ${taiwan}`,
           },
         ]
