@@ -38,8 +38,11 @@ describe('catalogs', () => {
     // Words that are the same in both languages.
     const same = new Set(['haha', 'XP', 'TOCFL', 'MRT', 'Email', 'OK', 'Space']);
     const english = new Map(strings(en));
+    // Numbers and those words alone ("2 TOCFL") need no translation.
+    const wordsIn = (text: string) =>
+      text.split(/[\s\d.,/·+%✦–-]+/).filter((w) => w && !same.has(w));
     const untranslated = strings(vi)
-      .filter(([path, text]) => english.get(path) === text && !same.has(text))
+      .filter(([path, text]) => english.get(path) === text && wordsIn(text).length > 0)
       .map(([path]) => path);
     expect(untranslated).toEqual([]);
   });
