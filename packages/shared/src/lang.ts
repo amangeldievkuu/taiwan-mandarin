@@ -18,14 +18,10 @@ export const isLang = (value: unknown): value is Lang =>
  * "Học sinh" → "hoc sinh", "đi" → "di", "nǚ" → "nu".
  */
 export const foldLatin = (text: string): string =>
-  text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '')
-    .replace(/đ/g, 'd');
+  text.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').replace(/đ/g, 'd');
 
 // Breve (ă), circumflex (â ê ô), tilde, hook above, horn (ơ ư), dot below: marks pinyin never uses.
-const VIETNAMESE_MARKS = /[̛̣̂̃̆̉]|đ/iu;
+const VIETNAMESE_MARKS = /[\u0302\u0303\u0306\u0309\u031b\u0323]|đ/iu;
 
 /** Text that can only be Vietnamese, not pinyin ("bạn", "đi", "ăn"; not "ban", "nǚ", "mā"). */
 export const looksVietnamese = (text: string): boolean =>

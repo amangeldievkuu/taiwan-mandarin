@@ -1,0 +1,422 @@
+# Words with no Vietnamese meaning (CVDICT lacks them): write them into glosses-vi.jsonl
+一百塊	yi1 bai3 kuai4	N1	a hundred dollars (NT$100)
+你好嗎	ni3 hao3 ma5	N1	how are you?
+多少錢	duo1 shao3 qian2	N1	how much (money)?
+您好	nin2 hao3	N1	hello (polite)
+臺灣人	tai2 wan1 ren2	N1	Taiwanese person; people of Taiwan
+呀~ya1	ya1	L1	ah (used to express surprise); (onom.) creaking
+週日	zhou1 ri4	L1	(dialect) weekday
+還要	hai2 yao4	L3	still want; even more (than); also need to
+好了	hao3 le5	L3	that's enough; all right, done; (after a verb) finished
+碼頭	ma3 tou5	L3	wharf; dock; quay; pier
+走走	zou3 zou3	L3	to take a walk; to stroll around
+說起來	shuo1 qi3 lai2	L3	speaking of it; come to think of it; when you mention it
+美元	mei3 yuan2	L3	American dollar; US dollar
+香菸	xiang1 yan1	L3	cigarette (CL:支 zhī,條 (tiáo),根 (gēn),包 (bāo),盒 (hé)) (variant of 香煙 (xiāngyān))
+美金	mei3 jin1	L3	American dollar; US dollar
+日圓	ri4 yuan2	L3	variant of 日元 (rìyuán)
+抽菸	chou1 yan1	L3	to smoke (tobacco)
+歐元	ou1 yuan2	L3	euro (currency)
+中文系	zhong1 wen2 xi4	L3	Chinese department (at a university)
+巷口	xiang4 kou3	L3	entrance of a lane or alley
+扣子	kou4 zi5	L3	button (on clothes)
+牠	ta1	L4	it (pronoun for an animal)
+吸菸	xi1 yan1	L4	to smoke (tobacco)
+懶得	lan3 de5	L4	to not feel like (doing sth); to be disinclined to
+算帳	suan4 zhang4	L4	to settle accounts; to work out the bill; to get even with sb
+鈕扣	niu3 kou4	L4	button (on clothes)
+限量	xian4 liang4	L4	to limit the amount (of); to restrict the quantity (of); limit (on quantity)
+蒐集	sou1 ji2	L4	to gather; to collect
+面向	mian4 xiang4	L4	to face; to turn towards; geared towards; catering for
+之餘	zhi1 yu2	L4	besides; apart from; in addition to (doing sth)
+品嚐	pin3 chang2	L4	to have a taste of; to sample
+身旁	shen1 pang2	L4	by one's side; beside sb
+評量	ping2 liang2	L4	assessment; evaluation; to assess
+看診	kan4 zhen3	L4	(of a doctor) to see a patient; to give a consultation; (of a patient) to see a doctor
+幫手	bang1 shou3	L4	helper; assistant
+新進	xin1 jin4	L4	newly arrived; newly hired (staff)
+企業界	qi4 ye4 jie4	L4	the business world; business circles
+泥巴	ni2 ba1	L4	(coll.) mud
+桶子	tong3 zi5	L4	bucket; pail; barrel
+石子	shi2 zi5	L4	small stone; gravel
+冷冰冰	leng3 bing1 bing1	L4	ice-cold; (of manner) cold and distant
+閒逛	xian2 guang4	L4	to stroll; to wander around; to window-shop
+傻事	sha3 shi4	L4	foolish thing; stupid mistake
+夥伴	huo3 ban4	L5	companion; pal; partner; business associate
+意識到	yi4 shi4 dao4	L5	to be aware of; to realize
+娘家	niang2 jia1	L5	wife's family (before marriage)
+鮮艶	xian1 yan4	L5	bright-colored; gaily-colored
+名氣	ming2 qi4	L5	reputation; fame
+分量	fen4 liang4	L5	(food) portion size
+小夥子	xiao3 huo3 zi5	L5	(coll.) young man; young fellow; lad
+佛經	fo2 jing1	L5	Buddhist texts; Buddhist scripture
+期貨	qi2 huo4	L5	
+搜集	sou1 ji2	L5	to collect; to gather (information, items)
+艱鉅	jian1 ju4	L5	challenging; demanding
+轉帳	zhuan3 zhang4	L5	to transfer money (between accounts); bank transfer
+婆家	po2 jia1	L5	husband's family (traditionally where the wife moves into)
+菩薩	pu2 sa4	L5	(Buddhism) bodhisattva
+僅有	jin3 you3	L5	only (having); the only; sole
+僱主	gu4 zhu3	L5	variant of 雇主 (gùzhǔ)
+經理人	jing1 li3 ren2	L5	manager; executive; fund manager
+隔年	ge2 nian2	L5	the following year; every other year
+維生	wei2 sheng1	L5	
+席次	xi2 ci4	L5	seat (in a legislature); seating order
+助人	zhu4 ren2	L5	to help others
+雇用	gu4 yong4	L5	to employ; to hire
+依序	yi1 xu4	L5	in order; sequentially
+譯註	yi4 zhu4	L5	translator's note
+諮商	zi1 shang1	L5	(psychological) counseling
+長久以來	chang2 jiu3 yi3 lai2	L5	for a long time now; long since
+年齡層	nian2 ling2 ceng2	L5	age group; age bracket
+多加	duo1 jia1	L5	to add more; (多加小心) to be extra careful
+動線	dong4 xian4	L5	path taken by people moving through a space
+超乎	chao1 hu1	L5	to go beyond; to exceed (expectations, imagination)
+事蹟	shi4 ji1	L5	notable deeds; exploits
+艱困	jian1 kun4	L5	difficult; hard; arduous
+企畫	qi4 hua4	L5	variant of 企劃 (qǐhuà)
+大夥	da4 huo3	L5	everyone; all of us; all of you
+暖身	nuan3 shen1	L5	to warm up (before exercise); warm-up
+在在	zai4 zai4	L5	everywhere; in every respect
+氾濫	fan4 lan4	L5	to overflow; to inundate; to flood; (fig.) to proliferate unchecked
+自知	zi4 zhi1	L5	to know oneself; to be aware (of one's own faults)
+知性	zhi1 xing4	L5	intellectual; cerebral
+視聽	shi4 ting1	L5	what people see and hear; public perception; audiovisual
+四海	si4 hai3	L5	(fig.) the whole world
+下文	xia4 wen2	L5	the text below; the following text; (fig.) what happened next; later developments
+徬徨	pang2 huang2	L5	to hesitate; to wander, not knowing what to do
+涉入	she4 ru4	L5	to get involved in; to be implicated in
+源源不絕	yuan2 yuan2 bu4 jue2	L5	in an unending stream; continuously
+取自	qu3 zi4	L5	taken from; drawn from (a source)
+大勢	da4 shi4	L5	overall trend
+致勝	zhi4 sheng4	L5	to win; to achieve victory (致勝關鍵 key to winning)
+居於	ju1 yu2	L5	to occupy (a position)
+藉機	jie4 ji1	L5	to seize the opportunity (to do sth)
+觸控	chu4 kong4	L5	touch control; touch-screen (觸控螢幕)
+大不了	da4 bu4 liao3	L5	at worst; if worst comes to worst; (usu. in the negative) serious; alarming
+無時無刻	wu2 shi2 wu2 ke4	L5	(idiom) (when followed by 不 (bù)) at no time; (when not followed by 不 (bù)) at all times
+大開眼界	da4 kai1 yan3 jie4	L5	(idiom) to broaden one's horizons greatly
+說穿	shuo1 chuan1	L5	to tell the truth plainly; to reveal (說穿了 to put it bluntly)
+心安	xin1 an1	L5	at ease; reassured
+街角	jie1 jiao3	L5	street corner
+閃閃發光	shan3 shan3 fa1 guang1	L5	to sparkle; to glitter
+多采多姿	duo1 cai3 duo1 zi1	L5	colorful; rich and varied
+重責大任	zhong4 ze2 da4 ren4	L5	heavy responsibility; important duty
+上上下下	shang4 shang4 xia4 xia4	L5	everyone (from top to bottom); up and down
+用兵	yong4 bing1	L5	to use military force; to command troops
+游牧	you2 mu4	L5	nomadic; to live as nomads
+笑咪咪	xiao4 mi1 mi1	L5	smiling; beaming
+放聲大哭	fang4 sheng1 da4 ku1	L5	to sob loudly; to bawl
+採收	cai3 shou1	L6	to harvest
+藝文	yi4 wen2	L6	arts and culture; arts and literature
+評鑑	ping2 jian4	L6	evaluation; assessment
+參訪	can1 fang3	L6	to visit (an institution) to learn; study visit
+研議	yan2 yi4	L6	to deliberate over (a proposal, policy etc)
+智慧型	zhi4 hui4 xing2	L6	smart; intelligent (智慧型手機 smartphone)
+串連	chuan4 lian2	L6	to link up; to connect; to organize together
+街友	jie1 you3	L6	homeless person (Taiwan)
+志業	zhi4 ye4	L6	calling; life's work; vocation
+驚豔	jing1 yan4	L6	very impressed; stunned; amazed; to astonish
+所有人	suo3 you3 ren2	L6	everyone; owner
+悠遊	you1 you2	L6	to roam leisurely; carefree
+布條	bu4 tiao2	L6	banner; strip of cloth
+直指	zhi2 zhi3	L6	to point directly at; to criticize directly
+省思	xing3 si1	L6	reflection; to reflect on
+輕忽	qing1 hu1	L6	to neglect; to take lightly
+註明	zhu4 ming2	L6	to specify; to note clearly; to indicate in writing
+大老	da4 lao3	L6	veteran figure; party elder; grandee
+包覆	bao1 fu4	L6	to wrap; to cover; to coat
+心念	xin1 nian4	L6	thought; intention; idea
+壓軸	ya1 zhou2	L6	grand finale; (attributive) final; climactic
+主政	zhu3 zheng4	L6	to lead a government
+宅邸	zhai2 di3	L6	residence of a high-ranking official
+藝品	yi4 pin3	L6	craftwork; art object
+仿效	fang3 xiao4	L6	to imitate; to follow the example of
+形塑	xing2 su4	L6	to shape; to mold (an image, culture)
+日曬	ri4 shai4	L6	sun exposure; to dry in the sun
+添購	tian1 gou4	L6	to purchase additionally; to buy more
+藥廠	yao4 chang3	L6	pharmaceutical factory; drug company
+燒毀	shao1 hui3	L6	to burn down; to destroy by fire
+隨興	sui2 xing4	L6	as the mood takes one; impromptu; casual
+說詞	shuo1 ci2	L6	wording; version of events; excuse
+心路歷程	xin1 lu4 li4 cheng2	L6	emotional journey; inner journey
+求診	qiu2 zhen3	L6	to seek medical treatment; to see a doctor
+悲情	bei1 qing2	L6	sorrowful; tragic sentiment
+起舞	qi3 wu3	L6	to start dancing; to rise and dance
+迎向	ying2 xiang4	L6	to face; to meet head-on (迎向未來 to face the future)
+迴路	hui2 lu4	L6	circuit; loop
+分工合作	fen1 gong1 he2 zuo4	L6	to divide the work and cooperate
+巧遇	qiao3 yu4	L6	to run into by chance; chance encounter
+設限	she4 xian4	L6	to set a limit; to impose a restriction
+受創	shou4 chuang1	L6	to be wounded; to be hurt (physically or emotionally)
+平衡點	ping2 heng2 dian3	L6	balance point; equilibrium
+深植	shen1 zhi2	L6	to be deeply rooted; to implant deeply
+觀照	guan1 zhao4	L6	to observe and reflect on; to examine closely
+昇華	sheng1 hua2	L6	sublimation; to sublimate; to elevate
+二話不說	er4 hua4 bu4 shuo1	L6	(idiom) not saying anything further; not raising any objection; without demur
+備感	bei4 gan3	L6	to feel deeply (備感榮幸 to feel greatly honored)
+決然	jue2 ran2	L6	resolutely; determinedly
+專精	zhuan1 jing1	L6	to specialize in; expert in
+同夥	tong2 huo3	L6	accomplice; partner (in a group)
+自已	zi4 yi3	L6	oneself (variant of 自己 in the list)
+記取	ji4 qu3	L6	to remember; to learn (a lesson)
+長程	chang2 cheng2	L6	long-range; long-term; long-distance
+立意	li4 yi4	L6	to conceptualize; to come up with the central idea; concept; central idea
+來勢洶洶	lai2 shi4 xiong1 xiong1	L6	to come on with great force; menacing
+請益	qing3 yi4	L6	to ask for advice; to consult
+撻伐	ta4 fa1	L6	to condemn; to attack (verbally)
+豔陽	yan4 yang2	L6	bright sun; brilliant sunshine
+孤軍	gu1 jun1	L6	isolated force; alone and unsupported
+勳章	xun1 zhang1	L6	medal; decoration
+尾端	wei3 duan1	L6	end; tail end; tip
+人本	ren2 ben3	L6	people-oriented; humanistic
+涉水	she4 shui3	L6	to wade through water; (of a vehicle) to drive through water
+關鍵點	guan1 jian4 dian3	L6	key point; critical point
+苦讀	ku3 du2	L6	to study hard
+讚譽	zan4 yu4	L6	to praise; to acclaim
+使臣	shi3 chen2	L6	envoy; diplomatic messenger (historical)
+奏章	zou4 zhang1	L6	memorial to the emperor
+觀眾席	guan1 zhong4 xi2	L6	audience seating area
+走下坡	zou3 xia4 po1	L6	(fig.) to decline; to deteriorate; to go downhill
+大手筆	da4 shou3 bi3	L6	bold stroke; generous spending; masterpiece
+聲色	sheng1 se4	L6	voice and expression; sensual pleasures (不動聲色 to stay composed)
+擺盪	bai3 dang4	L6	to swing; to sway back and forth
+岩壁	yan2 bi4	L6	rock face; cliff wall
+解雇	jie3 gu4	L6	to dismiss; to fire (an employee)
+誇讚	kua1 zan4	L6	to praise
+擊破	ji2 po4	L6	to break; to defeat; to smash
+洩露	xie4 lu4	L6	to leak (a secret); to divulge
+朝政	chao2 zheng4	L6	(historical) affairs of state at the imperial court
+綑綁	kun3 bang3	L6	to tie up; to bind
+無門	wu2 men2	L6	no way (to do sth) (投訴無門 nowhere to complain)
+藤蔓	teng2 man4	L6	trailing or climbing stem; vine
+倒過來	dao4 guo4 lai2	L6	upside down; the other way round
+坐視	zuo4 shi4	L6	to stand by and watch; to look on passively
+使力	shi3 li4	L6	to exert strength; to make an effort
+受雇	shou4 gu4	L6	to be employed; to be hired
+終其一生	zhong1 qi2 yi1 sheng1	L6	all one's life; throughout one's life
+藉助	jie4 zhu4	L6	to draw support from; with the help of
+人和	ren2 he2	L6	harmony among people; popular support
+偶發	ou3 fa1	L6	accidental; occasional; sporadic
+擅於	shan4 yu2	L6	to be good at; skilled in
+鉅額	ju4 e2	L6	variant of 巨額 (jù'é)
+率兵	shuai4 bing1	L6	to lead troops
+深鎖	shen1 suo3	L6	locked up; closed off; (of one's brow) furrowed; frowning
+卯足	mao3 zu2	L6	to exert all one's strength (卯足全力)
+忐忑不安	tan3 te4 bu4 an1	L6	(idiom) anxious; in turmoil
+獨門	du2 men2	L6	exclusive; one's own (secret technique)
+一隅	yi1 yu2	L6	a corner; a small area
+受罰	shou4 fa2	L6	to be punished
+攻佔	gong1 zhan4	L6	to attack and occupy; to capture
+更形	geng4 xing2	L6	even more; increasingly
+託付	tuo1 fu4	L6	to entrust to sb
+獨享	du2 xiang3	L6	to have sth to oneself
+勤於	qin2 yu2	L6	diligent in; to be diligent at
+高照	gao1 zhao4	L6	to shine high in the sky
+無畏	wu2 wei4	L6	fearless
+家務事	jia1 wu4 shi4	L6	household affairs; family matter
+引介	yin3 jie4	L6	to introduce (an idea, product, technology etc); to introduce one person to another
+明快	ming2 kuai4	L6	(of style, mood etc) bright; lively; brisk; prompt
+三思	san1 si1	L6	to think carefully; to think twice
+扯上	che3 shang4	L6	to get mixed up with; to drag in
+沿街	yan2 jie1	L6	along the street
+存疑	cun2 yi2	L6	to leave a question open; to hold doubts; to be skeptical
+百態	bai3 tai4	L6	all aspects; various forms (人生百態)
+志士	zhi4 shi4	L6	person committed to a noble cause or ideal
+摻雜	chan1 za2	L6	to mix; to mingle
+愛恨	ai4 hen4	L6	love and hate
+鉅細靡遺	ju4 xi4 mi3 yi2	L6	in great detail; leaving nothing out
+心防	xin1 fang2	L6	guardedness; wariness; mental defenses
+揚棄	yang2 qi4	L6	to discard; to abandon
+剖開	pou3 kai1	L6	to cut open; to split open
+領兵	ling3 bing1	L6	to lead troops
+交疊	jiao1 die2	L6	to overlap
+鬱鬱	yu4 yu4	L6	gloomy; depressed; (of plants) lush
+眼花撩亂	yan3 hua1 liao2 luan4	L6	dazzled; bewildered by too many things
+光采	guang1 cai3	L6	variant of 光彩 (guāngcǎi)
+退居	tui4 ju1	L6	to retire to (a lesser position); to step back
+鄉野	xiang1 ye3	L6	countryside; rural areas
+上策	shang4 ce4	L6	best course of action; best policy
+母性	mu3 xing4	L6	maternal instinct; motherliness
+起疑	qi3 yi2	L6	to begin to suspect; to grow suspicious
+豔麗	yan4 li4	L6	gorgeous; bright and beautiful
+分際	fen4 ji4	L6	boundary; limits (of propriety, duty etc); degree; extent
+纏鬥	chan2 dou4	L6	to fight a long, tangled battle
+影藝	ying3 yi4	L6	film and the arts; show business
+盡失	jin4 shi1	L6	(of hope, appetite, authority etc) to be lost
+人面	ren2 mian4	L6	face; personal connections (人面很廣)
+遠播	yuan3 bo4	L6	to spread far (of fame)
+相知	xiang1 zhi1	L6	to know each other well; close friend
+趨前	qu1 qian2	L6	to step forward; to approach
+如常	ru2 chang2	L6	as usual
+井水	jing3 shui3	L6	well water
+源源	yuan2 yuan2	L6	continuously; in a steady flow
+遍野	bian4 ye3	L6	all over the fields; everywhere
+造影	zao4 ying3	L6	imaging; radiography (醫學造影)
+自許	zi4 xu3	L6	to describe oneself as; to set oneself the goal of
+徒增	tu2 zeng1	L6	to only add to; to needlessly increase
+大相逕庭	da4 xiang1 jing4 ting2	L6	to be completely different
+抬頭挺胸	tai2 tou2 ting3 xiong1	L6	to hold one's head high; with chest out
+明說	ming2 shuo1	L6	to state clearly; to say explicitly
+叫座	jiao4 zuo4	L6	to draw large audiences; box-office hit
+無依	wu2 yi1	L6	helpless; with no one to rely on
+追根究柢	zhui1 gen1 jiu4 di3	L6	to get to the bottom of sth
+閒話家常	xian2 hua4 jia1 chang2	L6	to chat about everyday matters; small talk
+人來人往	ren2 lai2 ren2 wang3	L6	(idiom) people coming and going; bustling with activity
+邁開	mai4 kai1	L6	to take a step (邁開步伐)
+要脅	yao1 xie2	L6	to threaten; to coerce
+泛黃	fan4 huang2	L6	to yellow (with age)
+浸淫	jin4 yin2	L6	to saturate; to suffuse; (literary) (fig.) to be steeped
+據以	ju4 yi3	L6	on the basis of; according to which
+下肚	xia4 du4	L6	to consume (food or drink); to eat; to drink
+章法	zhang1 fa3	L6	method; orderly arrangement (of writing or action)
+局外人	ju2 wai4 ren2	L6	outsider
+艱澀	jian1 se4	L6	difficult and obscure (of writing)
+戰果	zhan4 guo3	L6	results of a battle; achievements
+作詩	zuo4 shi1	L6	to write poetry
+娓娓道來	wei3 wei3 dao4 lai2	L6	to tell in a gentle, engaging way
+無懼	wu2 ju4	L6	fearless; not afraid of
+根深柢固	gen1 shen1 di3 gu4	L6	deep-rooted; entrenched
+得志	de2 zhi4	L6	to achieve one's ambition; to be successful
+正途	zheng4 tu2	L6	see 正路 (zhènglù)
+立於	li4 yu2	L6	to stand at; to be placed in (立於不敗之地)
+訓練有素	xun4 lian4 you3 su4	L6	well-trained
+專文	zhuan1 wen2	L6	special article; feature article
+健將	jian4 jiang4	L6	(archaic) adept and valiant military general; skilled athlete; top player
+前座	qian2 zuo4	L6	front seat
+門縫	men2 feng4	L6	slight gap between a door and its frame
+無憂	wu2 you1	L6	carefree; without worry
+詳加	xiang2 jia1	L6	to (do sth) in detail (詳加說明)
+擁立	yong3 li4	L6	(formal) to back sb as leader
+淒慘	qi1 can3	L6	miserable; tragic
+旦夕	dan4 xi4	L6	morning and evening; in a very short time (危在旦夕)
+人跡	ren2 ji1	L6	human traces; sign of people (人跡罕至)
+筋疲力竭	jin1 pi2 li4 jie2	L6	completely exhausted
+一臂之力	yi1 bi4 zhi1 li4	L6	a helping hand
+非比尋常	fei1 bi3 xun2 chang2	L6	extraordinary
+身受	shen1 shou4	L6	to experience personally (感同身受)
+健在	jian4 zai4	L6	(of an elderly person) alive and in good health; (of a thing) intact; holding up OK
+咋舌	ze2 she2	L6	(literary) to be speechless
+松林	song1 lin2	L6	pine forest
+辭彙	ci2 hui4	L6	vocabulary
+為宜	wei2 yi2	L6	it is appropriate to; it is best to
+枯黃	ku1 huang2	L6	withered and yellow
+來來往往	lai2 lai2 wang3 wang3	L6	coming and going
+一聲令下	yi1 sheng1 ling4 xia4	L6	at a word of command
+閉口	bi4 kou3	L6	to shut one's mouth; to keep silent
+悶氣	men4 qi4	L6	pent-up anger; sulkiness
+孤苦	gu1 ku3	L6	lonely and poor
+終至	zhong1 zhi4	L6	eventually leading to; finally ending up
+端視	duan1 shi4	L6	to depend entirely on
+真義	zhen1 yi4	L6	true meaning
+山岳	shan1 yue4	L6	mountains
+嬉鬧	xi1 nao4	L6	to play and frolic noisily
+功勳	gong1 xun1	L6	meritorious service; distinguished contribution; achievement of great merit
+敵不過	di2 bu4 guo4	L6	to be no match for
+繫於	xi4 yu2	L6	to depend on; to hinge on
+藉故	jie4 gu4	L6	to find an excuse; on some pretext
+適於	shi4 yu2	L6	suitable for
+黑漆漆	hei1 qi1 qi1	L6	pitch-dark
+稍作	shao1 zuo4	L6	to do a little (稍作休息 to take a short rest)
+純然	chun2 ran2	L6	purely; entirely
+凜然	lin3 ran2	L6	stern; awe-inspiring
+當頭棒喝	dang1 tou2 bang4 he4	L6	a sharp warning; wake-up call
+眾所皆知	zhong4 suo3 jie1 zhi1	L6	as everyone knows; well known
+屈膝	qu1 xi1	L6	to bend the knee; to kneel; to submit
+擊垮	ji2 kua3	L6	to defeat; to crush
+蓬頭	peng2 tou2	L6	disheveled hair (蓬頭垢面)
+學養	xue2 yang3	L6	learning and cultivation
+終歸	zhong1 gui1	L6	in the end; ultimately; after all
+神遊	shen2 you2	L6	to travel in one's imagination
+依樣	yi1 yang4	L6	following the same pattern (依樣畫葫蘆)
+出關	chu1 guan1	L6	to leave through a pass; to go through customs
+多難	duo1 nan4	L6	full of hardships
+硬仗	ying4 zhang4	L6	tough battle; difficult task; big challenge
+直挺挺	zhi2 ting3 ting3	L6	bolt upright; straight and stiff
+召來	zhao4 lai2	L6	to summon; to call in
+震天	zhen4 tian1	L6	deafening; earth-shaking
+後患	hou4 huan4	L6	future trouble
+自憐	zi4 lian2	L6	self-pity
+愁容	chou2 rong2	L6	worried look; sad expression
+右臂	you4 bi4	L6	right arm
+細讀	xi4 du2	L6	to read carefully
+下嚥	xia4 yan4	L6	to swallow (food or drink)
+殺身	sha1 shen1	L6	to lose one's life (殺身之禍)
+累贅	lei3 zhui4	L6	superfluous; cumbersome; burdensome; a burden
+深覺	shen1 jue2	L6	to feel deeply
+浮生	fu2 sheng1	L6	fleeting life
+自圓其說	zi4 yuan2 qi2 shuo1	L6	(idiom) to make a story or theory consistent; to give a plausible explanation
+平心靜氣	ping2 xin1 jing4 qi4	L6	calm and even-tempered
+相讓	xiang1 rang4	L6	to give way to each other; to yield
+接踵而至	jie1 zhong3 er2 zhi4	L6	to come one after another
+兩頰	liang3 jia2	L6	both cheeks
+有鑑於此	you3 jian4 yu2 ci3	L6	in view of this
+閉目	bi4 mu4	L6	to close one's eyes
+身居	shen1 ju1	L6	to hold (a position); to live in
+畢露	bi4 lu4	L6	to be fully exposed (原形畢露)
+飄蕩	piao1 dang4	L6	to drift; to float about
+野心勃勃	ye3 xin1 bo2 bo2	L6	(idiom) highly ambitious
+長篇大論	chang2 pian1 da4 lun4	L6	long-winded speech or essay
+轟隆隆	hong1 long2 long2	L6	rumbling; booming
+嘻嘻哈哈	xi1 xi1 ha1 ha1	L6	laughing and joking
+一屁股	yi1 pi4 gu3	L6	(to sit down) heavily (一屁股坐下)
+棟樑	dong4 liang2	L6	pillar; mainstay (of a country or group)
+一朝	yi1 zhao1	L6	once; one day (一朝一夕)
+傾身	qing1 shen1	L6	to lean forward
+寒顫	han2 zhan4	L6	shiver
+心不甘情不願	xin1 bu4 gan1 qing2 bu4 yuan4	L6	grudgingly; unwillingly
+拔腿就跑	ba2 tui3 jiu4 pao3	L6	to take to one's heels
+圭臬	gui1 nie4	L6	standard; criterion
+慣於	guan4 yu2	L6	to be used to; accustomed to
+迅雷不及掩耳	xun4 lei2 bu4 ji2 yan3 er3	L6	as sudden as a thunderclap
+歷久不衰	li4 jiu3 bu4 shuai1	L6	enduring; lasting
+莫測	mo4 ce4	L6	unfathomable; unpredictable
+根植	gen1 zhi2	L6	to be rooted in
+金銀財寶	jin1 yin2 cai2 bao3	L6	treasure; riches
+細想	xi4 xiang3	L6	to think carefully
+正題	zheng4 ti2	L6	main topic; matter at hand
+意氣	yi4 qi4	L6	spirit; mettle; impulsiveness
+豐功偉業	feng1 gong1 wei3 ye4	L6	great achievements
+天南地北	tian1 nan2 di4 bei3	L6	(idiom) far apart; (idiom) from different places; from all over
+強固	qiang2 gu4	L6	strong; solid
+無奇	wu2 qi2	L6	ordinary; unremarkable (平淡無奇)
+概略	gai4 lüe4	L6	outline; summary; roughly
+相告	xiang1 gao4	L6	to tell each other; to inform
+為害	wei2 hai4	L6	to cause harm
+慨然	kai3 ran2	L6	generously; with deep feeling
+神迷	shen2 mi2	L6	entranced; spellbound
+盡其所能	jin4 qi2 suo3 neng2	L6	to do everything one can
+擱下	ge1 xia4	L6	to put aside; to lay down
+逐字	zhu2 zi4	L6	word by word
+上昇	shang4 sheng1	L6	to rise; to ascend
+絕少	jue2 shao3	L6	very rarely
+自作主張	zi4 zuo4 zhu3 zhang1	L6	(idiom) to act on one's own; to decide for oneself
+緊張兮兮	jin3 zhang1 xi1 xi1	L6	very nervous; jittery
+鼓足	gu3 zu2	L6	to summon up (courage, energy)
+牢不可破	lao2 bu4 ke3 po4	L6	rock-solid
+稱奇	cheng1 qi2	L6	to marvel at
+難言	nan2 yan2	L6	hard to put into words
+集大成	ji2 da4 cheng2	L6	to bring together the best of (a tradition)
+當差	dang1 chai1	L6	to work as a servant or minor official
+心窩	xin1 wo1	L6	chest area around the heart; (fig.) heart; innermost feelings
+克敵	ke4 di2	L6	to defeat the enemy
+素色	su4 se4	L6	plain color
+緊追不捨	jin3 zhui1 bu4 she3	L6	to chase relentlessly
+天昏地暗	tian1 hun1 di4 an4	L6	dark sky and earth; total chaos
+薪火	xin1 huo3	L6	torch passed on; tradition (薪火相傳)
+嫉惡如仇	ji2 e4 ru2 chou2	L6	(idiom) to hate evil as one hates an enemy
+莽夫	mang3 fu1	L6	rash, reckless man
+一動也不動	yi1 dong4 ye3 bu4 dong4	L6	completely motionless
+執行不力	zhi2 xing2 bu4 li4	L6	poorly implemented
+士氣大振	shi4 qi4 da4 zhen4	L6	morale soars
+毀於一旦	hui3 yu2 yi1 dan4	L6	(idiom) ruined in a short time (esp. of sth that took a long time or great effort to…
+熊熊烈火	xiong2 xiong2 lie4 huo3	L6	raging fire
+獲益良多	huo4 yi4 liang2 duo1	L6	to benefit greatly
+粗聲粗氣	cu1 sheng1 cu1 qi4	L6	in a gruff voice
+連根拔起	lian2 gen1 ba2 qi3	L6	to uproot completely
+過路財神	guo4 lu4 cai2 shen2	L6	money that passes through one's hands
+金光閃閃	jin1 guang1 shan3 shan3	L6	glittering with gold
+隻字片語	zhi1 zi4 pian4 yu3	L6	a few words; a single word
+頗負盛名	po3 fu4 sheng4 ming2	L6	quite famous; renowned
+食指大動	shi2 zhi3 da4 dong4	L6	(idiom) to be excited to dig into the delicious food
+首尾呼應	shou3 wei3 hu1 ying4	L6	beginning and end echo each other

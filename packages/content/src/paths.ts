@@ -9,6 +9,7 @@ export const RAW = {
   naer: at('data/raw/coct/tbcl-14452-202504.xlsx'),
   frequency: at('data/raw/coct/word-freq-1141208.xlsx'),
   cedict: at('data/raw/cedict/cedict.txt'),
+  cvdict: at('data/raw/cvdict/CVDICT.u8'),
   tatoebaCmn: at('data/raw/tatoeba/cmn_sentences.tsv'),
   tatoebaEng: at('data/raw/tatoeba/eng_sentences.tsv'),
   tatoebaLinks: at('data/raw/tatoeba/cmn-eng_links.tsv'),
@@ -18,6 +19,7 @@ export const RAW = {
 export const DATA = {
   aiExamples: at('data/generated/examples-ai.jsonl'),
   aiGlosses: at('data/generated/glosses-ai.jsonl'),
+  aiGlossesVi: at('data/generated/glosses-vi.jsonl'),
   readers: at('data/readers'),
 };
 

@@ -1,4 +1,8 @@
 // Content types, shared by the web app, the content pipeline and the API.
+//
+// Each language has its own content files: English in content/ and dict/, Vietnamese in content/vi/
+// and dict/vi/. A Vietnamese file is the English one plus the fields marked "Vietnamese files", so a
+// learner loads one set or the other.
 
 /**
  * Study path, following the TOCFL bands. N1–L5 come from the official 《華語八千詞表》;
@@ -64,6 +68,8 @@ export interface Example {
    */
   wordLengths?: number[];
   en: string;
+  /** Vietnamese translation (Vietnamese files; missing → show `en`). */
+  vi?: string;
   source: 'tatoeba' | 'ai' | 'curated';
   /** Source id, e.g. the Tatoeba sentence number. */
   ref?: string;
@@ -90,8 +96,16 @@ export interface Word {
   cl?: string;
   examples?: Example[];
   glossSource: 'cedict' | 'curated' | 'ai' | 'none';
+  /** Vietnamese meaning (Vietnamese files; missing → show `en`). */
+  vi?: string;
+  /** Where `vi` comes from: hand-written, CVDICT (CC-CEDICT translated), or written with AI. */
+  viSource?: 'curated' | 'cvdict' | 'ai';
   /** Note about Taiwan usage; marks the word as Taiwan-specific. */
   tw?: string;
+  /** `tw` in Vietnamese (Vietnamese files). */
+  twVi?: string;
+  /** Sino-Vietnamese (Hán-Việt) reading, "quốc gia" for 國家 (Vietnamese files). */
+  hv?: string;
   /** Mainland equivalent (in Traditional characters), shown only as a labeled note. */
   mainland?: string;
   /** Reading not yet confirmed against the MOE 《重編國語辭典修訂本》. */

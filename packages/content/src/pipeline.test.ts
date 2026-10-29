@@ -5,7 +5,8 @@ import { pickExamples } from './examples.ts';
 import { citationTones, parseForms, pinyinVariants, readForm, zhuyinVariants } from './headword.ts';
 import { alignPinyin, type PinyinContext } from './pinyin.ts';
 import { taiwanCharReadings } from './dictionary.ts';
-import { studyGloss } from './lexicon.ts';
+import { attachVietnamese, isTaiwanReadingNote, parseCvdictLine } from './cvdict.ts';
+import { fold, gloss, studyGloss } from './lexicon.ts';
 
 const LINES = [
   '垃圾 垃圾 [la1 ji1] /trash/refuse/garbage/Taiwan pr. [le4 se4]/',
@@ -196,5 +197,79 @@ describe('studyGloss', () => {
 
   it('shortens a single long sense', () => {
     expect(studyGloss(['a'.repeat(30) + ' ' + 'b'.repeat(80)])).toMatch(/…$/);
+  });
+});
+
+describe('CVDICT (Vietnamese)', () => {
+  const cvdictOf = (lines: string[]) =>
+    new Map(
+      lines.flatMap((l) => {
+        const parsed = parseCvdictLine(l);
+        return parsed ? [parsed] : [];
+      }),
+    );
+
+  it('keys lines exactly as CC-CEDICT does, case included', () => {
+    expect(parseCedictLine('和 和 [He2] /surname He/')?.key).toBe('和 和 [He2]');
+    expect(parseCedictLine('和 和 [he2] /and/')?.key).toBe('和 和 [he2]');
+    const cedict = ['和 和 [He2] /surname He/', '和 和 [he2] /and/'].flatMap(
+      (l) => parseCedictLine(l) ?? [],
+    );
+    const cvdict = cvdictOf(['和 和 [He2] /họ [He2]/', '和 和 [he2] /và/']);
+    expect(attachVietnamese(cedict, cvdict)).toBe(2);
+    expect(cedict.map((e) => e.vi)).toEqual([['họ Hé'], ['và']]);
+  });
+
+  it('drops measure words and Taiwan readings however they are worded', () => {
+    expect(
+      parseCvdictLine(
+        '垃圾 垃圾 [la1 ji1] /rác/rác thải/(khẩu ngữ) chất lượng kém/Tiếng Đài Loan đọc là [le4 se4]/',
+      )?.[1],
+    ).toEqual(['rác', 'rác thải', '(khẩu ngữ) chất lượng kém']);
+    expect(parseCvdictLine('國家 国家 [guo2 jia1] /quốc gia; dân tộc/LT:個|个[ge4]/')?.[1]).toEqual(
+      ['quốc gia; dân tộc'],
+    );
+    for (const note of [
+      'phiên âm Đài Loan [xing4]',
+      'cách phát âm ở Đài Loan: [le4 se4]',
+      'người Đài Loan phát âm [xing4] cho nghĩa hành vi-cử chỉ',
+    ])
+      expect(isTaiwanReadingNote(note)).toBe(true);
+    // Taiwan senses and cross-references are meanings, not reading notes.
+    expect(isTaiwanReadingNote('(Đài Loan) xe tay ga')).toBe(false);
+    expect(isTaiwanReadingNote('(Đài Loan) như 機車|机车[ji1 che1]')).toBe(false);
+  });
+
+  it('rewrites cross-references like CC-CEDICT', () => {
+    expect(parseCvdictLine('台 台 [tai2] /biến thể của 臺|台[tai2]/')?.[1]).toEqual([
+      'biến thể của 臺 (tái)',
+    ]);
+  });
+
+  it('glosses from the same entries as English, pointers and labelled notes left out', () => {
+    const cedict = [
+      '行 行 [hang2] /row; line/profession/',
+      '行 行 [xing2] /to walk; to go/capable/',
+    ].flatMap((l) => parseCedictLine(l) ?? []);
+    const cvdict = cvdictOf([
+      '行 行 [hang2] /hàng; dòng/nghề/',
+      '行 行 [xing2] /đi; đến/có khả năng/',
+    ]);
+    attachVietnamese(cedict, cvdict);
+    const dict = new Map([[fold('行'), cedict]]);
+    expect(gloss('行', 'xing2', dict)).toMatchObject({
+      en: 'to walk; to go; capable',
+      vi: 'đi; đến; có khả năng',
+    });
+    expect(gloss('行', 'hang2', dict)?.vi).toBe('hàng; dòng; nghề');
+    expect(studyGloss(['họ Tán', 'họ hàng', 'biến thể của 臺 (tái)', 'xem thêm 得罪'], 'vi')).toBe(
+      'họ Tán; họ hàng; biến thể của 臺 (tái)',
+    );
+    expect(
+      studyGloss(
+        ['tồn tại; còn sống', '(ai đó hoặc cái gì đó) ở (vị trí)', '(văn học) khổ (sở)'],
+        'vi',
+      ),
+    ).toBe('tồn tại; còn sống; (ai đó hoặc cái gì đó) ở (vị trí)');
   });
 });

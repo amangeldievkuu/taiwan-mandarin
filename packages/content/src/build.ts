@@ -1,5 +1,6 @@
 // Builds the app's content from the downloaded sources. Run: npm run content
-//   1. study-path words: TOCFL + NAER + curated starter words, glossed from CC-CEDICT
+//   1. study-path words: TOCFL + NAER + curated starter words, glossed from CC-CEDICT (and in
+//      Vietnamese from CVDICT, its translation)
 //   2. dictionary shards: CC-CEDICT with Taiwan readings, linked to study-path words
 //   3. example sentences: Tatoeba, plus AI-written ones from data/generated
 //   4. graded readers from data/readers, split into words
@@ -15,9 +16,11 @@ import {
   type ContentManifest,
   type Example,
   type LevelManifest,
+  type Word,
 } from '@taiwan-mandarin/shared';
 import { checkVocab, formatIssues } from '@taiwan-mandarin/shared/taiwan-standard';
 import { charReadings, readCedict, syllableInventory } from './cedict.ts';
+import { attachVietnamese, readCvdict } from './cvdict.ts';
 import { buildDictionary } from './dictionary.ts';
 import { pickExamples, readTatoeba } from './examples.ts';
 import { buildLexicon } from './lexicon.ts';
@@ -53,6 +56,10 @@ const cedict = readCedict(RAW.cedict);
 const ctx = { inventory: syllableInventory(cedict), readings: charReadings(cedict) };
 done(`${cedict.length} entries`);
 
+done = step('CVDICT');
+const translated = attachVietnamese(cedict, readCvdict(RAW.cvdict));
+done(`${translated} of ${cedict.length} entries in Vietnamese`);
+
 done = step('word lists');
 const tocfl = readTocfl(RAW.tocfl);
 const naer = readNaer(RAW.naer);
@@ -65,15 +72,23 @@ const { words, legacyIds, report } = buildLexicon({ tocfl, naer, cedict, frequen
 const aiGlosses = new Map(
   readJsonl<{ id: string; en: string }>(DATA.aiGlosses).map((g) => [g.id, g.en] as const),
 );
+const aiGlossesVi = new Map(
+  readJsonl<{ id: string; vi: string }>(DATA.aiGlossesVi).map((g) => [g.id, g.vi] as const),
+);
 for (const w of words) {
   const en = aiGlosses.get(w.id);
   if (!w.en && en) {
     w.en = en;
     w.glossSource = 'ai';
   }
+  const vi = aiGlossesVi.get(w.id);
+  if (!w.vi && vi) {
+    w.vi = vi;
+    w.viSource = 'ai';
+  }
 }
 done(
-  `${words.length} words ${JSON.stringify(report.bySource)}, ${words.filter((w) => !w.en).length} without gloss`,
+  `${words.length} words ${JSON.stringify(report.bySource)}, ${words.filter((w) => !w.en).length} without gloss, ${words.filter((w) => !w.vi).length} without a Vietnamese one`,
 );
 
 done = step('dictionary');
@@ -145,6 +160,22 @@ done(
   `${readers.length} texts; words above their level (auto-glossed): ${readers.map((r) => `${r.id} ${Math.round(r.hard * 100)}%`).join(', ')}`,
 );
 
+/** A word as the English files carry it, without the Vietnamese fields. */
+function englishWord(word: Word): Word {
+  const w = { ...word };
+  delete w.vi;
+  delete w.viSource;
+  delete w.twVi;
+  delete w.hv;
+  w.examples = w.examples?.map((example) => {
+    const e = { ...example };
+    delete e.vi;
+    return e;
+  });
+  if (!w.examples) delete w.examples;
+  return w;
+}
+
 // ---- write ----
 done = step('write');
 rmSync(OUT.content, { recursive: true, force: true });
@@ -167,7 +198,7 @@ const write = (path: string, data: unknown) => {
 const levels: LevelManifest[] = LEVELS.map(({ id }) => {
   const list = words.filter((w) => w.level === id);
   const file = `words-${id}.json`;
-  write(`content/${file}`, list);
+  write(`content/${file}`, list.map(englishWord));
   return {
     id,
     count: list.length,
@@ -209,6 +240,15 @@ writeFileSync(
     .filter((w) => !w.en)
     .map((w) => `${w.id}\t${w.pinyin}\t${w.level}`)
     .join('\n') + '\n',
+);
+writeFileSync(
+  join(ROOT, 'data/generated/no-gloss-vi.tsv'),
+  '# Words with no Vietnamese meaning (CVDICT lacks them): write them into glosses-vi.jsonl\n' +
+    words
+      .filter((w) => !w.vi)
+      .map((w) => `${w.id}\t${w.pinyin}\t${w.level}\t${w.en}`)
+      .join('\n') +
+    '\n',
 );
 writeFileSync(
   join(ROOT, 'data/generated/reader-hard-words.tsv'),

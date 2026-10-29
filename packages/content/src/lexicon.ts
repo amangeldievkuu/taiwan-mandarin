@@ -2,10 +2,12 @@
 
 import {
   CURATED,
+  type CuratedWord,
   LEVEL_IDS,
   levelIndex,
   splitSyllables,
   toZhuyin,
+  type Lang,
   type Level,
   type TopicId,
   type Word,
@@ -81,8 +83,14 @@ function readEntry(
   };
 }
 
-const GLOSS_SKIP =
-  /^(surname |variant of |old variant of |used in |see |abbr\. for |also written |\(old\) )/i;
+/** Senses that are pointers rather than meanings, kept out of flashcard glosses. */
+const GLOSS_SKIP: Record<Lang, RegExp> = {
+  en: /^(surname |variant of |old variant of |used in |see |abbr\. for |also written |\(old\) )/i,
+  // CVDICT's wording of the same: "họ Tán", "biến thể (cũ) của", "dùng trong", "xem (thêm)",
+  // "viết tắt của", "cũng viết là", "(cũ)". A surname is "họ" + a capitalized name ("họ hàng" is a
+  // word: relatives).
+  vi: /^(họ (hai chữ |kép )?\p{Lu}|biến thể (cũ |cổ )?(của|cho) |\(cổ\) biến thể|chữ cổ của |dùng trong |xem |viết tắt (của|cho) |cũng (được )?viết |\((cũ|cổ)\) |\(cách (nói|gọi) cũ\))/iu,
+};
 
 /**
  * Character variants that differ between Taiwan's standard forms and CC-CEDICT's Traditional
@@ -99,11 +107,12 @@ const FOLD = new Map(
 );
 export const fold = (text: string) => [...text].map((c) => FOLD.get(c) ?? c).join('');
 
-function gloss(
+/** The CC-CEDICT entries a study word's gloss comes from: its reading, common words first. */
+function pickEntries(
   hanzi: string,
   pinyin: string,
   dict: ReadonlyMap<string, CedictEntry[]>,
-): { en: string; cl?: string } | undefined {
+): CedictEntry[] {
   const entries = dict.get(fold(hanzi)) ?? [];
   const sound = toneless(pinyin);
   const same = (e: CedictEntry) =>
@@ -117,42 +126,87 @@ function gloss(
   if (matching.length === 0 && new Set(common.map((e) => toneless(e.pinyin))).size === 1)
     matching = common;
   const nonProper = matching.filter((e) => !e.proper);
-  const chosen = (nonProper.length ? nonProper : matching).slice(0, 2);
-  const defs = chosen.flatMap((e) => e.defs).filter((d) => !GLOSS_SKIP.test(d));
-  const fallback = chosen.flatMap((e) => e.defs);
-  const en = studyGloss(defs.length ? defs : fallback);
-  if (!en) return undefined;
-  const cl = [...new Set(chosen.flatMap((e) => e.classifiers))].join(' ');
-  return { en, cl: cl || undefined };
+  return (nonProper.length ? nonProper : matching).slice(0, 2);
 }
 
+/** The gloss in one language from the chosen entries' definitions, pointers ("see …") left out. */
+function glossFrom(entries: readonly CedictEntry[], lang: Lang): string {
+  const all = entries.flatMap((e) => (lang === 'vi' ? (e.vi ?? []) : e.defs));
+  const defs = all.filter((d) => !GLOSS_SKIP[lang].test(d));
+  return studyGloss(defs.length ? defs : all, lang);
+}
+
+export function gloss(
+  hanzi: string,
+  pinyin: string,
+  dict: ReadonlyMap<string, CedictEntry[]>,
+): { en: string; vi?: string; cl?: string } | undefined {
+  const chosen = pickEntries(hanzi, pinyin, dict);
+  const en = glossFrom(chosen, 'en');
+  if (!en) return undefined;
+  const vi = glossFrom(chosen, 'vi');
+  const cl = [...new Set(chosen.flatMap((e) => e.classifiers))].join(' ');
+  return { en, vi: vi || undefined, cl: cl || undefined };
+}
+
+const GENERAL_MEASURE_WORD: Record<Lang, [RegExp, string]> = {
+  en: [
+    /^\(classifier used before a noun that has no specific classifier\)$/,
+    'general measure word',
+  ],
+  vi: [/^\(lượng từ dùng trước danh từ không có lượng từ cụ thể\)$/, 'lượng từ chung'],
+};
+const NOT_A_SENSE: Record<Lang, RegExp> = {
+  en: /^(also pr\.|also written|see also|abbr\. for)/i,
+  vi: /^(cũng (đọc|phát âm)|cũng (được )?viết|xem thêm|viết tắt)/i,
+};
 /**
- * A flashcard-sized gloss: the first short senses, about 90 characters at most. CC-CEDICT's long
- * usage notes stay in the dictionary.
+ * Senses in parentheses from end to end: notes ("(completed action marker)") and labelled senses
+ * ("(literary) to suffer (a misfortune)"), which flashcards do without. Vietnamese puts English's
+ * "(of sb or sth) to be at" as "(ai đó hoặc cái gì đó) ở (vị trí)": a meaning, not a note.
  */
-export function studyGloss(defs: readonly string[]): string {
+const NOTE_ONLY: Record<Lang, RegExp> = {
+  en: /^\(.*\)$/,
+  vi: /^\((?!(ai|cái|vật|người|của|về|đối với) ).*\)$/u,
+};
+/** Vietnamese takes more letters to say the same, so its glosses get a little more room. */
+const GLOSS_LENGTH: Record<Lang, { sense: number; total: number }> = {
+  en: { sense: 48, total: 90 },
+  vi: { sense: 56, total: 100 },
+};
+
+/**
+ * A flashcard-sized gloss: the first short senses, about 90 characters at most (100 in
+ * Vietnamese). CC-CEDICT's long usage notes stay in the dictionary.
+ */
+export function studyGloss(defs: readonly string[], lang: Lang = 'en'): string {
+  const [general, generalLabel] = GENERAL_MEASURE_WORD[lang];
+  const { sense: senseLength, total } = GLOSS_LENGTH[lang];
   const senses = [
     ...new Set(
       defs
         .flatMap((d) => d.split(/; (?![^(]*\))/))
-        .map((d) =>
-          d
-            .trim()
-            .replace(
-              /^\(classifier used before a noun that has no specific classifier\)$/,
-              'general measure word',
-            ),
-        ),
+        .map((d) => d.trim().replace(general, generalLabel)),
     ),
-  ].filter((d) => d && !/^(also pr\.|also written|see also|abbr\. for)/i.test(d));
-  const short = senses.filter((d) => d.length <= 48 && !/^\(.*\)$/.test(d));
+  ].filter((d) => d && !NOT_A_SENSE[lang].test(d));
+  const short = senses.filter((d) => d.length <= senseLength && !NOTE_ONLY[lang].test(d));
   const picked: string[] = [];
   for (const sense of short.length ? short : senses) {
-    if (picked.length >= 4 || [...picked, sense].join('; ').length > 90) break;
+    if (picked.length >= 4 || [...picked, sense].join('; ').length > total) break;
     picked.push(sense);
   }
-  if (picked.length === 0 && senses[0]) return senses[0].slice(0, 88).replace(/\s+\S*$/, '') + '…';
+  if (picked.length === 0 && senses[0])
+    return senses[0].slice(0, total - 2).replace(/\s+\S*$/, '') + '…';
   return picked.join('; ');
+}
+
+/** A word's Vietnamese meaning and note: the curated ones, else CVDICT's gloss. */
+function vietnamese(
+  curated: CuratedWord | undefined,
+  cvdict: string | undefined,
+): Pick<Word, 'vi' | 'viSource' | 'twVi'> {
+  if (curated?.vi) return { vi: curated.vi, viSource: 'curated', twVi: curated.twVi };
+  return cvdict ? { vi: cvdict, viSource: 'cvdict' } : {};
 }
 
 export function buildLexicon(input: {
@@ -269,6 +323,7 @@ export function buildLexicon(input: {
       hanzi: head.text,
       pinyin,
       en: useCurated ? curated.en : (g?.en ?? ''),
+      ...vietnamese(useCurated ? curated : undefined, g?.vi),
       level: c.level,
       src: c.src,
       rank: 0,
@@ -286,7 +341,10 @@ export function buildLexicon(input: {
         : {}),
       // Mainland words the NAER list includes for recognition (地鐵, 自行車): say what Taiwan uses.
       ...(Object.hasOwn(MAINLAND_TERMS, head.text) && !useCurated
-        ? { tw: `Mainland usage. Taiwan says ${MAINLAND_TERMS[head.text]}.` }
+        ? {
+            tw: `Mainland usage. Taiwan says ${MAINLAND_TERMS[head.text]}.`,
+            twVi: `Cách nói ở Trung Quốc đại lục. Ở Đài Loan nói ${MAINLAND_TERMS[head.text]}.`,
+          }
         : {}),
     });
   }
@@ -306,6 +364,7 @@ export function buildLexicon(input: {
       hanzi: curated.hanzi,
       pinyin: curated.pinyin,
       en: curated.en,
+      ...vietnamese(curated, gloss(curated.hanzi, curated.pinyin, dict)?.vi),
       level,
       src: 'curated',
       rank: 0,

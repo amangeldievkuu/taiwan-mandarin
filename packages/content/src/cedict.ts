@@ -5,6 +5,8 @@ import { readFileSync } from 'node:fs';
 import { parseSyllable, pinyinWord } from '@taiwan-mandarin/shared';
 
 export interface CedictEntry {
+  /** The line's own key, "學生 学生 [xue2 sheng5]": exact, case and all, for joining CVDICT. */
+  key: string;
   trad: string;
   /** Numbered pinyin, lowercase, ü spelled out. Taiwan reading when CC-CEDICT gives one. */
   pinyin: string;
@@ -15,6 +17,8 @@ export interface CedictEntry {
   classifiers: string[];
   /** Capitalized reading: a name or place. */
   proper: boolean;
+  /** Vietnamese definitions from CVDICT, cleaned the same way (see cvdict.ts). */
+  vi?: string[];
 }
 
 /** "xia4hai2" / "Tai2 wan1" / "lu:4" → "xia4 hai2" / "tai2 wan1" / "lü4" */
@@ -83,7 +87,7 @@ const LINE = /^(\S+) (\S+) \[([^\]]*)\] \/(.*)\/$/;
 export function parseCedictLine(line: string): CedictEntry | undefined {
   const match = LINE.exec(line.trim());
   if (!match) return undefined;
-  const [, trad = '', , rawPinyin = '', rawDefs = ''] = match;
+  const [, trad = '', simp = '', rawPinyin = '', rawDefs = ''] = match;
   let pinyin = normalizePinyin(rawPinyin);
   let mainlandPinyin: string | undefined;
   const classifiers: string[] = [];
@@ -107,6 +111,7 @@ export function parseCedictLine(line: string): CedictEntry | undefined {
     if (cleaned) defs.push(cleaned);
   }
   return {
+    key: `${trad} ${simp} [${rawPinyin}]`,
     trad,
     pinyin,
     mainlandPinyin,

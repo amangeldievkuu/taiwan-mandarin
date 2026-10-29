@@ -12,7 +12,11 @@ export interface CuratedWord {
   hanzi: string;
   pinyin: string;
   en: string;
+  /** Vietnamese meaning. */
+  vi?: string;
   tw?: string;
+  /** `tw` in Vietnamese. */
+  twVi?: string;
   mainland?: string;
   readingUnverified?: boolean;
   /** Path level for words that are in neither official list. */
