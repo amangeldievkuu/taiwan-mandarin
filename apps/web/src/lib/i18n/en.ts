@@ -784,6 +784,9 @@ export const en = {
     order: 'Stroke order',
     restart: 'Restart',
     practice: 'Practice writing',
+    hideOutline: 'Hide outline',
+    fullScreen: 'Full screen',
+    exitFullScreen: 'Exit full screen',
   },
 
   misc: {

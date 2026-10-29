@@ -870,6 +870,9 @@ export const ru: Messages = {
     order: 'Порядок черт',
     restart: 'Заново',
     practice: 'Потренироваться писать',
+    hideOutline: 'Скрыть контур',
+    fullScreen: 'На весь экран',
+    exitFullScreen: 'Свернуть',
   },
 
   misc: {

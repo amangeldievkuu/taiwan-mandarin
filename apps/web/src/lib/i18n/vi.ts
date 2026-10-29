@@ -834,6 +834,9 @@ export const vi: Messages = {
     order: 'Thứ tự nét',
     restart: 'Làm lại',
     practice: 'Luyện viết',
+    hideOutline: 'Ẩn chữ mờ',
+    fullScreen: 'Toàn màn hình',
+    exitFullScreen: 'Thoát toàn màn hình',
   },
 
   misc: {

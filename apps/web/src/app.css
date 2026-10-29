@@ -53,6 +53,8 @@
   --shadow: var(--shadow-2);
   --scrim: rgb(16 18 20 / 0.4);
   --grid-line: rgb(200 16 46 / 0.12);
+  /* The faint character to trace in the stroke writer: hex, since hanzi-writer reads no other form */
+  --stroke-outline: #cfd3d8;
 
   /* Ratings */
   --again: var(--seal);
@@ -209,6 +211,7 @@
     inset 0 1px 0 rgb(255 255 255 / 0.04);
   --scrim: rgb(0 0 0 / 0.6);
   --grid-line: rgb(242 85 99 / 0.16);
+  --stroke-outline: #42464c;
   color-scheme: dark;
 }
 
@@ -254,6 +257,7 @@
       inset 0 1px 0 rgb(255 255 255 / 0.04);
     --scrim: rgb(0 0 0 / 0.6);
     --grid-line: rgb(242 85 99 / 0.16);
+    --stroke-outline: #42464c;
     color-scheme: dark;
   }
 }
@@ -920,6 +924,16 @@ kbd {
 
   ::view-transition-new(nav),
   ::view-transition-new(toasts) {
+    animation: none;
+  }
+
+  /* Full screen in the stroke writer: only the sheet and its paper move, the page behind stays. */
+  :root[data-nav='sheet']::view-transition-old(root) {
+    animation: none;
+    opacity: 0;
+  }
+
+  :root[data-nav='sheet']::view-transition-new(root) {
     animation: none;
   }
 }
