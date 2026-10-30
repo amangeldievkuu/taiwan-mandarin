@@ -6,6 +6,7 @@ import { LEVELS, TOPICS, type Level, type TopicId } from '@taiwan-mandarin/share
 import { ERRORS, SCENARIOS, type ApiErrorCode, type ScenarioId } from '@taiwan-mandarin/shared/api';
 import type { ClientErrorCode } from '../api';
 import type { PartOfDay } from '../greeting';
+import type { MoCheer, MoMood } from '../mo';
 import type { RouteName } from '../router.svelte';
 import { formatNumber } from './locale.svelte';
 
@@ -81,6 +82,16 @@ export const en = {
     evening: 'evening!',
     night: 'sleep well',
   } satisfies Record<PartOfDay, string>,
+  /** What 墨 says about the learner's day and while studying (lib/mo.ts), under its Chinese line. */
+  mo: {
+    back: 'welcome back!',
+    mended: 'mended with gold!',
+    milestone: (n: number) => `${n} days!`,
+    doneToday: 'all done for today!',
+    lateNight: "don't stay up too late",
+    combo: (n: number) => `${n} in a row!`,
+    finished: 'well done!',
+  } satisfies Record<Exclude<MoMood, 'greet'> | MoCheer, string | ((n: number) => string)>,
   /** What 墨 says when tapped (嘿！ 哈哈 咚！ 再來！ 好癢), in turn. */
   taps: ['hey!', 'haha', 'boing', 'again!', 'that tickles'],
 

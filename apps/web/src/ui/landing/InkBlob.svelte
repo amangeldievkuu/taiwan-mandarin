@@ -1,7 +1,7 @@
 <!--
   墨 (Mo), a drop of ink with legs, drawn in outline. It drips onto the page, walks while the
   page scrolls, faces the way it is going, sits down to say something when the scrolling stops,
-  and dozes off after a while. Tap it and it hops. The parent sets `--dir` and the classes
+  and dozes off after a while. Tap it and it hops (or the parent bumps `bounce`). The parent sets `--dir` and the classes
   walking / sitting / sleepy / fast (see lib/walk.ts), hanging and climbing (on a rope) and hush
   (sitting without a word); everything else is CSS on the SVG. `look` dresses it in what ink
   has unlocked: a red string scarf, a straw hat (斗笠) or a golden brush tip.
@@ -16,6 +16,7 @@
 
 <script lang="ts">
   import type { LookOf } from '@taiwan-mandarin/shared';
+  import { untrack } from 'svelte';
   import { t } from '../../lib/i18n/index.svelte';
 
   interface Props {
@@ -26,9 +27,11 @@
     /** Put the speech bubble underneath, near the top of the screen. */
     below?: boolean;
     look?: LookOf<'mo'>;
+    /** Changed by the parent to make 墨 hop for joy. */
+    bounce?: number;
   }
 
-  let { says, flip = false, below = false, look = 'plain' }: Props = $props();
+  let { says, flip = false, below = false, look = 'plain', bounce = 0 }: Props = $props();
 
   const TAPS = ['嘿！', '哈哈', '咚！', '再來！', '好癢'];
 
@@ -38,17 +41,25 @@
   let hopTimer: ReturnType<typeof setTimeout> | undefined;
   let sayTimer: ReturnType<typeof setTimeout> | undefined;
 
-  function hop() {
+  function jump() {
     // Off for a frame, so a second tap starts the hop again.
     hopping = false;
     requestAnimationFrame(() => (hopping = true));
     clearTimeout(hopTimer);
     hopTimer = setTimeout(() => (hopping = false), 700);
+  }
+
+  function hop() {
+    jump();
     const i = taps++ % TAPS.length;
     tapped = { zh: TAPS[i] ?? '', gloss: t().taps[i] ?? '' };
     clearTimeout(sayTimer);
     sayTimer = setTimeout(() => (tapped = null), 1800);
   }
+
+  $effect(() => {
+    if (bounce) untrack(jump);
+  });
 
   $effect(() => () => {
     clearTimeout(hopTimer);

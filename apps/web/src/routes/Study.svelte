@@ -41,6 +41,7 @@
   import { router } from '../lib/router.svelte';
   import { canSpeak, speak } from '../lib/speech';
   import { GRADES, Rating, type Grade } from '../lib/srs';
+  import { COMBOS } from '../lib/mo';
   import { store } from '../lib/store.svelte';
   import { toasts } from '../lib/toast.svelte';
   import { cardIn, cardOut, flipIn, rise } from '../lib/transitions';
@@ -87,6 +88,8 @@
   /** Cards were studied in this visit (the end screen celebrates only then). */
   let studied = $state(false);
   let halfway = false;
+  /** Right answers in a row (anything but "again"), for 墨 to cheer. */
+  let run = 0;
   let glyphs = $state<HTMLElement>();
   let pressed = $state<string | null>(null);
   /** The phone's mode menu is open. */
@@ -144,6 +147,9 @@
     feedback.buzz('light');
     store.rate(g);
     if (from) celebrate.float(from, `+${gained}`);
+    run = g === Rating.Again ? 0 : run + 1;
+    if (!store.queue.length) companion.say('finished');
+    else if (COMBOS.includes(run)) companion.say('combo', run);
     const total = store.finished + store.queue.length;
     if (!halfway && total >= 8 && store.progress >= 0.5 && store.queue.length) {
       halfway = true;

@@ -105,6 +105,15 @@ export const vi: Messages = {
     evening: 'chào buổi tối!',
     night: 'ngủ ngon nhé',
   },
+  mo: {
+    back: 'mừng bạn trở lại!',
+    mended: 'vá bằng vàng rồi!',
+    milestone: (n) => `${n} ngày rồi!`,
+    doneToday: 'hôm nay xong hết rồi!',
+    lateNight: 'đừng thức khuya quá nhé',
+    combo: (n) => `đúng ${n} câu liền!`,
+    finished: 'vất vả rồi!',
+  },
   taps: ['này!', 'haha', 'tưng!', 'nữa đi!', 'nhột quá'],
 
   week: {

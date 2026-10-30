@@ -2,9 +2,19 @@
 // that is the bottom-right corner, on top of the tab bar. A page with something better to sit
 // on marks it with `use:perch` (Study's progress bar); a page with no room to spare uses
 // `use:stepAway` (an open conversation), and 墨 climbs out of sight until it is gone. Whether
-// 墨 comes along at all is a per-device choice in Settings.
+// 墨 comes along at all is a per-device choice in Settings. A page can also have 墨 say
+// something as it happens (`say`): a run of right answers, a session done.
 
 import { SvelteSet } from 'svelte/reactivity';
+import type { MoCheer } from './mo';
+
+export interface Cheer {
+  mood: MoCheer;
+  /** For counts: how many in a row. */
+  n: number;
+  /** New for every call, so the same cheer twice is said twice. */
+  id: number;
+}
 
 const KEY = 'taiwan-mandarin:companion';
 
@@ -21,11 +31,17 @@ class Companion {
   on = $state(readOn());
   /** The element 墨 sits on, at its right-hand end. */
   anchor = $state<HTMLElement | null>(null);
+  /** The latest thing a page asked 墨 to say. */
+  cheer = $state<Cheer | null>(null);
   /** What is on screen that wants 墨 out of the way. */
   private aways = new SvelteSet<HTMLElement>();
 
   get away(): boolean {
     return this.aways.size > 0;
+  }
+
+  say(mood: MoCheer, n = 0): void {
+    this.cheer = { mood, n, id: (this.cheer?.id ?? 0) + 1 };
   }
 
   setOn(on: boolean): void {
