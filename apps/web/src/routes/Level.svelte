@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick, untrack } from 'svelte';
   import Loading from '../ui/Loading.svelte';
   import {
     foldLatin,
@@ -105,6 +106,32 @@
     });
     observer.observe(sentinel);
     return () => observer.disconnect();
+  });
+
+  /** The word just looked at, when we came back from its page: marked in the list. */
+  const seen = untrack(() =>
+    router.from?.name === 'word' ? (router.from.params['id'] ?? null) : null,
+  );
+
+  // Back from a word: make sure its row is rendered and on screen (once the browser has put the
+  // scroll back where it was, so a row already in view doesn't move).
+  let seenShown = false;
+  $effect(() => {
+    if (!seen || seenShown || loading || wide) return;
+    seenShown = true;
+    const at = untrack(() => filtered.findIndex((w) => w.id === seen));
+    if (at < 0) return;
+    if (at >= untrack(() => limit)) limit = at + 50;
+    void tick().then(() =>
+      requestAnimationFrame(() => {
+        const row = document.querySelector<HTMLElement>(`.row[data-id="${CSS.escape(seen)}"]`);
+        if (!row) return;
+        const box = row.getBoundingClientRect();
+        const tabbar = parseFloat(getComputedStyle(row).getPropertyValue('--tabbar-h')) || 0;
+        if (box.top < 0 || box.bottom > innerHeight - tabbar)
+          row.scrollIntoView({ block: 'center' });
+      }),
+    );
   });
 
   const pinyinLine = (w: Word) => pinyinWord(w.pinyin);
@@ -246,6 +273,8 @@
               <a
                 class="row"
                 class:selected={wide && selectedWord?.id === w.id}
+                class:seen={!wide && w.id === seen}
+                data-id={w.id}
                 href={router.href(`/word/${encodeURIComponent(w.id)}`)}
                 onclick={(e) => open(w, e)}
               >
@@ -486,6 +515,25 @@
 
   .row.selected {
     background: var(--seal-wash);
+  }
+
+  /* The word just looked at, on coming back: a wash and a jade bar, pulsing once. */
+  .row.seen {
+    background: color-mix(in srgb, var(--jade) 12%, transparent);
+    box-shadow: inset 3px 0 0 var(--jade);
+    animation: seen 1.2s var(--ease-out);
+  }
+
+  @keyframes seen {
+    from {
+      background: color-mix(in srgb, var(--jade) 32%, transparent);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .row.seen {
+      animation: none;
+    }
   }
 
   .w-hanzi {
