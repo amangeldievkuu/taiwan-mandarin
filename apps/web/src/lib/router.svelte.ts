@@ -91,6 +91,8 @@ export const viewKey = (route: Route): string =>
 interface EntryState {
   tm: 1;
   prev: string | null;
+  /** Names the entry, to keep its scroll position (missing on entries from older versions). */
+  key?: string;
 }
 
 const isEntry = (state: unknown): state is EntryState =>
@@ -98,6 +100,27 @@ const isEntry = (state: unknown): state is EntryState =>
 
 /** The current page as an in-app path (with its query). */
 const here = (): string => location.pathname.slice(base.length) + location.search || '/';
+
+const newKey = (): string => crypto.randomUUID();
+
+/** Where each history entry was scrolled to, kept for the tab's life (so across a reload too). */
+const POSITIONS_KEY = 'taiwan-mandarin:scroll';
+
+function loadPositions(): Map<string, number> {
+  try {
+    return new Map(JSON.parse(sessionStorage.getItem(POSITIONS_KEY) ?? '[]') as [string, number][]);
+  } catch {
+    return new Map();
+  }
+}
+
+function savePositions(positions: Map<string, number>): void {
+  try {
+    sessionStorage.setItem(POSITIONS_KEY, JSON.stringify([...positions].slice(-100)));
+  } catch {
+    // Storage blocked or full: back after a reload starts at the top.
+  }
+}
 
 interface GoOptions {
   /** Replace this history entry instead of adding one (switching between siblings). */
@@ -116,15 +139,28 @@ class Router {
   from = $state<Route | null>(null);
   /** Latest navigation, so a slow transition never shows an older page over a newer one. */
   private seq = 0;
+  /** The current history entry's key. */
+  private key: string;
+  /** Scroll position by entry key, so going back or forward returns to where the page was. */
+  private positions = loadPositions();
 
   constructor() {
-    if (isEntry(history.state)) this.prev = history.state.prev;
-    else history.replaceState({ tm: 1, prev: null } satisfies EntryState, '');
+    // The router puts the scroll back itself, once the page returned to is drawn. The browser
+    // would do it at once, showing the page being left scrolled to the other's place for a frame.
+    history.scrollRestoration = 'manual';
+    const state: EntryState = isEntry(history.state) ? history.state : { tm: 1, prev: null };
+    this.prev = state.prev;
+    this.key = state.key ?? newKey();
+    history.replaceState({ ...state, key: this.key } satisfies EntryState, '');
+    addEventListener('scroll', () => this.positions.set(this.key, scrollY), { passive: true });
+    addEventListener('pagehide', () => savePositions(this.positions));
     addEventListener('popstate', (event) => {
-      this.prev = isEntry(event.state) ? event.state.prev : null;
+      const entry = isEntry(event.state) ? event.state : null;
+      this.prev = entry?.prev ?? null;
+      this.key = entry?.key ?? newKey();
       // A back swipe the browser already animated (iOS Safari) isn't animated twice.
       const animated = 'hasUAVisualTransition' in event && event.hasUAVisualTransition === true;
-      this.show(parse(new URL(location.href)), !animated);
+      this.show(parse(new URL(location.href)), !animated, this.positions.get(this.key) ?? 0);
     });
   }
 
@@ -151,13 +187,15 @@ class Router {
     }
     const { replace = false } = options;
     if (replace) {
-      history.replaceState({ tm: 1, prev: this.prev } satisfies EntryState, '', url);
+      history.replaceState({ tm: 1, prev: this.prev, key: this.key } satisfies EntryState, '', url);
     } else {
       const prev = here();
-      history.pushState({ tm: 1, prev } satisfies EntryState, '', url);
+      this.key = newKey();
+      history.pushState({ tm: 1, prev, key: this.key } satisfies EntryState, '', url);
       this.prev = prev;
     }
-    this.show(parse(url), options.animate ?? !replace, options.scrollTop ?? !replace);
+    const scrollTop = options.scrollTop ?? !replace;
+    this.show(parse(url), options.animate ?? !replace, scrollTop ? 0 : undefined);
   }
 
   /**
@@ -180,13 +218,16 @@ class Router {
     this.go(url.pathname.slice(base.length) + url.search);
   };
 
-  private show(next: Route, animate: boolean, scrollTop = false): void {
+  /** Shows `next`, then scrolls to `top` (if given) in the same frame, once it is drawn. */
+  private show(next: Route, animate: boolean, top?: number): void {
     const seq = ++this.seq;
     const update = () => {
       if (seq !== this.seq) return;
-      this.from = this.route;
-      this.route = next;
-      if (scrollTop) scrollTo({ top: 0 });
+      flushSync(() => {
+        this.from = this.route;
+        this.route = next;
+      });
+      if (top !== undefined) scrollTo({ top, behavior: 'instant' });
     };
     const from = this.route;
     if (
@@ -201,7 +242,7 @@ class Router {
     }
     const root = document.documentElement;
     root.dataset['nav'] = navKind(from.name, next.name);
-    const transition = document.startViewTransition(() => flushSync(update));
+    const transition = document.startViewTransition(update);
     void transition.finished.finally(() => {
       if (seq === this.seq) delete root.dataset['nav'];
     });

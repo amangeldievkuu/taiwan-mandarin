@@ -928,8 +928,10 @@ kbd {
     animation-name: vt-in-right;
   }
 
+  /* Going back, the page left behind is gone at once (no ghost of it over the one returned to). */
   :root[data-nav='back']::view-transition-old(root) {
-    animation-name: vt-out-right;
+    animation: none;
+    opacity: 0;
   }
 
   :root[data-nav='back']::view-transition-new(root) {
@@ -983,13 +985,6 @@ kbd {
   from {
     opacity: 0;
     transform: translateX(8%);
-  }
-}
-
-@keyframes vt-out-right {
-  to {
-    opacity: 0;
-    transform: translateX(6%);
   }
 }
 
