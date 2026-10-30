@@ -71,6 +71,11 @@ const Env = z.object({
   AI_DAILY_LIMIT: int(200, 0, 1_000_000),
   /** Pronunciation checks per user per day. */
   SPEECH_DAILY_LIMIT: int(300, 0, 1_000_000),
+  /** Web Push keys for the daily reminders (npx web-push generate-vapid-keys); unset: no reminders. */
+  VAPID_PUBLIC_KEY: text(),
+  VAPID_PRIVATE_KEY: text(),
+  /** Who push services can contact: a mailto: or https: URL. Unset: WEB_ORIGIN when it's https. */
+  VAPID_SUBJECT: text(),
 });
 
 export type Env = z.infer<typeof Env> & { JWT_SECRET: string };

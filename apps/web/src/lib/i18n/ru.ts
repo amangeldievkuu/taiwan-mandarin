@@ -495,6 +495,7 @@ export const ru: Messages = {
       tooManyAttempts: 'Слишком много попыток. Подожди минуту и попробуй снова.',
       dailyLimit: 'Дневной лимит исчерпан ({limit}). Завтра он обновится.',
       aiNotSetUp: 'ИИ на этом сервере не настроен (OPENAI_API_KEY).',
+      remindersNotSetUp: 'Напоминания на этом сервере не настроены (VAPID_PUBLIC_KEY).',
       aiMisconfigured: 'ИИ на этом сервере настроен неправильно.',
       aiCutOff: 'Ответ ИИ оборвался. Попробуй снова.',
       aiTimeout: 'ИИ отвечал слишком долго. Попробуй снова.',

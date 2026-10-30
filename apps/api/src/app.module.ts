@@ -21,6 +21,10 @@ import { HealthController } from './health/health.controller.js';
 import { MeController } from './me/me.controller.js';
 import { TokensService } from './me/tokens.service.js';
 import { PrismaService } from './prisma/prisma.service.js';
+import { PushController } from './push/push.controller.js';
+import { PushService } from './push/push.service.js';
+import { ReminderService } from './push/reminder.service.js';
+import { WebPushSender } from './push/web-push.sender.js';
 import { SpeechController } from './speech/speech.controller.js';
 import { SpeechService } from './speech/speech.service.js';
 import { WhisperService } from './speech/whisper.service.js';
@@ -49,6 +53,7 @@ const env = loadEnv();
     PublicController,
     AiController,
     SpeechController,
+    PushController,
   ],
   providers: [
     { provide: ENV, useValue: env satisfies Env },
@@ -69,6 +74,9 @@ const env = loadEnv();
     TalkService,
     WhisperService,
     SpeechService,
+    WebPushSender,
+    PushService,
+    ReminderService,
   ],
 })
 export class AppModule {}

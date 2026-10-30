@@ -41,6 +41,8 @@ export const ERRORS = {
   speechTimeout: 'Speech recognition took too long. Try again.',
   speechBusy: 'Speech recognition is busy. Try again in a minute.',
   speechFailed: 'Speech recognition failed. Try again.',
+  // Reminders
+  remindersNotSetUp: 'Reminders are not set up on this server (VAPID_PUBLIC_KEY).',
   // Anything else
   unexpected: 'Something went wrong. Try again.',
 } as const;

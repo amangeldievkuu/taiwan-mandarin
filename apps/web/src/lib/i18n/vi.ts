@@ -471,6 +471,7 @@ export const vi: Messages = {
       tooManyAttempts: 'Thử quá nhiều lần. Hãy đợi một phút rồi thử lại.',
       dailyLimit: 'Đã đạt giới hạn hôm nay ({limit}). Ngày mai sẽ được làm mới.',
       aiNotSetUp: 'Máy chủ này chưa bật tính năng AI (OPENAI_API_KEY).',
+      remindersNotSetUp: 'Máy chủ này chưa bật lời nhắc (VAPID_PUBLIC_KEY).',
       aiMisconfigured: 'Tính năng AI trên máy chủ này chưa được cài đặt đúng.',
       aiCutOff: 'Câu trả lời của AI bị cắt ngang. Hãy thử lại.',
       aiTimeout: 'AI trả lời quá lâu. Hãy thử lại.',

@@ -18,7 +18,8 @@ services:
       retries: 10
 
   # The app itself (docker compose --profile app up -d --build). The API refuses to start
-  # without JWT_SECRET in .env; OPENAI_API_KEY (AI and pronunciation) is optional.
+  # without JWT_SECRET in .env; OPENAI_API_KEY (AI and pronunciation) and the VAPID keys (daily
+  # reminders) are optional.
   api:
     profiles: [app]
     build: { context: ., target: api }
@@ -45,6 +46,10 @@ services:
       OPENAI_MAX_RETRIES: ${OPENAI_MAX_RETRIES:-}
       AI_DAILY_LIMIT: ${AI_DAILY_LIMIT:-}
       SPEECH_DAILY_LIMIT: ${SPEECH_DAILY_LIMIT:-}
+      # Daily reminders (Web Push); optional.
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-}
 
   web:
     profiles: [app]

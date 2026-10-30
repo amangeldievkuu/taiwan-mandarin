@@ -34,6 +34,8 @@ model User {
   timeZone           String?
   /// Access tokens issued before this are refused (password change, sign out everywhere).
   sessionsValidFrom  DateTime?
+  /// The learner's day ("YYYY-MM-DD") the last daily reminder went out, so it goes out once.
+  reminderDay        String?
 
   cards         Card[]
   reviews       ReviewLog[]
@@ -42,6 +44,7 @@ model User {
   apiKeys       ApiKey[]
   conversations Conversation[]
   aiUsage       AiUsage[]
+  pushSubs      PushSubscription[]
 }
 
 model RefreshToken {
@@ -147,6 +150,21 @@ model PracticeLog {
 
   @@index([userId, at])
   @@index([userId, createdAt])
+}
+
+/// A device that turned the daily reminder on: its Web Push subscription.
+model PushSubscription {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// The push service URL; one per browser install.
+  endpoint   String    @unique
+  p256dh     String
+  auth       String
+  createdAt  DateTime  @default(now())
+  lastSentAt DateTime?
+
+  @@index([userId])
 }
 
 model Conversation {
