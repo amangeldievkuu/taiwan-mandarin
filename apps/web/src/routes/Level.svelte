@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { tick, untrack } from 'svelte';
+  import { flushSync, tick, untrack } from 'svelte';
   import Loading from '../ui/Loading.svelte';
   import {
     foldLatin,
@@ -91,7 +91,11 @@
     if (wide) {
       e.preventDefault();
       selected = w.id;
-    } else router.link(e);
+    } else {
+      // Marked as it is tapped, so the page sliding away (and the one back) already shows it.
+      flushSync(() => (seen = w.id));
+      router.link(e);
+    }
   }
 
   function addAllShown() {
@@ -108,23 +112,25 @@
     return () => observer.disconnect();
   });
 
-  /** The word just looked at, when we came back from its page: marked in the list. */
-  const seen = untrack(() =>
+  /** The word we came back from, if we came back from one. */
+  const back = untrack(() =>
     router.from?.name === 'word' ? (router.from.params['id'] ?? null) : null,
   );
+  /** The word just looked at: marked in the list. */
+  let seen = $state(back);
 
-  // Back from a word: make sure its row is rendered and on screen (once the browser has put the
+  // Back from a word: make sure its row is rendered and on screen (once the router has put the
   // scroll back where it was, so a row already in view doesn't move).
   let seenShown = false;
   $effect(() => {
-    if (!seen || seenShown || loading || wide) return;
+    if (!back || seenShown || loading || wide) return;
     seenShown = true;
-    const at = untrack(() => filtered.findIndex((w) => w.id === seen));
+    const at = untrack(() => filtered.findIndex((w) => w.id === back));
     if (at < 0) return;
     if (at >= untrack(() => limit)) limit = at + 50;
     void tick().then(() =>
       requestAnimationFrame(() => {
-        const row = document.querySelector<HTMLElement>(`.row[data-id="${CSS.escape(seen)}"]`);
+        const row = document.querySelector<HTMLElement>(`.row[data-id="${CSS.escape(back)}"]`);
         if (!row) return;
         const box = row.getBoundingClientRect();
         const tabbar = parseFloat(getComputedStyle(row).getPropertyValue('--tabbar-h')) || 0;
@@ -517,23 +523,10 @@
     background: var(--seal-wash);
   }
 
-  /* The word just looked at, on coming back: a wash and a jade bar, pulsing once. */
+  /* The word just looked at: a jade wash and bar, from the tap until another word is opened. */
   .row.seen {
     background: color-mix(in srgb, var(--jade) 12%, transparent);
     box-shadow: inset 3px 0 0 var(--jade);
-    animation: seen 1.2s var(--ease-out);
-  }
-
-  @keyframes seen {
-    from {
-      background: color-mix(in srgb, var(--jade) 32%, transparent);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .row.seen {
-      animation: none;
-    }
   }
 
   .w-hanzi {
