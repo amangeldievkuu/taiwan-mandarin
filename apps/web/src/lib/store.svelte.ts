@@ -18,6 +18,7 @@ import {
 } from './srs';
 import {
   achievements,
+  activeLooks,
   currentTimeZone,
   dayKeyIn,
   DEFAULT_SETTINGS,
@@ -29,8 +30,10 @@ import {
   xpForDay,
   type DayActivity,
   type Lang,
+  type LookOf,
   type PracticeKind,
   type Settings,
+  type Slot,
   type Word,
 } from '@taiwan-mandarin/shared';
 import {
@@ -147,6 +150,8 @@ class Store {
   /** The kintsugi streak: missed days mend with gold. */
   streak = $derived(kintsugi(practicedDays(this.days), this.today));
   xp = $derived({ total: totalXp(this.days), today: xpForDay(this.days[this.today]) });
+  /** The looks in use: chosen ones the ink has unlocked, defaults elsewhere. */
+  looks = $derived(activeLooks(this.settings.looks, this.xp.total));
   /** The seal album: milestones earned and on the way. */
   seals = $derived(achievements(this.days, this.streak));
   /** XP earned in this study session. */
@@ -437,6 +442,11 @@ class Store {
     if ((patch.newPerDay !== undefined || patch.levels !== undefined) && !this.revealed) {
       await this.refreshQueue();
     }
+  }
+
+  /** Uses a look ink has unlocked (it syncs with the settings). */
+  async chooseLook<S extends Slot>(slot: S, value: LookOf<S>): Promise<void> {
+    await this.updateSettings({ looks: { ...this.settings.looks, [slot]: value } });
   }
 
   /** Deletes all progress on this device (the account's copy is deleted first by the caller). */

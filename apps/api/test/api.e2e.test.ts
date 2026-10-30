@@ -386,6 +386,13 @@ describe('sync', () => {
 
     const unknown = await sync({ value: { ...value, language: 'fr' }, updatedAt: 300 });
     expect(unknown.status).toBe(400);
+
+    // Looks chosen at the inkstone travel with the settings.
+    const looks = { pot: 'tenmoku', mo: 'scarf' };
+    const chosen = await sync({ value: { ...value, looks }, updatedAt: 400 });
+    expect(chosen.body.settings.value.looks).toEqual(looks);
+    const odd = await sync({ value: { ...value, looks: { pot: 'plastic' } }, updatedAt: 500 });
+    expect(odd.status).toBe(400);
   });
 });
 

@@ -1,6 +1,7 @@
 // User settings, shared by the web app and the API.
 
 import type { Level } from './content/types.ts';
+import type { LookChoices } from './inkstone.ts';
 import type { Lang } from './lang.ts';
 
 export type Phonetics = 'zhuyin' | 'pinyin' | 'both';
@@ -20,6 +21,8 @@ export interface Settings {
   levels: Level[];
   /** FSRS target probability of recall, 0.80–0.97. */
   retention: number;
+  /** Looks chosen from what ink has unlocked (see inkstone.ts). */
+  looks: LookChoices;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -31,4 +34,5 @@ export const DEFAULT_SETTINGS: Settings = {
   newPerDay: 10,
   levels: ['N1'],
   retention: 0.9,
+  looks: {},
 };
