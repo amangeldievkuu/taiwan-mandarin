@@ -259,7 +259,9 @@ app keeps that count up to date itself.
 - **Server.** Make a VAPID key pair once with `npx web-push generate-vapid-keys` and set
   `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` in `.env`. Keep the pair: new keys cut every device
   off its reminders until the learner turns them on again. `VAPID_SUBJECT` defaults to
-  `WEB_ORIGIN` when that is https. Without keys, the section stays hidden.
+  `WEB_ORIGIN` when that is https. Without keys, the section stays hidden. The API checks the
+  keys when it starts: the public key is 87 characters and the private key 43, each on one line.
+  It won't start with a key that's cut short, a pair that's swapped, or only one key set.
 - **iPhone and iPad** (iOS 16.4 or later). Web Push only works in the app added to the Home
   Screen. In a Safari tab, the section explains how to add it.
 - **Signing out** turns the device's reminder off, so the next account on that device starts

@@ -26,6 +26,30 @@ const lowercase = (value: unknown) => {
   return typeof v === 'string' ? v.trim().toLowerCase() : v;
 };
 const text = () => z.preprocess(blank, z.string().trim().optional());
+/** A Web Push (VAPID) key in base64url, as `web-push generate-vapid-keys` prints it. */
+const vapidKey = (kind: 'public' | 'private') =>
+  z.preprocess(
+    blank,
+    z
+      .string()
+      .trim()
+      .superRefine((value, ctx) => {
+        const [bytes, chars] = kind === 'public' ? [65, 87] : [32, 43];
+        const decoded = /^[A-Za-z0-9_-]+=*$/.test(value)
+          ? Buffer.from(value, 'base64url').length
+          : -1;
+        if (decoded === bytes) return;
+        const swapped = kind === 'private' && decoded === 65;
+        ctx.addIssue({
+          code: 'custom',
+          message:
+            `the ${kind} key is ${chars} base64url characters (${bytes} bytes) on one line, ` +
+            `got ${value.length} characters` +
+            (swapped ? '; it looks like the public key: are the two swapped?' : ''),
+        });
+      })
+      .optional(),
+  );
 const int = (fallback: number, min: number, max: number) =>
   z.preprocess(blank, z.coerce.number().int().min(min).max(max).default(fallback));
 
@@ -72,8 +96,8 @@ const Env = z.object({
   /** Pronunciation checks per user per day. */
   SPEECH_DAILY_LIMIT: int(300, 0, 1_000_000),
   /** Web Push keys for the daily reminders (npx web-push generate-vapid-keys); unset: no reminders. */
-  VAPID_PUBLIC_KEY: text(),
-  VAPID_PRIVATE_KEY: text(),
+  VAPID_PUBLIC_KEY: vapidKey('public'),
+  VAPID_PRIVATE_KEY: vapidKey('private'),
   /** Who push services can contact: a mailto: or https: URL. Unset: WEB_ORIGIN when it's https. */
   VAPID_SUBJECT: text(),
 });
@@ -89,6 +113,8 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
     throw new Error(`Invalid environment:\n${z.prettifyError(parsed.error)}`);
   }
   const env = parsed.data;
+  if (!env.VAPID_PUBLIC_KEY !== !env.VAPID_PRIVATE_KEY)
+    throw new Error('Set both VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY (one pair) or neither');
   if (!env.JWT_SECRET) {
     if (env.NODE_ENV === 'production')
       throw new Error('JWT_SECRET (32+ characters) is required in production');

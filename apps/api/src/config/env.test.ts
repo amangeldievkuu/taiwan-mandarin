@@ -1,3 +1,4 @@
+import webpush from 'web-push';
 import { describe, expect, it } from 'vitest';
 import { aiSettings, loadEnv } from './env.js';
 
@@ -61,5 +62,38 @@ describe('loadEnv', () => {
     expect(() =>
       loadEnv({ DATABASE_URL: 'postgresql://localhost/x', OPENAI_TALK_EFFORT: 'hgih' }),
     ).toThrow(/OPENAI_TALK_EFFORT/);
+  });
+
+  describe('VAPID keys', () => {
+    const db = { DATABASE_URL: 'postgresql://localhost/x' };
+    const { publicKey, privateKey } = webpush.generateVAPIDKeys();
+
+    it('accepts a pair, or no keys at all', () => {
+      expect(
+        loadEnv({ ...db, VAPID_PUBLIC_KEY: publicKey, VAPID_PRIVATE_KEY: privateKey }),
+      ).toMatchObject({ VAPID_PUBLIC_KEY: publicKey, VAPID_PRIVATE_KEY: privateKey });
+      expect(
+        loadEnv({ ...db, VAPID_PUBLIC_KEY: '', VAPID_PRIVATE_KEY: '' }).VAPID_PUBLIC_KEY,
+      ).toBeUndefined();
+    });
+
+    it('stops at startup on a key cut short or with stray characters', () => {
+      expect(() =>
+        loadEnv({ ...db, VAPID_PUBLIC_KEY: publicKey, VAPID_PRIVATE_KEY: privateKey.slice(0, 40) }),
+      ).toThrow(/43 base64url characters[\s\S]*VAPID_PRIVATE_KEY/);
+      expect(() =>
+        loadEnv({ ...db, VAPID_PUBLIC_KEY: publicKey, VAPID_PRIVATE_KEY: `"${privateKey}"` }),
+      ).toThrow(/VAPID_PRIVATE_KEY/);
+    });
+
+    it('says when the two keys are swapped', () => {
+      expect(() =>
+        loadEnv({ ...db, VAPID_PUBLIC_KEY: privateKey, VAPID_PRIVATE_KEY: publicKey }),
+      ).toThrow(/are the two swapped/);
+    });
+
+    it('wants both keys or neither', () => {
+      expect(() => loadEnv({ ...db, VAPID_PUBLIC_KEY: publicKey })).toThrow(/VAPID_PRIVATE_KEY/);
+    });
   });
 });
