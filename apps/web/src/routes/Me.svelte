@@ -137,6 +137,11 @@
       {#if next}<small class="ink-next"
           >{t().me.inkNext(t().inkstone.names[next.id] ?? next.en, next.at - store.xp.total)}</small
         >{/if}
+      <!-- Phones never see the hover lift: the chevron and the pill say this card opens a page. -->
+      <span class="ink-open" aria-hidden="true"
+        ><span lang="zh-Hant-TW">硯</span> {t().titles['me-ink']}</span
+      >
+      <svg class="chevron" viewBox="0 0 8 14" aria-hidden="true"><path d="M1 1l6 6-6 6" /></svg>
     </a>
     <div class="stat sheet enter" style:--i={2}>
       <strong class="big"><Counter value={counts.learned} /></strong>
@@ -255,9 +260,40 @@
     color: var(--gold-deep);
   }
 
+  /* Unlike the tiles beside it, this card opens the Inkstone: tinted gold, with a way in. */
   .ink-card {
+    position: relative;
     color: inherit;
     text-decoration: none;
+    border-color: color-mix(in srgb, var(--gold-deep) 35%, var(--rule));
+    background: color-mix(in srgb, var(--gold-wash) 60%, var(--paper-raised));
+  }
+
+  .ink-card:active {
+    background: var(--gold-wash);
+  }
+
+  .ink-card .chevron {
+    position: absolute;
+    top: 18px;
+    right: 16px;
+    stroke: var(--gold-deep);
+  }
+
+  /* Scoped through .ink-card, so `.stat span` doesn't set its size. */
+  .ink-card .ink-open {
+    align-self: flex-start;
+    margin-top: 10px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--gold-wash);
+    color: var(--gold-deep);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .ink-card .ink-open span {
+    font: inherit;
   }
 
   .ink-next {
