@@ -12,6 +12,7 @@ const forms = (n: number, one: string, few: string, many: string) =>
 const days = (n: number) => `${n} ${forms(n, 'день', 'дня', 'дней')}`;
 
 export const ru: Messages = {
+  ink: 'туши',
   app: {
     name: 'Тайваньский китайский',
     offlineReady: 'Готово к работе офлайн',
@@ -139,7 +140,7 @@ export const ru: Messages = {
       'words-100': '100 новых слов',
       'words-500': '500 новых слов',
       'words-1000': '1000 новых слов',
-      'xp-10000': '10 000 XP',
+      'xp-10000': '10 000 капель туши',
     },
     count: (earned, total) =>
       `${earned} из ${total} ${forms(total, 'печати', 'печатей', 'печатей')}`,
@@ -196,7 +197,7 @@ export const ru: Messages = {
       `На сегодня всё. ${reviews ? `Повторений: ${reviews}. ` : ''}Почитай что-нибудь или ` +
       'загляни в словарь.',
     readStory: 'Почитать рассказ',
-    xpToday: (xp) => `+${xp} XP сегодня`,
+    xpToday: (xp) => `+${xp} туши сегодня`,
     plant: (n) => `Твоё растение: ${days(n)}`,
     yourPath: 'Твой путь',
     allLevels: 'Все уровни',
@@ -247,6 +248,7 @@ export const ru: Messages = {
     plant: (n, seams) => `Твоё растение: ${days(n)}, золотых швов: ${seams}`,
     dayStreak: 'дн. подряд',
     longest: (n, seams) => `Рекорд: ${days(n)} · золотых швов: ${seams}`,
+    ink: 'Тушь',
     xpToday: (xp) => `+${xp} сегодня`,
     wellRemembered: (n) => `Хорошо запомнено: ${n}`,
     remembered: 'запомнено',
@@ -488,7 +490,7 @@ export const ru: Messages = {
     halfwayBody: 'Так держать, отлично получается.',
     mode: 'Режим занятия',
     modeIs: (name) => `Режим занятия: ${name}`,
-    sessionXp: (xp) => `${xp} XP за занятие`,
+    sessionXp: (xp) => `${xp} туши за занятие`,
     cardsLeft: (n) => `Осталось ${n} ${forms(n, 'карточка', 'карточки', 'карточек')}`,
     left: (n) => `осталось ${n}`,
     new: 'Новое',
@@ -642,7 +644,8 @@ export const ru: Messages = {
     total: 'Всего',
   },
 
-  chips: (n, seams, xp) => `${days(n)} подряд${seams ? `, золотых швов: ${seams}` : ''}, ${xp} XP`,
+  chips: (n, seams, xp) =>
+    `${days(n)} подряд${seams ? `, золотых швов: ${seams}` : ''}, туши: ${xp}`,
 
   read: {
     eyebrow: 'Чтение по уровням',

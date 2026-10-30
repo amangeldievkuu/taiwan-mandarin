@@ -1,6 +1,7 @@
 <script lang="ts">
-  // The streak and XP at a glance: a little sprout in a pot with the days beside it (green once
-  // you have practiced today, a gold seam when the pot has one), and the XP total. Both lead to Me.
+  // The streak and ink at a glance: a little sprout in a pot with the days beside it (green once
+  // you have practiced today, a gold seam when the pot has one), and the ink earned. Both lead to Me.
+  import InkDrop from './InkDrop.svelte';
   import Counter from './Counter.svelte';
   import { t } from '../lib/i18n/index.svelte';
   import { router } from '../lib/router.svelte';
@@ -33,7 +34,7 @@
     <strong><Counter value={streak.count} /></strong>
   </span>
   <span class="chip xp" aria-hidden="true">
-    {#key store.xp.total}<span class="spark">✦</span>{/key}
+    {#key store.xp.total}<span class="spark"><InkDrop size={15} /></span>{/key}
     <strong><Counter value={store.xp.total} /></strong>
   </span>
 </a>
@@ -127,12 +128,13 @@
     font-size: 15px;
     color: var(--gold);
     text-shadow: 0 0 1px var(--gold-edge);
-    animation: twinkle var(--dur-4) var(--ease-spring);
+    animation: drip var(--dur-4) var(--ease-spring);
   }
 
-  @keyframes twinkle {
+  /* A new drop of ink falls in. */
+  @keyframes drip {
     from {
-      transform: scale(0.4) rotate(-60deg);
+      transform: translateY(-7px) scale(0.5);
     }
   }
 </style>

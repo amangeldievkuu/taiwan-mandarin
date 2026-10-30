@@ -1,4 +1,5 @@
 <script lang="ts">
+  import InkDrop from '../ui/InkDrop.svelte';
   import { untrack } from 'svelte';
   import BackButton from '../ui/BackButton.svelte';
   import Loading from '../ui/Loading.svelte';
@@ -32,7 +33,7 @@
   let playing = $state<number | null>(null);
   /** The end of the story, watched to count it as read. */
   let end = $state<HTMLElement>();
-  /** Read to the end: null before, then whether it earned XP (once a day per story). */
+  /** Read to the end: null before, then whether it earned ink (once a day per story). */
   let finished = $state<{ earned: boolean } | null>(null);
   let openedAt = 0;
 
@@ -56,7 +57,7 @@
   const readingTime = (r: Reader) =>
     Math.max(15_000, r.paragraphs.flat().reduce((n, t) => n + t.t.length, 0) * 100);
 
-  // Reaching the end of the story, after time enough to read it, counts it for XP.
+  // Reaching the end of the story, after time enough to read it, counts it for ink.
   $effect(() => {
     const target = end;
     const story = reader;
@@ -211,8 +212,7 @@
       {#if finished}
         <span class="hanzi" lang="zh-Hant-TW">讀完了</span>
         <span class="sub">{t().reader.finished}</span>
-        {#if finished.earned}<span class="xp"><span aria-hidden="true">✦</span> +{XP.read} XP</span
-          >{/if}
+        {#if finished.earned}<span class="xp"><InkDrop size={12} /> +{XP.read} {t().ink}</span>{/if}
       {/if}
     </p>
   {:else if missing}

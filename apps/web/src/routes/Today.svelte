@@ -1,6 +1,7 @@
 <script lang="ts">
   // Home: today's practice in a ring, the streak plant with this week, where the learner is on
   // the path, and the other ways to practise.
+  import InkDrop from '../ui/InkDrop.svelte';
   import { LEVELS } from '@taiwan-mandarin/shared';
   import Counter from '../ui/Counter.svelte';
   import Icon, { type IconName } from '../ui/Icon.svelte';
@@ -124,9 +125,7 @@
         >
       {/if}
       {#if store.xp.today}
-        <span class="xp-today"
-          ><span aria-hidden="true">✦</span> {t().today.xpToday(store.xp.today)}</span
-        >
+        <span class="xp-today"><InkDrop size={12} /> {t().today.xpToday(store.xp.today)}</span>
       {/if}
     </div>
   </section>

@@ -28,10 +28,15 @@ export function achievements(days: ActivityMap, streak: Kintsugi): SealAward[] {
     },
     { id: 'bowl-7', zh: '週', en: 'A 7-day sapling', progress: toward(streak.longest, 7) },
     { id: 'bowl-30', zh: '月', en: 'Buds at 30 days', progress: toward(streak.longest, 30) },
-    { id: 'bowl-100', zh: '百日', en: 'In bloom at 100 days', progress: toward(streak.longest, 100) },
+    {
+      id: 'bowl-100',
+      zh: '百日',
+      en: 'In bloom at 100 days',
+      progress: toward(streak.longest, 100),
+    },
     { id: 'words-100', zh: '百', en: '100 new words', progress: toward(learned, 100) },
     { id: 'words-500', zh: '五百', en: '500 new words', progress: toward(learned, 500) },
     { id: 'words-1000', zh: '千', en: '1,000 new words', progress: toward(learned, 1000) },
-    { id: 'xp-10000', zh: '萬', en: '10,000 XP', progress: toward(xp, 10_000) },
+    { id: 'xp-10000', zh: '萬', en: '10,000 drops of ink', progress: toward(xp, 10_000) },
   ];
 }

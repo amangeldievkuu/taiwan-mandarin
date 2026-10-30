@@ -18,7 +18,8 @@
 <script lang="ts">
   // The study session: one card at a time on a little stack. Reveal it (tap, Space, or the
   // button), grade it, and it flies off (left for Again, right for Good: the direction tells the
-  // grade, every grade gets the same energy and XP) while the next card rises from the stack.
+  // grade, every grade gets the same energy and ink) while the next card rises from the stack.
+  import InkDrop from '../ui/InkDrop.svelte';
   import { XP } from '@taiwan-mandarin/shared';
   import { tick, untrack } from 'svelte';
   import HanziText from '../ui/HanziText.svelte';
@@ -260,7 +261,7 @@
         {#key store.sessionXp}<span
             class="session-xp"
             aria-label={t().study.sessionXp(store.sessionXp)}
-            ><span aria-hidden="true">✦</span> {store.sessionXp}</span
+            ><InkDrop size={12} /> {store.sessionXp}</span
           >{/key}
         <span class="left tabular" aria-label={t().study.cardsLeft(remaining)}
           >{t().study.left(remaining)}</span

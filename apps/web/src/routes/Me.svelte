@@ -1,6 +1,7 @@
 <script lang="ts">
-  // Progress at a glance (the streak plant, XP, words and retention, the last 30 days), then the
+  // Progress at a glance (the streak plant, ink, words and retention, the last 30 days), then the
   // way into the account, the settings, the garden, the levels and the credits.
+  import InkDrop from '../ui/InkDrop.svelte';
   import { LEVEL_IDS } from '@taiwan-mandarin/shared';
   import Counter from '../ui/Counter.svelte';
   import Icon, { type IconName } from '../ui/Icon.svelte';
@@ -124,10 +125,8 @@
 
   <section class="headline">
     <div class="stat sheet enter" style:--i={1}>
-      <strong class="big xp"
-        ><span aria-hidden="true">✦</span> <Counter value={store.xp.total} /></strong
-      >
-      <span>XP</span>
+      <strong class="big xp"><InkDrop size={26} /> <Counter value={store.xp.total} /></strong>
+      <span>{t().me.ink}</span>
       <small>{t().me.xpToday(store.xp.today)}</small>
     </div>
     <div class="stat sheet enter" style:--i={2}>

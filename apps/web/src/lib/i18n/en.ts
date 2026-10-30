@@ -12,6 +12,8 @@ const byId = <K extends string>(rows: readonly { id: K; en: string }[]) =>
   Object.fromEntries(rows.map((r) => [r.id, r.en])) as Record<K, string>;
 
 export const en = {
+  /** After a number of drops earned: "+50 ink". */
+  ink: 'ink',
   app: {
     name: 'Taiwan Mandarin',
     offlineReady: 'Ready to work offline',
@@ -104,7 +106,7 @@ export const en = {
       'words-100': '100 new words',
       'words-500': '500 new words',
       'words-1000': '1,000 new words',
-      'xp-10000': '10,000 XP',
+      'xp-10000': '10,000 drops of ink',
     } as Record<string, string>,
     count: (earned: number, total: number) => `${earned} of ${total} seals`,
     progress: (percent: number) => `${percent}% of the way`,
@@ -160,7 +162,7 @@ export const en = {
       `All done for today. ${reviews ? `${reviews} reviews. ` : ''}Read something or look ` +
       'around the dictionary.',
     readStory: 'Read a story',
-    xpToday: (xp: number) => `+${xp} XP today`,
+    xpToday: (xp: number) => `+${xp} ink today`,
     plant: (days: number) => `Your streak plant: ${days} days`,
     yourPath: 'Your path',
     allLevels: 'All levels',
@@ -210,6 +212,8 @@ export const en = {
     dayStreak: 'day streak',
     longest: (days: number, seams: number) =>
       `Longest ${days} · ${seams} gold ${seams === 1 ? 'seam' : 'seams'}`,
+    /** Gold ink (金墨), earned by practice: what other apps call XP. */
+    ink: 'Ink',
     xpToday: (xp: number) => `+${xp} today`,
     wellRemembered: (n: number) => `${n} well remembered`,
     remembered: 'remembered',
@@ -407,7 +411,7 @@ export const en = {
     halfwayBody: 'Keep going, you are doing great.',
     mode: 'Study mode',
     modeIs: (name: string) => `Study mode: ${name}`,
-    sessionXp: (xp: number) => `${xp} XP this session`,
+    sessionXp: (xp: number) => `${xp} ink this session`,
     cardsLeft: (n: number) => `${n} cards left`,
     left: (n: number) => `${n} left`,
     new: 'New',
@@ -561,7 +565,7 @@ export const en = {
   },
 
   chips: (days: number, seams: number, xp: number) =>
-    `${days}-day streak${seams ? `, ${seams} gold seams` : ''}, ${xp} XP`,
+    `${days}-day streak${seams ? `, ${seams} gold seams` : ''}, ${xp} ink`,
 
   read: {
     eyebrow: 'Graded reading',

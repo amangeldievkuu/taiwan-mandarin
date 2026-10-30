@@ -1,6 +1,7 @@
 <script lang="ts">
-  // The end of a study session: the 完 seal stamped, the XP earned counting up, what was done,
+  // The end of a study session: the 完 seal stamped, the ink earned counting up, what was done,
   // and the streak plant with this week. Petals, a chime and a buzz when the queue was just finished.
+  import InkDrop from './InkDrop.svelte';
   import type { Kintsugi } from '@taiwan-mandarin/shared';
   import { onMount } from 'svelte';
   import Counter from './Counter.svelte';
@@ -46,8 +47,9 @@
 
   {#if stats.reviewed}
     <p class="xp enter" style:--i={1}>
-      <span class="spark" aria-hidden="true">✦</span>
-      <Counter value={xp} from={0} duration={1200} format={(n) => `+${Math.round(n)}`} /> XP
+      <span class="spark"><InkDrop size={22} /></span>
+      <Counter value={xp} from={0} duration={1200} format={(n) => `+${Math.round(n)}`} />
+      {t().ink}
     </p>
     <dl class="tiles">
       <div class="tile enter" style:--i={2}>

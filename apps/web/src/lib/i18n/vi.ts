@@ -4,6 +4,7 @@ import type { Messages } from './en';
 import { formatNumber } from './locale.svelte';
 
 export const vi: Messages = {
+  ink: 'mực',
   app: {
     name: 'Tiếng Hoa Đài Loan',
     offlineReady: 'Sẵn sàng dùng ngoại tuyến',
@@ -129,7 +130,7 @@ export const vi: Messages = {
       'words-100': '100 từ mới',
       'words-500': '500 từ mới',
       'words-1000': '1.000 từ mới',
-      'xp-10000': '10.000 XP',
+      'xp-10000': '10.000 giọt mực',
     },
     count: (earned, total) => `${earned}/${total} con dấu`,
     progress: (percent) => `đã được ${percent}%`,
@@ -185,7 +186,7 @@ export const vi: Messages = {
       `Hôm nay xong hết rồi. ${reviews ? `${reviews} lượt ôn. ` : ''}Đọc gì đó hoặc dạo quanh ` +
       'từ điển nhé.',
     readStory: 'Đọc một bài',
-    xpToday: (xp) => `+${xp} XP hôm nay`,
+    xpToday: (xp) => `+${xp} mực hôm nay`,
     plant: (days) => `Cây chuỗi ngày của bạn: ${days} ngày`,
     yourPath: 'Lộ trình của bạn',
     allLevels: 'Tất cả cấp độ',
@@ -234,6 +235,7 @@ export const vi: Messages = {
     plant: (days, seams) => `Cây chuỗi ngày của bạn: ${days} ngày, ${seams} đường vàng`,
     dayStreak: 'ngày liên tiếp',
     longest: (days, seams) => `Dài nhất ${days} · ${seams} đường vàng`,
+    ink: 'Mực',
     xpToday: (xp) => `+${xp} hôm nay`,
     wellRemembered: (n) => `${n} từ nhớ chắc`,
     remembered: 'nhớ được',
@@ -464,7 +466,7 @@ export const vi: Messages = {
     halfwayBody: 'Cố lên, bạn đang làm rất tốt.',
     mode: 'Chế độ học',
     modeIs: (name) => `Chế độ học: ${name}`,
-    sessionXp: (xp) => `${xp} XP trong lượt học này`,
+    sessionXp: (xp) => `${xp} mực trong lượt học này`,
     cardsLeft: (n) => `Còn ${n} thẻ`,
     left: (n) => `còn ${n}`,
     new: 'Mới',
@@ -616,7 +618,8 @@ export const vi: Messages = {
     total: 'Tổng',
   },
 
-  chips: (days, seams, xp) => `Chuỗi ${days} ngày${seams ? `, ${seams} đường vàng` : ''}, ${xp} XP`,
+  chips: (days, seams, xp) =>
+    `Chuỗi ${days} ngày${seams ? `, ${seams} đường vàng` : ''}, ${xp} mực`,
 
   read: {
     eyebrow: 'Đọc theo trình độ',
