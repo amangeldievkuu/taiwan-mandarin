@@ -8,6 +8,7 @@ import type { Level } from '../content/types.ts';
 import { canonicalTimeZone, isTimeZone } from '../days.ts';
 import { SLOTS } from '../inkstone.ts';
 import { LANG_IDS } from '../lang.ts';
+import { REMINDER_TIME } from '../reminders.ts';
 import { ERRORS, type ApiErrorCode } from './errors.ts';
 
 export * from './errors.ts';
@@ -56,6 +57,7 @@ export const SettingsSchema = z.object({
       mo: z.enum(SLOTS.mo).optional(),
     })
     .optional(),
+  reminderTime: z.string().regex(REMINDER_TIME).optional(),
 });
 
 // ---- Auth ----
@@ -221,6 +223,31 @@ export interface TokenDto {
 export interface TokenCreatedDto extends TokenDto {
   /** Shown once. */
   token: string;
+}
+
+// ---- Reminders (Web Push) ----
+
+/** A browser's push subscription (PushSubscription.toJSON()). */
+export const PushSubscribeSchema = z.object({
+  endpoint: z.url({ protocol: /^https$/ }).max(2048),
+  keys: z.object({ p256dh: z.string().min(1).max(256), auth: z.string().min(1).max(64) }),
+});
+export type PushSubscribeBody = z.infer<typeof PushSubscribeSchema>;
+
+export const PushUnsubscribeSchema = z.object({ endpoint: z.string().max(2048) });
+
+export interface PushConfigDto {
+  /** The server's VAPID key; null when the server sends no reminders. */
+  publicKey: string | null;
+}
+
+/** What a reminder push carries to the service worker (public/push-sw.js). */
+export interface PushPayload {
+  title: string;
+  body: string;
+  /** Cards due now, for the icon badge. */
+  due: number;
+  url: string;
 }
 
 // ---- Stats ----

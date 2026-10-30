@@ -13,3 +13,4 @@ export * from './kintsugi.ts';
 export * from './achievements.ts';
 export * from './inkstone.ts';
 export * from './pronunciation/index.ts';
+export * from './reminders.ts';

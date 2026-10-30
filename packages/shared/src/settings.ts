@@ -23,6 +23,8 @@ export interface Settings {
   retention: number;
   /** Looks chosen from what ink has unlocked (see inkstone.ts). */
   looks: LookChoices;
+  /** Time of day ("HH:MM") for the daily reminder, on devices that turned it on. */
+  reminderTime: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -35,4 +37,5 @@ export const DEFAULT_SETTINGS: Settings = {
   levels: ['N1'],
   retention: 0.9,
   looks: {},
+  reminderTime: '20:00',
 };
