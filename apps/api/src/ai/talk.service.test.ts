@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { describe, expect, it } from 'vitest';
-import { repeats, RULES } from './talk.service.js';
+import { repeats, RULES, systemPrompt } from './talk.service.js';
 
 describe('repeats', () => {
   const earlier = '喔，你要去花蓮。請在台北車站買火車票，坐火車大概三個小時就到。';
@@ -35,5 +35,25 @@ describe('RULES', () => {
     expect(RULES.en.split('\n')[0]).toBe(
       'You are a conversation partner for someone learning Taiwan Mandarin. Their first language is English.',
     );
+  });
+});
+
+describe('systemPrompt', () => {
+  const follows = 'When the learner brings up a new subject, follow them to it';
+
+  it('lets a chat go wherever the learner takes it', () => {
+    for (const id of ['free', 'food', 'weather'] as const) {
+      expect(systemPrompt(id, 'Vocabulary: …', 'en')).toContain(follows);
+    }
+  });
+
+  it('keeps a task on its way to its end', () => {
+    const prompt = systemPrompt('night-market', 'Vocabulary: …', 'en');
+    expect(prompt).not.toContain(follows);
+    expect(prompt).toContain('Raohe Night Market');
+  });
+
+  it('starts with the rules, so the cached prefix stays the same', () => {
+    expect(systemPrompt('taxi', 'Vocabulary: …', 'vi').startsWith(RULES.vi)).toBe(true);
   });
 });

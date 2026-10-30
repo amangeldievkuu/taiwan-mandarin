@@ -730,6 +730,8 @@ export const en = {
     signIn: 'Sign in to practise conversations.',
     notSetUp: "Conversation practice isn't set up on this server yet.",
     choose: 'Choose a situation',
+    /** Over the chat topics, under the situations. */
+    chat: 'Or just chat',
     delete: 'Delete',
     deleteConversation: 'Delete this conversation',
     continue: 'Continue',

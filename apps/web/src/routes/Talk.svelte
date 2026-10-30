@@ -18,6 +18,7 @@
   import {
     SCENARIOS,
     type ScenarioId,
+    type ScenarioKind,
     type TalkConversation,
     type TalkEndResponse,
     type TalkListItem,
@@ -286,22 +287,30 @@
     {:else if status && !status.available}
       <p class="empty">{t().talk.notSetUp}</p>
     {:else}
+      {#snippet picker(kind: ScenarioKind)}
+        <div class="scenarios">
+          {#each SCENARIOS.filter((s) => s.kind === kind) as s (s.id)}
+            <button
+              type="button"
+              class="scenario sheet pressable"
+              disabled={sending}
+              onclick={() => start(s.id)}
+            >
+              <span class="s-zh hanzi" lang="zh-Hant-TW">{s.zh}</span>
+              <span class="s-en">{t().scenarios[s.id]}</span>
+            </button>
+          {/each}
+        </div>
+      {/snippet}
       <h2 class="section-title">
         {t().talk.choose} <span class="zh" lang="zh-Hant-TW">情境</span>
       </h2>
-      <div class="scenarios">
-        {#each SCENARIOS as s (s.id)}
-          <button
-            type="button"
-            class="scenario sheet pressable"
-            disabled={sending}
-            onclick={() => start(s.id)}
-          >
-            <span class="s-zh hanzi" lang="zh-Hant-TW">{s.zh}</span>
-            <span class="s-en">{t().scenarios[s.id]}</span>
-          </button>
-        {/each}
-      </div>
+      {@render picker('task')}
+      <!-- Chats: friends talking, and the partner follows wherever the learner takes it. -->
+      <h2 class="section-title">
+        {t().talk.chat} <span class="zh" lang="zh-Hant-TW">聊天</span>
+      </h2>
+      {@render picker('chat')}
       {#snippet conversations(items: TalkListItem[], label: string)}
         <ul class="list" aria-label={label}>
           {#each items as item (item.id)}

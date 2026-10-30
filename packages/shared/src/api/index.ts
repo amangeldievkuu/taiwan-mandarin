@@ -328,16 +328,30 @@ export type ExplainStreamEvent =
 
 // ---- AI: conversation practice ----
 
+/**
+ * A task has an end the partner works towards (the drink is bought, the way is found); a chat is
+ * friends talking, and the partner follows the learner wherever they take it.
+ */
+export type ScenarioKind = 'task' | 'chat';
+
 export const SCENARIOS = [
-  { id: 'night-market', zh: '夜市點餐', en: 'Ordering at a night-market stall' },
-  { id: 'bubble-tea', zh: '買飲料', en: 'Buying bubble tea' },
-  { id: 'mrt', zh: '問路', en: 'Asking the way at an MRT station' },
-  { id: 'convenience-store', zh: '便利商店', en: 'At the convenience store' },
-  { id: 'classmate', zh: '認識同學', en: 'Meeting a new classmate' },
-  { id: 'clinic', zh: '看醫生', en: 'At the clinic' },
-  { id: 'renting', zh: '租房子', en: 'Viewing a room to rent' },
-  { id: 'free', zh: '自由聊天', en: 'Free conversation' },
-] as const;
+  { id: 'night-market', kind: 'task', zh: '夜市點餐', en: 'Ordering at a night-market stall' },
+  { id: 'bubble-tea', kind: 'task', zh: '買飲料', en: 'Buying bubble tea' },
+  { id: 'mrt', kind: 'task', zh: '問路', en: 'Asking the way at an MRT station' },
+  { id: 'convenience-store', kind: 'task', zh: '便利商店', en: 'At the convenience store' },
+  { id: 'taxi', kind: 'task', zh: '搭計程車', en: 'Taking a taxi' },
+  { id: 'hotel', kind: 'task', zh: '飯店入住', en: 'Checking in at a hotel' },
+  { id: 'classmate', kind: 'task', zh: '認識同學', en: 'Meeting a new classmate' },
+  { id: 'clinic', kind: 'task', zh: '看醫生', en: 'At the clinic' },
+  { id: 'renting', kind: 'task', zh: '租房子', en: 'Viewing a room to rent' },
+  { id: 'hobbies', kind: 'chat', zh: '聊興趣', en: 'Talking about hobbies' },
+  { id: 'food', kind: 'chat', zh: '聊美食', en: 'Taiwanese food you love' },
+  { id: 'travel', kind: 'chat', zh: '聊旅行', en: 'Travelling around Taiwan' },
+  { id: 'weekend', kind: 'chat', zh: '週末計畫', en: 'Weekend plans' },
+  { id: 'family', kind: 'chat', zh: '聊家人', en: 'Family' },
+  { id: 'weather', kind: 'chat', zh: '聊天氣', en: 'The weather' },
+  { id: 'free', kind: 'chat', zh: '自由聊天', en: 'Free conversation' },
+] as const satisfies readonly { id: string; kind: ScenarioKind; zh: string; en: string }[];
 export type ScenarioId = (typeof SCENARIOS)[number]['id'];
 
 export const TalkRequestSchema = z.object({

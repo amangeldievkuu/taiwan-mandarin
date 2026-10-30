@@ -72,8 +72,28 @@ const PARTNERS: Record<ScenarioId, string> = {
     'You are a receptionist and then a doctor at a neighbourhood clinic. The learner has a cold.',
   renting:
     'You are a landlord showing a room near a university in Taipei. Talk about rent, utilities, the deposit.',
-  free: 'You are a friendly Taiwanese friend chatting about everyday life.',
+  taxi: 'You are a taxi driver in Taipei. Ask where to, say roughly how long it takes, chat a little on the way, and take payment by EasyCard or cash (offer a 收據).',
+  hotel:
+    'You are at the front desk of a hotel in Taipei. Check the learner in: the name on the booking, their passport or ID, breakfast times, the Wi-Fi, check-out time.',
+  hobbies:
+    'You are a Taiwanese friend. Talk about what you each do for fun: 爬山, 打籃球, 唱 KTV, 追劇, games, music.',
+  food: 'You are a Taiwanese friend who loves food. Talk about favourite dishes and where to eat them: 滷肉飯, 牛肉麵, 小籠包, the 早餐店 on the corner, night-market snacks.',
+  travel:
+    'You are a Taiwanese friend who has been all over Taiwan. Talk about places to go (台南, 花蓮, 九份, 墾丁, 日月潭), how to get there (高鐵, 台鐵, scooter) and what to do there.',
+  weekend:
+    'You are a Taiwanese friend. Talk about what you each did or will do at the weekend: a night market, 逛街, a hike, going home to see family.',
+  family:
+    'You are a Taiwanese friend. Talk about your families: who is in them, what they do, where they live, how often you see them.',
+  weather:
+    "You are a Taiwanese friend. Talk about the weather: Taiwan's hot, humid summers, the 梅雨 rains, typhoon days off (颱風假), and what the weather is like where the learner is from.",
+  free: 'You are a friendly Taiwanese friend chatting about whatever the learner wants to talk about.',
 };
+
+/** Added for chats: friends talking have no end to reach, and go where the learner goes. */
+const CHAT = `This is a chat between friends, with no task to finish: instead of moving towards an end, keep it going. Share a little about yourself and ask one follow-up question. When the learner brings up a new subject, follow them to it and talk about that; never steer back to the earlier topic.`;
+
+/** Friends talking, rather than a task with an end. */
+const isChat = (scenario: ScenarioId) => SCENARIOS.find((s) => s.id === scenario)?.kind === 'chat';
 
 /** The learner's language as the instructions name it. */
 const LANGUAGE: Record<Lang, string> = { en: 'English', vi: 'Vietnamese', ru: 'Russian' };
@@ -107,6 +127,13 @@ export const RULES: Record<Lang, string> = {
   vi: rules(LANGUAGE.vi),
   ru: rules(LANGUAGE.ru),
 };
+
+/** The partner's instructions: the rules, the learner's vocabulary, and the scenario. */
+export function systemPrompt(scenario: ScenarioId, vocabulary: string, lang: Lang): string {
+  const info = SCENARIOS.find((s) => s.id === scenario);
+  const chat = isChat(scenario) ? ` ${CHAT}` : '';
+  return `${RULES[lang]}\n\n${vocabulary}\n\nScenario: ${info?.en} (${info?.zh}). ${PARTNERS[scenario]}${chat}`;
+}
 
 // Sent after the learner's "（我要走了。）" when they end the conversation.
 const CLOSING = `The learner is ending the conversation now. Say goodbye as your character would, in one short, warm sentence with known words, and do not ask anything. correction: null.`;
@@ -267,7 +294,9 @@ export class TalkService {
           `Your reply used words outside the learner's vocabulary: ${check.beyond.join('、')}. Keep the words the scenario needs and say the rest with known words.`,
         check.mainland.length && `Use Taiwan wording: ${check.mainland.join('; ')}.`,
         repeated &&
-          'You already told the learner that. Take the next step of the scenario instead: ask the next thing your character needs to know, show them where to go, or wrap up.',
+          (isChat(scenario)
+            ? 'You already told the learner that. Say something new instead: share something about yourself or ask about what they just said.'
+            : 'You already told the learner that. Take the next step of the scenario instead: ask the next thing your character needs to know, show them where to go, or wrap up.'),
       ]
         .filter(Boolean)
         .join(' ');
@@ -423,8 +452,7 @@ export class TalkService {
 
   /** The partner's instructions: the rules, this learner's vocabulary, and the scenario. */
   private system(scenario: ScenarioId, vocabulary: Vocabulary, lang: Lang): string {
-    const info = SCENARIOS.find((s) => s.id === scenario);
-    return `${RULES[lang]}\n\n${vocabulary.prompt}\n\nScenario: ${info?.en} (${info?.zh}). ${PARTNERS[scenario]}`;
+    return systemPrompt(scenario, vocabulary.prompt, lang);
   }
 
   /** Stored messages (oldest first) as model turns, ending with the learner's `prompt`. */
