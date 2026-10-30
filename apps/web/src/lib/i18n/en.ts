@@ -5,6 +5,7 @@
 import { LEVELS, TOPICS, type Level, type TopicId } from '@taiwan-mandarin/shared';
 import { ERRORS, SCENARIOS, type ApiErrorCode, type ScenarioId } from '@taiwan-mandarin/shared/api';
 import type { ClientErrorCode } from '../api';
+import type { PartOfDay } from '../greeting';
 import type { RouteName } from '../router.svelte';
 import { formatNumber } from './locale.svelte';
 
@@ -57,7 +58,6 @@ export const en = {
   /** What 墨 says on arriving at each page, under its Chinese line. */
   companion: {
     welcome: 'hello!',
-    today: 'morning!',
     study: "you've got this",
     path: 'step by step',
     level: 'up we go',
@@ -73,7 +73,14 @@ export const en = {
     'me-ink': 'grinding ink',
     'me-levels': 'so many levels',
     'me-about': "I'm Mo",
-  } satisfies Record<RouteName, string>,
+  } satisfies Record<Exclude<RouteName, 'today'>, string>,
+  /** What 墨 says on Today, by the time of day (早安！ 午安！ 晚上好！ 晚安～). */
+  greet: {
+    morning: 'morning!',
+    afternoon: 'afternoon!',
+    evening: 'evening!',
+    night: 'sleep well',
+  } satisfies Record<PartOfDay, string>,
   /** What 墨 says when tapped (嘿！ 哈哈 咚！ 再來！ 好癢), in turn. */
   taps: ['hey!', 'haha', 'boing', 'again!', 'that tickles'],
 
@@ -192,6 +199,7 @@ export const en = {
     morning: 'Good morning',
     afternoon: 'Good afternoon',
     evening: 'Good evening',
+    night: 'Good night',
     ring: (done: number, left: number) => `${done} done, ${left} left today`,
     allDone: 'all done',
     cardsLeft: (n: number): string => (n === 1 ? 'card left' : 'cards left'),

@@ -92,7 +92,6 @@ export const ru: Messages = {
 
   companion: {
     welcome: 'привет!',
-    today: 'доброе утро!',
     study: 'у тебя получится',
     path: 'шаг за шагом',
     level: 'вперёд и вверх',
@@ -108,6 +107,12 @@ export const ru: Messages = {
     'me-ink': 'тру тушь',
     'me-levels': 'сколько уровней',
     'me-about': 'я Мо',
+  },
+  greet: {
+    morning: 'доброе утро!',
+    afternoon: 'добрый день!',
+    evening: 'добрый вечер!',
+    night: 'сладких снов',
   },
   taps: ['эй!', 'ха-ха', 'бум', 'ещё!', 'щекотно'],
 
@@ -225,6 +230,7 @@ export const ru: Messages = {
     morning: 'Доброе утро',
     afternoon: 'Добрый день',
     evening: 'Добрый вечер',
+    night: 'Доброй ночи',
     ring: (done, left) => `Сегодня сделано ${done}, осталось ${left}`,
     allDone: 'всё готово',
     cardsLeft: (n) => forms(n, 'карточка осталась', 'карточки осталось', 'карточек осталось'),

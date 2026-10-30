@@ -83,7 +83,6 @@ export const vi: Messages = {
 
   companion: {
     welcome: 'xin chào!',
-    today: 'chào buổi sáng!',
     study: 'cố lên!',
     path: 'từng bước một',
     level: 'leo núi nào',
@@ -99,6 +98,12 @@ export const vi: Messages = {
     'me-ink': 'mài mực',
     'me-levels': 'nhiều cấp quá',
     'me-about': 'mình là Mặc',
+  },
+  greet: {
+    morning: 'chào buổi sáng!',
+    afternoon: 'chào buổi chiều!',
+    evening: 'chào buổi tối!',
+    night: 'ngủ ngon nhé',
   },
   taps: ['này!', 'haha', 'tưng!', 'nữa đi!', 'nhột quá'],
 
@@ -214,6 +219,7 @@ export const vi: Messages = {
     morning: 'Chào buổi sáng',
     afternoon: 'Chào buổi chiều',
     evening: 'Chào buổi tối',
+    night: 'Chúc ngủ ngon',
     ring: (done, left) => `Hôm nay đã xong ${done}, còn ${left}`,
     allDone: 'xong hết',
     cardsLeft: () => 'thẻ còn lại',

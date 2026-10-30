@@ -12,14 +12,14 @@
   import { t } from '../../lib/i18n/index.svelte';
   import { arrive, climbAway, stopAll, type Rig } from '../../lib/entrances';
   import { reduced } from '../../lib/motion';
+  import { GREETING_ZH, partOfDay } from '../../lib/greeting';
   import { entranceFor, type Entrance } from '../../lib/nav';
   import { router, viewKey, type RouteName } from '../../lib/router.svelte';
   import { store } from '../../lib/store.svelte';
 
   /** What 墨 says on arriving at each page (and, under it, in the learner's language). */
-  const LINES: Record<RouteName, string> = {
+  const LINES: Record<Exclude<RouteName, 'today'>, string> = {
     welcome: '你好！',
-    today: '早安！',
     study: '加油！',
     path: '一步一步',
     level: '爬山囉',
@@ -60,9 +60,12 @@
     companion.anchor ? 'anchor' : UP_TOP.has(router.route.name) ? 'top' : 'floor',
   );
   const view = $derived(viewKey(router.route));
-  const line = $derived({
-    zh: LINES[router.route.name],
-    gloss: t().companion[router.route.name],
+  const line = $derived.by(() => {
+    const name = router.route.name;
+    if (name !== 'today') return { zh: LINES[name], gloss: t().companion[name] };
+    // On Today, 墨 greets by the time of day, as the page does.
+    const part = partOfDay(new Date(store.clock).getHours());
+    return { zh: `${GREETING_ZH[part]}${part === 'night' ? '～' : '！'}`, gloss: t().greet[part] };
   });
 
   // On a perch a page offered: follow its top right-hand corner as the page scrolls or resizes.

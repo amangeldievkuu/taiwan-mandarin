@@ -11,20 +11,18 @@
   import StatChips from '../ui/StatChips.svelte';
   import WeekStrip from '../ui/WeekStrip.svelte';
   import { content } from '../lib/content.svelte';
+  import { GREETING_ZH, partOfDay } from '../lib/greeting';
   import { intlLocale, t } from '../lib/i18n/index.svelte';
   import { router } from '../lib/router.svelte';
   import { cardCounts } from '../lib/stats';
   import { store } from '../lib/store.svelte';
 
-  const now = new Date();
-  const hour = now.getHours();
-  const greeting = $derived(
-    hour < 11
-      ? { zh: '早安', text: t().today.morning }
-      : hour < 18
-        ? { zh: '午安', text: t().today.afternoon }
-        : { zh: '晚安', text: t().today.evening },
-  );
+  // The store's clock ticks each minute, so the greeting and date follow the time of day.
+  const now = $derived(new Date(store.clock));
+  const greeting = $derived.by(() => {
+    const part = partOfDay(now.getHours());
+    return { zh: GREETING_ZH[part], text: t().today[part] };
+  });
   const dateLabel = $derived(
     now.toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long' }),
   );
