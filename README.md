@@ -138,6 +138,10 @@ result is validated (contains the word, passes the guard) and appended to
   character written in the stroke writer. The same story or character counts once a day. These go
   in their own append-only practice log (synced like the review log); they add ink but don't
   water the plant, which still needs a review.
+- **Inkstone (硯, Me → Ink).** Ink is never spent: amounts from 500 to 50,000 unlock looks only,
+  chosen there and synced with the settings. They are 九宮格 and 宣紙 writing paper, 天目, 汝窯 and
+  鈞窯 pot glazes, indigo and gold seal paste, a gold brush, and a red string, a straw hat or a
+  golden brush tip for 墨. Each unlock is announced once. Ladder: `packages/shared/src/inkstone.ts`.
 - **Seals (印譜).** Nine milestones (first gold seam, buds at 30 days, 1,000 words…).
 - All of it comes from practice totals per day (`packages/shared/src/activity.ts`). Signed in,
   sync returns those totals for every device in the learner's time zone, so phone, iPad and

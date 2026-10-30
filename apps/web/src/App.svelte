@@ -4,6 +4,7 @@
   import Account from './routes/Account.svelte';
   import Dict from './routes/Dict.svelte';
   import Garden from './routes/Garden.svelte';
+  import Inkstone from './routes/Inkstone.svelte';
   import Level from './routes/Level.svelte';
   import Levels from './routes/Levels.svelte';
   import Me from './routes/Me.svelte';
@@ -158,6 +159,8 @@
           <Settings />
         {:else if router.route.name === 'me-garden'}
           <Garden />
+        {:else if router.route.name === 'me-ink'}
+          <Inkstone />
         {:else if router.route.name === 'me-levels'}
           <Levels />
         {:else if router.route.name === 'me-about'}

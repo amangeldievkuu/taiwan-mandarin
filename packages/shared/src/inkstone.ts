@@ -55,6 +55,16 @@ export const UNLOCKS: readonly Unlock[] = [
   unlock('mo', 'gilt', 50_000, '金毫', 'A golden brush tip for 墨'),
 ];
 
+/** Every look's name in Chinese, by `${slot}-${value}` (an unlock's id). */
+export const LOOK_ZH: Record<string, string> = {
+  'pot-celadon': '青瓷',
+  'paste-vermilion': '朱砂',
+  'paper-plain': '米字格',
+  'brush-vermilion': '朱筆',
+  'mo-plain': '墨',
+  ...Object.fromEntries(UNLOCKS.map((u) => [u.id, u.zh])),
+};
+
 /** The unlock that brings this look, or undefined for a default. */
 export const unlockFor = (slot: Slot, value: string): Unlock | undefined =>
   UNLOCKS.find((u) => u.slot === slot && u.value === value);

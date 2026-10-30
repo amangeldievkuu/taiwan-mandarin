@@ -20,6 +20,7 @@ export const DEPTH: Record<RouteName, number> = {
   'me-account': 1,
   'me-settings': 1,
   'me-garden': 1,
+  'me-ink': 1,
   'me-levels': 1,
   'me-about': 1,
   word: 2,
@@ -44,6 +45,7 @@ const TAB_OF: Partial<Record<RouteName, RouteName>> = {
   'me-account': 'me',
   'me-settings': 'me',
   'me-garden': 'me',
+  'me-ink': 'me',
   'me-levels': 'me',
   'me-about': 'me',
 };

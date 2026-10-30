@@ -20,6 +20,7 @@ export type RouteName =
   | 'me-account'
   | 'me-settings'
   | 'me-garden'
+  | 'me-ink'
   | 'me-levels'
   | 'me-about'
   | 'welcome';
@@ -30,6 +31,7 @@ export const ME_ROUTES: RouteName[] = [
   'me-account',
   'me-settings',
   'me-garden',
+  'me-ink',
   'me-levels',
   'me-about',
 ];
@@ -54,6 +56,7 @@ const PATTERNS: [RouteName, RegExp][] = [
   ['me-account', /^\/me\/account\/?$/],
   ['me-settings', /^\/me\/settings\/?$/],
   ['me-garden', /^\/me\/garden\/?$/],
+  ['me-ink', /^\/me\/ink\/?$/],
   ['me-levels', /^\/me\/levels\/?$/],
   ['me-about', /^\/me\/about\/?$/],
   ['welcome', /^\/welcome\/?$/],

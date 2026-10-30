@@ -2,7 +2,7 @@
   // Progress at a glance (the streak plant, ink, words and retention, the last 30 days), then the
   // way into the account, the settings, the garden, the levels and the credits.
   import InkDrop from '../ui/InkDrop.svelte';
-  import { LEVEL_IDS } from '@taiwan-mandarin/shared';
+  import { LEVEL_IDS, nextUnlock } from '@taiwan-mandarin/shared';
   import Counter from '../ui/Counter.svelte';
   import Icon, { type IconName } from '../ui/Icon.svelte';
   import StreakPlant from '../ui/StreakPlant.svelte';
@@ -32,6 +32,7 @@
   const levelsStarted = $derived(
     LEVEL_IDS.filter((id) => Object.values(store.cards).some((r) => r.level === id)).length,
   );
+  const next = $derived(nextUnlock(store.xp.total));
   const sealsEarned = $derived(store.seals.filter((s) => s.progress >= 1).length);
   const phonetics = $derived(
     { zhuyin: '注音', pinyin: 'Pinyin', both: '注音 + Pinyin' }[store.settings.phonetics],
@@ -124,11 +125,19 @@
   </section>
 
   <section class="headline">
-    <div class="stat sheet enter" style:--i={1}>
+    <a
+      class="stat sheet enter ink-card pressable"
+      style:--i={1}
+      href={router.href('/me/ink')}
+      onclick={router.link}
+    >
       <strong class="big xp"><InkDrop size={26} /> <Counter value={store.xp.total} /></strong>
       <span>{t().me.ink}</span>
       <small>{t().me.xpToday(store.xp.today)}</small>
-    </div>
+      {#if next}<small class="ink-next"
+          >{t().me.inkNext(t().inkstone.names[next.id] ?? next.en, next.at - store.xp.total)}</small
+        >{/if}
+    </a>
     <div class="stat sheet enter" style:--i={2}>
       <strong class="big"><Counter value={counts.learned} /></strong>
       <span>{t().today.learned}</span>
@@ -243,6 +252,17 @@
   }
 
   .xp {
+    color: var(--gold-deep);
+  }
+
+  .ink-card {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .ink-next {
+    margin-top: 2px;
+    font-weight: 700;
     color: var(--gold-deep);
   }
 

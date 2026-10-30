@@ -35,6 +35,7 @@ export const en = {
     'me-account': 'Account',
     'me-settings': 'Settings',
     'me-garden': 'Garden',
+    'me-ink': 'Inkstone',
     'me-levels': 'By level',
     'me-about': 'About',
     welcome: 'Welcome',
@@ -69,6 +70,7 @@ export const en = {
     'me-account': 'welcome',
     'me-settings': 'tweak away',
     'me-garden': 'how pretty',
+    'me-ink': 'grinding ink',
     'me-levels': 'so many levels',
     'me-about': "I'm Mo",
   } satisfies Record<RouteName, string>,
@@ -96,6 +98,44 @@ export const en = {
     years: (n: string) => `${n}y`,
   },
 
+  /** The inkstone (硯): what ink unlocks, and choosing it. */
+  inkstone: {
+    total: (ink: number) => `${formatNumber(ink)} drops of ink`,
+    next: (name: string, at: number, left: number) =>
+      `${name} at ${formatNumber(at)} · ${formatNumber(left)} to go`,
+    all: 'Everything is unlocked. The ink keeps flowing.',
+    how:
+      'Ink is never spent. Every answer, story, Talk message and character you write adds to it, ' +
+      'and along the way it unlocks looks to choose here.',
+    slots: {
+      pot: 'Pot glaze',
+      paste: 'Seal paste',
+      paper: 'Writing paper',
+      brush: 'Brush',
+      mo: 'Things for 墨',
+    },
+    names: {
+      'pot-celadon': 'Celadon',
+      'pot-tenmoku': 'Tenmoku',
+      'pot-ru': 'Ru, sky after rain',
+      'pot-jun': 'Jun',
+      'paste-vermilion': 'Vermilion',
+      'paste-indigo': 'Indigo',
+      'paste-gold': 'Gold',
+      'paper-plain': 'Rice-shaped grid',
+      'paper-nine': 'Nine squares',
+      'paper-xuan': 'Rice paper',
+      'brush-vermilion': 'Vermilion',
+      'brush-gold': 'Gold',
+      'mo-plain': 'Just 墨',
+      'mo-scarf': 'Red string',
+      'mo-hat': 'Straw hat',
+      'mo-gilt': 'Golden brush tip',
+    } as Record<string, string>,
+    inUse: 'In use',
+    at: (ink: number) => formatNumber(ink),
+  },
+
   seals: {
     names: {
       'first-day': 'First day of study',
@@ -119,6 +159,8 @@ export const en = {
       `to gold. ${days} days of growing.`,
     sprout: 'A new sprout',
     sproutBody: 'Your last plant is in your garden, gold and all. This one starts today.',
+    unlocked: (name: string) => `Unlocked · ${name}`,
+    unlockedBody: 'Choose it at the inkstone, under Me.',
     newSeal: (name: string) => `New seal · ${name}`,
     plant: 'Your streak plant',
   },
@@ -162,7 +204,7 @@ export const en = {
       `All done for today. ${reviews ? `${reviews} reviews. ` : ''}Read something or look ` +
       'around the dictionary.',
     readStory: 'Read a story',
-    xpToday: (xp: number) => `+${xp} ink today`,
+    xpToday: (xp: number) => `+${formatNumber(xp)} ink today`,
     plant: (days: number) => `Your streak plant: ${days} days`,
     yourPath: 'Your path',
     allLevels: 'All levels',
@@ -214,7 +256,8 @@ export const en = {
       `Longest ${days} · ${seams} gold ${seams === 1 ? 'seam' : 'seams'}`,
     /** Gold ink (金墨), earned by practice: what other apps call XP. */
     ink: 'Ink',
-    xpToday: (xp: number) => `+${xp} today`,
+    inkNext: (name: string, left: number) => `${name} · ${formatNumber(left)} to go`,
+    xpToday: (xp: number) => `+${formatNumber(xp)} today`,
     wellRemembered: (n: number) => `${n} well remembered`,
     remembered: 'remembered',
     last30: 'last 30 days',

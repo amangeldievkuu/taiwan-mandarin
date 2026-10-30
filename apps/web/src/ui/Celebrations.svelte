@@ -7,6 +7,7 @@
   import Confetti from './Confetti.svelte';
   import StreakPlant from './StreakPlant.svelte';
   import Seal from './Seal.svelte';
+  import { unlockedAt } from '@taiwan-mandarin/shared';
   import { celebrate } from '../lib/celebrate.svelte';
   import { once, seeded } from '../lib/celebrated';
   import { feedback } from '../lib/feedback.svelte';
@@ -41,6 +42,18 @@
           title: `新芽 · ${t().celebrate.sprout}`,
           body: t().celebrate.sproutBody,
         });
+      }
+    }
+    for (const unlock of unlockedAt(store.xp.total)) {
+      if (once(`unlock:${unlock.id}`)) {
+        const name = t().inkstone.names[unlock.id] ?? unlock.en;
+        toasts.show({
+          kind: 'seal',
+          title: t().celebrate.unlocked(name),
+          body: t().celebrate.unlockedBody,
+          seal: unlock.zh,
+        });
+        feedback.play('stamp');
       }
     }
     for (const seal of store.seals) {

@@ -32,6 +32,7 @@
     'me-account': '歡迎',
     'me-settings': '調一調',
     'me-garden': '好漂亮',
+    'me-ink': '磨墨',
     'me-levels': '好多級',
     'me-about': '我是墨',
   };
