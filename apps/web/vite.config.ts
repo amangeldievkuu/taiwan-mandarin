@@ -52,6 +52,8 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Daily reminders: the push and notification-click handlers.
+        importScripts: ['push-sw.js'],
         globPatterns: ['**/*.{js,css,html,svg,png,ico}', 'strokes-tw.json'],
         // Word lists and dictionary shards (~19 MB per language) are cached on first use, not
         // precached.
