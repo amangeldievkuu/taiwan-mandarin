@@ -124,6 +124,7 @@ export const ru: Messages = {
     finished: 'молодец!',
   },
   taps: ['эй!', 'ха-ха', 'бум', 'ещё!', 'щекотно'],
+  dance: 'танцуем!',
 
   week: {
     label: 'Эта неделя',

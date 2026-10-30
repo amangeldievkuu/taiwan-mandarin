@@ -115,6 +115,7 @@ export const vi: Messages = {
     finished: 'vất vả rồi!',
   },
   taps: ['này!', 'haha', 'tưng!', 'nữa đi!', 'nhột quá'],
+  dance: 'nhảy nào!',
 
   week: {
     label: 'Tuần này',

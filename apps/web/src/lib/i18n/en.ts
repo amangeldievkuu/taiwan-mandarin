@@ -94,6 +94,8 @@ export const en = {
   } satisfies Record<Exclude<MoMood, 'greet'> | MoCheer, string | ((n: number) => string)>,
   /** What 墨 says when tapped (嘿！ 哈哈 咚！ 再來！ 好癢), in turn. */
   taps: ['hey!', 'haha', 'boing', 'again!', 'that tickles'],
+  /** What 墨 says when five taps in a row make it dance (跳舞囉！). */
+  dance: 'dance time!',
 
   week: {
     label: 'This week',

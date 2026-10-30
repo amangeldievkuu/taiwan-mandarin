@@ -78,6 +78,8 @@
   let heard = companion.cheer?.id ?? 0;
   /** Bumped to make 墨 hop. */
   let bounce = $state(0);
+  /** Bumped to make 墨 dance, for the big moments. */
+  let dance = $state(0);
   /** Today's once-a-day lines already said. */
   let said = { day: '', moods: new Set<MoMood>() };
 
@@ -160,6 +162,7 @@
     dir = -1;
     cheering = null;
     arrived = arrival();
+    if (arrived === 'milestone' || arrived === 'doneToday') dance++;
     speak();
   }
 
@@ -216,7 +219,8 @@
     });
   });
 
-  // A page cheers (a run of right answers, a session done): 墨 says so, and hops for the big ones.
+  // A page cheers (a run of right answers, a session done): 墨 says so, hops for a long run and
+  // dances when the session is done.
   $effect(() => {
     const cheer = companion.cheer;
     untrack(() => {
@@ -224,7 +228,8 @@
       heard = cheer.id;
       if (gone || leaving || pose !== 'sitting') return;
       cheering = cheer;
-      if (cheer.mood === 'finished' || cheer.n >= 10) bounce++;
+      if (cheer.mood === 'finished') dance++;
+      else if (cheer.n >= 10) bounce++;
       speak();
     });
   });
@@ -263,7 +268,7 @@
   <span class="cord" bind:this={cord}></span>
   <div class="mover" bind:this={mover}>
     <div class="body" bind:this={body}>
-      <InkBlob says={line} flip below={place === 'top'} look={store.looks.mo} {bounce} />
+      <InkBlob says={line} flip below={place === 'top'} look={store.looks.mo} {bounce} {dance} />
     </div>
   </div>
 </div>

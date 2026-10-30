@@ -1,7 +1,8 @@
 <!--
   墨 (Mo), a drop of ink with legs, drawn in outline. It drips onto the page, walks while the
   page scrolls, faces the way it is going, sits down to say something when the scrolling stops,
-  and dozes off after a while. Tap it and it hops (or the parent bumps `bounce`). The parent sets `--dir` and the classes
+  and dozes off after a while. Tap it and it hops (or the parent bumps `bounce`); tap it five
+  times in a row and it dances (or the parent bumps `dance`). The parent sets `--dir` and the classes
   walking / sitting / sleepy / fast (see lib/walk.ts), hanging and climbing (on a rope) and hush
   (sitting without a word); everything else is CSS on the SVG. `look` dresses it in what ink
   has unlocked: a red string scarf, a straw hat (斗笠) or a golden brush tip.
@@ -29,16 +30,34 @@
     look?: LookOf<'mo'>;
     /** Changed by the parent to make 墨 hop for joy. */
     bounce?: number;
+    /** Changed by the parent to make 墨 dance. */
+    dance?: number;
   }
 
-  let { says, flip = false, below = false, look = 'plain', bounce = 0 }: Props = $props();
+  let {
+    says,
+    flip = false,
+    below = false,
+    look = 'plain',
+    bounce = 0,
+    dance = 0,
+  }: Props = $props();
 
   const TAPS = ['嘿！', '哈哈', '咚！', '再來！', '好癢'];
+  const DANCE_LINE = '跳舞囉！';
+  /** Taps closer together than this are in a row; that many in a row and 墨 dances. */
+  const TAP_GAP_MS = 1200;
+  const TAPS_TO_DANCE = 5;
+  const DANCE_MS = 2400;
 
   let taps = 0;
+  let inARow = 0;
+  let lastTap = 0;
   let tapped = $state<Line | null>(null);
   let hopping = $state(false);
+  let dancing = $state(false);
   let hopTimer: ReturnType<typeof setTimeout> | undefined;
+  let danceTimer: ReturnType<typeof setTimeout> | undefined;
   let sayTimer: ReturnType<typeof setTimeout> | undefined;
 
   function jump() {
@@ -49,27 +68,55 @@
     hopTimer = setTimeout(() => (hopping = false), 700);
   }
 
-  function hop() {
-    jump();
-    const i = taps++ % TAPS.length;
-    tapped = { zh: TAPS[i] ?? '', gloss: t().taps[i] ?? '' };
+  function startDance() {
+    hopping = false;
+    clearTimeout(hopTimer);
+    // Off for a frame, so a dance during a dance starts over.
+    dancing = false;
+    requestAnimationFrame(() => (dancing = true));
+    clearTimeout(danceTimer);
+    danceTimer = setTimeout(() => (dancing = false), DANCE_MS);
+  }
+
+  function say(line: Line, ms: number) {
+    tapped = line;
     clearTimeout(sayTimer);
-    sayTimer = setTimeout(() => (tapped = null), 1800);
+    sayTimer = setTimeout(() => (tapped = null), ms);
+  }
+
+  function hop() {
+    const now = Date.now();
+    inARow = now - lastTap < TAP_GAP_MS ? inARow + 1 : 1;
+    lastTap = now;
+    if (inARow >= TAPS_TO_DANCE) {
+      inARow = 0;
+      startDance();
+      say({ zh: DANCE_LINE, gloss: t().dance }, DANCE_MS);
+      return;
+    }
+    if (!dancing) jump();
+    const i = taps++ % TAPS.length;
+    say({ zh: TAPS[i] ?? '', gloss: t().taps[i] ?? '' }, 1800);
   }
 
   $effect(() => {
     if (bounce) untrack(jump);
   });
 
+  $effect(() => {
+    if (dance) untrack(startDance);
+  });
+
   $effect(() => () => {
     clearTimeout(hopTimer);
+    clearTimeout(danceTimer);
     clearTimeout(sayTimer);
   });
 
   const line = $derived(tapped ?? says);
 </script>
 
-<div class="blob look-{look}" class:tapped={!!tapped} class:flip class:below>
+<div class="blob look-{look}" class:tapped={!!tapped} class:dancing class:flip class:below>
   <button class="body" class:hopping type="button" tabindex="-1" aria-hidden="true" onclick={hop}>
     <svg viewBox="0 0 30 30">
       <!-- z z z, for dozing -->
@@ -77,6 +124,12 @@
         <text x="24" y="4">z</text>
         <text x="27.5" y="-1" class="z2">z</text>
         <text x="31" y="-6.5" class="z3">z</text>
+      </g>
+
+      <!-- ♪ ♫, for dancing -->
+      <g class="notes">
+        <text x="-1" y="8">♪</text>
+        <text x="27" y="5" class="n2">♫</text>
       </g>
 
       <g class="facing">
@@ -376,8 +429,115 @@
       step 0.25s ease-in-out infinite alternate-reverse;
   }
 
+  /* Dancing: up on its feet, stepping side to side, a turn, a hop to finish; notes float up. */
+  .dancing svg {
+    animation: sway 2.4s ease-in-out;
+  }
+
+  @keyframes sway {
+    0%,
+    62%,
+    84%,
+    100% {
+      translate: 0 0;
+      rotate: 0deg;
+    }
+    12%,
+    37% {
+      translate: -15% 0;
+      rotate: -8deg;
+    }
+    25%,
+    50% {
+      translate: 15% 0;
+      rotate: 8deg;
+    }
+    92% {
+      translate: 0 -30%;
+    }
+  }
+
+  .dancing .figure {
+    transform-box: view-box;
+    transform-origin: 15px 0;
+    animation: groove 2.4s ease-in-out;
+  }
+
+  /* Stands for the dance (no sitting drop), squashes on each beat, and turns round. */
+  @keyframes groove {
+    0%,
+    62%,
+    74%,
+    96% {
+      translate: 0 0;
+      scale: 1 1;
+    }
+    6%,
+    18%,
+    31%,
+    43%,
+    56% {
+      translate: 0 0;
+      scale: 0.95 1.05;
+    }
+    12%,
+    25%,
+    37%,
+    50% {
+      translate: 0 0;
+      scale: 1.08 0.92;
+    }
+    68% {
+      translate: 0 0;
+      scale: -1 1;
+    }
+  }
+
+  /* The ink is already down: keep it, and kick the legs in turn. */
+  .dancing .leg-a {
+    animation:
+      ink 0s forwards,
+      step 0.3s ease-in-out 8 alternate;
+  }
+
+  .dancing .leg-b {
+    animation:
+      ink 0s forwards,
+      step 0.3s ease-in-out 8 alternate-reverse;
+  }
+
+  .notes text {
+    fill: var(--ink-2);
+    font-family: var(--font-ui);
+    font-weight: 800;
+    font-size: 6px;
+    opacity: 0;
+  }
+
+  .dancing .notes text {
+    animation: note 1.2s ease-out 2;
+  }
+
+  .dancing .notes .n2 {
+    animation-delay: 0.6s;
+  }
+
+  @keyframes note {
+    0% {
+      opacity: 0;
+      translate: 0 2px;
+    }
+    30% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      translate: 1px -7px;
+    }
+  }
+
   /* Dozing: eyes shut, z's float up. */
-  :global(.sleepy) .blob:not(.tapped) .eyes {
+  :global(.sleepy) .blob:not(.tapped):not(.dancing) .eyes {
     animation: none;
     scale: 1 0.15;
   }
@@ -398,15 +558,15 @@
     font-size: 6.5px;
   }
 
-  :global(.sleepy) .blob:not(.tapped) .zzz text {
+  :global(.sleepy) .blob:not(.tapped):not(.dancing) .zzz text {
     animation: doze 2.4s ease-in-out infinite;
   }
 
-  :global(.sleepy) .blob:not(.tapped) .zzz .z2 {
+  :global(.sleepy) .blob:not(.tapped):not(.dancing) .zzz .z2 {
     animation-delay: 0.5s;
   }
 
-  :global(.sleepy) .blob:not(.tapped) .zzz .z3 {
+  :global(.sleepy) .blob:not(.tapped):not(.dancing) .zzz .z3 {
     animation-delay: 1s;
   }
 
@@ -524,8 +684,10 @@
     .eyes,
     .figure,
     .zzz text,
+    .notes text,
     .dust circle,
-    .body.hopping svg {
+    .body.hopping svg,
+    .dancing svg {
       animation: none !important;
     }
 
