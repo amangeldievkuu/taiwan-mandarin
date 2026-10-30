@@ -247,6 +247,24 @@ npm run db:migrate -w @taiwan-mandarin/api     # apply migrations
 npm run test:api                               # API end-to-end tests (separate *_test database)
 ```
 
+### Daily reminders (sign-in required)
+
+Settings › Reminders turns on a daily note from 墨 for the device you're on. The time you pick syncs
+across devices. Every 15 minutes the API looks for learners whose time has come in their own time
+zone and who haven't reviewed or practised yet that day. Each of those learners gets one Web Push
+per device. It says how many cards are due, in the learner's language. The service worker shows it
+(`apps/web/public/push-sw.js`) and puts the due count on the app icon. While the app is open, the
+app keeps that count up to date itself.
+
+- **Server.** Make a VAPID key pair once with `npx web-push generate-vapid-keys` and set
+  `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` in `.env`. Keep the pair: new keys cut every device
+  off its reminders until the learner turns them on again. `VAPID_SUBJECT` defaults to
+  `WEB_ORIGIN` when that is https. Without keys, the section stays hidden.
+- **iPhone and iPad** (iOS 16.4 or later). Web Push only works in the app added to the Home
+  Screen. In a Safari tab, the section explains how to add it.
+- **Signing out** turns the device's reminder off, so the next account on that device starts
+  without one.
+
 ## Content
 
 `npm run content` downloads the sources into `data/raw/` (gitignored) and writes
