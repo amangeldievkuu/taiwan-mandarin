@@ -2,8 +2,10 @@
   // The streak as a plum tree (梅) in a celadon pot: it grows with every day practiced, buds at
   // 30 days and blooms at 100. Every mended gap is a gold seam on the pot (金繼). While days can
   // still be mended the pot shows an open crack and the leaves droop until you come back. Before
-  // the first practice it is an unglazed pot with a seed in it.
-  import type { Bowl, Seam } from '@taiwan-mandarin/shared';
+  // the first practice it is an unglazed pot with a seed in it. The glaze is the learner's, from
+  // what ink has unlocked (天目, 汝窯, 鈞窯).
+  import type { Bowl, LookOf, Seam } from '@taiwan-mandarin/shared';
+  import { store } from '../lib/store.svelte';
   import {
     POT_BODY,
     POT_RIM,
@@ -26,9 +28,12 @@
     /** Sway in the breeze and, with flowers out, let petals drift down. For a plant shown on its
         own; a garden of them stays still. */
     lively?: boolean;
+    /** The pot's glaze; the learner's own by default. */
+    glaze?: LookOf<'pot'>;
   }
 
-  let { bowl, crack = 0, fresh = null, size = 120, label, lively = false }: Props = $props();
+  let { bowl, crack = 0, fresh = null, size = 120, label, lively = false, glaze }: Props = $props();
+  const pot = $derived(glaze ?? store.looks.pot);
   const id = $props.id();
   const plant = $derived(plantShape(bowl?.start ?? '', bowl?.days ?? 0));
   const inBloom = $derived((bowl?.days ?? 0) >= 100);
@@ -81,7 +86,7 @@
 </script>
 
 <svg
-  class="plant-art"
+  class="plant-art glaze-{pot}"
   class:clay={!bowl}
   class:wilt={crack > 0}
   viewBox="0 0 120 120"
@@ -116,6 +121,11 @@
       <stop offset="1" stop-color="#ffc8d8" stop-opacity="0" />
     </radialGradient>
     <clipPath id="{id}-pot"><path d={POT_BODY} /></clipPath>
+    <radialGradient id="{id}-splash">
+      <stop offset="0" stop-color="#8e3f8c" stop-opacity="0.55" />
+      <stop offset="0.6" stop-color="#a5559c" stop-opacity="0.25" />
+      <stop offset="1" stop-color="#a5559c" stop-opacity="0" />
+    </radialGradient>
   </defs>
 
   <!-- The pot: shadow, glazed body, the light on its rim and side, then the gold. -->
@@ -136,6 +146,18 @@
       width={POT_RIM.width}
       height="3"
     />
+    {#if bowl && pot === 'jun'}
+      <!-- Jun ware's purple splashes, where the copper in the glaze ran -->
+      <ellipse cx="70" cy="95" rx="14" ry="10" fill="url(#{id}-splash)" />
+      <ellipse cx="49" cy="107" rx="8" ry="5" fill="url(#{id}-splash)" />
+    {/if}
+    {#if bowl && pot === 'tenmoku'}
+      <!-- Tenmoku's rust-brown streaks running down from the rim (hare's fur) -->
+      <path
+        class="hare"
+        d="M37 84q.6 6-.2 12M42 84q-.5 8 .3 15M47 84q.5 5-.2 9M53 84q-.4 9 .2 17M58 84q.5 4 0 7M64 84q.5 7-.2 13M69 84q-.5 5 .2 10M75 84q.5 8-.3 14M81 84q-.4 4 .1 8"
+      />
+    {/if}
     <ellipse class="shine" cx="43" cy="97" rx="2.6" ry="10" />
     {#each seams as seam (seamKey(seam))}
       {@const d = seamPath(seamKey(seam), seam.days)}
@@ -309,6 +331,53 @@
 
   .glaze-dark {
     stop-color: #7aae97;
+  }
+
+  /* 天目 tenmoku: near-black iron glaze with rust at the edges. */
+  .glaze-tenmoku .glaze-light {
+    stop-color: #3e2c22;
+  }
+
+  .glaze-tenmoku .glaze-mid {
+    stop-color: #211813;
+  }
+
+  .glaze-tenmoku .glaze-dark {
+    stop-color: #0f0b09;
+  }
+
+  .hare {
+    fill: none;
+    stroke: #b4753f;
+    stroke-width: 0.45;
+    stroke-linecap: round;
+    opacity: 0.6;
+  }
+
+  /* 汝窯 Ru: the blue-grey of the sky after rain. */
+  .glaze-ru .glaze-light {
+    stop-color: #e3ecec;
+  }
+
+  .glaze-ru .glaze-mid {
+    stop-color: #bccfd2;
+  }
+
+  .glaze-ru .glaze-dark {
+    stop-color: #8eaab1;
+  }
+
+  /* 鈞窯 Jun: opalescent blue, splashed with purple. */
+  .glaze-jun .glaze-light {
+    stop-color: #bcd0ea;
+  }
+
+  .glaze-jun .glaze-mid {
+    stop-color: #8aa8d4;
+  }
+
+  .glaze-jun .glaze-dark {
+    stop-color: #5878ad;
   }
 
   .clay .glaze-light {

@@ -3,7 +3,8 @@
   page scrolls, faces the way it is going, sits down to say something when the scrolling stops,
   and dozes off after a while. Tap it and it hops. The parent sets `--dir` and the classes
   walking / sitting / sleepy / fast (see lib/walk.ts), hanging and climbing (on a rope) and hush
-  (sitting without a word); everything else is CSS on the SVG.
+  (sitting without a word); everything else is CSS on the SVG. `look` dresses it in what ink
+  has unlocked: a red string scarf, a straw hat (斗笠) or a golden brush tip.
 -->
 <script module lang="ts">
   export interface Line {
@@ -14,6 +15,7 @@
 </script>
 
 <script lang="ts">
+  import type { LookOf } from '@taiwan-mandarin/shared';
   import { t } from '../../lib/i18n/index.svelte';
 
   interface Props {
@@ -23,9 +25,10 @@
     flip?: boolean;
     /** Put the speech bubble underneath, near the top of the screen. */
     below?: boolean;
+    look?: LookOf<'mo'>;
   }
 
-  let { says, flip = false, below = false }: Props = $props();
+  let { says, flip = false, below = false, look = 'plain' }: Props = $props();
 
   const TAPS = ['嘿！', '哈哈', '咚！', '再來！', '好癢'];
 
@@ -55,7 +58,7 @@
   const line = $derived(tapped ?? says);
 </script>
 
-<div class="blob" class:tapped={!!tapped} class:flip class:below>
+<div class="blob look-{look}" class:tapped={!!tapped} class:flip class:below>
   <button class="body" class:hopping type="button" tabindex="-1" aria-hidden="true" onclick={hop}>
     <svg viewBox="0 0 30 30">
       <!-- z z z, for dozing -->
@@ -88,6 +91,15 @@
               <circle cx="17.5" cy="12.5" r="1.3" />
               <circle cx="21.5" cy="12.5" r="1.3" />
             </g>
+            {#if look === 'scarf'}
+              <!-- 紅線: a red string tied round it, the ends blowing back -->
+              <path class="scarf" d="M6.6 17.2c2.6 1.9 14.6 1.9 16.9-.2" />
+              <path class="scarf" d="M8.4 18.2 5.6 21.6M8.4 18.2 4.6 19.4" />
+            {:else if look === 'hat'}
+              <!-- 斗笠: a straw hat, tied under the chin -->
+              <path class="hat" d="M6.4 7.4 15 1.6l8.6 5.8c-5.4 1.3-11.8 1.3-17.2 0Z" />
+              <path class="hat-weave" d="M15 1.6v6.8M10.8 4.4l-.8 3.6M19.2 4.4l.8 3.6" />
+            {/if}
           </g>
         </g>
       </g>
@@ -203,6 +215,39 @@
     fill: none;
     stroke: currentColor;
     stroke-width: 1.3;
+    stroke-linecap: round;
+  }
+
+  /* 金毫: the brush tip dipped in gold. */
+  .look-gilt .hair {
+    stroke: var(--gold);
+    stroke-width: 1.7;
+    filter: drop-shadow(0 0 0.6px var(--gold-edge));
+  }
+
+  /* Under the hat, the brush tip stays out of sight. */
+  .look-hat .hair {
+    display: none;
+  }
+
+  .scarf {
+    fill: none;
+    stroke: var(--seal);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+
+  .hat {
+    fill: #e2c27e;
+    stroke: currentColor;
+    stroke-width: 1;
+    stroke-linejoin: round;
+  }
+
+  .hat-weave {
+    fill: none;
+    stroke: #a8823f;
+    stroke-width: 0.5;
     stroke-linecap: round;
   }
 

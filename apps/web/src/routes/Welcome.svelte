@@ -121,7 +121,7 @@
       <p class="fine">{t().landing.fine}</p>
     </div>
     <div class="hero-seal" aria-hidden="true">
-      <Seal text="華" size={132} />
+      <Seal text="華" size={132} paste="vermilion" />
       <p class="hint">
         <Icon name="back" />
         {t().landing.scroll}
@@ -136,7 +136,7 @@
     <ul>
       {#each FEATURES as seal, i (seal)}
         <li class="feature sheet" style:--i={i}>
-          <Seal text={seal} size={44} outline />
+          <Seal text={seal} size={44} outline paste="vermilion" />
           <h3>{t().landing.features[i]?.title}</h3>
           <p>{t().landing.features[i]?.text}</p>
         </li>
@@ -145,7 +145,7 @@
   </section>
 
   <section class="plant sheet">
-    <StreakPlant bowl={bloom} size={170} label={t().landing.plantLabel} lively />
+    <StreakPlant bowl={bloom} size={170} label={t().landing.plantLabel} lively glaze="celadon" />
     <div>
       <h2>{t().landing.plantTitle}</h2>
       <p>{t().landing.plantText}</p>

@@ -14,6 +14,7 @@
   import { reduced } from '../../lib/motion';
   import { entranceFor, type Entrance } from '../../lib/nav';
   import { router, viewKey, type RouteName } from '../../lib/router.svelte';
+  import { store } from '../../lib/store.svelte';
 
   /** What 墨 says on arriving at each page (and, under it, in the learner's language). */
   const LINES: Record<RouteName, string> = {
@@ -195,7 +196,7 @@
   <span class="cord" bind:this={cord}></span>
   <div class="mover" bind:this={mover}>
     <div class="body" bind:this={body}>
-      <InkBlob says={line} flip below={place === 'top'} />
+      <InkBlob says={line} flip below={place === 'top'} look={store.looks.mo} />
     </div>
   </div>
 </div>

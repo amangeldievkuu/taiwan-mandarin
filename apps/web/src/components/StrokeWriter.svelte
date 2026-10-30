@@ -84,9 +84,17 @@
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   }
 
-  // Re-create the writer when the character or the color scheme changes.
+  /** Writing paper and brush, from what ink has unlocked. */
+  const GRID = {
+    plain: 'M120 0v240M0 120h240M0 0l240 240M240 0L0 240',
+    nine: 'M80 0v240M160 0v240M0 80h240M0 160h240',
+    xuan: 'M120 0v240M0 120h240M0 0l240 240M240 0L0 240',
+  } as const;
+
+  // Re-create the writer when the character, the color scheme or the brush changes.
   $effect(() => {
     void scheme;
+    const brush = store.looks.brush === 'gold' ? cssVar('--gold') : cssVar('--seal');
     const current = char;
     missing = false;
     verified = null;
@@ -108,8 +116,8 @@
       showCharacter: shown,
       strokeColor: cssVar('--ink'),
       outlineColor: cssVar('--stroke-outline'),
-      drawingColor: cssVar('--seal'),
-      highlightColor: cssVar('--seal'),
+      drawingColor: brush,
+      highlightColor: brush,
       radicalColor: null,
       strokeAnimationSpeed: 1,
       delayBetweenStrokes: 220,
@@ -241,13 +249,13 @@
 
 {#snippet board(where: Place, size: number)}
   <div
-    class="canvas"
+    class="canvas paper-{store.looks.paper}"
     class:quiz={mode === 'quiz'}
     style:--size="{size}px"
     style:view-transition-name={morphing && place.host === where ? 'stroke-sheet' : null}
   >
     <svg class="grid" viewBox="0 0 240 240" aria-hidden="true">
-      <path d="M120 0v240M0 120h240M0 0l240 240M240 0L0 240" vector-effect="non-scaling-stroke" />
+      <path d={GRID[store.looks.paper]} vector-effect="non-scaling-stroke" />
     </svg>
     <div
       class="target"
@@ -380,6 +388,19 @@
 
   .grid {
     stroke-dasharray: 4 5;
+  }
+
+  /* 九宮格: nine squares, ruled in faint vermilion like a copybook. */
+  .paper-nine .grid {
+    stroke: color-mix(in srgb, var(--seal) 30%, transparent);
+    stroke-dasharray: none;
+  }
+
+  /* 宣紙: warm rice paper with a few fibres in it. */
+  .paper-xuan {
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.006 0.05' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.36 0 0 0 0 0.22 0 0 0 0.8 -0.45'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23f)'/%3E%3C/svg%3E"),
+      color-mix(in srgb, #e9d6ad 32%, var(--paper));
   }
 
   .target {

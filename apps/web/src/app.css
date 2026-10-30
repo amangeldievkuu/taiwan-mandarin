@@ -39,6 +39,10 @@
   --gold-deep: #9a6400;
   --gold-wash: #fff4d6;
   --gold-gradient: linear-gradient(135deg, #fff1b8, #f2c14e 45%, #b9831a);
+  /* Seal pastes ink can unlock (see [data-paste] below) */
+  --indigo-paste: #2f4c8a;
+  --indigo-paste-ink: #f4f7ff;
+  --gold-paste-ink: #7a1414;
   /* Ochre: Hard, an open crack */
   --ochre: #a65f00;
   --ochre-wash: #fbefdc;
@@ -200,6 +204,9 @@
   --gold-deep: #f4c55a;
   --gold-wash: rgb(244 197 90 / 0.14);
   --gold-gradient: linear-gradient(135deg, #fff3c4, #f4c55a 45%, #c8952a);
+  --indigo-paste: #8ea8e8;
+  --indigo-paste-ink: #0b1430;
+  --gold-paste-ink: #3a0d06;
   --ochre: #f0a43a;
   --ochre-wash: rgb(240 164 58 / 0.14);
   --shadow-1: 0 1px 2px rgb(0 0 0 / 0.5);
@@ -246,6 +253,9 @@
     --gold-deep: #f4c55a;
     --gold-wash: rgb(244 197 90 / 0.14);
     --gold-gradient: linear-gradient(135deg, #fff3c4, #f4c55a 45%, #c8952a);
+    --indigo-paste: #8ea8e8;
+    --indigo-paste-ink: #0b1430;
+    --gold-paste-ink: #3a0d06;
     --ochre: #f0a43a;
     --ochre-wash: rgb(240 164 58 / 0.14);
     --shadow-1: 0 1px 2px rgb(0 0 0 / 0.5);
@@ -264,6 +274,17 @@
 
 :root[data-glyph='sans'] {
   --font-hanzi: var(--font-ui);
+}
+
+/* The seal paste (印泥) chosen at the inkstone: only seals change, the vermilion elsewhere stays. */
+:root[data-paste='indigo'] {
+  --seal-paste: var(--indigo-paste);
+  --seal-paste-ink: var(--indigo-paste-ink);
+}
+
+:root[data-paste='gold'] {
+  --seal-paste: var(--gold);
+  --seal-paste-ink: var(--gold-paste-ink);
 }
 
 /* Phone keyboard up (Nav sets data-typing): the tab bar steps aside, and everything docked above

@@ -77,6 +77,7 @@
     const root = document.documentElement;
     const theme = store.settings.theme;
     root.dataset.glyph = store.settings.glyphStyle;
+    root.dataset.paste = store.looks.paste;
     if (theme === 'auto') delete root.dataset.theme;
     else root.dataset.theme = theme;
     // A forced theme recolours the chrome too; "auto" leaves each meta on its own scheme.
@@ -173,7 +174,7 @@
   <UpdatePrompt />
 {:else}
   <div class="splash">
-    <Seal text="華" size={72} />
+    <Seal text="華" size={72} paste="vermilion" />
     {#if store.error}
       <p>{t().app.loadFailed}<br /><small>{store.error}</small></p>
       <button class="btn quiet" type="button" onclick={() => location.reload()}
