@@ -311,6 +311,22 @@ export const en = {
     vibrationHint: 'A little buzz on each answer (this device)',
     companion: '墨 on every page',
     companionHint: 'The ink drop that comes along with you (this device)',
+    reminders: 'Reminders',
+    reminder: 'Daily reminder',
+    reminderHint: "A note from 墨 if you haven't practised yet that day (this device)",
+    reminderTime: 'Time',
+    reminderTimeHint: 'Your time zone; it comes within 15 minutes',
+    reminderTest: 'Send a test',
+    reminderSent: 'Sent. It should show in a few seconds.',
+    reminderNotSent: 'Nothing was sent: turn the reminder off and on again.',
+    reminderSignIn: 'Sign in to get a daily reminder from 墨.',
+    reminderInstall:
+      'On iPhone and iPad, reminders need the app on your Home Screen: tap Share, then ' +
+      '“Add to Home Screen”, and open it from there.',
+    reminderUnsupported: "This browser can't show reminders.",
+    reminderBlocked:
+      'Notifications are blocked for this app. Allow them in the system settings (on iPhone: ' +
+      'Settings → Notifications → 華語), then come back.',
     data: 'Data',
     todayCounts: (learned: number, reviews: number) => `Today: ${learned} new · ${reviews} reviews`,
     resetAccount:

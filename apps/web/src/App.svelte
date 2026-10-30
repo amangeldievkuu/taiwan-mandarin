@@ -27,6 +27,7 @@
   import { locale, t } from './lib/i18n/index.svelte';
   import { feedback } from './lib/feedback.svelte';
   import { pwa } from './lib/pwa.svelte';
+  import { reminders } from './lib/reminders.svelte';
   import { router, viewKey } from './lib/router.svelte';
   import { store } from './lib/store.svelte';
   import { account, rememberedUser } from './lib/sync.svelte';
@@ -73,6 +74,12 @@
   $effect(() => {
     document.documentElement.lang = locale.lang;
   });
+
+  // The daily reminder follows the account signed in; the app icon shows the cards due.
+  $effect(() => {
+    if (account.checked) void reminders.refresh(account.user?.id ?? null);
+  });
+  $effect(() => reminders.badge(store.dueCount));
 
   $effect(() => {
     const root = document.documentElement;

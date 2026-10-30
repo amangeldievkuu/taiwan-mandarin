@@ -26,6 +26,7 @@ import {
 } from './api';
 import type { CardRecord } from './storage';
 import { errorText } from './i18n/errors';
+import { reminders } from './reminders.svelte';
 import { t } from './i18n/index.svelte';
 import { store } from './store.svelte';
 import { toasts } from './toast.svelte';
@@ -202,6 +203,7 @@ class Account {
   async logout(): Promise<void> {
     // Send what this device has first: the next account signed in here starts from its own data.
     await this.sync().catch(() => undefined);
+    await reminders.forget();
     setSession(null);
     this.setUser(null);
     // Offline, the cookie would bring the session back at the next start: finish it later.
@@ -217,12 +219,14 @@ class Account {
   /** Signs out on every device, this one included (after sending what this device has). */
   async logoutEverywhere(): Promise<void> {
     await this.sync();
+    await reminders.forget();
     await api('/v1/auth/logout-all', { method: 'POST' });
     setSession(null);
     this.setUser(null);
   }
 
   async deleteAccount(): Promise<void> {
+    await reminders.forget();
     await api('/v1/auth/me', { method: 'DELETE' });
     setSession(null);
     this.setUser(null);

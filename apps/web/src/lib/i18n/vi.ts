@@ -329,6 +329,22 @@ export const vi: Messages = {
     vibrationHint: 'Rung nhẹ mỗi lần trả lời (thiết bị này)',
     companion: '墨 trên mọi trang',
     companionHint: 'Giọt mực luôn đồng hành cùng bạn (thiết bị này)',
+    reminders: 'Lời nhắc',
+    reminder: 'Nhắc học mỗi ngày',
+    reminderHint: 'Một lời nhắn từ 墨 nếu hôm đó bạn chưa luyện tập (thiết bị này)',
+    reminderTime: 'Giờ',
+    reminderTimeHint: 'Theo múi giờ của bạn; đến trong vòng 15 phút',
+    reminderTest: 'Gửi thử',
+    reminderSent: 'Đã gửi. Vài giây nữa sẽ hiện ra.',
+    reminderNotSent: 'Chưa gửi được: hãy tắt lời nhắc rồi bật lại.',
+    reminderSignIn: 'Đăng nhập để 墨 nhắc bạn học mỗi ngày.',
+    reminderInstall:
+      'Trên iPhone và iPad, lời nhắc chỉ hoạt động khi ứng dụng ở Màn hình chính: chạm Chia sẻ → ' +
+      '“Thêm vào MH chính”, rồi mở ứng dụng từ đó.',
+    reminderUnsupported: 'Trình duyệt này không hiển thị được lời nhắc.',
+    reminderBlocked:
+      'Thông báo của ứng dụng đang bị chặn. Hãy cho phép trong cài đặt hệ thống (trên iPhone: ' +
+      'Cài đặt → Thông báo → 華語), rồi quay lại.',
     data: 'Dữ liệu',
     todayCounts: (learned, reviews) => `Hôm nay: ${learned} từ mới · ${reviews} lượt ôn`,
     resetAccount:
@@ -471,7 +487,6 @@ export const vi: Messages = {
       tooManyAttempts: 'Thử quá nhiều lần. Hãy đợi một phút rồi thử lại.',
       dailyLimit: 'Đã đạt giới hạn hôm nay ({limit}). Ngày mai sẽ được làm mới.',
       aiNotSetUp: 'Máy chủ này chưa bật tính năng AI (OPENAI_API_KEY).',
-      remindersNotSetUp: 'Máy chủ này chưa bật lời nhắc (VAPID_PUBLIC_KEY).',
       aiMisconfigured: 'Tính năng AI trên máy chủ này chưa được cài đặt đúng.',
       aiCutOff: 'Câu trả lời của AI bị cắt ngang. Hãy thử lại.',
       aiTimeout: 'AI trả lời quá lâu. Hãy thử lại.',
@@ -488,6 +503,7 @@ export const vi: Messages = {
       speechTimeout: 'Nhận dạng giọng nói quá lâu. Hãy thử lại.',
       speechBusy: 'Nhận dạng giọng nói đang bận. Hãy thử lại sau một phút.',
       speechFailed: 'Nhận dạng giọng nói gặp lỗi. Hãy thử lại.',
+      remindersNotSetUp: 'Máy chủ này chưa bật lời nhắc (VAPID_PUBLIC_KEY).',
       unexpected: 'Đã có lỗi xảy ra. Hãy thử lại.',
       offline: 'Không kết nối được máy chủ.',
       serverTimeout: 'Máy chủ trả lời quá lâu. Hãy thử lại.',

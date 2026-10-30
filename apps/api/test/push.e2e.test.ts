@@ -68,8 +68,8 @@ const auth = () => ({ authorization: `Bearer ${token}` });
 const mine = () => sent.filter((s) => s.endpoint === endpoint);
 
 describe('push subscriptions', () => {
-  it('gives the VAPID key', async () => {
-    const res = await request(http).get('/v1/push/config').set(auth()).expect(200);
+  it('gives the VAPID key, signed in or not', async () => {
+    const res = await request(http).get('/v1/push/config').expect(200);
     expect(res.body).toEqual({ publicKey: 'BTestPublicKey' });
   });
 

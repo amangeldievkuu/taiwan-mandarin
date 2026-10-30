@@ -1,8 +1,9 @@
 <script lang="ts">
-  // The app's settings, in four short groups: reading, studying, feedback and data.
+  // The app's settings, in short groups: reading, studying, feedback, reminders and data.
   import { LANGS } from '@taiwan-mandarin/shared';
   import Segmented from '../components/Segmented.svelte';
   import SettingRow from '../ui/SettingRow.svelte';
+  import SignInPrompt from '../ui/SignInPrompt.svelte';
   import SubpageHead from '../ui/SubpageHead.svelte';
   import Switch from '../ui/Switch.svelte';
   import { api } from '../lib/api';
@@ -10,6 +11,7 @@
   import { feedback } from '../lib/feedback.svelte';
   import { errorText } from '../lib/i18n/errors';
   import { t } from '../lib/i18n/index.svelte';
+  import { reminders } from '../lib/reminders.svelte';
   import { store } from '../lib/store.svelte';
   import { account } from '../lib/sync.svelte';
 
@@ -23,6 +25,35 @@
 
   const todayNew = $derived(store.days[store.today]?.learned ?? store.daily.newCount);
   const todayReviews = $derived(store.days[store.today]?.reviews ?? store.daily.reviewCount);
+
+  let reminderError = $state<string | null>(null);
+  let testNote = $state<string | null>(null);
+  let testing = $state(false);
+
+  /** Runs straight from the tap: Safari asks for permission only from a gesture. */
+  async function toggleReminder(on: boolean) {
+    if (reminders.busy || !account.user) return;
+    reminderError = null;
+    testNote = null;
+    try {
+      await (on ? reminders.enable(account.user.id) : reminders.disable());
+    } catch (e) {
+      reminderError = errorText(e);
+    }
+  }
+
+  async function testReminder() {
+    testing = true;
+    reminderError = null;
+    try {
+      testNote =
+        (await reminders.test()) > 0 ? t().settings.reminderSent : t().settings.reminderNotSent;
+    } catch (e) {
+      reminderError = errorText(e);
+    } finally {
+      testing = false;
+    }
+  }
 
   let confirmReset = $state(false);
   let resetting = $state(false);
@@ -190,6 +221,57 @@
     </SettingRow>
   </div>
 
+  {#if reminders.publicKey}
+    <h2 class="section-title">
+      {t().settings.reminders} <span class="zh" lang="zh-Hant-TW">提醒</span>
+    </h2>
+    {#if !account.user}
+      {#if account.checked}<SignInPrompt seal="提" text={t().settings.reminderSignIn} />{/if}
+    {:else if reminders.support !== 'ok'}
+      <div class="sheet data">
+        <p>
+          {reminders.support === 'install'
+            ? t().settings.reminderInstall
+            : t().settings.reminderUnsupported}
+        </p>
+      </div>
+    {:else}
+      <div class="sheet group">
+        <SettingRow
+          label={t().settings.reminder}
+          hint={reminders.permission === 'denied'
+            ? t().settings.reminderBlocked
+            : t().settings.reminderHint}
+        >
+          <Switch checked={reminders.on} label={t().settings.reminder} onchange={toggleReminder} />
+        </SettingRow>
+        {#if reminders.on}
+          <SettingRow label={t().settings.reminderTime} hint={t().settings.reminderTimeHint}>
+            <input
+              class="time"
+              type="time"
+              step="900"
+              required
+              aria-label={t().settings.reminderTime}
+              value={store.settings.reminderTime}
+              onchange={(e) => {
+                const time = e.currentTarget.value;
+                if (/^\d\d:\d\d$/.test(time)) void store.updateSettings({ reminderTime: time });
+              }}
+            />
+          </SettingRow>
+          <div class="test">
+            <button type="button" class="btn quiet small" disabled={testing} onclick={testReminder}
+              >{t().settings.reminderTest}</button
+            >
+            {#if testNote}<small role="status">{testNote}</small>{/if}
+          </div>
+        {/if}
+        {#if reminderError}<p class="warn reminder-error" role="alert">{reminderError}</p>{/if}
+      </div>
+    {/if}
+  {/if}
+
   <h2 class="section-title">{t().settings.data} <span class="zh" lang="zh-Hant-TW">資料</span></h2>
   <div class="sheet data">
     <p>{t().settings.todayCounts(todayNew, todayReviews)}</p>
@@ -239,6 +321,33 @@
 
   .warn {
     color: var(--seal) !important;
+  }
+
+  .time {
+    height: 40px;
+    padding: 0 10px;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-raised);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .test {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--rule);
+  }
+
+  .test small {
+    color: var(--ink-2);
+  }
+
+  .reminder-error {
+    margin: 0;
+    padding: 0 16px 12px;
   }
 
   .buttons {

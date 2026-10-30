@@ -25,8 +25,6 @@ import { PushService } from './push.service.js';
 import { ReminderService } from './reminder.service.js';
 
 @ApiTags('reminders')
-@ApiBearerAuth()
-@UseGuards(AuthGuard)
 @Controller('v1/push')
 export class PushController {
   constructor(
@@ -34,6 +32,7 @@ export class PushController {
     @Inject(ReminderService) private readonly reminders: ReminderService,
   ) {}
 
+  /** Public, so the app knows before sign-in whether this server sends reminders. */
   @Get('config')
   @ApiOperation({ summary: 'The VAPID key to subscribe with; null when reminders are off' })
   config(): PushConfigDto {
@@ -41,6 +40,8 @@ export class PushController {
   }
 
   @Post('subscribe')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
   @HttpCode(204)
   @ApiOperation({ summary: 'Turn the daily reminder on for this device' })
   @ApiZodBody(PushSubscribeSchema)
@@ -53,6 +54,8 @@ export class PushController {
   }
 
   @Post('unsubscribe')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
   @HttpCode(204)
   @ApiOperation({ summary: 'Turn the daily reminder off for this device' })
   @ApiZodBody(PushUnsubscribeSchema)
@@ -64,6 +67,8 @@ export class PushController {
   }
 
   @Post('test')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
   @HttpCode(200)
   @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @ApiOperation({ summary: 'Send the reminder now to every device that turned it on' })
