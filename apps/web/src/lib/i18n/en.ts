@@ -587,6 +587,7 @@ export const en = {
     translation: 'English',
     listenParagraph: 'Listen to this paragraph',
     missing: "This reader doesn't exist.",
+    finished: 'Read to the end',
   },
 
   explain: {

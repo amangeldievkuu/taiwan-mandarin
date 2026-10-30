@@ -455,6 +455,52 @@ describe('activity', () => {
     ]);
   });
 
+  it('counts practice away from the cards, the same story once a day', async () => {
+    const { token } = await signUp();
+    const auth = { authorization: `Bearer ${token}` };
+    const practice = (kind: string, ref: string, iso: string) => ({
+      id: randomUUID(),
+      kind,
+      ref,
+      at: Date.parse(iso),
+    });
+    const read = practice('read', 'mrt', '2026-10-21T02:00:00Z');
+    const phone = await sync(auth, {
+      reviews: [at('2026-10-21T01:00:00Z')],
+      practice: [
+        read,
+        practice('read', 'mrt', '2026-10-21T03:00:00Z'),
+        practice('talk', 'message-1', '2026-10-21T04:00:00Z'),
+        practice('talk', 'message-2', '2026-10-21T04:01:00Z'),
+        // Practice alone still makes a day.
+        practice('write', '愛', '2026-10-22T04:00:00Z'),
+      ],
+      activity: { timeZone: 'Asia/Taipei', since: 0 },
+    });
+    expect(phone.status).toBe(200);
+    expect(phone.body.acceptedPractice).toContain(read.id);
+    expect(phone.body.activity.days).toEqual([
+      expect.objectContaining({ date: '2026-10-21', reviews: 1, read: 1, talk: 2, write: 0 }),
+      expect.objectContaining({ date: '2026-10-22', reviews: 0, read: 0, write: 1 }),
+    ]);
+
+    // Sent again, or the same story read on another device that day: still counted once.
+    const laptop = await sync(auth, {
+      since: phone.body.cursor,
+      practice: [read, practice('read', 'mrt', '2026-10-21T09:00:00Z')],
+      activity: { timeZone: 'Asia/Taipei', since: phone.body.cursor },
+    });
+    expect(laptop.body.activity.days).toContainEqual(
+      expect.objectContaining({ date: '2026-10-21', read: 1 }),
+    );
+
+    const stats = await request(http).get('/v1/me/stats').query({ tz: 'Asia/Taipei' }).set(auth);
+    expect(stats.body.xp.total).toBe(10 + 50 + 2 * 10 + 10);
+
+    const bad = await sync(auth, { practice: [{ ...read, kind: 'sing' }] });
+    expect(bad.status).toBe(400);
+  });
+
   it('rejects unknown time zones and sends nothing unasked', async () => {
     const { token } = await signUp();
     const auth = { authorization: `Bearer ${token}` };

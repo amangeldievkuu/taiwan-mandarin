@@ -256,6 +256,7 @@ class Account {
         since: store.syncState.cursor,
         cards: local.cards.map(([id, r]) => toDto(id, r)),
         reviews: local.reviews.map((r) => ({ ...r, pending: undefined })),
+        practice: local.practice.map((p) => ({ ...p, pending: undefined })),
         deck: { entries: $state.snapshot(store.deck), updatedAt: store.syncState.deckUpdatedAt },
         settings: {
           value: $state.snapshot(store.settings),
@@ -271,6 +272,7 @@ class Account {
         deck: response.deck,
         fsrsWeights: response.fsrs?.w,
         acceptedReviews: response.acceptedReviews,
+        acceptedPractice: response.acceptedPractice ?? [],
         pushedAt: local.startedAt,
         activity: response.activity,
       });

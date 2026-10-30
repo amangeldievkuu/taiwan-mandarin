@@ -43,6 +43,7 @@
   import Icon from '../ui/Icon.svelte';
   import { t } from '../lib/i18n/index.svelte';
   import { reduced } from '../lib/motion';
+  import { store } from '../lib/store.svelte';
 
   interface Props {
     char: string;
@@ -172,6 +173,7 @@
       onMistake: ({ mistakesOnStroke }) => (status = mistakesOnStroke >= 3 ? say.hint : say.again),
       onComplete: ({ totalMistakes }) => {
         mode = 'done';
+        void store.practiced('write', char);
         status = totalMistakes ? say.done(totalMistakes) : say.perfect;
       },
     });

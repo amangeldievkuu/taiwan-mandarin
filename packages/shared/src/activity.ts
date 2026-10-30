@@ -1,5 +1,5 @@
-// Learning activity per calendar day, summed from the review log: what the streak, XP, the
-// 30-day chart and retention are made of. The server sends the same totals for all of a learner's
+// Learning activity per calendar day, summed from the review log and the practice log (stories,
+// Talk, writing): what the streak, XP, the 30-day chart and retention are made of. The server sends the same totals for all of a learner's
 // devices (sync), so every device shows the same numbers.
 
 import { shiftDay } from './days.ts';
@@ -20,6 +20,12 @@ export interface DayActivity {
   kept: number;
   /** Time spent answering, ms. */
   ms: number;
+  /** Stories read to the end (each once a day). */
+  read: number;
+  /** Messages sent in Talk. */
+  talk: number;
+  /** Characters written in the stroke writer (each once a day). */
+  write: number;
 }
 
 /** Day → activity. */
@@ -27,6 +33,18 @@ export type ActivityMap = Readonly<Record<string, DayActivity>>;
 
 export interface ReviewEntry extends ReviewLike {
   durationMs?: number;
+}
+
+/** Practice outside the flashcards, kept in its own log: what was done, to what, when. */
+export const PRACTICE_KINDS = ['read', 'talk', 'write'] as const;
+export type PracticeKind = (typeof PRACTICE_KINDS)[number];
+
+export interface PracticeEntry {
+  kind: PracticeKind;
+  /** The story id, the Talk message id or the character. Counted once per day. */
+  ref: string;
+  /** Epoch ms. */
+  at: number;
 }
 
 const COUNTS = [
@@ -39,6 +57,7 @@ const COUNTS = [
   'graded',
   'kept',
   'ms',
+  ...PRACTICE_KINDS,
 ] as const;
 const RATING = { 1: 'again', 2: 'hard', 3: 'good', 4: 'easy' } as const;
 
@@ -53,6 +72,9 @@ export const emptyDay = (date: string): DayActivity => ({
   graded: 0,
   kept: 0,
   ms: 0,
+  read: 0,
+  talk: 0,
+  write: 0,
 });
 
 const localDay = (ms: number) => dayKey(new Date(ms));
@@ -93,6 +115,35 @@ export function activityFromReviews(
   return map;
 }
 
+/** The map with one more practice entry; the old map is left as it was. */
+export function addPractice(
+  map: ActivityMap,
+  entry: PracticeEntry,
+  dayOf: (ms: number) => string = localDay,
+): ActivityMap {
+  const date = dayOf(entry.at);
+  const day = { ...emptyDay(date), ...map[date] };
+  day[entry.kind]++;
+  return { ...map, [date]: day };
+}
+
+/** Practice entries counted into the map, the same thing on the same day only once. */
+export function activityWithPractice(
+  map: ActivityMap,
+  entries: readonly PracticeEntry[],
+  dayOf: (ms: number) => string = localDay,
+): ActivityMap {
+  const seen = new Set<string>();
+  let result = map;
+  for (const entry of entries) {
+    const key = `${entry.kind}\n${entry.ref}\n${dayOf(entry.at)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result = addPractice(result, entry, dayOf);
+  }
+  return result;
+}
+
 /** Both maps added up, day by day. */
 export function sumActivity(a: ActivityMap, b: ActivityMap): ActivityMap {
   const map: Record<string, DayActivity> = { ...a };
@@ -103,7 +154,8 @@ export function sumActivity(a: ActivityMap, b: ActivityMap): ActivityMap {
       continue;
     }
     const sum = { ...other };
-    for (const key of COUNTS) sum[key] += day[key];
+    // Days saved before a count existed lack it.
+    for (const key of COUNTS) sum[key] = (sum[key] ?? 0) + (day[key] ?? 0);
     map[date] = sum;
   }
   return map;
@@ -146,12 +198,17 @@ export const retentionOf = (t: { graded: number; kept: number }): number | null 
 
 /**
  * XP rewards effort, never the grade, so honest grading costs nothing: every answer is worth the
- * same, and meeting a new word a little more.
+ * same, and meeting a new word a little more. Practice away from the cards counts too: a message
+ * in Talk or a character written is worth an answer, a story read to the end five.
  */
-export const XP = { review: 10, newWord: 5 } as const;
+export const XP = { review: 10, newWord: 5, read: 50, talk: 10, write: 10 } as const;
 
 export const xpForDay = (day?: DayActivity): number =>
-  day ? day.reviews * XP.review + day.learned * XP.newWord : 0;
+  day
+    ? day.reviews * XP.review +
+      day.learned * XP.newWord +
+      PRACTICE_KINDS.reduce((sum, kind) => sum + (day[kind] ?? 0) * XP[kind], 0)
+    : 0;
 
 export const totalXp = (map: ActivityMap): number =>
   Object.values(map).reduce((sum, d) => sum + xpForDay(d), 0);

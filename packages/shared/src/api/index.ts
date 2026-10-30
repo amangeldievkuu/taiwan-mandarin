@@ -3,7 +3,7 @@
 // web bundle only takes the types.
 
 import { z } from 'zod';
-import type { DayActivity } from '../activity.ts';
+import { PRACTICE_KINDS, type DayActivity } from '../activity.ts';
 import type { Level } from '../content/types.ts';
 import { canonicalTimeZone, isTimeZone } from '../days.ts';
 import { LANG_IDS } from '../lang.ts';
@@ -138,6 +138,16 @@ export const ReviewSchema = z.object({
 });
 export type ReviewDto = z.infer<typeof ReviewSchema>;
 
+/** A story read to the end, a message sent in Talk, a character written. */
+export const PracticeSchema = z.object({
+  /** Client-generated UUID; duplicates are ignored. */
+  id: z.uuid(),
+  kind: z.enum(PRACTICE_KINDS),
+  ref: z.string().min(1).max(64),
+  at: EpochMs,
+});
+export type PracticeDto = z.infer<typeof PracticeSchema>;
+
 export const DeckEntrySchema = z.object({
   id: z.string().min(1).max(64),
   level: LevelSchema.optional(),
@@ -149,13 +159,15 @@ export const SyncRequestSchema = z.object({
   since: z.number().int().min(0),
   cards: z.array(CardRecordSchema).max(20000),
   reviews: z.array(ReviewSchema).max(20000),
+  /** Missing from apps older than the practice log. */
+  practice: z.array(PracticeSchema).max(20000).default([]),
   deck: z
     .object({ entries: z.array(DeckEntrySchema).max(5000), updatedAt: z.number().int() })
     .optional(),
   settings: z.object({ value: SettingsSchema, updatedAt: z.number().int() }).optional(),
   /**
    * Practice totals per day in this time zone, for the streak, XP and charts: every day when
-   * `since` is 0, otherwise the days with reviews stored after `since` (epoch ms).
+   * `since` is 0, otherwise the days with reviews or practice stored after `since` (epoch ms).
    */
   activity: z.object({ timeZone: TimeZoneSchema, since: z.number().int().min(0) }).optional(),
 });
@@ -172,6 +184,8 @@ export interface SyncResponse {
   fsrs?: { w: number[]; trainedAt: string; reviewCount: number };
   /** Review ids the server stored (or already had). */
   acceptedReviews: string[];
+  /** The same for practice entries. */
+  acceptedPractice: string[];
   /**
    * Totals per day across all the learner's devices (when asked for). `full`: every day, which
    * replaces what the client had; otherwise only days that changed.

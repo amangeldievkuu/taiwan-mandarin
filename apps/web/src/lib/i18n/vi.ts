@@ -641,6 +641,7 @@ export const vi: Messages = {
     translation: 'Tiếng Việt',
     listenParagraph: 'Nghe đoạn này',
     missing: 'Bài đọc này không tồn tại.',
+    finished: 'Đã đọc hết bài',
   },
 
   explain: {

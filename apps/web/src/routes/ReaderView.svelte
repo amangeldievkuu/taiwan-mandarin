@@ -1,8 +1,10 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import BackButton from '../ui/BackButton.svelte';
   import Loading from '../ui/Loading.svelte';
   import {
     LEVELS,
+    XP,
     toToneMarkedSyllables,
     toZhuyin,
     type Reader,
@@ -28,8 +30,15 @@
   let ruby = $state(false);
   let showTranslation = $state<Record<number, boolean>>({});
   let playing = $state<number | null>(null);
+  /** The end of the story, watched to count it as read. */
+  let end = $state<HTMLElement>();
+  /** Read to the end: null before, then whether it earned XP (once a day per story). */
+  let finished = $state<{ earned: boolean } | null>(null);
+  let openedAt = 0;
 
   $effect(() => {
+    finished = null;
+    openedAt = Date.now();
     content
       .readers()
       .then((all) => {
@@ -42,6 +51,32 @@
   });
 
   const level = $derived(LEVELS.find((l) => l.id === reader?.level));
+
+  /** Scrolling straight to the bottom isn't reading: the end counts after this long on the page. */
+  const readingTime = (r: Reader) =>
+    Math.max(15_000, r.paragraphs.flat().reduce((n, t) => n + t.t.length, 0) * 100);
+
+  // Reaching the end of the story, after time enough to read it, counts it for XP.
+  $effect(() => {
+    const target = end;
+    const story = reader;
+    if (!target || !story || untrack(() => finished)) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const count = () => {
+      observer.disconnect();
+      void store.practiced('read', story.id).then((earned) => (finished = { earned }));
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      clearTimeout(timer);
+      if (!entry?.isIntersecting) return;
+      timer = setTimeout(count, Math.max(0, openedAt + readingTime(story) - Date.now()));
+    });
+    observer.observe(target);
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+    };
+  });
 
   /** Per-character readings for ruby text. */
   function annotations(token: ReaderToken): { char: string; rt: string }[] {
@@ -172,6 +207,14 @@
         </div>
       {/each}
     </article>
+    <p class="end" bind:this={end} aria-live="polite">
+      {#if finished}
+        <span class="hanzi" lang="zh-Hant-TW">讀完了</span>
+        <span class="sub">{t().reader.finished}</span>
+        {#if finished.earned}<span class="xp"><span aria-hidden="true">✦</span> +{XP.read} XP</span
+          >{/if}
+      {/if}
+    </p>
   {:else if missing}
     <p class="empty">{t().reader.missing}</p>
   {:else if failed}
@@ -321,6 +364,36 @@
 
   .mini:hover {
     background: var(--fill);
+  }
+
+  .end {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px 10px;
+    min-height: 32px;
+    margin: 8px 0 24px;
+  }
+
+  .end .hanzi {
+    font-family: var(--font-kai);
+    font-size: 20px;
+    color: var(--ink);
+  }
+
+  .end .sub {
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+
+  .end .xp {
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    background: var(--gold-wash);
+    color: var(--gold-deep);
+    font-size: 13px;
+    font-weight: 800;
   }
 
   .translation {

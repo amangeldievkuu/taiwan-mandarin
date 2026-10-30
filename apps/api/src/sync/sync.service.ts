@@ -1,6 +1,6 @@
 // Offline-first sync. The client sends what changed since its last sync; the server merges:
 //   cards     last-write-wins on the client's updatedAt (per word);
-//   reviews   append-only, keyed by the client's UUID (retries are harmless);
+//   reviews, practice   append-only, keyed by the client's UUID (retries are harmless);
 //   deck, settings   whole-value last-write-wins.
 // It answers with every card the server has that changed since the client's cursor, plus its copy
 // of any card the client sent an older version of, and, when asked, practice totals per day in the
@@ -147,6 +147,21 @@ export class SyncService {
       });
     }
 
+    if (request.practice.length) {
+      const storedAt = new Date();
+      await this.db.practiceLog.createMany({
+        data: request.practice.map((p) => ({
+          id: p.id,
+          userId,
+          kind: p.kind,
+          ref: p.ref,
+          at: new Date(p.at),
+          createdAt: storedAt,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
     // Settings and deck: each replaced only when the incoming one is newer, in the same statement.
     if (request.settings) {
       const updatedAt = BigInt(clamp(request.settings.updatedAt));
@@ -206,6 +221,7 @@ export class SyncService {
           }
         : {}),
       acceptedReviews: request.reviews.map((r) => r.id),
+      acceptedPractice: request.practice.map((p) => p.id),
       ...(asked && days
         ? { activity: { timeZone: asked.timeZone, full: asked.since === 0, days } }
         : {}),

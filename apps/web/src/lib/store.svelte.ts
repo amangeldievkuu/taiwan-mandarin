@@ -19,6 +19,7 @@ import {
 import {
   achievements,
   currentTimeZone,
+  dayKeyIn,
   DEFAULT_SETTINGS,
   kintsugi,
   LEVEL_IDS,
@@ -28,11 +29,13 @@ import {
   xpForDay,
   type DayActivity,
   type Lang,
+  type PracticeKind,
   type Settings,
   type Word,
 } from '@taiwan-mandarin/shared';
 import {
   applyDownload,
+  countPractice,
   countReview,
   emptyActivity,
   mergedDays,
@@ -49,6 +52,7 @@ import {
   migrate,
   type CardRecord,
   type Daily,
+  type PracticeRecord,
   type ReviewRecord,
   type Snapshot,
   type StorageAdapter,
@@ -188,11 +192,17 @@ class Store {
   private async loadActivity(saved: ActivityState | undefined): Promise<void> {
     const timeZone = currentTimeZone();
     if (saved && saved.timeZone === timeZone) {
-      const missed = await this.storage.reviews(saved.countedUpTo + 1).catch(() => []);
-      this.activity = missed.reduce(countReview, saved);
+      const since = saved.countedUpTo + 1;
+      const missed = await this.storage.reviews(since).catch(() => []);
+      const missedPractice = await this.storage.practice(since).catch(() => []);
+      this.activity = missedPractice.reduce(countPractice, missed.reduce(countReview, saved));
     } else {
       // First run with activity, or the device moved to another time zone.
-      this.activity = rebuildActivity(await this.storage.reviews(0).catch(() => []), timeZone);
+      this.activity = rebuildActivity(
+        await this.storage.reviews(0).catch(() => []),
+        await this.storage.practice(0).catch(() => []),
+        timeZone,
+      );
     }
   }
 
@@ -373,6 +383,28 @@ class Store {
     return this.storage.reviews(since);
   }
 
+  /**
+   * Practice away from the cards, for XP: a story read to the end, a message sent in Talk, a
+   * character written. The same story or character counts once a day; false when it already has.
+   */
+  async practiced(kind: PracticeKind, ref: string): Promise<boolean> {
+    const at = Date.now();
+    const { timeZone } = this.activity;
+    const today = dayKeyIn(at, timeZone);
+    const recent = await this.storage.practice(at - 26 * 3_600_000).catch(() => []);
+    if (recent.some((p) => p.kind === kind && p.ref === ref && dayKeyIn(p.at, timeZone) === today))
+      return false;
+    const entry: PracticeRecord = { id: uuid(), kind, ref, at, pending: true };
+    try {
+      await this.storage.addPractice(entry);
+    } catch {
+      return false;
+    }
+    this.activity = countPractice(this.activity, entry);
+    this.changed();
+    return true;
+  }
+
   /** Shows the app, and loads its content, in the learner's language. */
   private applyLanguage(): void {
     locale.lang = this.settings.language;
@@ -444,6 +476,7 @@ class Store {
   async pendingChanges(): Promise<{
     cards: [string, CardRecord][];
     reviews: ReviewRecord[];
+    practice: PracticeRecord[];
     startedAt: number;
   }> {
     const startedAt = Date.now();
@@ -451,7 +484,8 @@ class Store {
       ([, r]) => r.updatedAt > this.syncState.pushedAt,
     );
     const reviews = (await this.storage.reviews(0)).filter((r) => r.pending);
-    return { cards, reviews, startedAt };
+    const practice = (await this.storage.practice(0)).filter((p) => p.pending);
+    return { cards, reviews, practice, startedAt };
   }
 
   /**
@@ -498,6 +532,7 @@ class Store {
     deck?: { entries: Snapshot['deck']; updatedAt: number };
     fsrsWeights?: number[];
     acceptedReviews: string[];
+    acceptedPractice: string[];
     pushedAt: number;
     activity?: { timeZone: string; full: boolean; days: DayActivity[] };
   }): Promise<void> {
@@ -519,13 +554,20 @@ class Store {
     if (remote.fsrsWeights) this.syncState.fsrsWeights = remote.fsrsWeights;
     this.configureFsrs();
     await this.storage.markSynced(remote.acceptedReviews);
+    await this.storage.markPracticeSynced(remote.acceptedPractice);
     if (remote.activity) {
       // Everything pending when the sync began was sent; what is pending now came later (its
       // review time is when the card was turned over, up to ten minutes earlier).
-      const unsent = (await this.storage.reviews(remote.pushedAt - 10 * 60_000)).filter(
-        (r) => r.pending,
+      const since = remote.pushedAt - 10 * 60_000;
+      const unsent = (await this.storage.reviews(since)).filter((r) => r.pending);
+      const unsentPractice = (await this.storage.practice(since)).filter((p) => p.pending);
+      this.activity = applyDownload(
+        this.activity,
+        remote.activity,
+        remote.cursor,
+        unsent,
+        unsentPractice,
       );
-      this.activity = applyDownload(this.activity, remote.activity, remote.cursor, unsent);
     }
     await this.flush();
     if (!this.revealed) await this.refreshQueue();

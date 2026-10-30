@@ -1,14 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
   activityFromReviews,
+  activityWithPractice,
   addToActivity,
   dailyFromActivity,
+  emptyDay,
   practicedDays,
   retentionOf,
   sumActivity,
   totalXp,
   windowTotals,
   xpForDay,
+  type DayActivity,
   type ReviewEntry,
 } from './activity.ts';
 
@@ -77,5 +80,45 @@ describe('activity', () => {
     );
     expect(xpForDay(day['2026-10-21'])).toBe(135);
     expect(totalXp(map)).toBe(4 * 10 + 5);
+  });
+
+  it('gives XP for practice away from the cards, the same thing once a day', () => {
+    const entry = (kind: 'read' | 'talk' | 'write', ref: string, date = '2026-10-21') => ({
+      kind,
+      ref,
+      at: Date.parse(`${date}T12:00:00Z`),
+    });
+    const days = activityWithPractice(
+      map,
+      [
+        entry('read', 'mrt'),
+        entry('read', 'mrt'),
+        entry('talk', 'm1'),
+        entry('talk', 'm2'),
+        entry('write', '愛'),
+        entry('write', '愛', '2026-10-22'),
+      ],
+      utc,
+    );
+    expect(days['2026-10-21']).toMatchObject({ read: 1, talk: 2, write: 1 });
+    // Practice alone doesn't water the plant: the streak still counts days with reviews.
+    expect(practicedDays(days)).not.toContain('2026-10-22');
+    expect(xpForDay(days['2026-10-22'])).toBe(10);
+    expect(totalXp(days)).toBe(totalXp(map) + 50 + 2 * 10 + 10 + 10);
+  });
+
+  it('adds up days saved before the practice counts existed', () => {
+    const old: Partial<DayActivity> = emptyDay('2026-10-21');
+    delete old.read;
+    delete old.talk;
+    delete old.write;
+    const sum = sumActivity(
+      { '2026-10-21': old as DayActivity },
+      {
+        '2026-10-21': { ...emptyDay('2026-10-21'), talk: 1 },
+      },
+    );
+    expect(sum['2026-10-21']?.talk).toBe(1);
+    expect(xpForDay(sum['2026-10-21'])).toBe(10);
   });
 });

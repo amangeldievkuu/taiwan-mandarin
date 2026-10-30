@@ -37,6 +37,7 @@ model User {
 
   cards         Card[]
   reviews       ReviewLog[]
+  practice      PracticeLog[]
   refreshTokens RefreshToken[]
   apiKeys       ApiKey[]
   conversations Conversation[]
@@ -127,6 +128,24 @@ model ReviewLog {
   @@index([userId, reviewedAt])
   @@index([userId, wordId, reviewedAt])
   /// Sync asks which days have reviews stored since its last visit.
+  @@index([userId, createdAt])
+}
+
+/// Practice away from the cards, append-only: stories read to the end, Talk messages, characters
+/// written. Counted into the daily totals (XP), the same thing on the same day once.
+model PracticeLog {
+  /// Client-generated UUID, so retries never duplicate an entry.
+  id        String   @id @db.Uuid
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// read | talk | write
+  kind      String
+  /// The story id, the Talk message id or the character.
+  ref       String
+  at        DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId, at])
   @@index([userId, createdAt])
 }
 

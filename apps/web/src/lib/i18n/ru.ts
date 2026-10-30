@@ -667,6 +667,7 @@ export const ru: Messages = {
     translation: 'Русский',
     listenParagraph: 'Послушать абзац',
     missing: 'Такого текста нет.',
+    finished: 'Дочитано до конца',
   },
 
   explain: {

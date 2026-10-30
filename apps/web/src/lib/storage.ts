@@ -1,7 +1,13 @@
 // Persistence behind a small interface, so server sync can wrap it (see sync.ts) without touching
-// the store or UI. One snapshot (settings, cards, counters) plus an append-only review log.
+// the store or UI. One snapshot (settings, cards, counters) plus append-only review and practice
+// logs.
 
-import { DEFAULT_SETTINGS, type Level, type Settings } from '@taiwan-mandarin/shared';
+import {
+  DEFAULT_SETTINGS,
+  type Level,
+  type PracticeEntry,
+  type Settings,
+} from '@taiwan-mandarin/shared';
 import { TypeConvert, type Card } from 'ts-fsrs';
 import type { ActivityState } from './activity';
 
@@ -71,6 +77,14 @@ export interface ReviewRecord {
   pending?: boolean;
 }
 
+/** A story read to the end, a message sent in Talk, a character written. */
+export interface PracticeRecord extends PracticeEntry {
+  /** Client-generated UUID; the server ignores duplicates. */
+  id: string;
+  /** Not yet sent to the server. */
+  pending?: boolean;
+}
+
 export interface StorageAdapter {
   /** The saved snapshot, possibly in an older format (see `migrate`). */
   load(): Promise<StoredSnapshot | null>;
@@ -80,11 +94,17 @@ export interface StorageAdapter {
   reviews(since?: number): Promise<ReviewRecord[]>;
   /** Marks reviews as stored on the server. */
   markSynced(ids: readonly string[]): Promise<void>;
+  addPractice(entry: PracticeRecord): Promise<void>;
+  /** Practice at or after `since` (epoch ms), oldest first. */
+  practice(since?: number): Promise<PracticeRecord[]>;
+  /** Marks practice entries as stored on the server. */
+  markPracticeSynced(ids: readonly string[]): Promise<void>;
   clear(): Promise<void>;
 }
 
 const KEY = 'taiwan-mandarin:v1';
 const REVIEWS_KEY = 'taiwan-mandarin:reviews';
+const PRACTICE_KEY = 'taiwan-mandarin:practice';
 
 interface SnapshotV1 {
   version: 1;
@@ -143,12 +163,15 @@ export class IndexedDbAdapter implements StorageAdapter {
 
   private open(): Promise<IDBDatabase> {
     this.db ??= new Promise((resolve, reject) => {
-      const request = indexedDB.open('taiwan-mandarin', 2);
+      const request = indexedDB.open('taiwan-mandarin', 3);
       request.onupgradeneeded = (event) => {
         const db = request.result;
         if (event.oldVersion < 1) db.createObjectStore('kv');
         if (event.oldVersion < 2) {
           db.createObjectStore('reviews', { keyPath: 'id' }).createIndex('review', 'review');
+        }
+        if (event.oldVersion < 3) {
+          db.createObjectStore('practice', { keyPath: 'id' }).createIndex('at', 'at');
         }
       };
       request.onsuccess = () => {
@@ -183,7 +206,7 @@ export class IndexedDbAdapter implements StorageAdapter {
   }
 
   private run<T>(
-    store: 'kv' | 'reviews',
+    store: 'kv' | 'reviews' | 'practice',
     mode: IDBTransactionMode,
     op: (s: IDBObjectStore) => IDBRequest<T>,
   ) {
@@ -219,16 +242,34 @@ export class IndexedDbAdapter implements StorageAdapter {
   }
 
   async markSynced(ids: readonly string[]): Promise<void> {
+    await this.markStored('reviews', ids);
+  }
+
+  async addPractice(entry: PracticeRecord): Promise<void> {
+    await this.run('practice', 'readwrite', (s) => s.put(entry));
+  }
+
+  async practice(since = 0): Promise<PracticeRecord[]> {
+    return this.run<PracticeRecord[]>('practice', 'readonly', (s) =>
+      s.index('at').getAll(IDBKeyRange.lowerBound(since)),
+    );
+  }
+
+  async markPracticeSynced(ids: readonly string[]): Promise<void> {
+    await this.markStored('practice', ids);
+  }
+
+  private async markStored(name: 'reviews' | 'practice', ids: readonly string[]): Promise<void> {
     await this.withDb(
       (db) =>
         new Promise<void>((resolve, reject) => {
-          const tx = db.transaction('reviews', 'readwrite');
-          const store = tx.objectStore('reviews');
+          const tx = db.transaction(name, 'readwrite');
+          const store = tx.objectStore(name);
           for (const id of ids) {
             const request = store.get(id);
             request.onsuccess = () => {
-              const review = request.result as ReviewRecord | undefined;
-              if (review?.pending) store.put({ ...review, pending: false });
+              const entry = request.result as { pending?: boolean } | undefined;
+              if (entry?.pending) store.put({ ...entry, pending: false });
             };
           }
           tx.oncomplete = () => resolve();
@@ -241,6 +282,7 @@ export class IndexedDbAdapter implements StorageAdapter {
   async clear(): Promise<void> {
     await this.run('kv', 'readwrite', (s) => s.delete(KEY));
     await this.run('reviews', 'readwrite', (s) => s.clear());
+    await this.run('practice', 'readwrite', (s) => s.clear());
   }
 }
 
@@ -292,10 +334,29 @@ export class LocalStorageAdapter implements StorageAdapter {
     );
   }
 
+  async addPractice(entry: PracticeRecord): Promise<void> {
+    const all = this.read<PracticeRecord[]>(PRACTICE_KEY) ?? [];
+    if (!all.some((p) => p.id === entry.id)) this.write(PRACTICE_KEY, [...all, entry]);
+  }
+
+  async practice(since = 0): Promise<PracticeRecord[]> {
+    return (this.read<PracticeRecord[]>(PRACTICE_KEY) ?? []).filter((p) => p.at >= since);
+  }
+
+  async markPracticeSynced(ids: readonly string[]): Promise<void> {
+    const done = new Set(ids);
+    const all = this.read<PracticeRecord[]>(PRACTICE_KEY) ?? [];
+    this.write(
+      PRACTICE_KEY,
+      all.map((p) => (done.has(p.id) ? { ...p, pending: false } : p)),
+    );
+  }
+
   async clear(): Promise<void> {
     try {
       localStorage.removeItem(KEY);
       localStorage.removeItem(REVIEWS_KEY);
+      localStorage.removeItem(PRACTICE_KEY);
     } catch {
       // ignore
     }
@@ -332,5 +393,8 @@ export class BrowserStorage implements StorageAdapter {
   addReview = (review: ReviewRecord) => this.attempt((a) => a.addReview(review));
   reviews = (since?: number) => this.attempt((a) => a.reviews(since));
   markSynced = (ids: readonly string[]) => this.attempt((a) => a.markSynced(ids));
+  addPractice = (entry: PracticeRecord) => this.attempt((a) => a.addPractice(entry));
+  practice = (since?: number) => this.attempt((a) => a.practice(since));
+  markPracticeSynced = (ids: readonly string[]) => this.attempt((a) => a.markPracticeSynced(ids));
   clear = () => this.attempt((a) => a.clear());
 }

@@ -133,7 +133,10 @@ result is validated (contains the word, passes the guard) and appended to
   all, and a new seed is planted. Logic: `packages/shared/src/kintsugi.ts`; drawing:
   `apps/web/src/lib/plant-art.ts`.
 - **XP.** 10 per answer and 5 more for a new word, the same for every grade, so honest grading
-  never costs anything.
+  never costs anything. Practice away from the cards counts too: 50 for a story read to the end,
+  10 for each message sent in Talk and each character written in the stroke writer. The same story
+  or character counts once a day. These go in their own append-only practice log (synced like
+  the review log); they add XP but don't water the plant, which still needs a review.
 - **Seals (印譜).** Nine milestones (first gold seam, buds at 30 days, 1,000 words…).
 - All of it comes from practice totals per day (`packages/shared/src/activity.ts`). Signed in,
   sync returns those totals for every device in the learner's time zone, so phone, iPad and

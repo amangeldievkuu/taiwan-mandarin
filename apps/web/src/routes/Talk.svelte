@@ -137,6 +137,8 @@
       if (mine !== session) return;
       conversationId = res.conversationId;
       messages = [...messages.filter((m) => m.id !== pending?.id), ...res.messages];
+      const sent = res.messages.find((m) => m.role === 'user');
+      if (sent) void store.practiced('talk', sent.id);
       const reply = res.messages.at(-1);
       if (reply) announce(reply, res.messages.find((m) => m.role === 'user')?.correction);
       if (reply && canSpeak) void speak(reply.content);
