@@ -358,6 +358,7 @@ export const ru: Messages = {
     reminderTest: 'Проверить',
     reminderSent: 'Отправлено. Появится через несколько секунд.',
     reminderNotSent: 'Ничего не отправлено: выключи и снова включи напоминание.',
+    reminderRefused: (why: string) => `Сервис уведомлений не принял его (${why}).`,
     reminderSignIn: 'Войди, и 墨 будет каждый день напоминать о занятиях.',
     reminderInstall:
       'На iPhone и iPad напоминания работают, только если приложение на экране «Домой»: нажми ' +

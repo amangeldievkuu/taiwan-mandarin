@@ -17,6 +17,7 @@ import {
   PushUnsubscribeSchema,
   type PushConfigDto,
   type PushSubscribeBody,
+  type PushTestDto,
 } from '@taiwan-mandarin/shared/api';
 import type { z } from 'zod';
 import { AuthGuard, CurrentUser, type AuthUser } from '../auth/auth.guard.js';
@@ -72,9 +73,9 @@ export class PushController {
   @HttpCode(200)
   @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @ApiOperation({ summary: 'Send the reminder now to every device that turned it on' })
-  async test(@CurrentUser() user: AuthUser): Promise<{ sent: number }> {
+  async test(@CurrentUser() user: AuthUser): Promise<PushTestDto> {
     this.requirePush();
-    return { sent: await this.reminders.sendNow(user.id) };
+    return this.reminders.sendNow(user.id);
   }
 
   private requirePush(): void {

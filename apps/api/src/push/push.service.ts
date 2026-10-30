@@ -32,11 +32,18 @@ export class PushService {
     await this.db.pushSubscription.deleteMany({ where: { userId, endpoint } });
   }
 
-  /** Sends to every device of the learner; returns how many took it. Gone devices are removed. */
-  async sendToUser(userId: string, payload: PushPayload): Promise<number> {
+  /**
+   * Sends to every device of the learner: how many took it, and why the others refused (gone
+   * devices are removed, not counted).
+   */
+  async sendToUser(
+    userId: string,
+    payload: PushPayload,
+  ): Promise<{ sent: number; errors: string[] }> {
     const subs = await this.db.pushSubscription.findMany({ where: { userId } });
     const json = JSON.stringify(payload);
     let sent = 0;
+    const errors: string[] = [];
     for (const sub of subs) {
       try {
         await this.sender.send(
@@ -52,12 +59,24 @@ export class PushService {
         if (isGone(e)) {
           await this.db.pushSubscription.deleteMany({ where: { id: sub.id } });
         } else {
-          this.logger.warn(
-            `Push to ${new URL(sub.endpoint).host} failed: ${e instanceof Error ? e.message : e}`,
-          );
+          const error = `${new URL(sub.endpoint).host}: ${describe(e)}`;
+          errors.push(error);
+          this.logger.warn(`Push to ${error}`);
         }
       }
     }
-    return sent;
+    return { sent, errors };
   }
+}
+
+/** A push service's refusal: its status and what it said (web-push puts them on the error). */
+function describe(e: unknown): string {
+  if (typeof e !== 'object' || e === null) return String(e);
+  const { statusCode, body, message } = e as {
+    statusCode?: number;
+    body?: string;
+    message?: string;
+  };
+  const said = (body || message || '').trim().slice(0, 200);
+  return statusCode ? `${statusCode} ${said}`.trim() : said || 'failed';
 }

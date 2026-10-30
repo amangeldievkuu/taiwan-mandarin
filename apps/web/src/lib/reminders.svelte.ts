@@ -2,7 +2,7 @@
 // and off, and the count of due cards on the app icon. The time is a synced setting; the server
 // sends the reminder (apps/api/src/push), the service worker shows it (public/push-sw.js).
 
-import type { PushConfigDto } from '@taiwan-mandarin/shared/api';
+import type { PushConfigDto, PushTestDto } from '@taiwan-mandarin/shared/api';
 import { api } from './api';
 
 /** `install`: iPhone and iPad get Web Push only in the app added to the Home Screen. */
@@ -161,9 +161,9 @@ class Reminders {
     this.on = false;
   }
 
-  /** Sends the reminder now; the number of devices it went to. */
-  async test(): Promise<number> {
-    return (await api<{ sent: number }>('/v1/push/test', { method: 'POST' })).sent;
+  /** Sends the reminder now: the devices it went to, and why push services refused it. */
+  test(): Promise<PushTestDto> {
+    return api<PushTestDto>('/v1/push/test', { method: 'POST' });
   }
 
   /** The cards due, on the app icon (where the system allows badges: notifications granted). */

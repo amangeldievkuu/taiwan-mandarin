@@ -337,6 +337,7 @@ export const vi: Messages = {
     reminderTest: 'Gửi thử',
     reminderSent: 'Đã gửi. Vài giây nữa sẽ hiện ra.',
     reminderNotSent: 'Chưa gửi được: hãy tắt lời nhắc rồi bật lại.',
+    reminderRefused: (why: string) => `Dịch vụ thông báo đã từ chối (${why}).`,
     reminderSignIn: 'Đăng nhập để 墨 nhắc bạn học mỗi ngày.',
     reminderInstall:
       'Trên iPhone và iPad, lời nhắc chỉ hoạt động khi ứng dụng ở Màn hình chính: chạm Chia sẻ → ' +

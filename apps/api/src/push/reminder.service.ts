@@ -73,11 +73,11 @@ export class ReminderService {
       data: { reminderDay: day },
     });
     if (!claimed.count || (await this.practised(user.id, day, timeZone, now))) return false;
-    return (await this.send(user.id, settings.language, day, now)) > 0;
+    return (await this.send(user.id, settings.language, day, now)).sent > 0;
   }
 
   /** Sends today's reminder now, whatever the time (the "Send a test" button). */
-  async sendNow(userId: string, now = Date.now()): Promise<number> {
+  async sendNow(userId: string, now = Date.now()): Promise<{ sent: number; errors: string[] }> {
     const user = await this.db.user.findUniqueOrThrow({
       where: { id: userId },
       select: { settings: true, timeZone: true },

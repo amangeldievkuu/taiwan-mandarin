@@ -319,6 +319,7 @@ export const en = {
     reminderTest: 'Send a test',
     reminderSent: 'Sent. It should show in a few seconds.',
     reminderNotSent: 'Nothing was sent: turn the reminder off and on again.',
+    reminderRefused: (why: string) => `The push service refused it (${why}).`,
     reminderSignIn: 'Sign in to get a daily reminder from 墨.',
     reminderInstall:
       'On iPhone and iPad, reminders need the app on your Home Screen: tap Share, then ' +

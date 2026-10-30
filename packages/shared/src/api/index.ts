@@ -241,6 +241,12 @@ export interface PushConfigDto {
   publicKey: string | null;
 }
 
+/** "Send a test": the devices it went to, and each push service's refusal (none, no devices). */
+export interface PushTestDto {
+  sent: number;
+  errors: string[];
+}
+
 /** What a reminder push carries to the service worker (public/push-sw.js). */
 export interface PushPayload {
   title: string;

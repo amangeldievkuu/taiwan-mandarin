@@ -46,8 +46,10 @@
     testing = true;
     reminderError = null;
     try {
-      testNote =
-        (await reminders.test()) > 0 ? t().settings.reminderSent : t().settings.reminderNotSent;
+      const { sent, errors } = await reminders.test();
+      if (sent > 0) testNote = t().settings.reminderSent;
+      else if (errors.length) reminderError = t().settings.reminderRefused(errors.join('; '));
+      else testNote = t().settings.reminderNotSent;
     } catch (e) {
       reminderError = errorText(e);
     } finally {

@@ -14,10 +14,18 @@ import type { PushTarget } from '../src/push/web-push.sender.js';
 const sent: { endpoint: string; payload: PushPayload }[] = [];
 /** Endpoints the stub answers 410 Gone for. */
 const gone = new Set<string>();
+/** Endpoints the stub refuses, as FCM does a push signed with the wrong keys. */
+const refused = new Set<string>();
 const stub = {
   publicKey: 'BTestPublicKey',
   send: async (target: PushTarget, payload: string) => {
     if (gone.has(target.endpoint)) throw Object.assign(new Error('Gone'), { statusCode: 410 });
+    if (refused.has(target.endpoint)) {
+      throw Object.assign(new Error('Received unexpected response code'), {
+        statusCode: 403,
+        body: 'the VAPID credentials do not match',
+      });
+    }
     sent.push({ endpoint: target.endpoint, payload: JSON.parse(payload) as PushPayload });
   },
 };
@@ -62,6 +70,7 @@ afterAll(async () => {
 beforeEach(() => {
   sent.length = 0;
   gone.clear();
+  refused.clear();
 });
 
 const auth = () => ({ authorization: `Bearer ${token}` });
@@ -89,7 +98,7 @@ describe('push subscriptions', () => {
     expect(await db.pushSubscription.count({ where: { userId } })).toBe(1);
 
     const res = await request(http).post('/v1/push/test').set(auth()).expect(200);
-    expect(res.body).toEqual({ sent: 1 });
+    expect(res.body).toEqual({ sent: 1, errors: [] });
     expect(mine()).toHaveLength(1);
     expect(mine()[0]?.payload).toMatchObject({
       title: expect.stringContaining('墨'),
@@ -105,8 +114,21 @@ describe('push subscriptions', () => {
     await request(http).post('/v1/push/subscribe').set(auth()).send(subscription).expect(204);
     gone.add(endpoint);
     const res = await request(http).post('/v1/push/test').set(auth()).expect(200);
-    expect(res.body).toEqual({ sent: 0 });
+    expect(res.body).toEqual({ sent: 0, errors: [] });
     expect(await db.pushSubscription.count({ where: { userId } })).toBe(0);
+  });
+
+  it('says why a push service refused the test', async () => {
+    await request(http).post('/v1/push/subscribe').set(auth()).send(subscription).expect(204);
+    refused.add(endpoint);
+    const res = await request(http).post('/v1/push/test').set(auth()).expect(200);
+    expect(res.body).toEqual({
+      sent: 0,
+      errors: ['push.example.com: 403 the VAPID credentials do not match'],
+    });
+    // Not gone: the device stays, for when the server's keys are right again.
+    expect(await db.pushSubscription.count({ where: { userId } })).toBe(1);
+    await request(http).post('/v1/push/unsubscribe').set(auth()).send({ endpoint }).expect(204);
   });
 });
 
