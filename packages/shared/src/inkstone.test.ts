@@ -28,12 +28,12 @@ describe('inkstone', () => {
   it('knows what is unlocked and what comes next', () => {
     expect(unlockedAt(0)).toEqual([]);
     expect(nextUnlock(0)?.id).toBe('paper-nine');
-    expect(unlockedAt(1_200).map((u) => u.id)).toEqual(['paper-nine', 'pot-tenmoku']);
-    expect(nextUnlock(1_200)?.id).toBe('mo-scarf');
+    expect(unlockedAt(1_200).map((u) => u.id)).toEqual(['paper-nine', 'pot-qinghua']);
+    expect(nextUnlock(1_200)?.id).toBe('mo-shoes');
     expect(nextUnlock(1_000_000)).toBeUndefined();
     expect(isUnlocked('pot', 'celadon', 0)).toBe(true);
-    expect(isUnlocked('pot', 'tenmoku', 999)).toBe(false);
-    expect(isUnlocked('pot', 'tenmoku', 1_000)).toBe(true);
+    expect(isUnlocked('pot', 'qinghua', 999)).toBe(false);
+    expect(isUnlocked('pot', 'qinghua', 1_000)).toBe(true);
   });
 
   it('uses a chosen look only once its ink is there', () => {
@@ -43,6 +43,11 @@ describe('inkstone', () => {
     expect(activeLooks(undefined, 30_000)).toEqual(DEFAULT_LOOKS);
     // Something stored by a newer app that this one doesn't know.
     expect(activeLooks({ pot: 'raku' } as never, 1e9).pot).toBe('celadon');
+    // Renamed looks, chosen before the rename, carry over.
+    expect(activeLooks({ pot: 'tenmoku', mo: 'scarf' } as never, 1e9)).toMatchObject({
+      pot: 'qinghua',
+      mo: 'shoes',
+    });
   });
 
   it('syncs the choices, and settings from older apps without them', () => {

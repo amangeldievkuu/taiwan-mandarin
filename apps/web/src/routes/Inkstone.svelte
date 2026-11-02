@@ -351,4 +351,10 @@
     animation: none;
     stroke-dashoffset: 0;
   }
+
+  .mo :global(.shoe),
+  .mo :global(.shoe-flower) {
+    animation: none;
+    opacity: 1;
+  }
 </style>

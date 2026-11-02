@@ -91,10 +91,25 @@
     xuan: 'M120 0v240M0 120h240M0 0l240 240M240 0L0 240',
   } as const;
 
-  // Re-create the writer when the character, the color scheme or the brush changes.
+  /** The brush look as a plain string: `store.looks` is a fresh object after every sync or
+      practice, and depending on it would rebuild the writer (and drop a quiz) each time. */
+  const brushLook = $derived(store.looks.brush);
+  const placeHost = $derived(place.host);
+  const placeSize = $derived(place.size);
+
+  function colors() {
+    const brush = brushLook === 'gold' ? cssVar('--gold') : cssVar('--seal');
+    return {
+      strokeColor: cssVar('--ink'),
+      outlineColor: cssVar('--stroke-outline'),
+      drawingColor: brush,
+      highlightColor: brush,
+    };
+  }
+
+  // A new writer only for a new character. Colors and size change on the running one, so a
+  // quiz in progress is never thrown away.
   $effect(() => {
-    void scheme;
-    const brush = store.looks.brush === 'gold' ? cssVar('--gold') : cssVar('--seal');
     const current = char;
     missing = false;
     verified = null;
@@ -102,6 +117,7 @@
     status = '';
     const { host, size } = untrack(() => place);
     const shown = untrack(() => outline.shown);
+    const initial = untrack(colors);
     // The targets are empty elements owned by hanzi-writer, not by Svelte.
     hosts.page?.replaceChildren();
     hosts.focus?.replaceChildren();
@@ -114,10 +130,7 @@
       showOutline: shown,
       // Without the outline the sheet starts blank: nothing to copy before you write.
       showCharacter: shown,
-      strokeColor: cssVar('--ink'),
-      outlineColor: cssVar('--stroke-outline'),
-      drawingColor: brush,
-      highlightColor: brush,
+      ...initial,
       radicalColor: null,
       strokeAnimationSpeed: 1,
       delayBetweenStrokes: 220,
@@ -139,12 +152,30 @@
 
   // Move the drawing (hanzi-writer's own <svg>) between the page and full screen, and fit it.
   // Resizing keeps an animation or a quiz going where it was.
+  // Only when the place or size really changes: each resize rebuilds hanzi-writer's renderer.
   $effect(() => {
-    const { host, size } = place;
+    const host = placeHost;
+    const size = placeSize;
     const target = hosts[host];
     const drawing = hosts[host === 'focus' ? 'page' : 'focus']?.firstElementChild;
     if (target && drawing) target.append(drawing);
-    writer?.updateDimensions({ width: size, height: size, padding: padding(size) });
+    untrack(() => writer)?.updateDimensions({ width: size, height: size, padding: padding(size) });
+  });
+
+  // New theme or brush: recolor the writer in place.
+  let painted = '';
+  $effect(() => {
+    void scheme;
+    const next = colors();
+    const key = JSON.stringify(next);
+    const w = untrack(() => writer);
+    if (!w || key === painted) {
+      painted = key;
+      return;
+    }
+    painted = key;
+    for (const [name, value] of Object.entries(next))
+      void w.updateColor(name as keyof typeof next, value, { duration: 0 });
   });
 
   // Colors come from CSS variables: redraw when the theme (system or in-app) changes.

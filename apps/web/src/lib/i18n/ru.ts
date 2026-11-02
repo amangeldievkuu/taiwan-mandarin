@@ -171,7 +171,7 @@ export const ru: Messages = {
     },
     names: {
       'pot-celadon': 'Селадон',
-      'pot-tenmoku': 'Тэммоку',
+      'pot-qinghua': 'Бело-синий фарфор',
       'pot-ru': 'Жу, небо после дождя',
       'pot-jun': 'Цзюнь',
       'paste-vermilion': 'Киноварь',
@@ -183,7 +183,7 @@ export const ru: Messages = {
       'brush-vermilion': 'Киноварь',
       'brush-gold': 'Золото',
       'mo-plain': 'Просто 墨',
-      'mo-scarf': 'Красная нить',
+      'mo-shoes': 'Красные туфельки',
       'mo-hat': 'Соломенная шляпа',
       'mo-gilt': 'Золотой кончик кисти',
     },

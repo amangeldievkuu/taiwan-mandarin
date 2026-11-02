@@ -388,9 +388,16 @@ describe('sync', () => {
     expect(unknown.status).toBe(400);
 
     // Looks chosen at the inkstone travel with the settings.
-    const looks = { pot: 'tenmoku', mo: 'scarf' };
+    const looks = { pot: 'qinghua', mo: 'shoes' };
     const chosen = await sync({ value: { ...value, looks }, updatedAt: 400 });
     expect(chosen.body.settings.value.looks).toEqual(looks);
+    // An older app still sends the old names: stored under the new ones.
+    const legacy = await sync({
+      value: { ...value, looks: { pot: 'tenmoku', mo: 'scarf' } },
+      updatedAt: 450,
+    });
+    expect(legacy.status).toBe(200);
+    expect(legacy.body.settings.value.looks).toEqual(looks);
     const odd = await sync({ value: { ...value, looks: { pot: 'plastic' } }, updatedAt: 500 });
     expect(odd.status).toBe(400);
   });

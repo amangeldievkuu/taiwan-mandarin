@@ -5,7 +5,7 @@
   times in a row and it dances (or the parent bumps `dance`). The parent sets `--dir` and the classes
   walking / sitting / sleepy / fast (see lib/walk.ts), hanging and climbing (on a rope) and hush
   (sitting without a word); everything else is CSS on the SVG. `look` dresses it in what ink
-  has unlocked: a red string scarf, a straw hat (斗笠) or a golden brush tip.
+  has unlocked: red embroidered shoes (繡花鞋), a straw hat (斗笠) or a golden brush tip.
 -->
 <script module lang="ts">
   export interface Line {
@@ -141,8 +141,21 @@
 
         <g class="figure">
           <g class="legs">
-            <path class="leg leg-a" pathLength="1" d="M12 22 11 29" />
-            <path class="leg leg-b" pathLength="1" d="M18 22 19 29" />
+            <!-- Each leg swings from the hip with its shoe on (繡花鞋: red cloth, a gold flower) -->
+            <g class="limb limb-a">
+              <path class="leg" pathLength="1" d="M12 22 11 29" />
+              {#if look === 'shoes'}
+                <path class="shoe" d="M13.7 30.2q.3-1.9-1.6-2.2h-2.6q-1.4.1-1.4 1.5v.7Z" />
+                <circle class="shoe-flower" cx="11.8" cy="29.1" r="0.5" />
+              {/if}
+            </g>
+            <g class="limb limb-b">
+              <path class="leg" pathLength="1" d="M18 22 19 29" />
+              {#if look === 'shoes'}
+                <path class="shoe" d="M21.7 30.2q.3-1.9-1.6-2.2h-2.6q-1.4.1-1.4 1.5v.7Z" />
+                <circle class="shoe-flower" cx="19.8" cy="29.1" r="0.5" />
+              {/if}
+            </g>
           </g>
           <g class="drop">
             <!-- the brush tip the drop fell from -->
@@ -155,11 +168,7 @@
               <circle cx="17.5" cy="12.5" r="1.3" />
               <circle cx="21.5" cy="12.5" r="1.3" />
             </g>
-            {#if look === 'scarf'}
-              <!-- 紅線: a red string tied round it, the ends blowing back -->
-              <path class="scarf" d="M6.6 17.2c2.6 1.9 14.6 1.9 16.9-.2" />
-              <path class="scarf" d="M8.4 18.2 5.6 21.6M8.4 18.2 4.6 19.4" />
-            {:else if look === 'hat'}
+            {#if look === 'hat'}
               <!-- 斗笠: a straw hat, tied under the chin -->
               <path class="hat" d="M6.4 7.4 15 1.6l8.6 5.8c-5.4 1.3-11.8 1.3-17.2 0Z" />
               <path class="hat-weave" d="M15 1.6v6.8M10.8 4.4l-.8 3.6M19.2 4.4l.8 3.6" />
@@ -294,11 +303,28 @@
     display: none;
   }
 
-  .scarf {
-    fill: none;
-    stroke: var(--seal);
-    stroke-width: 1.5;
-    stroke-linecap: round;
+  .shoe {
+    fill: var(--seal);
+    stroke: currentColor;
+    stroke-width: 0.6;
+    stroke-linejoin: round;
+  }
+
+  .shoe-flower {
+    fill: var(--gold);
+  }
+
+  /* The shoes go on once the legs are inked in. */
+  .shoe,
+  .shoe-flower {
+    opacity: 0;
+    animation: shoe-on 0.3s var(--ease-out) 0.9s forwards;
+  }
+
+  @keyframes shoe-on {
+    to {
+      opacity: 1;
+    }
   }
 
   .hat {
@@ -357,26 +383,29 @@
   }
 
   /* Walking: the legs step and the drop bobs. */
-  .leg {
-    transform-box: fill-box;
-    transform-origin: 50% 0;
+  .limb {
+    transform-box: view-box;
     transition: rotate 0.35s var(--ease-spring);
   }
 
-  :global(.walking) .leg-a {
-    animation:
-      ink 0.4s var(--ease-out) 0.5s forwards,
-      step 0.3s ease-in-out infinite alternate;
+  .limb-a {
+    transform-origin: 12px 22px;
   }
 
-  :global(.walking) .leg-b {
-    animation:
-      ink 0.4s var(--ease-out) 0.5s forwards,
-      step 0.3s ease-in-out infinite alternate-reverse;
+  .limb-b {
+    transform-origin: 18px 22px;
   }
 
-  :global(.walking.fast) .leg {
-    animation-duration: 0.4s, 0.2s;
+  :global(.walking) .limb-a {
+    animation: step 0.3s ease-in-out infinite alternate;
+  }
+
+  :global(.walking) .limb-b {
+    animation: step 0.3s ease-in-out infinite alternate-reverse;
+  }
+
+  :global(.walking.fast) .limb {
+    animation-duration: 0.2s;
   }
 
   :global(.walking) .figure {
@@ -403,30 +432,26 @@
     translate: 0 3px;
   }
 
-  :global(.sitting) .leg {
+  :global(.sitting) .limb {
     rotate: -70deg;
   }
 
   /* Hanging on a rope: legs dangling apart. */
-  :global(.hanging) .leg-a {
+  :global(.hanging) .limb-a {
     rotate: 18deg;
   }
 
-  :global(.hanging) .leg-b {
+  :global(.hanging) .limb-b {
     rotate: -18deg;
   }
 
   /* Climbing a rope: the legs kick in turn, pushing off it. */
-  :global(.climbing) .leg-a {
-    animation:
-      ink 0.4s var(--ease-out) 0.5s forwards,
-      step 0.25s ease-in-out infinite alternate;
+  :global(.climbing) .limb-a {
+    animation: step 0.25s ease-in-out infinite alternate;
   }
 
-  :global(.climbing) .leg-b {
-    animation:
-      ink 0.4s var(--ease-out) 0.5s forwards,
-      step 0.25s ease-in-out infinite alternate-reverse;
+  :global(.climbing) .limb-b {
+    animation: step 0.25s ease-in-out infinite alternate-reverse;
   }
 
   /* Dancing: up on its feet, stepping side to side, a turn, a hop to finish; notes float up. */
@@ -493,17 +518,13 @@
     }
   }
 
-  /* The ink is already down: keep it, and kick the legs in turn. */
-  .dancing .leg-a {
-    animation:
-      ink 0s forwards,
-      step 0.3s ease-in-out 8 alternate;
+  /* Kick the legs in turn (the ink on them is already down). */
+  .dancing .limb-a {
+    animation: step 0.3s ease-in-out 8 alternate;
   }
 
-  .dancing .leg-b {
-    animation:
-      ink 0s forwards,
-      step 0.3s ease-in-out 8 alternate-reverse;
+  .dancing .limb-b {
+    animation: step 0.3s ease-in-out 8 alternate-reverse;
   }
 
   .notes text {
@@ -681,6 +702,9 @@
     .drop,
     .hair,
     .leg,
+    .limb,
+    .shoe,
+    .shoe-flower,
     .eyes,
     .figure,
     .zzz text,
@@ -696,9 +720,14 @@
       stroke-dashoffset: 0;
     }
 
+    .shoe,
+    .shoe-flower {
+      opacity: 1;
+    }
+
     .facing,
     .figure,
-    .leg,
+    .limb,
     .says {
       transition: none;
     }

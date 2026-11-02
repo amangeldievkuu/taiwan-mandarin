@@ -3,7 +3,7 @@
   // 30 days and blooms at 100. Every mended gap is a gold seam on the pot (金繼). While days can
   // still be mended the pot shows an open crack and the leaves droop until you come back. Before
   // the first practice it is an unglazed pot with a seed in it. The glaze is the learner's, from
-  // what ink has unlocked (天目, 汝窯, 鈞窯).
+  // what ink has unlocked (青花, 汝窯, 鈞窯).
   import type { Bowl, LookOf, Seam } from '@taiwan-mandarin/shared';
   import { store } from '../lib/store.svelte';
   import {
@@ -151,12 +151,33 @@
       <ellipse cx="70" cy="95" rx="14" ry="10" fill="url(#{id}-splash)" />
       <ellipse cx="49" cy="107" rx="8" ry="5" fill="url(#{id}-splash)" />
     {/if}
-    {#if bowl && pot === 'tenmoku'}
-      <!-- Tenmoku's rust-brown streaks running down from the rim (hare's fur) -->
-      <path
-        class="hare"
-        d="M37 84q.6 6-.2 12M42 84q-.5 8 .3 15M47 84q.5 5-.2 9M53 84q-.4 9 .2 17M58 84q.5 4 0 7M64 84q.5 7-.2 13M69 84q-.5 5 .2 10M75 84q.5 8-.3 14M81 84q-.4 4 .1 8"
-      />
+    {#if bowl && pot === 'qinghua'}
+      <!-- 青花: cobalt painted on white porcelain. A wave band on the rim, a lotus scroll round
+           the belly, and lotus-petal panels at the foot, each between fine double lines. -->
+      <g class="cobalt">
+        <path class="cobalt-line" d="M28 74.6h64M28 80.6h64M28 85.6h64M28 87.2h64" />
+        <path
+          class="cobalt-line"
+          d="M28 77.6q2-2.2 4 0t4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0"
+        />
+        <path class="cobalt-vine" d="M32 98c4-6 8 6 12 0s8-6 12 0M64 98c4-6 8 6 12 0s8-6 12 0" />
+        <path
+          class="cobalt-leaf"
+          d="M37.5 94.4q2.4-2.6 4.4-.4-2.2 2.4-4.4.4ZM49 101.8q2.4 2.6 4.4.4-2.2-2.4-4.4-.4ZM70.6 94.4q-2.4-2.6-4.4-.4 2.2 2.4 4.4.4ZM82 101.8q-2.4 2.6-4.4.4 2.2-2.4 4.4-.4Z"
+        />
+        <!-- the lotus in the middle of the scroll -->
+        <path
+          class="cobalt-flower"
+          d="M60 92.2q2.6 3.2 0 6.6-2.6-3.4 0-6.6ZM60 98.8q-4.6-.4-5.8-4 3.4.4 5.8 4ZM60 98.8q4.6-.4 5.8-4-3.4.4-5.8 4ZM55.4 99.6q4.6 1.6 9.2 0"
+        />
+        <circle class="cobalt-dot" cx="38.6" cy="100.6" r="0.9" />
+        <circle class="cobalt-dot" cx="81.4" cy="100.6" r="0.9" />
+        <path class="cobalt-line" d="M28 104.6h64M28 106.2h64" />
+        <path
+          class="cobalt-line"
+          d="M38 113q1-5.2 3-5.2t3 5.2q1-5.2 3-5.2t3 5.2q1-5.2 3-5.2t3 5.2q1-5.2 3-5.2t3 5.2q1-5.2 3-5.2t3 5.2q1-5.2 3-5.2t3 5.2q1-5.2 3-5.2t3 5.2"
+        />
+      </g>
     {/if}
     <ellipse class="shine" cx="43" cy="97" rx="2.6" ry="10" />
     {#each seams as seam (seamKey(seam))}
@@ -333,25 +354,48 @@
     stop-color: #7aae97;
   }
 
-  /* 天目 tenmoku: near-black iron glaze with rust at the edges. */
-  .glaze-tenmoku .glaze-light {
-    stop-color: #3e2c22;
+  /* 青花 blue and white: cool white porcelain, painted in cobalt. */
+  .glaze-qinghua .glaze-light {
+    stop-color: #fbfcfd;
   }
 
-  .glaze-tenmoku .glaze-mid {
-    stop-color: #211813;
+  .glaze-qinghua .glaze-mid {
+    stop-color: #eef2f6;
   }
 
-  .glaze-tenmoku .glaze-dark {
-    stop-color: #0f0b09;
+  .glaze-qinghua .glaze-dark {
+    stop-color: #c9d3df;
   }
 
-  .hare {
+  .cobalt {
     fill: none;
-    stroke: #b4753f;
-    stroke-width: 0.45;
+    stroke: #2b4fa0;
     stroke-linecap: round;
-    opacity: 0.6;
+    stroke-linejoin: round;
+  }
+
+  .cobalt-line {
+    stroke-width: 0.5;
+    opacity: 0.85;
+  }
+
+  .cobalt-vine {
+    stroke-width: 0.8;
+    opacity: 0.9;
+  }
+
+  /* Leaves and petals washed in, darker at their outline, like a brush loaded with cobalt. */
+  .cobalt-leaf,
+  .cobalt-flower {
+    fill: #3d63b8;
+    fill-opacity: 0.55;
+    stroke-width: 0.45;
+  }
+
+  .cobalt-dot {
+    fill: #2b4fa0;
+    stroke: none;
+    opacity: 0.8;
   }
 
   /* 汝窯 Ru: the blue-grey of the sky after rain. */

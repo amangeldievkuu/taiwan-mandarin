@@ -161,7 +161,7 @@ export const vi: Messages = {
     },
     names: {
       'pot-celadon': 'Men ngọc',
-      'pot-tenmoku': 'Thiên mục',
+      'pot-qinghua': 'Gốm hoa lam',
       'pot-ru': 'Nhữ diêu, trời sau mưa',
       'pot-jun': 'Quân diêu',
       'paste-vermilion': 'Đỏ son',
@@ -173,7 +173,7 @@ export const vi: Messages = {
       'brush-vermilion': 'Đỏ son',
       'brush-gold': 'Vàng',
       'mo-plain': 'Chỉ 墨 thôi',
-      'mo-scarf': 'Sợi chỉ đỏ',
+      'mo-shoes': 'Giày thêu đỏ',
       'mo-hat': 'Nón lá',
       'mo-gilt': 'Ngòi bút vàng',
     },

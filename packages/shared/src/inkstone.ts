@@ -4,11 +4,11 @@
 
 /** Each slot's looks, the default (what the app always had) first. */
 export const SLOTS = {
-  pot: ['celadon', 'tenmoku', 'ru', 'jun'],
+  pot: ['celadon', 'qinghua', 'ru', 'jun'],
   paste: ['vermilion', 'indigo', 'gold'],
   paper: ['plain', 'nine', 'xuan'],
   brush: ['vermilion', 'gold'],
-  mo: ['plain', 'scarf', 'hat', 'gilt'],
+  mo: ['plain', 'shoes', 'hat', 'gilt'],
 } as const;
 
 export type Slot = keyof typeof SLOTS;
@@ -43,8 +43,8 @@ const unlock = <S extends Slot>(slot: S, value: LookOf<S>, at: number, zh: strin
 /** In the order they come: a normal day of study earns some 500–800 ink. */
 export const UNLOCKS: readonly Unlock[] = [
   unlock('paper', 'nine', 500, '九宮格', 'Nine-square paper'),
-  unlock('pot', 'tenmoku', 1_000, '天目', 'Tenmoku glaze'),
-  unlock('mo', 'scarf', 2_000, '紅線', 'A red string for 墨'),
+  unlock('pot', 'qinghua', 1_000, '青花', 'Blue-and-white porcelain'),
+  unlock('mo', 'shoes', 2_000, '繡花鞋', 'Red embroidered shoes for 墨'),
   unlock('paste', 'indigo', 3_500, '花青', 'Indigo seal paste'),
   unlock('paper', 'xuan', 5_000, '宣紙', 'Rice paper'),
   unlock('pot', 'ru', 7_500, '汝窯', 'Ru glaze'),
@@ -76,6 +76,23 @@ export function isUnlocked(slot: Slot, value: string, ink: number): boolean {
   return !!u && ink >= u.at;
 }
 
+/** Looks that were renamed: what an older app (or an older saved choice) calls them. */
+export const LEGACY_LOOKS: { [S in Slot]?: Record<string, LookOf<S>> } = {
+  pot: { tenmoku: 'qinghua' },
+  mo: { scarf: 'shoes' },
+};
+
+/** The same choices with renamed looks under their current names; anything else is kept as is. */
+export function normalizeLooks<T>(chosen: T): T {
+  if (!chosen || typeof chosen !== 'object') return chosen;
+  const out: Record<string, unknown> = { ...(chosen as Record<string, unknown>) };
+  for (const [slot, renamed] of Object.entries(LEGACY_LOOKS)) {
+    const value = out[slot];
+    if (typeof value === 'string' && renamed && value in renamed) out[slot] = renamed[value];
+  }
+  return out as T;
+}
+
 /** Everything unlocked with this much ink, in order. */
 export const unlockedAt = (ink: number): Unlock[] => UNLOCKS.filter((u) => ink >= u.at);
 
@@ -88,6 +105,7 @@ export const nextUnlock = (ink: number): Unlock | undefined => UNLOCKS.find((u) 
  */
 export function activeLooks(chosen: LookChoices | undefined, ink: number): Looks {
   const looks: Record<string, string> = { ...DEFAULT_LOOKS };
+  chosen = normalizeLooks(chosen);
   for (const slot of SLOT_IDS) {
     const value = chosen?.[slot];
     if (value && (SLOTS[slot] as readonly string[]).includes(value) && isUnlocked(slot, value, ink))

@@ -136,7 +136,7 @@ export const en = {
     },
     names: {
       'pot-celadon': 'Celadon',
-      'pot-tenmoku': 'Tenmoku',
+      'pot-qinghua': 'Blue and white',
       'pot-ru': 'Ru, sky after rain',
       'pot-jun': 'Jun',
       'paste-vermilion': 'Vermilion',
@@ -148,7 +148,7 @@ export const en = {
       'brush-vermilion': 'Vermilion',
       'brush-gold': 'Gold',
       'mo-plain': 'Just 墨',
-      'mo-scarf': 'Red string',
+      'mo-shoes': 'Red cloth shoes',
       'mo-hat': 'Straw hat',
       'mo-gilt': 'Golden brush tip',
     } as Record<string, string>,

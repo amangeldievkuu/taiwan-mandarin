@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { PRACTICE_KINDS, type DayActivity } from '../activity.ts';
 import type { Level } from '../content/types.ts';
 import { canonicalTimeZone, isTimeZone } from '../days.ts';
-import { SLOTS } from '../inkstone.ts';
+import { SLOTS, normalizeLooks } from '../inkstone.ts';
 import { LANG_IDS } from '../lang.ts';
 import { REMINDER_TIME } from '../reminders.ts';
 import { ERRORS, type ApiErrorCode } from './errors.ts';
@@ -48,14 +48,18 @@ export const SettingsSchema = z.object({
   newPerDay: z.number().int().min(0).max(200),
   levels: z.array(LevelSchema).min(1),
   retention: z.number().min(0.7).max(0.99),
+  // An older app may still send a renamed look (天目, 紅線): taken under its new name.
   looks: z
-    .object({
-      pot: z.enum(SLOTS.pot).optional(),
-      paste: z.enum(SLOTS.paste).optional(),
-      paper: z.enum(SLOTS.paper).optional(),
-      brush: z.enum(SLOTS.brush).optional(),
-      mo: z.enum(SLOTS.mo).optional(),
-    })
+    .preprocess(
+      normalizeLooks,
+      z.object({
+        pot: z.enum(SLOTS.pot).optional(),
+        paste: z.enum(SLOTS.paste).optional(),
+        paper: z.enum(SLOTS.paper).optional(),
+        brush: z.enum(SLOTS.brush).optional(),
+        mo: z.enum(SLOTS.mo).optional(),
+      }),
+    )
     .optional(),
   reminderTime: z.string().regex(REMINDER_TIME).optional(),
 });
