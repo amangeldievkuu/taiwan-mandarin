@@ -57,7 +57,17 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,ico}', 'strokes-tw.json'],
         // Word lists and dictionary shards (~19 MB per language) are cached on first use, not
         // precached.
-        globIgnores: ['content/**', 'dict/**'],
+        // The prerendered pages for search engines (scripts/prerender.ts) aren't the app's.
+        globIgnores: [
+          'content/**',
+          'dict/**',
+          'word/**',
+          'path/**',
+          'read/**',
+          'welcome/**',
+          'sitemap.xml',
+          'robots.txt',
+        ],
         navigateFallbackDenylist: [/^\/api\//, /^\/content\//, /^\/dict\//],
         runtimeCaching: [
           {

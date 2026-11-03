@@ -97,6 +97,16 @@ microphone and secure cookies need HTTPS on a real domain. With such a proxy in 
 listens only on 127.0.0.1; nginx sends security headers (CSP and others) with the app. Then open
 it on the iPhone or iPad and choose Share › Add to Home Screen.
 
+#### Search engines
+
+`npm run build` prerenders a static page for the welcome page, the TOCFL path, each level, every
+word (about 15,000) and every reader (`apps/web/scripts/prerender.ts`). Each page has its own title,
+description, Open Graph tags, JSON-LD and text, so search engines and link previews see it without
+running the app, which replaces that text when it starts. Set `SITE_URL` (the public https address)
+before building to add canonical links and `sitemap.xml`; `robots.txt` then points to the sitemap.
+nginx answers an unknown word, level or reader with a 404. The learner's own pages (Study, Talk,
+Me) are marked `noindex`.
+
 #### Backups
 
 The `backup` service dumps the database into `./backups` when it starts and then every

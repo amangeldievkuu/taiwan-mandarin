@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run strokes && vite build",
+    "build": "npm run strokes && vite build && npm run prerender",
+    "prerender": "node --conditions=source scripts/prerender.ts",
     "preview": "vite preview",
     "strokes": "node --conditions=source scripts/build-strokes.ts",
     "icons": "pwa-assets-generator",

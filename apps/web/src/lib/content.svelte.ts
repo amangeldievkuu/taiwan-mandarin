@@ -207,8 +207,13 @@ class Content {
   }
 
   /** A reader's title, once the readers have loaded (for back buttons). */
+  /** A reader, once the readers are loaded. */
+  reader(id: string): Reader | undefined {
+    return this.readerList?.find((r) => r.id === id);
+  }
+
   readerTitle(id: string): string | undefined {
-    return this.readerList?.find((r) => r.id === id)?.title;
+    return this.reader(id)?.title;
   }
 }
 

@@ -32,6 +32,8 @@
   import { store } from './lib/store.svelte';
   import { account, rememberedUser } from './lib/sync.svelte';
   import { toasts } from './lib/toast.svelte';
+  import { NOINDEX_ROUTES } from './lib/seo';
+  import { documentTitle } from './lib/titles';
   import { shouldWelcome, wasWelcomed } from './lib/welcome';
 
   /** The welcome page has no navigation and no rail: it is the page before the app. */
@@ -73,6 +75,19 @@
 
   $effect(() => {
     document.documentElement.lang = locale.lang;
+  });
+
+  // The tab's title names the page; a learner's own pages stay out of search results.
+  $effect(() => {
+    const route = router.route;
+    document.title = documentTitle(route);
+    let robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    if (NOINDEX_ROUTES.has(route.name)) {
+      robots ??= document.head.appendChild(
+        Object.assign(document.createElement('meta'), { name: 'robots' }),
+      );
+      robots.content = 'noindex';
+    } else robots?.remove();
   });
 
   // The daily reminder follows the account signed in; the app icon shows the cards due.

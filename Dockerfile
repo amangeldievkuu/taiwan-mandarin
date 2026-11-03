@@ -17,6 +17,9 @@ RUN mkdir /fsrs-wasi && cd /fsrs-wasi && npm init -y >/dev/null \
 COPY . .
 # Prisma downloads its migration engine on first use; fetch it now, not at runtime.
 RUN cd apps/api && npx prisma version >/dev/null
+# The site's public address, for canonical links and the sitemap (apps/web/scripts/prerender.ts).
+# Both app targets pass the same value, so they share this stage.
+ARG SITE_URL=
 RUN npm run build:shared \
  && npm run content \
  && npm run build -w @taiwan-mandarin/api \

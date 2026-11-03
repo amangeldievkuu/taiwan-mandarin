@@ -3,6 +3,7 @@
 
 import { isLevel } from '@taiwan-mandarin/shared';
 import { content } from './content.svelte';
+import { DEFAULT_TITLE, levelTitle, pageTitle, readerTitle, wordTitle } from './seo';
 import { t } from './i18n/index.svelte';
 import type { Route } from './router.svelte';
 
@@ -30,4 +31,32 @@ export function routeTitle(route: Route): Title {
     default:
       return { text: titles[route.name] };
   }
+}
+
+/**
+ * The browser tab's title. Words, levels and readers get the same full title as their prerendered
+ * page (scripts/prerender.ts), so a search engine running the app sees the same one.
+ */
+export function documentTitle(route: Route): string {
+  switch (route.name) {
+    case 'today':
+    case 'welcome':
+      return DEFAULT_TITLE;
+    case 'word': {
+      const word = content.word(route.params['id'] ?? '');
+      if (word) return wordTitle(word);
+      break;
+    }
+    case 'level': {
+      const level = route.params['level'];
+      if (isLevel(level)) return levelTitle(level);
+      break;
+    }
+    case 'reader': {
+      const reader = content.reader(route.params['id'] ?? '');
+      if (reader) return readerTitle(reader);
+      break;
+    }
+  }
+  return pageTitle(routeTitle(route).text);
 }
