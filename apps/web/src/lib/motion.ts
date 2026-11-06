@@ -18,8 +18,6 @@ function spring(damping: number, frequency: number): (t: number) => number {
           (Math.cos(ringing * t) + ratio * Math.sin(ringing * t));
 }
 
-/** About 12% overshoot, like --ease-spring in app.css. */
-export const springOut = spring(0.55, 10.5);
 /** About 5% overshoot, like --ease-spring-soft. */
 export const springSoft = spring(0.7, 10);
 

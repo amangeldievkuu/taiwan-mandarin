@@ -2,7 +2,7 @@
 // scale, and vibration where the device has it (Android; iPhones have no vibration API). Both are
 // per-device choices; sound is on by default. Every grade sounds the same: Again is never a buzzer.
 
-export type Cue = 'grade' | 'xp' | 'complete' | 'mend' | 'stamp' | 'toggle';
+export type Cue = 'grade' | 'complete' | 'mend' | 'stamp' | 'toggle';
 type Buzz = 'light' | 'success' | 'mend';
 
 const SOUND_KEY = 'taiwan-mandarin:sound';
@@ -89,10 +89,6 @@ class Feedback {
     switch (cue) {
       case 'grade':
         note({ freq: 660, to: 990, length: 0.09, volume: 0.16 });
-        break;
-      case 'xp':
-        note({ freq: 1318.5, length: 0.07, volume: 0.09, type: 'sine' });
-        note({ freq: 1760, at: 0.06, length: 0.09, volume: 0.09, type: 'sine' });
         break;
       case 'complete':
         // C E G C, then a little shimmer.

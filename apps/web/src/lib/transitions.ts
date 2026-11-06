@@ -3,7 +3,7 @@
 
 import { cubicIn } from 'svelte/easing';
 import type { TransitionConfig } from 'svelte/transition';
-import { reduced, springOut, springSoft } from './motion';
+import { reduced, springSoft } from './motion';
 
 type Direction = { direction: 'in' | 'out' | 'both' };
 
@@ -72,22 +72,6 @@ export function sheet(
       wide
         ? `transform: translateX(${u * 28}px); opacity: ${t}`
         : `transform: translateY(${u * 100}%)`,
-  };
-}
-
-/** Popping into place (a badge, a stamp, a new chip). */
-export function pop(
-  _node: Element,
-  { delay = 0, from = 0.6 }: { delay?: number; from?: number } = {},
-  options?: Direction,
-): TransitionConfig {
-  if (reduced()) return NONE;
-  const leaving = options?.direction === 'out';
-  return {
-    delay,
-    duration: leaving ? 160 : 520,
-    easing: leaving ? cubicIn : springOut,
-    css: (t) => `transform: scale(${from + (1 - from) * t}); opacity: ${Math.min(1, t * 2)}`,
   };
 }
 
