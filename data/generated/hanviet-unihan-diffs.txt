@@ -1,2 +1,664 @@
 # Hán-Việt readings that differ from Unihan's kVietnamese (which also lists Nôm readings)
-
+丫		nha	Unihan: a
+丹		đan	Unihan: đam
+主		chủ	Unihan: chúa
+乃		nãi	Unihan: nải
+乍		sạ	Unihan: chạ
+乘	cheng2	thừa	Unihan: thặng
+乳		nhũ	Unihan: vú
+乾	gan1	can	Unihan: kiền
+予		dư	Unihan: nhừ
+二		nhị	Unihan: nhì
+亢		kháng	Unihan: cang
+仆		phốc	Unihan: bọc
+份		phận	Unihan: phần
+仿		phỏng	Unihan: phảng
+伎		kỹ	Unihan: kĩ
+伶		linh	Unihan: rành
+低		đê	Unihan: đây
+你		nhĩ	Unihan: nể
+併		tịnh	Unihan: tính
+使		sử	Unihan: sứ
+例		lệ	Unihan: lề
+供	gong4	cúng	Unihan: cung
+侯		hầu	Unihan: hậu
+侶		lữ	Unihan: lứa
+俑		dũng	Unihan: dõng
+們		môn	Unihan: món
+倒	dao4	đáo	Unihan: đảo
+倖		hạnh	Unihan: hãnh
+倘		thảng	Unihan: thẳng
+候		hậu	Unihan: hầu
+偽		ngụy	Unihan: nguỵ
+傘		tản	Unihan: tàn
+催		thôi	Unihan: thòi
+傳	zhuan4	truyện	Unihan: truyền
+僑		kiều	Unihan: quều
+僥		kiêu	Unihan: nghẹo
+兔		thố	Unihan: thỏ
+兢		căng	Unihan: cạnh
+其		kỳ	Unihan: kì
+冠	guan1	quan	Unihan: quán
+冷		lãnh	Unihan: lạnh
+准		chuẩn	Unihan: chốn
+凍		đống	Unihan: đông
+几		kỷ	Unihan: kỉ
+函		hàm	Unihan: hòm
+刃		nhận	Unihan: nhẫn
+刊		khan	Unihan: san
+別		biệt	Unihan: biết
+刷		xoát	Unihan: loát
+削	xiao1	tiêu	Unihan: tước
+剖		phẫu	Unihan: bo
+剝		bác	Unihan: bóc
+剪		tiễn	Unihan: tiện
+割		cát	Unihan: cắt
+創	chuang1	sang	Unihan: sáng
+剷		sạn	Unihan: xẻng
+劃		hoạch	Unihan: vạch
+劾		hặc	Unihan: hạch
+勁		kính	Unihan: cứng
+勒		lặc	Unihan: lắc
+勝	sheng1	thăng	Unihan: thắng
+勞	lao4	lạo	Unihan: lao
+化		hóa	Unihan: hoá
+匱		quỹ	Unihan: quĩ
+協		hiệp	Unihan: hiếp
+厭		yếm	Unihan: ướm
+厲		lệ	Unihan: lẹ
+參	cen1	sâm	Unihan: tham
+又		hựu	Unihan: lại
+叛		phản	Unihan: bạn
+句		cú	Unihan: câu
+另		lệnh	Unihan: lánh
+召		triệu	Unihan: chịu
+叭		bát	Unihan: bớt
+司		tư	Unihan: ti
+吃		cật	Unihan: khật
+否		phủ	Unihan: bĩ
+吧		ba	Unihan: và
+吩		phân	Unihan: phàn
+吸		hấp	Unihan: cộp
+吾		ngô	Unihan: ngo
+呀		nha	Unihan: nhá
+呃		ách	Unihan: nhách
+呆		ngai	Unihan: ngốc
+咀		trớ	Unihan: thở
+咄		đốt	Unihan: xót
+咆		bào	Unihan: bàu
+咋		trá	Unihan: chạ
+和	he2	hòa	Unihan: hoà
+和	he4	họa	Unihan: hoà
+和	huo4	hòa	Unihan: hoà
+咧		liệt	Unihan: lác
+咬		giảo	Unihan: rao
+咳		khái	Unihan: cay
+咽	yan1	yết	Unihan: nhằn
+咽	ye4	ế	Unihan: nhằn
+哄		hống	Unihan: họng
+哆		đa	Unihan: đớ
+哈		ha	Unihan: hóp
+哪		na	Unihan: ná
+哭		khốc	Unihan: khóc
+哮		hiếu	Unihan: hao
+哺		bộ	Unihan: phô
+唉		ai	Unihan: hãy
+唯		duy	Unihan: dõi
+唾		thóa	Unihan: thoá
+啄		trác	Unihan: trốc
+啜		chuyết	Unihan: xuýt
+喂		vị	Unihan: ỏi
+喃		nam	Unihan: nôm
+喋		điệp	Unihan: nhịp
+單		đan	Unihan: đơn
+嘆		thán	Unihan: han
+嘍		lâu	Unihan: làu
+噁		ố	Unihan: ạc
+噓		hư	Unihan: hờ
+噥		nông	Unihan: nũng
+噪		táo	Unihan: tháo
+噬		thị	Unihan: phè
+嚨		lung	Unihan: lùng
+囂		hiêu	Unihan: hiu
+圈		quyển	Unihan: khuyên
+圍		vi	Unihan: vè
+圭		khuê	Unihan: quê
+址		chỉ	Unihan: xởi
+坑		khanh	Unihan: ganh
+坦		thản	Unihan: đất
+垃		lạp	Unihan: lắp
+垮		khoa	Unihan: khoai
+塞	sai4	tái	Unihan: tắc
+墜		trụy	Unihan: truỵ
+墮		đọa	Unihan: đoạ
+壘		lũy	Unihan: luỹ
+夭	yao1	yêu	Unihan: yểu
+夷		di	Unihan: dì
+奄		yêm	Unihan: ăm
+奇	ji1	cơ	Unihan: kỳ
+女		nữ	Unihan: nữa
+奶		nãi	Unihan: nái
+好	hao3	hảo	Unihan: háo
+好	hao4	hiếu	Unihan: háo
+妓		kỹ	Unihan: kĩ
+妥		thỏa	Unihan: thoả
+姊		tỷ	Unihan: chị
+始		thủy	Unihan: thuỷ
+姐		tỷ	Unihan: thư
+委		ủy	Unihan: uỷ
+姨		di	Unihan: dì
+姪		chất	Unihan: đẹt
+娓		vị	Unihan: vãi
+媒		môi	Unihan: mối
+媽		ma	Unihan: má
+嫂		tẩu	Unihan: dâu
+嫩		nộn	Unihan: non
+子		tử	Unihan: tí
+季		quý	Unihan: quí
+守		thủ	Unihan: thú
+寄		ký	Unihan: gửi
+寞		mạc	Unihan: mịch
+將	jiang1	tương	Unihan: tướng
+對		đối	Unihan: đỗi
+少	shao4	thiếu	Unihan: thiểu
+尚		thượng	Unihan: chuộng
+岌		cập	Unihan: ngập
+岸		ngạn	Unihan: ngàn
+峽		hiệp	Unihan: giáp
+崖		nhai	Unihan: day
+嶄		tiệm	Unihan: chởm
+差	cha4	sái	Unihan: sai
+差	ci1	si	Unihan: sai
+己		kỷ	Unihan: kỉ
+希		hy	Unihan: hơi
+帝		đế	Unihan: đấy
+帶		đái	Unihan: đai
+帽		mạo	Unihan: mão
+幅		phúc	Unihan: bức
+幢		tràng	Unihan: choàng
+幣		tệ	Unihan: giẻ
+年		niên	Unihan: nên
+幻		huyễn	Unihan: ảo
+序		tự	Unihan: tựa
+座		tọa	Unihan: toà
+庫		khố	Unihan: kho
+廂		sương	Unihan: rương
+廈		hạ	Unihan: hè
+廓		khuếch	Unihan: quách
+廚		trù	Unihan: chù
+延		diên	Unihan: dang
+強	jiang4	cưỡng	Unihan: càng
+強	qiang2	cường	Unihan: càng
+強	qiang3	cưỡng	Unihan: càng
+彈	dan4	đạn	Unihan: đàn
+彩		thải	Unihan: thái
+彬		bân	Unihan: băn
+彿		phất	Unihan: phớt
+徐		từ	Unihan: chờ
+忌		kỵ	Unihan: kị
+忖		thốn	Unihan: thổn
+忱		trầm	Unihan: thầm
+怎		chẩm	Unihan: chẩn
+悅		duyệt	Unihan: dột
+悉		tất	Unihan: tạt
+悴		tụy	Unihan: xót
+悶		muộn	Unihan: muốn
+惕		dịch	Unihan: thích
+惜		tích	Unihan: tiếc
+惡	wu4	ố	Unihan: ác
+愈		dũ	Unihan: rủ
+慌		hoang	Unihan: hoảng
+慚		tàm	Unihan: tuồm
+慣		quán	Unihan: quen
+慰		úy	Unihan: uý
+慵		dong	Unihan: thuồng
+憚		đạn	Unihan: dạn
+懇		khẩn	Unihan: khấn
+應	ying1	ưng	Unihan: ứng
+懊		áo	Unihan: ảo
+懦		nhu	Unihan: nhụa
+所		sở	Unihan: sỡ
+扒	ba1	ba	Unihan: bắt
+扒	pa2	bài	Unihan: bắt
+扔		nhung	Unihan: nẫy
+扛		kháng	Unihan: giăng
+扯		xả	Unihan: chải
+扳		ban	Unihan: bẳn
+找		trảo	Unihan: quơ
+技		kỹ	Unihan: kĩ
+抉		quyết	Unihan: khoét
+把		bả	Unihan: bã
+抒		thư	Unihan: trữ
+抓		trảo	Unihan: co
+抨		phanh	Unihan: banh
+披		phi	Unihan: phơ
+拄		trụ	Unihan: chủ
+拈		niêm	Unihan: chêm
+拉		lạp	Unihan: lấp
+拌		bạn	Unihan: bắn
+拍		phách	Unihan: phếch
+拖		tha	Unihan: đà
+拗		áo	Unihan: húc
+拙		chuyết	Unihan: chút
+拭		thức	Unihan: rị
+拮		kiết	Unihan: cất
+拱		củng	Unihan: cõng
+拷		khảo	Unihan: khỉu
+拼		bính	Unihan: phanh
+挑		khiêu	Unihan: vẹo
+挪		na	Unihan: ná
+挫		tỏa	Unihan: doạ
+挾		hiệp	Unihan: xáp
+捅		thống	Unihan: thòng
+捌		bát	Unihan: bịt
+捍		hãn	Unihan: cản
+捕		bộ	Unihan: bõ
+捧		phủng	Unihan: bổng
+据		cư	Unihan: cứ
+捲		quyển	Unihan: cuốn
+捺		nại	Unihan: nài
+掃	sao4	sào	Unihan: tảo
+掉		điệu	Unihan: trao
+掙		tranh	Unihan: tránh
+掛		quải	Unihan: quẩy
+掠		lược	Unihan: lướt
+推		thôi	Unihan: suy
+掩		yểm	Unihan: ém
+揀		giản	Unihan: gióng
+插		sáp	Unihan: chắp
+損		tổn	Unihan: tốn
+搏		bác	Unihan: vác
+搓		tha	Unihan: sai
+搔		tao	Unihan: trao
+搖		dao	Unihan: gieo
+搗		đảo	Unihan: đẽo
+搞		cảo	Unihan: cào
+搬		ban	Unihan: bưng
+搭		đáp	Unihan: đắp
+摟		lâu	Unihan: lùa
+摸		mô	Unihan: mò
+摺		chiệp	Unihan: dập
+撈		lao	Unihan: lau
+撓		nhiễu	Unihan: nhéo
+撞		tráng	Unihan: chàng
+撩		liêu	Unihan: lêu
+撫		phủ	Unihan: vỗ
+播		bá	Unihan: vá
+撲		phốc	Unihan: vục
+擅		thiện	Unihan: chen
+據		cứ	Unihan: cớ
+擦		sát	Unihan: xát
+擱		các	Unihan: gác
+擴		khuếch	Unihan: quẳng
+擺		bãi	Unihan: bẫy
+攏		lũng	Unihan: long
+攔		lan	Unihan: dan
+攙		sàm	Unihan: sọm
+攝		nhiếp	Unihan: nhép
+攤		than	Unihan: nặn
+敢		cảm	Unihan: cám
+散	san4	tán	Unihan: tản
+數	shu3	sổ	Unihan: số
+斗		đẩu	Unihan: đấu
+斥		xích	Unihan: xịch
+斧		phủ	Unihan: búa
+旗		kỳ	Unihan: cờ
+旭		húc	Unihan: hóc
+昆		côn	Unihan: con
+易		dị	Unihan: dịch
+時		thời	Unihan: thì
+晃		hoảng	Unihan: quáng
+晤		ngộ	Unihan: cữ
+晦		hối	Unihan: hổi
+晴		tình	Unihan: tạnh
+暈		vựng	Unihan: vừng
+暴	pu4	bộc	Unihan: bạo
+曉		hiểu	Unihan: hẻo
+曖		ái	Unihan: áy
+曠		khoáng	Unihan: khoảng
+曳		duệ	Unihan: dấy
+曾	zeng1	tăng	Unihan: tằng
+會	kuai4	khoái	Unihan: hội
+朝	zhao1	triêu	Unihan: triều
+期		kỳ	Unihan: kì
+未		vị	Unihan: mùi
+朱		chu	Unihan: cho
+朵		đóa	Unihan: đoá
+杆		can	Unihan: cơn
+李		lý	Unihan: lí
+束		thúc	Unihan: thút
+板		bản	Unihan: ván
+枕		chẩm	Unihan: chẳm
+枷		già	Unihan: da
+染		nhiễm	Unihan: nhuộm
+柚		dữu	Unihan: dâu
+株		chu	Unihan: chò
+桎		chất	Unihan: chuối
+桶		thống	Unihan: thùng
+梆		bang	Unihan: bương
+梏		cốc	Unihan: gáo
+梭		thoa	Unihan: thoi
+棋		kỳ	Unihan: cời
+棒		bổng	Unihan: vổng
+棘		cức	Unihan: gấc
+森		sâm	Unihan: chùm
+棵		khỏa	Unihan: quả
+椎		chuy	Unihan: chòi
+楣		mi	Unihan: me
+槓		giang	Unihan: cổng
+槽		tào	Unihan: tàu
+樁		trang	Unihan: thung
+樂	yue4	nhạc	Unihan: lạc
+樑		lương	Unihan: rường
+樓		lâu	Unihan: lầu
+標		tiêu	Unihan: bêu
+樞		khu	Unihan: xu
+檢		kiểm	Unihan: ghém
+櫃		quỹ	Unihan: cũi
+歇		hiết	Unihan: hết
+歪		oai	Unihan: quay
+歹		đãi	Unihan: ngạt
+殊		thù	Unihan: thùa
+毀		hủy	Unihan: huỷ
+比	bi4	bì	Unihan: tỉ
+毯		thảm	Unihan: xồm
+水		thủy	Unihan: thuỷ
+永		vĩnh	Unihan: vắng
+汁		trấp	Unihan: chấp
+汝		nhữ	Unihan: nhớ
+汰		thái	Unihan: sưởi thải thãi thảy thẩy
+沃		ốc	Unihan: óc
+沉		trầm	Unihan: tròm
+沌		độn	Unihan: xộn
+沐		mộc	Unihan: múc
+沛		phái	Unihan: phải
+沫		mạt	Unihan: mượt
+油		du	Unihan: dầu
+沼		chiểu	Unihan: trẻo
+沾		triêm	Unihan: chăm
+泡		phao	Unihan: bàu
+泣		khấp	Unihan: khắp
+泥	ni4	nị	Unihan: lầy ne nè né nê nề nể nễ nệ nơi
+洞		động	Unihan: đọng
+洩		tiết	Unihan: dáy
+浸		tẩm	Unihan: tắm
+涯		nhai	Unihan: rượi
+液		dịch	Unihan: giá
+涸		hạc	Unihan: hạt
+淋		lâm	Unihan: lấm
+淪		luân	Unihan: lún
+混		hỗn	Unihan: hổn
+淹		yêm	Unihan: êm
+渡		độ	Unihan: đò
+湛		trạm	Unihan: đậm
+湧		dũng	Unihan: rụng
+源		nguyên	Unihan: nguồn
+溪		khê	Unihan: khe
+溶		dung	Unihan: ròng
+滌		địch	Unihan: sạch
+滑	gu3	cốt	Unihan: gột
+滑	hua2	hoạt	Unihan: gột
+滯		trệ	Unihan: sệ
+滲		sấm	Unihan: rướm
+滴		tích	Unihan: nhích
+滾		cổn	Unihan: củn
+漂	piao1	phiêu	Unihan: phều
+漂	piao3	phiếu	Unihan: phều
+漂	piao4	phiếu	Unihan: phều
+漓		li	Unihan: lầy
+漣		liên	Unihan: lăn
+漫		mạn	Unihan: man
+潤		nhuận	Unihan: nhuần
+潦		liêu	Unihan: lẻo
+潭		đàm	Unihan: đằm
+潰		hội	Unihan: hói
+潺		sàn	Unihan: sờn
+澄		trừng	Unihan: chừng
+澤		trạch	Unihan: rạch
+濃		nồng	Unihan: nống
+火		hỏa	Unihan: hoả
+炭		thán	Unihan: than
+炮	pao2	bào	Unihan: pháo
+烊		dương	Unihan: rang
+焉		yên	Unihan: vờn
+煤		môi	Unihan: muồi
+熄		tức	Unihan: tắt
+熾		sí	Unihan: xé
+燃		nhiên	Unihan: nhen
+燉		đôn	Unihan: đun
+燕		yến	Unihan: én
+燭		chúc	Unihan: đuốc
+燼		tẫn	Unihan: tần
+爬		ba	Unihan: bò
+爽		sảng	Unihan: sửng
+爾		nhĩ	Unihan: nhãi
+狹		hiệp	Unihan: hẹp
+獰		ninh	Unihan: nanh
+獵		liệp	Unihan: lốp
+玲		linh	Unihan: liếng
+理		lý	Unihan: lí
+琢		trác	Unihan: chác
+瓢		biều	Unihan: bầu
+瓦		ngõa	Unihan: ngói
+畏		úy	Unihan: uý
+畫		họa	Unihan: hoạ
+疏		sơ	Unihan: sớ
+疚		cứu	Unihan: nhíu
+痰		đàm	Unihan: đờm
+瘁		tụy	Unihan: tuỵ
+瘦		sấu	Unihan: xấu
+盈		doanh	Unihan: dềnh
+盎		ưởng	Unihan: áng
+盒		hợp	Unihan: hộp
+盜		đạo	Unihan: dừa
+盞		trản	Unihan: chén
+相	xiang4	tướng	Unihan: tương
+眈		đam	Unihan: xẩm
+眩		huyễn	Unihan: gioèn
+睹		đổ	Unihan: đủ
+瞭		liễu	Unihan: lẹo
+矗		xúc	Unihan: sực
+矣		hĩ	Unihan: hỉ
+磨		ma	Unihan: mài
+礎		sở	Unihan: sờ
+禍		họa	Unihan: hoạ
+禦		ngự	Unihan: ngừa
+禿		thốc	Unihan: thóc
+秉		bỉnh	Unihan: bảnh
+移		di	Unihan: dời
+種		chủng	Unihan: chõng
+稱	cheng4	xứng	Unihan: xưng
+稽		kê	Unihan: ghê
+穩		ổn	Unihan: ủn
+空	kong4	khống	Unihan: không
+窒		trất	Unihan: khỏng
+竅		khiếu	Unihan: khíu
+竿		can	Unihan: cần
+符		phù	Unihan: bùa
+筋		cân	Unihan: gân
+箱		tương	Unihan: rương
+築		trúc	Unihan: trốc
+篩		si	Unihan: rây
+篷		bồng	Unihan: bong
+簾		liêm	Unihan: rèm
+籃		lam	Unihan: xờm
+粹		túy	Unihan: tuý
+糞		phẩn	Unihan: phân
+紀		kỷ	Unihan: kỉ
+紐		nữu	Unihan: néo
+紡		phưởng	Unihan: vưởng
+紫		tử	Unihan: tía
+累	lei3	lũy	Unihan: luỵ
+累	lei4	lụy	Unihan: luỵ
+細		tế	Unihan: tới
+紳		thân	Unihan: thang
+絆		bạn	Unihan: bận
+絡		lạc	Unihan: rạc
+絲		ty	Unihan: tơ
+緘		giam	Unihan: dàm
+締		đế	Unihan: rế
+縈		oanh	Unihan: quanh
+縱		túng	Unihan: tung
+縷		lũ	Unihan: lụa
+繚		liễu	Unihan: lèo
+繪		hội	Unihan: gói
+繭		kiển	Unihan: kén
+繳		kiếu	Unihan: nhàu
+繹		dịch	Unihan: gịt
+缸		hang	Unihan: cong
+署		thự	Unihan: thợ
+美		mỹ	Unihan: mỉ
+羽		vũ	Unihan: võ
+翠		thúy	Unihan: thuý
+翩		phiên	Unihan: phiến
+耽		đam	Unihan: xẩm
+聘		sính	Unihan: sánh
+肝		can	Unihan: gan
+胖		bàn	Unihan: bỡn
+胳		cách	Unihan: cặc
+胸		hung	Unihan: hông
+脾		tỳ	Unihan: tì
+腔		khang	Unihan: xoang
+腥		tinh	Unihan: tanh
+腫		ủng	Unihan: thũng
+腹		phúc	Unihan: phục
+膠		giao	Unihan: keo
+膾		khoái	Unihan: gỏi
+臘		lạp	Unihan: chạp
+致		trí	Unihan: nhí
+臼		cữu	Unihan: cối
+舅		cữu	Unihan: cậu
+與	yu4	dự	Unihan: dữ
+興	xing4	hứng	Unihan: hưng
+舖		phô	Unihan: phố
+般		ban	Unihan: bàn
+艾		nghệ	Unihan: ngải
+苔		đài	Unihan: đầy
+苗		miêu	Unihan: meo
+茁		chuyết	Unihan: đốt
+茄		già	Unihan: nhà
+茫		mang	Unihan: mương
+荼		đồ	Unihan: dưa
+莓		môi	Unihan: mội
+著	zhao1	chiêu	Unihan: trứ
+著	zhao2	trước	Unihan: trứ
+著	zhuo2	trước	Unihan: trứ
+蒜		toán	Unihan: tỏi
+蓮		liên	Unihan: sen
+蔓		mạn	Unihan: mơn
+薑		khương	Unihan: gừng
+藉		tạ	Unihan: chạ
+蘿		la	Unihan: lá
+處	chu4	xứ	Unihan: xử
+號		hào	Unihan: hiệu
+虧		khuy	Unihan: khuya
+蚓		dẫn	Unihan: rận
+蚤		tảo	Unihan: tao
+蛛		chu	Unihan: châu
+蜂		phong	Unihan: ong
+蝴		hồ	Unihan: hà
+蠅		dăng	Unihan: nhặng
+蠟		lạp	Unihan: rệp
+蠻		man	Unihan: mán
+行	xing2	hành	Unihan: hàng
+行	xing4	hạnh	Unihan: hàng
+衫		sam	Unihan: oam
+袋		đại	Unihan: đãy
+裁		tài	Unihan: trài
+裊		niểu	Unihan: nẻo
+裕		dụ	Unihan: dịu
+裸		lỏa	Unihan: khoả
+要	yao1	yêu	Unihan: yếu
+規		quy	Unihan: qui
+觀	guan4	quán	Unihan: quan
+角		giác	Unihan: góc
+計		kế	Unihan: kể
+記		ký	Unihan: kí
+設		thiết	Unihan: thết
+詛		chú	Unihan: trớ
+誓		thệ	Unihan: thề
+課		khóa	Unihan: khoá
+諛		du	Unihan: hùa
+諱		húy	Unihan: huý
+譎		quyết	Unihan: quyệt
+譜		phổ	Unihan: phả
+警		cảnh	Unihan: khểnh
+讓		nhượng	Unihan: nhường
+豹		báo	Unihan: beo
+貓		miêu	Unihan: mèo
+貝		bối	Unihan: buổi
+貨		hóa	Unihan: hoá
+貫		quán	Unihan: quan
+贖		thục	Unihan: chuộc
+跌		điệt	Unihan: trặc
+距		cự	Unihan: cựa
+跟		căn	Unihan: ngấn
+跪		quỵ	Unihan: quỳ
+跳		khiêu	Unihan: khêu
+蹄		đề	Unihan: đế
+蹈		đạo	Unihan: dạo
+蹺		khiêu	Unihan: nghều
+躁		táo	Unihan: tháo
+躇		trừ	Unihan: chứa
+躺		thảng	Unihan: thẳng
+軀		khu	Unihan: xo
+軌		quỹ	Unihan: quẫy
+轟		oanh	Unihan: huênh
+辣		lạt	Unihan: lượt
+辱		nhục	Unihan: nhọc
+迢		điều	Unihan: dìu
+迭		điệt	Unihan: dật
+遙		dao	Unihan: diêu
+遣		khiển	Unihan: khiến
+遴		lân	Unihan: lận
+遶		nhiễu	Unihan: nháo
+邏		la	Unihan: lạ
+邦		bang	Unihan: vâng
+鄙		bỉ	Unihan: bẽ
+醜		xú	Unihan: xấu
+里		lý	Unihan: lịa
+重	chong2	trùng	Unihan: trọng
+鈍		độn	Unihan: nhọn
+鈕		nữu	Unihan: nạo
+銷		tiêu	Unihan: tiu
+鋪		phô	Unihan: phố
+鋸		cứ	Unihan: cưa
+鋼		cương	Unihan: gang
+錦		cẩm	Unihan: gấm
+錫		tích	Unihan: thiếc
+錯		thác	Unihan: thó
+鎖		tỏa	Unihan: toả
+鏡		kính	Unihan: kẻng
+鐘		chung	Unihan: chuông
+長	zhang3	trưởng	Unihan: trường
+闡		xiển	Unihan: xén
+附		phụ	Unihan: phò
+降	xiang2	hàng	Unihan: giáng
+陲		thùy	Unihan: thuỳ
+隨		tùy	Unihan: tuỳ
+隻		chích	Unihan: chiếc
+雍		ung	Unihan: ủng
+離		ly	Unihan: li
+難	nan4	nạn	Unihan: nan
+零		linh	Unihan: lênh
+靂		lịch	Unihan: rích
+靡		mỉ	Unihan: mị
+響		hưởng	Unihan: hướng
+頂		đỉnh	Unihan: đính
+須		tu	Unihan: tua
+頗		phả	Unihan: phở
+領		lĩnh	Unihan: lãnh
+餅		bính	Unihan: bánh
+餒		nỗi	Unihan: nuôi
+饞		tham	Unihan: thèm
+馨		hinh	Unihan: hanh
+馭		ngự	Unihan: ngựa
+馴		tuần	Unihan: thuần
+騎		kỵ	Unihan: kị
+驅		khu	Unihan: xúi
+驢		lư	Unihan: lừa
+髓		tủy	Unihan: tuỷ
+鮮	xian3	tiển	Unihan: tiên
+鳳		phụng	Unihan: phượng
+麗	li2	ly	Unihan: lệ
+齊		tề	Unihan: tày

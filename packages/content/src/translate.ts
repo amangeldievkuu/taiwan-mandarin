@@ -383,14 +383,25 @@ async function hanvietJob(): Promise<Job<{ char: string; syllable: string; words
 
   const known = (char: string, syllable: string) => `${char}|${syllable}` in table || char in table;
   const items = [...uses.values()].filter((u) => !known(u.char, u.syllable));
-  const diffs: string[] = [];
-  const save = () => {
+  /** From the whole table, so a run that adds a few readings keeps the list to review. */
+  const writeDiffs = () => {
+    const diffs = Object.entries(table).flatMap(([key, reading]) => {
+      const [char = '', syllable = ''] = key.split('|');
+      const listed = unihan.get(char);
+      return reading && listed && !listed.includes(reading)
+        ? [`${char}\t${syllable}\t${reading}\tUnihan: ${listed.join(' ')}`]
+        : [];
+    });
     writeFileSync(
       join(ROOT, 'data/generated/hanviet-unihan-diffs.txt'),
       "# Hán-Việt readings that differ from Unihan's kVietnamese (which also lists Nôm readings)\n" +
-        [...new Set(diffs)].sort().join('\n') +
+        diffs.sort().join('\n') +
         '\n',
     );
+  };
+  writeDiffs();
+  const save = () => {
+    writeDiffs();
     // One key per character when its readings agree, one per reading when they don't.
     const byChar = new Map<string, [string, string | null][]>();
     for (const [key, reading] of Object.entries(table)) {
@@ -426,9 +437,6 @@ Answer every number.`,
       const value = reading?.toLowerCase().normalize('NFC') ?? null;
       if (value !== null && (value === 'null' || !SYLLABLE.test(value))) return false;
       table[`${u.char}|${u.syllable}`] = value;
-      const listed = unihan.get(u.char);
-      if (value && listed && !listed.includes(value))
-        diffs.push(`${u.char}\t${u.syllable}\t${value}\tUnihan: ${listed.join(' ')}`);
       return true;
     },
     save,
