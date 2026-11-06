@@ -1,0 +1,51 @@
+# Smoke: upload the lockfiles after every push (asset token in the SMOKE_TOKEN secret).
+# Best in the workflow that deploys, so Smoke sees what runs. SMOKE_FAIL_ON: none, p1 or p2.
+name: Smoke inventory
+on:
+  push:
+permissions:
+  contents: read
+jobs:
+  upload:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload lockfiles to Smoke
+        env:
+          SMOKE_URL: ${{ vars.SMOKE_URL }}
+          SMOKE_TOKEN: ${{ secrets.SMOKE_TOKEN }}
+          SMOKE_FAIL_ON: none
+        run: |
+          set --
+          for p in package-lock.json; do
+            if [ -f "$p" ]; then set -- "$@" -F "files=@$p" -F "paths=$p"; else echo "Skipping $p (not found)"; fi
+          done
+          [ "$#" -gt 0 ] || { echo "No lockfiles found"; exit 1; }
+          soft() { echo "Warning: $1"; if [ "${SMOKE_STRICT:-false}" = "true" ]; then exit 1; fi; exit 0; }
+          rc=0
+          resp=$(curl -sS --fail-with-body -H "Authorization: Bearer $SMOKE_TOKEN" -F "ci=github" -F "release=$GITHUB_REF_NAME" -F "commit=$GITHUB_SHA" -F "pipelineUrl=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" "$@" "$SMOKE_URL/api/v1/ci/inventory") || rc=$?
+          if [ "$rc" -ne 0 ]; then
+            echo "$resp"
+            case "$rc" in 6|7|28|35|52|56) soft "Smoke could not be reached (curl exit $rc)";; esac
+            exit 1
+          fi
+          id=$(printf '%s' "$resp" | sed -n 's/^{"id":"\([0-9a-f-]*\)".*/\1/p')
+          echo "Uploaded to Smoke: snapshot $id"
+          i=0
+          while :; do
+            st=$(curl -sS --fail-with-body -H "Authorization: Bearer $SMOKE_TOKEN" "$SMOKE_URL/api/v1/ci/snapshots/$id") || soft "could not read the match result"
+            case "$st" in *'"status":"pending"'*) ;; *) break;; esac
+            i=$((i + 1)); [ "$i" -lt 60 ] || soft "matching did not finish within 5 minutes"
+            sleep 5
+          done
+          case "$st" in *'"status":"matched"'*) ;; *) soft "this upload was not matched (replaced by a newer one, or failed)";; esac
+          n() { printf '%s' "$st" | sed -n "s/.*\"$1\":{\"p1\":\([0-9]*\),\"p2\":\([0-9]*\),\"p3\":\([0-9]*\),\"p4\":\([0-9]*\)}.*/$2/p"; }
+          p1=$(n unresolved "\1"); p2=$(n unresolved "\2")
+          echo "Unresolved findings: P1 $p1, P2 $p2, P3 $(n unresolved "\3"), P4 $(n unresolved "\4") (new since this upload: P1 $(n new "\1"), P2 $(n new "\2"))"
+          echo "Details: $(printf '%s' "$st" | sed -n 's/.*"url":"\([^"]*\)".*/\1/p')"
+          case "${SMOKE_FAIL_ON:-none}" in
+            p1) [ "${p1:-0}" -eq 0 ] || { echo "Failing: unresolved P1 findings (SMOKE_FAIL_ON=p1)"; exit 1; };;
+            p2) [ $((${p1:-0} + ${p2:-0})) -eq 0 ] || { echo "Failing: unresolved P1/P2 findings (SMOKE_FAIL_ON=p2)"; exit 1; };;
+          esac
+
