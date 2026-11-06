@@ -511,6 +511,8 @@ export const vi: Messages = {
       wrongPassword: 'Mật khẩu hiện tại không đúng',
       tooManyAttempts: 'Thử quá nhiều lần. Hãy đợi một phút rồi thử lại.',
       dailyLimit: 'Đã đạt giới hạn hôm nay ({limit}). Ngày mai sẽ được làm mới.',
+      serverDailyLimit:
+        'Hôm nay tính năng này đã đạt giới hạn chung cho mọi người. Hãy thử lại vào ngày mai.',
       aiNotSetUp: 'Máy chủ này chưa bật tính năng AI (OPENAI_API_KEY).',
       aiMisconfigured: 'Tính năng AI trên máy chủ này chưa được cài đặt đúng.',
       aiCutOff: 'Câu trả lời của AI bị cắt ngang. Hãy thử lại.',

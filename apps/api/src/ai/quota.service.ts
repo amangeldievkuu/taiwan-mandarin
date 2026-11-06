@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import { dayKeyIn } from '@taiwan-mandarin/shared';
 import { ENV, type Env } from '../config/env.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -10,9 +10,17 @@ export type QuotaKind = 'ai' | 'speech';
 const QUOTA_TIME_ZONE = 'Asia/Taipei';
 const today = () => dayKeyIn(Date.now(), QUOTA_TIME_ZONE);
 
-/** Per-user daily limits on paid API calls (AI_DAILY_LIMIT, SPEECH_DAILY_LIMIT). */
+/**
+ * Daily limits on paid API calls: per user (AI_DAILY_LIMIT, SPEECH_DAILY_LIMIT) and for the whole
+ * server (AI_GLOBAL_DAILY_LIMIT, SPEECH_GLOBAL_DAILY_LIMIT), because signing up is free and needs
+ * no email check, so per-user limits alone don't bound the bill.
+ */
 @Injectable()
 export class QuotaService {
+  private readonly logger = new Logger('Quota');
+  /** The day each kind last hit the server's limit, so the log says it once a day. */
+  private readonly warned = new Map<QuotaKind, string>();
+
   constructor(
     @Inject(PrismaService) private readonly db: PrismaService,
     @Inject(ENV) private readonly env: Env,
@@ -22,6 +30,10 @@ export class QuotaService {
     return kind === 'ai' ? this.env.AI_DAILY_LIMIT : this.env.SPEECH_DAILY_LIMIT;
   }
 
+  private globalLimit(kind: QuotaKind): number {
+    return kind === 'ai' ? this.env.AI_GLOBAL_DAILY_LIMIT : this.env.SPEECH_GLOBAL_DAILY_LIMIT;
+  }
+
   async used(userId: string, kind: QuotaKind): Promise<number> {
     const row = await this.db.aiUsage.findUnique({
       where: { userId_day_kind: { userId, day: today(), kind } },
@@ -29,7 +41,10 @@ export class QuotaService {
     return row?.count ?? 0;
   }
 
-  /** Counts one use, or throws 429 when today's limit is reached. */
+  /**
+   * Counts one use, or throws 429 when today's limit is reached, the learner's own or the server's.
+   * A refused use is given back: it cost nothing, and retrying must not use up the server's limit.
+   */
   async consume(userId: string, kind: QuotaKind): Promise<void> {
     const day = today();
     const row = await this.db.aiUsage.upsert({
@@ -38,10 +53,23 @@ export class QuotaService {
       update: { count: { increment: 1 } },
     });
     if (row.count > this.limit(kind)) {
+      await this.refund(userId, kind).catch(() => undefined);
       throw new HttpException(
         apiError('dailyLimit', { limit: this.limit(kind) }),
         HttpStatus.TOO_MANY_REQUESTS,
       );
+    }
+    const { _sum } = await this.db.aiUsage.aggregate({
+      where: { day, kind },
+      _sum: { count: true },
+    });
+    if ((_sum.count ?? 0) > this.globalLimit(kind)) {
+      await this.refund(userId, kind).catch(() => undefined);
+      if (this.warned.get(kind) !== day) {
+        this.warned.set(kind, day);
+        this.logger.warn(`The server's daily ${kind} limit (${this.globalLimit(kind)}) is reached`);
+      }
+      throw new HttpException(apiError('serverDailyLimit'), HttpStatus.TOO_MANY_REQUESTS);
     }
   }
 

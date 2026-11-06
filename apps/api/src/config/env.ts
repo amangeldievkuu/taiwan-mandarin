@@ -95,6 +95,10 @@ const Env = z.object({
   AI_DAILY_LIMIT: int(200, 0, 1_000_000),
   /** Pronunciation checks per user per day. */
   SPEECH_DAILY_LIMIT: int(300, 0, 1_000_000),
+  /** AI requests per day across all users: a ceiling on the OpenAI bill. */
+  AI_GLOBAL_DAILY_LIMIT: int(5_000, 0, 1_000_000_000),
+  /** Pronunciation checks per day across all users. */
+  SPEECH_GLOBAL_DAILY_LIMIT: int(5_000, 0, 1_000_000_000),
   /** Web Push keys for the daily reminders (npx web-push generate-vapid-keys); unset: no reminders. */
   VAPID_PUBLIC_KEY: vapidKey('public'),
   VAPID_PRIVATE_KEY: vapidKey('private'),

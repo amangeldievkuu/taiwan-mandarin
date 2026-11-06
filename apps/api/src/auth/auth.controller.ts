@@ -43,7 +43,8 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  // Each new account comes with its own daily AI allowance.
+  @Throttle({ default: { limit: 5, ttl: 60 * 60_000 } })
   @ApiOperation({ summary: 'Create an account and sign in' })
   @ApiZodBody(RegisterSchema)
   async register(

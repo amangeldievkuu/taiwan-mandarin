@@ -204,4 +204,5 @@ model AiUsage {
   count  Int    @default(0)
 
   @@id([userId, day, kind])
+  @@index([day, kind])
 }

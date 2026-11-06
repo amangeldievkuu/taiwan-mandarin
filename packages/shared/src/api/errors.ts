@@ -22,6 +22,8 @@ export const ERRORS = {
   // Limits
   tooManyAttempts: 'Too many attempts. Wait a minute and try again.',
   dailyLimit: 'Daily limit reached ({limit}). It resets tomorrow.',
+  serverDailyLimit:
+    'This feature has reached its limit for today, for everyone. Try again tomorrow.',
   // AI
   aiNotSetUp: 'AI features are not set up on this server (OPENAI_API_KEY).',
   aiMisconfigured: 'AI features are not set up correctly on this server.',

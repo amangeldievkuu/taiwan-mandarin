@@ -196,17 +196,18 @@ between devices.
 These run on the server with OpenAI (`OPENAI_API_KEY`, which also powers speech-to-text). Every
 setting lives in `apps/api/.env` (or the environment in Docker); an empty value means "default".
 
-| Variable                                        | Default                | What it does                                                           |
-| ----------------------------------------------- | ---------------------- | ---------------------------------------------------------------------- |
-| `OPENAI_MODEL`                                  | `gpt-6-luna`           | Model for explain and conversation                                     |
-| `OPENAI_REASONING_EFFORT`                       | `low`                  | `none`, `minimal`, `low`, `medium`, `high`, `xhigh` or `max`           |
-| `OPENAI_EXPLAIN_MODEL`, `OPENAI_EXPLAIN_EFFORT` | the two above          | Explain a sentence only                                                |
-| `OPENAI_TALK_MODEL`, `OPENAI_TALK_EFFORT`       | `OPENAI_MODEL`, `none` | Conversation only                                                      |
-| `OPENAI_TRANSCRIBE_MODEL`                       | `whisper-1`            | Pronunciation check (whisper-1 gives word timestamps)                  |
-| `OPENAI_SERVICE_TIER`                           | `auto`                 | `priority` answers faster at a higher price, `flex` slower and cheaper |
-| `OPENAI_VERBOSITY`                              | (not sent)             | `low`, `medium` or `high`                                              |
-| `OPENAI_TIMEOUT_MS`, `OPENAI_MAX_RETRIES`       | `45000`, `1`           | Raise the timeout for slow settings (gpt-5 at medium effort)           |
-| `AI_DAILY_LIMIT`, `SPEECH_DAILY_LIMIT`          | `200`, `300`           | Requests per user per day                                              |
+| Variable                                             | Default                | What it does                                                           |
+| ---------------------------------------------------- | ---------------------- | ---------------------------------------------------------------------- |
+| `OPENAI_MODEL`                                       | `gpt-6-luna`           | Model for explain and conversation                                     |
+| `OPENAI_REASONING_EFFORT`                            | `low`                  | `none`, `minimal`, `low`, `medium`, `high`, `xhigh` or `max`           |
+| `OPENAI_EXPLAIN_MODEL`, `OPENAI_EXPLAIN_EFFORT`      | the two above          | Explain a sentence only                                                |
+| `OPENAI_TALK_MODEL`, `OPENAI_TALK_EFFORT`            | `OPENAI_MODEL`, `none` | Conversation only                                                      |
+| `OPENAI_TRANSCRIBE_MODEL`                            | `whisper-1`            | Pronunciation check (whisper-1 gives word timestamps)                  |
+| `OPENAI_SERVICE_TIER`                                | `auto`                 | `priority` answers faster at a higher price, `flex` slower and cheaper |
+| `OPENAI_VERBOSITY`                                   | (not sent)             | `low`, `medium` or `high`                                              |
+| `OPENAI_TIMEOUT_MS`, `OPENAI_MAX_RETRIES`            | `45000`, `1`           | Raise the timeout for slow settings (gpt-5 at medium effort)           |
+| `AI_DAILY_LIMIT`, `SPEECH_DAILY_LIMIT`               | `200`, `300`           | Requests per user per day                                              |
+| `AI_GLOBAL_DAILY_LIMIT`, `SPEECH_GLOBAL_DAILY_LIMIT` | `5000`, `5000`         | Requests per day across all users, a ceiling on the OpenAI bill        |
 
 - Answers use the Responses API with structured outputs, validated against zod schemas. Nothing
   is stored on OpenAI's side (`store: false`), and prompts are laid out so repeated parts are
