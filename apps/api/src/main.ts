@@ -5,13 +5,14 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module.js';
+import { applyBodyLimits } from './common/body-limits.js';
 import { ENV, type Env } from './config/env.js';
 
 const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
 const env = app.get<Env>(ENV);
 
 app.set('trust proxy', env.TRUST_PROXY);
-app.useBodyParser('json', { limit: '10mb' }); // a first sync can carry thousands of cards
+applyBodyLimits(app);
 app.use(helmet({ contentSecurityPolicy: env.NODE_ENV === 'production' ? undefined : false }));
 app.use(cookieParser());
 app.enableCors({ origin: env.WEB_ORIGIN.split(',').map((o) => o.trim()), credentials: true });
