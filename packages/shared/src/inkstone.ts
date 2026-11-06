@@ -58,7 +58,7 @@ export const UNLOCKS: readonly Unlock[] = [
 /** Every look's name in Chinese, by `${slot}-${value}` (an unlock's id). */
 export const LOOK_ZH: Record<string, string> = {
   'pot-celadon': '青瓷',
-  'paste-vermilion': '朱砂',
+  'paste-vermilion': '硃砂',
   'paper-plain': '米字格',
   'brush-vermilion': '朱筆',
   'mo-plain': '墨',
