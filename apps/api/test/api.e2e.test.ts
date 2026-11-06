@@ -602,6 +602,34 @@ describe('expired refresh tokens', () => {
   });
 });
 
+describe('review history', () => {
+  it('reaches every review, page by page, with `before`', async () => {
+    const { token } = await signUp();
+    const auth = { authorization: `Bearer ${token}` };
+    const base = Date.now() - 60_000;
+    await request(http)
+      .post('/v1/sync')
+      .set(auth)
+      .send({
+        since: 0,
+        cards: [],
+        reviews: [0, 1, 2].map((i) => ({ ...review('w1'), review: base + i * 1000 })),
+      })
+      .expect(200);
+
+    const page = async (query: string) =>
+      (await request(http).get(`/v1/me/reviews?${query}`).set(auth).expect(200)).body as {
+        review: number;
+      }[];
+    const first = await page('limit=2');
+    expect(first.map((r) => r.review)).toEqual([base + 2000, base + 1000]);
+    const next = await page(`limit=2&before=${first.at(-1)?.review}`);
+    expect(next.map((r) => r.review)).toEqual([base]);
+    expect(await page(`before=${base}`)).toEqual([]);
+    expect((await request(http).get('/v1/me/reviews?before=9e99').set(auth)).status).toBe(400);
+  });
+});
+
 describe('personal access tokens', () => {
   it('reads data but cannot manage tokens', async () => {
     const { token } = await signIn(account);

@@ -47,6 +47,9 @@ import { ActivityService } from '../sync/activity.service.js';
 import { toDto } from '../sync/sync.service.js';
 import { TokensService } from './tokens.service.js';
 
+/** A query parameter holding a time, within what a Date can hold. */
+const QueryEpochMs = z.coerce.number().int().min(0).max(8.64e15);
+
 const OptimizeSchema = z.object({
   utcOffsetMinutes: z.number().int().min(-720).max(840).default(480),
 });
@@ -135,16 +138,27 @@ export class MeController {
 
   @Get('reviews')
   @TokenAllowed()
-  @ApiOperation({ summary: 'Review log, newest first' })
-  @ApiQuery({ name: 'since', required: false, description: 'Epoch ms' })
+  @ApiOperation({
+    summary:
+      'Review log, newest first; pass the oldest `review` of a page as `before` for the next',
+  })
+  @ApiQuery({ name: 'since', required: false, description: 'At or after, epoch ms' })
+  @ApiQuery({ name: 'before', required: false, description: 'Before, epoch ms' })
   @ApiQuery({ name: 'limit', required: false })
   async reviews(
     @CurrentUser() user: AuthUser,
-    @Query('since', new ZodPipe(z.coerce.number().int().min(0).default(0))) since = 0,
+    @Query('since', new ZodPipe(QueryEpochMs.default(0))) since = 0,
+    @Query('before', new ZodPipe(QueryEpochMs.optional())) before?: number,
     @Query('limit', new ZodPipe(z.coerce.number().int().min(1).max(5000).default(500))) limit = 500,
   ) {
     const rows = await this.db.reviewLog.findMany({
-      where: { userId: user.id, reviewedAt: { gte: new Date(since) } },
+      where: {
+        userId: user.id,
+        reviewedAt: {
+          gte: new Date(since),
+          ...(before === undefined ? {} : { lt: new Date(before) }),
+        },
+      },
       orderBy: { reviewedAt: 'desc' },
       take: limit,
     });
