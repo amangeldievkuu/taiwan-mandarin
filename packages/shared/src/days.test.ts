@@ -47,7 +47,7 @@ describe('dayKeyIn', () => {
     expect(canonicalTimeZone('Mars/Base')).toBeUndefined();
   });
 
-  it('gives a zone\'s offset from UTC, with daylight saving', () => {
+  it("gives a zone's offset from UTC, with daylight saving", () => {
     expect(utcOffsetMinutes(Date.UTC(2026, 0, 15), 'Asia/Taipei')).toBe(480);
     expect(utcOffsetMinutes(Date.UTC(2026, 6, 15), 'America/New_York')).toBe(-240);
     expect(utcOffsetMinutes(Date.UTC(2026, 0, 15), 'America/New_York')).toBe(-300);

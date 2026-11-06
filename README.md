@@ -124,8 +124,10 @@ deploy/restore.sh backups/taiwan_mandarin-20261022-040000.dump
 failure leaves it as it was) and starts the API again. A copy on the same disk doesn't survive
 losing the machine: also copy `./backups` somewhere else, e.g. with a nightly `rsync` or `rclone`.
 
-CI (`.github/workflows/ci.yml`) runs content build, type checks, lint, all tests (with a
-PostgreSQL service) and the production builds. Pushes to `main` that pass then upload
+CI (`.github/workflows/ci.yml`) runs content build, type checks, lint, formatting, all tests (with a
+PostgreSQL service), the production builds and the Docker images. `npm install` also sets up a
+pre-push hook (`.githooks/pre-push`) that runs the Taiwan-standard guard, so a word it rejects stops
+the push instead of turning CI red. Pushes to `main` that pass then upload
 `package-lock.json` to [Smoke](https://smoke.aircraft.tw), which tracks vulnerabilities in the
 dependencies; this needs the `SMOKE_TOKEN` secret and the `SMOKE_ASSET_ID` variable in the repo.
 

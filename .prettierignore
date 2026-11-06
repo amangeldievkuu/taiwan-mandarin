@@ -5,3 +5,4 @@ package-lock.json
 apps/api/src/generated
 apps/web/public/content
 apps/web/public/dict
+apps/web/public/strokes-tw.json

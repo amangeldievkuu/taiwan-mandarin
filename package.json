@@ -10,6 +10,7 @@
     "node": ">=22.18"
   },
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
     "build:shared": "npm run build -w @taiwan-mandarin/shared",
     "content": "npm run fetch -w @taiwan-mandarin/content && npm run build -w @taiwan-mandarin/content",
     "db:up": "docker compose up -d --wait db",
