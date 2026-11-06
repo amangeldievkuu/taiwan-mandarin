@@ -45,3 +45,27 @@ jobs:
         run: npm run test -w @taiwan-mandarin/api
       - name: Build
         run: npm run build -w @taiwan-mandarin/api -w @taiwan-mandarin/web
+
+  smoke:
+    # Only main: pull requests aren't releases, and forks of this public repo get no secrets.
+    if: github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-24.04
+    # A Smoke outage shouldn't turn main red; the failed job still shows in the run.
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: Upload dependency inventory to Smoke
+        env:
+          SMOKE_TOKEN: ${{ secrets.SMOKE_TOKEN }}
+          SMOKE_ASSET_ID: ${{ vars.SMOKE_ASSET_ID }}
+        run: |
+          curl -sS --fail-with-body --retry 3 \
+            -H "Authorization: Bearer $SMOKE_TOKEN" \
+            -H "Idempotency-Key: $GITHUB_SHA-$GITHUB_RUN_ATTEMPT" \
+            -F "files=@package-lock.json" -F "paths=package-lock.json" \
+            -F "release=${GITHUB_SHA::12}" -F "commit=$GITHUB_SHA" \
+            -F "pipelineUrl=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            "https://api.smoke.aircraft.tw/v1/assets/$SMOKE_ASSET_ID/inventory"

@@ -125,7 +125,9 @@ failure leaves it as it was) and starts the API again. A copy on the same disk d
 losing the machine: also copy `./backups` somewhere else, e.g. with a nightly `rsync` or `rclone`.
 
 CI (`.github/workflows/ci.yml`) runs content build, type checks, lint, all tests (with a
-PostgreSQL service) and the production builds.
+PostgreSQL service) and the production builds. Pushes to `main` that pass then upload
+`package-lock.json` to [Smoke](https://smoke.aircraft.tw), which tracks vulnerabilities in the
+dependencies; this needs the `SMOKE_TOKEN` secret and the `SMOKE_ASSET_ID` variable in the repo.
 
 **More example sentences.** `npm run examples -w @taiwan-mandarin/content -- --levels L3,L4`
 writes Taiwan-style sentences for words without one, with OpenAI (`OPENAI_API_KEY` from
