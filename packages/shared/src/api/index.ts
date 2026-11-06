@@ -93,6 +93,11 @@ export const ChangePasswordSchema = z
   });
 export type ChangePasswordBody = z.infer<typeof ChangePasswordSchema>;
 
+export const DeleteAccountSchema = z.object({
+  password: z.string().min(1, ERRORS.passwordMissing).max(200, ERRORS.passwordTooLong),
+});
+export type DeleteAccountBody = z.infer<typeof DeleteAccountSchema>;
+
 export interface UserDto {
   id: string;
   email: string;

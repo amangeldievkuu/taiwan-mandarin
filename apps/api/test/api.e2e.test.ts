@@ -549,6 +549,26 @@ describe('reset progress', () => {
   });
 });
 
+describe('deleting the account', () => {
+  it('asks for the password', async () => {
+    const { email, token } = await signUp();
+    const auth = { authorization: `Bearer ${token}` };
+    const remove = (body: object) => request(http).delete('/v1/auth/me').set(auth).send(body);
+
+    expect((await remove({})).status).toBe(400);
+    const wrong = await remove({ password: 'not the password' });
+    expect(wrong.status).toBe(403);
+    expect(wrong.body.code).toBe('wrongPassword');
+    expect((await request(http).get('/v1/auth/me').set(auth)).status).toBe(200);
+
+    expect((await remove({ password: 'correct horse battery' })).status).toBe(204);
+    const gone = await request(http)
+      .post('/v1/auth/login')
+      .send({ email, password: 'correct horse battery' });
+    expect(gone.status).toBe(401);
+  });
+});
+
 describe('personal access tokens', () => {
   it('reads data but cannot manage tokens', async () => {
     const { token } = await signIn(account);

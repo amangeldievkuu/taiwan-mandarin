@@ -225,9 +225,10 @@ class Account {
     this.setUser(null);
   }
 
-  async deleteAccount(): Promise<void> {
-    await reminders.forget();
-    await api('/v1/auth/me', { method: 'DELETE' });
+  async deleteAccount(password: string): Promise<void> {
+    // First: a wrong password changes nothing. The server's subscriptions go with the account.
+    await api('/v1/auth/me', { method: 'DELETE', body: { password } });
+    await reminders.forget({ server: false });
     setSession(null);
     this.setUser(null);
     // The local copy is kept, and belongs to no account: the next sign-in merges it in.

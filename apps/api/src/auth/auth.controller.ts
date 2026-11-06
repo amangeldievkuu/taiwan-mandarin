@@ -16,10 +16,12 @@ import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import {
   ChangePasswordSchema,
+  DeleteAccountSchema,
   LoginSchema,
   RegisterSchema,
   type AuthResponse,
   type ChangePasswordBody,
+  type DeleteAccountBody,
   type LoginBody,
   type RegisterBody,
   type UserDto,
@@ -143,12 +145,15 @@ export class AuthController {
   @HttpCode(204)
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete the account and all its data' })
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Delete the account and all its data; asks for the password' })
+  @ApiZodBody(DeleteAccountSchema)
   async remove(
     @CurrentUser() user: AuthUser,
+    @ZodBody(DeleteAccountSchema) body: DeleteAccountBody,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    await this.auth.deleteAccount(user.id);
+    await this.auth.deleteAccount(user.id, body.password);
     res.clearCookie(COOKIE, { path: '/' });
   }
 

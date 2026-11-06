@@ -3,6 +3,7 @@
   // memory model, API access and deleting the account.
   import SubpageHead from '../ui/SubpageHead.svelte';
   import AuthForm from '../ui/account/AuthForm.svelte';
+  import PasswordField from '../ui/account/PasswordField.svelte';
   import PasswordSection from '../ui/account/PasswordSection.svelte';
   import ProfileCard from '../ui/account/ProfileCard.svelte';
   import TokensSection from '../ui/account/TokensSection.svelte';
@@ -52,14 +53,21 @@
   let confirmDelete = $state(false);
   let deleting = $state(false);
   let deleteError = $state<string | null>(null);
-  async function deleteAccount() {
+  let deletePassword = $state('');
+  function cancelDelete() {
+    confirmDelete = false;
+    deletePassword = '';
+    deleteError = null;
+  }
+  async function deleteAccount(event: SubmitEvent) {
+    event.preventDefault();
     deleting = true;
     deleteError = null;
     try {
-      await account.deleteAccount();
-      confirmDelete = false;
+      await account.deleteAccount(deletePassword);
+      cancelDelete();
     } catch (e) {
-      deleteError = authMessage(e);
+      deleteError = authMessage(e, 'password');
     } finally {
       deleting = false;
     }
@@ -106,19 +114,24 @@
 
     <div class="danger">
       {#if confirmDelete}
-        <span>{t().account.deleteConfirm}</span>
-        {#if deleteError}<span class="error" role="alert">{deleteError}</span>{/if}
-        <span class="buttons">
-          <button
-            type="button"
-            class="btn quiet small"
-            disabled={deleting}
-            onclick={() => (confirmDelete = false)}>{t().common.cancel}</button
-          >
-          <button type="button" class="btn seal small" disabled={deleting} onclick={deleteAccount}
-            >{deleting ? t().account.deleting : t().account.delete}</button
-          >
-        </span>
+        <form class="delete-form" onsubmit={deleteAccount}>
+          <p>{t().account.deleteConfirm}</p>
+          <PasswordField
+            id="delete-password"
+            label={t().auth.current}
+            autocomplete="current-password"
+            bind:value={deletePassword}
+          />
+          {#if deleteError}<p class="error" role="alert">{deleteError}</p>{/if}
+          <span class="buttons">
+            <button type="button" class="btn quiet small" disabled={deleting} onclick={cancelDelete}
+              >{t().common.cancel}</button
+            >
+            <button type="submit" class="btn seal small" disabled={deleting}
+              >{deleting ? t().account.deleting : t().account.delete}</button
+            >
+          </span>
+        </form>
       {:else}
         <button type="button" class="link" onclick={() => (confirmDelete = true)}
           >{t().account.deleteMenu}</button
@@ -160,6 +173,18 @@
     margin-top: 28px;
     font-size: 14px;
     color: var(--ink-2);
+  }
+
+  .delete-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .delete-form p {
+    margin: 0;
   }
 
   .buttons {

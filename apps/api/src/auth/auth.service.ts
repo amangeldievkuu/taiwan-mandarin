@@ -175,10 +175,7 @@ export class AuthService {
     body: ChangePasswordBody,
     userAgent?: string,
   ): Promise<Session> {
-    const user = await this.db.user.findUnique({ where: { id: userId } });
-    if (!user) throw new UnauthorizedException();
-    const ok = await argon2.verify(user.passwordHash, body.currentPassword).catch(() => false);
-    if (!ok) throw new ForbiddenException(apiError('wrongPassword'));
+    const user = await this.checkPassword(userId, body.currentPassword);
     await this.db.user.update({
       where: { id: userId },
       data: {
@@ -188,6 +185,15 @@ export class AuthService {
     });
     await this.revokeAll(userId);
     return this.issue(user, randomUUID(), userAgent);
+  }
+
+  /** The account, if `password` is its password; a wrong one is 403 (see changePassword). */
+  private async checkPassword(userId: string, password: string) {
+    const user = await this.db.user.findUnique({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException();
+    const ok = await argon2.verify(user.passwordHash, password).catch(() => false);
+    if (!ok) throw new ForbiddenException(apiError('wrongPassword'));
+    return user;
   }
 
   /** Ends every session of the account, on every device, including access tokens already issued. */
@@ -212,8 +218,9 @@ export class AuthService {
     return toDto(user);
   }
 
-  /** Deletes the account and everything in it (cascades). */
-  async deleteAccount(userId: string): Promise<void> {
+  /** Deletes the account and everything in it (cascades), once the password is confirmed. */
+  async deleteAccount(userId: string, password: string): Promise<void> {
+    await this.checkPassword(userId, password);
     await this.db.user.delete({ where: { id: userId } });
   }
 

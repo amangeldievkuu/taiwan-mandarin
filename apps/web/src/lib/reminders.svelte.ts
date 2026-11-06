@@ -146,16 +146,18 @@ class Reminders {
    * Before signing out: the next account signed in here starts without reminders, and nothing
    * reaches this device for the last one. Never fails.
    */
-  async forget(): Promise<void> {
+  async forget({ server = true } = {}): Promise<void> {
     if (this.support !== 'ok') return;
     const sub = await navigator.serviceWorker
       .getRegistration()
       .then((reg) => reg?.pushManager.getSubscription() ?? null)
       .catch(() => null);
     if (!sub) return;
-    await api('/v1/push/unsubscribe', { method: 'POST', body: { endpoint: sub.endpoint } }).catch(
-      () => undefined,
-    );
+    if (server) {
+      await api('/v1/push/unsubscribe', { method: 'POST', body: { endpoint: sub.endpoint } }).catch(
+        () => undefined,
+      );
+    }
     await sub.unsubscribe().catch(() => undefined);
     setOwner(null);
     this.on = false;
