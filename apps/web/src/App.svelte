@@ -29,6 +29,7 @@
   import { pwa } from './lib/pwa.svelte';
   import { reminders } from './lib/reminders.svelte';
   import { router, viewKey } from './lib/router.svelte';
+  import { onceMissingTaiwanVoice } from './lib/speech';
   import { store } from './lib/store.svelte';
   import { account, rememberedUser } from './lib/sync.svelte';
   import { toasts } from './lib/toast.svelte';
@@ -62,6 +63,7 @@
         body: t().app.offlineReadyBody,
       }),
     );
+    noteMissingVoice();
     const stopFeedback = feedback.init();
     const stopWatching = store.watchVisibility();
     return () => {
@@ -69,6 +71,27 @@
       stopWatching();
     };
   });
+
+  /** Once per device: the steps to add a voice stay in Settings. */
+  function noteMissingVoice() {
+    const KEY = 'taiwan-mandarin:voice-noted';
+    try {
+      if (localStorage.getItem(KEY)) return;
+    } catch {
+      return;
+    }
+    onceMissingTaiwanVoice(() => {
+      toasts.show(
+        { kind: 'info', title: t().app.noTaiwanVoice, body: t().app.noTaiwanVoiceBody },
+        10_000,
+      );
+      try {
+        localStorage.setItem(KEY, '1');
+      } catch {
+        // Storage is off: it may say so again next time.
+      }
+    });
+  }
 
   /** The browser chrome's colour (status bar, title bar): --paper in each theme. */
   const THEME_COLOR = { light: '#ffffff', dark: '#0f1012' } as const;

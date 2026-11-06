@@ -18,6 +18,9 @@ export const en = {
   ink: 'ink',
   app: {
     name: 'Taiwan Mandarin',
+    noTaiwanVoice: 'No Taiwan voice on this device',
+    noTaiwanVoiceBody:
+      'Words may be read with another accent. Me › Settings says how to add a Taiwan voice.',
     offlineReady: 'Ready to work offline',
     offlineReadyBody: 'Words you open from now on stay available without a connection.',
     loadFailed: "Couldn't load the word lists.",
@@ -357,6 +360,11 @@ export const en = {
     resetDevice: 'This deletes all progress and review history on this device.',
     deleteEverything: 'Delete everything',
     reset: 'Reset progress…',
+    noTaiwanVoice:
+      'This device has no Taiwan Mandarin voice, so words may be read with another accent and ' +
+      'sometimes a Mainland reading. To add one, look for Chinese (Taiwan) in your device settings. ' +
+      'iPhone, iPad and Mac: Accessibility › Spoken Content › Voices. Android: text-to-speech ' +
+      'settings. Windows: Language settings, Chinese (Traditional, Taiwan). Then reopen the app.',
     exportHint:
       "Save a copy of your words, settings and this device's review history. It stays on your " +
       'device; nothing is sent anywhere.',

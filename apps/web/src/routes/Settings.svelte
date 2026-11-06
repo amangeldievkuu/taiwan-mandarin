@@ -13,6 +13,7 @@
   import { errorText } from '../lib/i18n/errors';
   import { t } from '../lib/i18n/index.svelte';
   import { reminders } from '../lib/reminders.svelte';
+  import { hasTaiwanVoice } from '../lib/speech';
   import { store } from '../lib/store.svelte';
   import { account } from '../lib/sync.svelte';
 
@@ -242,6 +243,9 @@
         onchange={(on) => companion.setOn(on)}
       />
     </SettingRow>
+    {#if hasTaiwanVoice() === false}
+      <p class="voice-note">{t().settings.noTaiwanVoice}</p>
+    {/if}
   </div>
 
   {#if reminders.publicKey}
@@ -390,6 +394,14 @@
   .buttons {
     display: flex;
     gap: 8px;
+  }
+
+  .voice-note {
+    margin: 0;
+    padding: 12px 16px;
+    border-top: 1px solid var(--rule);
+    font-size: 14px;
+    color: var(--ink-2);
   }
 
   .buttons.wrap {

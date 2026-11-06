@@ -7,16 +7,36 @@ export const canSpeak = synth !== undefined && typeof SpeechSynthesisUtterance !
 
 let voice: SpeechSynthesisVoice | null = null;
 
+const langOf = (v: Pick<SpeechSynthesisVoice, 'lang'>) => v.lang.replace(/_/g, '-').toLowerCase();
+const isTaiwan = (v: Pick<SpeechSynthesisVoice, 'lang'>) =>
+  langOf(v) === 'zh-tw' || langOf(v) === 'zh-hant-tw';
+
+/**
+ * Whether this device can speak Taiwan Mandarin; null until it has listed its voices. Without one
+ * the app falls back to another Chinese voice, whose accent and readings may not be Taiwan's.
+ */
+export function hasTaiwanVoice(
+  voices: readonly Pick<SpeechSynthesisVoice, 'lang'>[] = synth?.getVoices() ?? [],
+): boolean | null {
+  return voices.length === 0 ? null : voices.some(isTaiwan);
+}
+
+let onMissingVoice: (() => void) | null = null;
+
+/** Calls `handler` the first time something is spoken without a Taiwan voice. */
+export function onceMissingTaiwanVoice(handler: () => void): void {
+  onMissingVoice = handler;
+}
+
 function pickVoice(): void {
   if (!synth) return;
   const voices = synth.getVoices();
-  const lang = (v: SpeechSynthesisVoice) => v.lang.replace('_', '-').toLowerCase();
-  const tw = voices.filter((v) => lang(v) === 'zh-tw');
+  const tw = voices.filter(isTaiwan);
   voice =
     tw.find((v) => /mei-?jia/i.test(v.name)) ??
     tw[0] ??
-    voices.find((v) => lang(v).startsWith('zh-hant')) ??
-    voices.find((v) => lang(v).startsWith('zh')) ??
+    voices.find((v) => langOf(v).startsWith('zh-hant')) ??
+    voices.find((v) => langOf(v).startsWith('zh')) ??
     null;
 }
 
@@ -31,6 +51,10 @@ if (synth) {
  */
 export function speak(text: string, options: { rate?: number } = {}): Promise<boolean> {
   if (!synth || !canSpeak) return Promise.resolve(false);
+  if (onMissingVoice && hasTaiwanVoice() === false) {
+    onMissingVoice();
+    onMissingVoice = null;
+  }
   return new Promise((resolve) => {
     try {
       synth.cancel();

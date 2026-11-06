@@ -7,6 +7,9 @@ export const vi: Messages = {
   ink: 'mực',
   app: {
     name: 'Tiếng Hoa Đài Loan',
+    noTaiwanVoice: 'Thiết bị này chưa có giọng đọc Đài Loan',
+    noTaiwanVoiceBody:
+      'Từ có thể được đọc theo giọng khác. Xem cách thêm giọng Đài Loan trong Tôi › Cài đặt.',
     offlineReady: 'Sẵn sàng dùng ngoại tuyến',
     offlineReadyBody: 'Những từ bạn mở từ giờ sẽ dùng được cả khi không có mạng.',
     loadFailed: 'Không tải được danh sách từ.',
@@ -378,6 +381,12 @@ export const vi: Messages = {
     resetDevice: 'Thao tác này xóa toàn bộ tiến độ và lịch sử ôn tập trên thiết bị này.',
     deleteEverything: 'Xóa tất cả',
     reset: 'Đặt lại tiến độ…',
+    noTaiwanVoice:
+      'Thiết bị này chưa có giọng đọc tiếng Hoa Đài Loan, nên từ có thể được đọc theo giọng khác, ' +
+      'đôi khi theo cách đọc Đại lục. Để thêm giọng, hãy tìm Chinese (Taiwan) trong cài đặt thiết ' +
+      'bị. iPhone, iPad và Mac: Accessibility › Spoken Content › Voices. Android: cài đặt chuyển ' +
+      'văn bản thành giọng nói. Windows: Language settings, Chinese (Traditional, Taiwan). Sau đó ' +
+      'hãy mở lại ứng dụng.',
     exportHint:
       'Lưu một bản sao từ vựng, cài đặt và lịch sử ôn tập trên thiết bị này. Bản sao ở lại trên ' +
       'thiết bị của bạn, không gửi đi đâu cả.',
