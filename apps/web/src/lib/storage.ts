@@ -102,6 +102,19 @@ export interface StorageAdapter {
   clear(): Promise<void>;
 }
 
+/**
+ * Asks the browser not to clear this app's data when space runs short or the app goes unused
+ * (Safari clears sites after about a week away). Without an account it's the only copy. The browser
+ * may say no; nothing depends on the answer.
+ */
+export async function askToKeepData(): Promise<void> {
+  try {
+    if (!(await navigator.storage.persisted())) await navigator.storage.persist();
+  } catch {
+    // Not available here.
+  }
+}
+
 const KEY = 'taiwan-mandarin:v1';
 const REVIEWS_KEY = 'taiwan-mandarin:reviews';
 const PRACTICE_KEY = 'taiwan-mandarin:practice';

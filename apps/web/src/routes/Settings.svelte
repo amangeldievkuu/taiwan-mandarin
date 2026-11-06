@@ -9,6 +9,7 @@
   import { api } from '../lib/api';
   import { companion } from '../lib/companion.svelte';
   import { feedback } from '../lib/feedback.svelte';
+  import { cardsCsv, reviewsCsv, saveFile, toJson } from '../lib/export';
   import { errorText } from '../lib/i18n/errors';
   import { t } from '../lib/i18n/index.svelte';
   import { reminders } from '../lib/reminders.svelte';
@@ -54,6 +55,26 @@
       reminderError = errorText(e);
     } finally {
       testing = false;
+    }
+  }
+
+  let exportError = $state<string | null>(null);
+
+  async function exportAs(kind: 'all' | 'words' | 'reviews') {
+    exportError = null;
+    try {
+      const data = await store.exportData();
+      const now = new Date();
+      const day = store.today;
+      if (kind === 'all') {
+        saveFile(`taiwan-mandarin-${day}.json`, toJson(data, now), 'application/json');
+      } else if (kind === 'words') {
+        saveFile(`taiwan-mandarin-words-${day}.csv`, cardsCsv(data.cards), 'text/csv');
+      } else {
+        saveFile(`taiwan-mandarin-reviews-${day}.csv`, reviewsCsv(data.reviews), 'text/csv');
+      }
+    } catch (e) {
+      exportError = errorText(e);
     }
   }
 
@@ -277,6 +298,20 @@
   <h2 class="section-title">{t().settings.data} <span class="zh" lang="zh-Hant-TW">資料</span></h2>
   <div class="sheet data">
     <p>{t().settings.todayCounts(todayNew, todayReviews)}</p>
+    <p>{t().settings.exportHint}</p>
+    <div class="buttons wrap">
+      <button type="button" class="btn quiet small" onclick={() => exportAs('all')}
+        >{t().settings.exportAll}</button
+      >
+      <button type="button" class="btn quiet small" onclick={() => exportAs('words')}
+        >{t().settings.exportWords}</button
+      >
+      <button type="button" class="btn quiet small" onclick={() => exportAs('reviews')}
+        >{t().settings.exportReviews}</button
+      >
+    </div>
+    {#if exportError}<p class="warn" role="alert">{exportError}</p>{/if}
+    <hr class="data-rule" />
     {#if confirmReset}
       <p class="warn">
         {account.user ? t().settings.resetAccount : t().settings.resetDevice}
@@ -355,5 +390,15 @@
   .buttons {
     display: flex;
     gap: 8px;
+  }
+
+  .buttons.wrap {
+    flex-wrap: wrap;
+  }
+
+  .data-rule {
+    margin: 14px 0;
+    border: 0;
+    border-top: 1px solid var(--rule);
   }
 </style>

@@ -357,6 +357,12 @@ export const en = {
     resetDevice: 'This deletes all progress and review history on this device.',
     deleteEverything: 'Delete everything',
     reset: 'Reset progress…',
+    exportHint:
+      "Save a copy of your words, settings and this device's review history. It stays on your " +
+      'device; nothing is sent anywhere.',
+    exportAll: 'Everything (JSON)',
+    exportWords: 'Words (CSV)',
+    exportReviews: 'Reviews (CSV)',
   },
 
   about: {

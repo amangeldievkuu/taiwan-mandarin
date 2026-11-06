@@ -48,8 +48,10 @@ import {
 import { content } from './content.svelte';
 import { devLanguage, firstRunLanguage } from './i18n/detect';
 import { locale, t } from './i18n/index.svelte';
+import type { ExportData } from './export';
 import { toasts } from './toast.svelte';
 import {
+  askToKeepData,
   BrowserStorage,
   mergeSettings,
   migrate,
@@ -161,6 +163,7 @@ class Store {
   private shownAt = 0;
   private saveTimer: ReturnType<typeof setTimeout> | undefined;
   private storage: StorageAdapter;
+  private askedToKeepData = false;
 
   constructor(storage: StorageAdapter) {
     this.storage = storage;
@@ -329,6 +332,10 @@ class Store {
   rate(grade: Grade): void {
     const id = this.queue[0];
     if (!id || !this.revealed || !this.pending) return;
+    if (!this.askedToKeepData) {
+      this.askedToKeepData = true;
+      void askToKeepData();
+    }
     const { card, log } = this.pending.preview[grade];
     const isNew = !this.cards[id];
     const requeue = shouldRequeue(grade, card, this.pending.at);
@@ -386,6 +393,17 @@ class Store {
 
   reviews(since?: number): Promise<ReviewRecord[]> {
     return this.storage.reviews(since);
+  }
+
+  /** All the learner's data on this device. Reviews sync upward only: others' aren't here. */
+  async exportData(): Promise<ExportData> {
+    return {
+      settings: $state.snapshot(this.settings),
+      cards: $state.snapshot(this.cards),
+      deck: $state.snapshot(this.deck),
+      reviews: await this.storage.reviews(0),
+      practice: await this.storage.practice(0),
+    };
   }
 
   /**

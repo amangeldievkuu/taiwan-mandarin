@@ -378,6 +378,12 @@ export const vi: Messages = {
     resetDevice: 'Thao tác này xóa toàn bộ tiến độ và lịch sử ôn tập trên thiết bị này.',
     deleteEverything: 'Xóa tất cả',
     reset: 'Đặt lại tiến độ…',
+    exportHint:
+      'Lưu một bản sao từ vựng, cài đặt và lịch sử ôn tập trên thiết bị này. Bản sao ở lại trên ' +
+      'thiết bị của bạn, không gửi đi đâu cả.',
+    exportAll: 'Tất cả (JSON)',
+    exportWords: 'Từ vựng (CSV)',
+    exportReviews: 'Lượt ôn (CSV)',
   },
 
   about: {
