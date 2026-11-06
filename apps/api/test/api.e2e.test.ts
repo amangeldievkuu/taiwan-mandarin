@@ -569,6 +569,39 @@ describe('deleting the account', () => {
   });
 });
 
+describe('expired refresh tokens', () => {
+  it('are swept for every account, and live ones stay', async () => {
+    const { AuthService } = await import('../src/auth/auth.service.js');
+    const { PrismaService } = await import('../src/prisma/prisma.service.js');
+    const db = app.get(PrismaService);
+    const { token } = await signUp();
+    const me = await request(http).get('/v1/auth/me').set('authorization', `Bearer ${token}`);
+    const userId = me.body.id as string;
+    const day = 24 * 60 * 60 * 1000;
+    const row = (name: string, expiresIn: number, revokedAgo?: number) => ({
+      userId,
+      family: randomUUID(),
+      tokenHash: sha256(`${name}-${randomUUID()}`),
+      expiresAt: new Date(Date.now() + expiresIn),
+      revokedAt: revokedAgo === undefined ? null : new Date(Date.now() - revokedAgo),
+    });
+    await db.refreshToken.createMany({
+      data: [
+        row('expired', -day),
+        row('revoked long ago', 30 * day, 61 * day),
+        row('revoked lately', 30 * day, day),
+      ],
+    });
+    const before = await db.refreshToken.count({ where: { userId } });
+
+    expect(await app.get(AuthService).sweepAll()).toBeGreaterThanOrEqual(2);
+
+    // The session from signing up and the lately revoked one are left.
+    expect(before).toBe(4);
+    expect(await db.refreshToken.count({ where: { userId } })).toBe(2);
+  });
+});
+
 describe('personal access tokens', () => {
   it('reads data but cannot manage tokens', async () => {
     const { token } = await signIn(account);

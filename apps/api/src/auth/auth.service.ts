@@ -19,6 +19,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { Cron } from '@nestjs/schedule';
 import argon2 from 'argon2';
 import type {
   AuthResponse,
@@ -35,7 +36,7 @@ export const ACCESS_TTL_SECONDS = 15 * 60;
 export const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 /** How many replacements one token may get: its rotation, then this many lost responses. */
 export const MAX_CHILDREN = 3;
-/** Expired and long-revoked tokens are dropped when their owner next refreshes. */
+/** Revoked tokens are kept this long, then dropped with the expired ones. */
 const SWEEP_AFTER_MS = 60 * 24 * 60 * 60 * 1000;
 
 export interface Session extends AuthResponse {
@@ -142,20 +143,27 @@ export class AuthService {
     );
   }
 
-  /** Drops this account's expired tokens and those revoked long ago; nothing waits on it. */
-  private sweep(userId: string): void {
+  /** Tokens that are of no more use: expired, or revoked long ago. */
+  private spent() {
     const now = Date.now();
+    return [
+      { expiresAt: { lt: new Date(now) } },
+      { revokedAt: { lt: new Date(now - SWEEP_AFTER_MS) } },
+    ];
+  }
+
+  /** Drops this account's spent tokens; nothing waits on it. */
+  private sweep(userId: string): void {
     void this.db.refreshToken
-      .deleteMany({
-        where: {
-          userId,
-          OR: [
-            { expiresAt: { lt: new Date(now) } },
-            { revokedAt: { lt: new Date(now - SWEEP_AFTER_MS) } },
-          ],
-        },
-      })
+      .deleteMany({ where: { userId, OR: this.spent() } })
       .catch(() => undefined);
+  }
+
+  /** Nightly: the same for accounts that never come back to refresh. Returns how many went. */
+  @Cron('0 3 * * *')
+  async sweepAll(): Promise<number> {
+    const { count } = await this.db.refreshToken.deleteMany({ where: { OR: this.spent() } });
+    return count;
   }
 
   async logout(token: string | undefined): Promise<void> {
