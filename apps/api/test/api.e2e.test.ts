@@ -336,6 +336,40 @@ describe('sync', () => {
     expect(huge.status).toBe(400);
   });
 
+  it('takes a long history in several requests: one that only sends gets nothing back', async () => {
+    const { token } = await signUp();
+    const auth = { authorization: `Bearer ${token}` };
+    const first = review('w1');
+    // The app puts the cursor of such a request ahead of the clock (sync.svelte.ts).
+    const sent = await request(http)
+      .post('/v1/sync')
+      .set(auth)
+      .send({
+        since: Date.now() + 10 * 60_000,
+        cards: [{ wordId: 'w1', updatedAt: Date.now(), card: card(new Date().toISOString()) }],
+        reviews: [first],
+      });
+    expect(sent.status).toBe(200);
+    expect(sent.body.cards).toEqual([]);
+    expect(sent.body.acceptedReviews).toEqual([first.id]);
+
+    // The last request, with the real cursor, brings back what the server has.
+    const second = review('w2');
+    const last = await request(http)
+      .post('/v1/sync')
+      .set(auth)
+      .send({
+        since: 0,
+        cards: [{ wordId: 'w2', updatedAt: Date.now(), card: card(new Date().toISOString()) }],
+        reviews: [second],
+      });
+    expect(last.body.cards.map((c: { wordId: string }) => c.wordId).sort()).toEqual(['w1', 'w2']);
+    const stored = await request(http).get('/v1/me/reviews').set(auth);
+    expect(stored.body.map((r: { id: string }) => r.id).sort()).toEqual(
+      [first.id, second.id].sort(),
+    );
+  });
+
   it('keeps the newer settings and deck', async () => {
     const { token } = await signUp();
     const auth = { authorization: `Bearer ${token}` };
@@ -546,6 +580,41 @@ describe('reset progress', () => {
       .send({ since: 0, cards: [], reviews: [] });
     expect(after.body.cards).toEqual([]);
     expect((await request(http).get('/v1/me/reviews').set(auth)).body).toEqual([]);
+  });
+
+  it('deletes practice too, and lets the nightly FSRS fit count from zero again', async () => {
+    const { PrismaService } = await import('../src/prisma/prisma.service.js');
+    const db = app.get(PrismaService);
+    const { token } = await signUp();
+    const auth = { authorization: `Bearer ${token}` };
+    const me = await request(http).get('/v1/auth/me').set(auth);
+    const userId = me.body.id as string;
+    const activity = { timeZone: 'Asia/Taipei', since: 0 };
+    const pushed = await request(http)
+      .post('/v1/sync')
+      .set(auth)
+      .send({
+        since: 0,
+        cards: [],
+        reviews: [review('w1')],
+        practice: [{ id: randomUUID(), kind: 'read', ref: 'mrt', at: Date.now() }],
+        activity,
+      });
+    expect(pushed.body.activity.days).toHaveLength(1);
+    expect(pushed.body.activity.days[0]).toMatchObject({ reviews: 1, read: 1 });
+    // As after a fit that was tried on a long history.
+    await db.user.update({ where: { id: userId }, data: { fsrsAttemptedCount: 3000 } });
+
+    await request(http).delete('/v1/me/progress').set(auth).expect(204);
+    const after = await request(http)
+      .post('/v1/sync')
+      .set(auth)
+      .send({ since: 0, cards: [], reviews: [], activity });
+    // No ink left from stories, Talk or writing either.
+    expect(after.body.activity.days).toEqual([]);
+    expect(await db.practiceLog.count({ where: { userId } })).toBe(0);
+    const user = await db.user.findUniqueOrThrow({ where: { id: userId } });
+    expect(user.fsrsAttemptedCount).toBe(0);
   });
 });
 

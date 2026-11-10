@@ -200,12 +200,16 @@ export class MeController {
   @Delete('progress')
   @HttpCode(204)
   @ApiOperation({
-    summary: 'Start over: delete every card, review, the deck and the personal FSRS weights',
+    summary:
+      'Start over: delete every card, review and practice entry, the deck and the personal ' +
+      'FSRS weights',
   })
   async resetProgress(@CurrentUser() user: AuthUser): Promise<void> {
     await this.db.$transaction([
       this.db.card.deleteMany({ where: { userId: user.id } }),
       this.db.reviewLog.deleteMany({ where: { userId: user.id } }),
+      // Stories, Talk and writing too: their ink would come back with the next sync.
+      this.db.practiceLog.deleteMany({ where: { userId: user.id } }),
       this.db.user.update({
         where: { id: user.id },
         data: {
@@ -214,6 +218,8 @@ export class MeController {
           fsrsWeights: [],
           fsrsTrainedAt: null,
           fsrsReviewCount: 0,
+          // The nightly fit counts new reviews from here, not from the history just deleted.
+          fsrsAttemptedCount: 0,
         },
       }),
     ]);
