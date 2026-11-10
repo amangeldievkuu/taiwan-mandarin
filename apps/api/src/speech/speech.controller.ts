@@ -44,7 +44,17 @@ export class SpeechController {
     @CurrentUser() user: AuthUser,
     @ZodBody(PronounceRequestSchema) body: PronounceRequest,
   ): Promise<PronounceResult> {
-    // The quota is only charged for recordings that get sent for recognition.
-    return this.speech.check(body, () => this.quota.consume(user.id, 'speech'));
+    // The quota is only charged for recordings that get sent for recognition, and given back
+    // when recognition fails.
+    let charged = false;
+    try {
+      return await this.speech.check(body, async () => {
+        await this.quota.consume(user.id, 'speech');
+        charged = true;
+      });
+    } catch (error) {
+      if (charged) await this.quota.refund(user.id, 'speech').catch(() => undefined);
+      throw error;
+    }
   }
 }

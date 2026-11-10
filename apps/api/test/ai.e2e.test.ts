@@ -225,6 +225,21 @@ describe('explain, streamed', () => {
     });
   });
 
+  it('gives the use back when the answer fails, as the plain route does', async () => {
+    const used = async () =>
+      (await request(http).get('/v1/ai/status').set(auth())).body.used as number;
+    const before = await used();
+    replies = [new BadGatewayException('The AI service failed. Try again.')];
+    const failed = await stream({ text: '請勿停車' });
+    expect((failed.body as ExplainStreamEvent[]).at(-1)?.type).toBe('error');
+    expect(await used()).toBe(before);
+
+    replies = [{ translation: 'No parking', tokens: [], grammar: [], notes: [] }];
+    const answered = await stream({ text: '請勿停車' });
+    expect((answered.body as ExplainStreamEvent[]).at(-1)?.type).toBe('done');
+    expect(await used()).toBe(before + 1);
+  });
+
   it('rejects empty requests before streaming', async () => {
     const res = await request(http).post('/v1/ai/explain/stream').set(auth()).send({});
     expect(res.status).toBe(400);
@@ -459,5 +474,19 @@ describe('quota', () => {
     replies = [{ reply: '你好！', translation: 'Hi!', correction: null }];
     await request(http).post('/v1/ai/talk').set(auth()).send({ scenario: 'mrt' }).expect(200);
     expect(await used()).toBe(before + 1);
+  });
+
+  it('gives back a goodbye that failed; the conversation still ends', async () => {
+    replies = [{ reply: '你好！', translation: 'Hi!', correction: null }];
+    const opened = await request(http).post('/v1/ai/talk').set(auth()).send({ scenario: 'free' });
+    const before = await used();
+    replies = [new BadGatewayException('upstream down')];
+    const ended = await request(http)
+      .post(`/v1/ai/talk/${opened.body.conversationId}/end`)
+      .set(auth());
+    expect(ended.status).toBe(200);
+    expect(ended.body.message).toBeNull();
+    expect(ended.body.endedAt).toEqual(expect.any(String));
+    expect(await used()).toBe(before);
   });
 });

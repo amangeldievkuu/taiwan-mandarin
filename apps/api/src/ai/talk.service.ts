@@ -364,13 +364,14 @@ export class TalkService {
   }
 
   /**
-   * Ends a conversation: the partner says goodbye (when `mayClose` allows another AI call), and it
-   * becomes read-only with a summary. Ending one that already ended just returns its summary.
+   * Ends a conversation: the partner says goodbye (when `goodbye.allowed` grants another AI call;
+   * `goodbye.failed` hears of one that produced nothing), and it becomes read-only with a summary.
+   * Ending one that already ended just returns its summary.
    */
   async end(
     userId: string,
     id: string,
-    mayClose: () => Promise<boolean>,
+    goodbye: { allowed: () => Promise<boolean>; failed?: () => Promise<unknown> },
     lang: Lang = 'en',
   ): Promise<TalkEndResponse> {
     const conversation = await this.owned(userId, id);
@@ -383,7 +384,7 @@ export class TalkService {
     }
 
     let closing: TalkMessage | null = null;
-    if (conversation.messages.length && this.llm.available && (await mayClose())) {
+    if (conversation.messages.length && this.llm.available && (await goodbye.allowed())) {
       try {
         const vocabulary = await this.vocabulary(userId);
         const answer = await this.reply(
@@ -411,6 +412,7 @@ export class TalkService {
       } catch (error) {
         // The goodbye is a nicety: the conversation still ends without it.
         this.logger.warn(`talk closing line failed: ${String(error)}`);
+        await goodbye.failed?.();
       }
     }
 

@@ -1,7 +1,7 @@
 // Pronunciation checks with Whisper replaced by a stub and synthetic recordings with known pitch.
 
 import { randomUUID } from 'node:crypto';
-import type { INestApplication } from '@nestjs/common';
+import { BadGatewayException, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -11,10 +11,13 @@ import type { Transcript } from '../src/speech/whisper.service.js';
 const RATE = 16000;
 let transcript: Transcript = { text: '', words: [] };
 let transcribed = 0;
+/** Set to make speech-to-text fail, as when OpenAI is down. */
+let failing: Error | null = null;
 const stub = {
   available: true,
   transcribe: async () => {
     transcribed++;
+    if (failing) throw failing;
     return transcript;
   },
 };
@@ -140,6 +143,25 @@ describe('POST /v1/speech/check', () => {
     const res = await check(wav([rising]), '你好', 'ni3');
     expect(res.status).toBe(400);
     expect(transcribed).toBe(0);
+  });
+
+  it('charges a check that was recognized, and gives the use back when recognition fails', async () => {
+    const used = async () =>
+      (await request(http).get('/v1/speech/status').set(auth)).body.used as number;
+    const before = await used();
+    transcript = { text: '你好', words: [{ word: '你好', start: 0.08, end: 0.76 }] };
+    failing = new BadGatewayException('Speech recognition failed. Try again.');
+    try {
+      expect((await check(wav([rising, low]), '你好', 'ni3 hao3')).status).toBe(502);
+    } finally {
+      failing = null;
+    }
+    expect(await used()).toBe(before);
+    // Turned away before recognition: never charged, so nothing to give back.
+    expect((await check(wav([]), '你好', 'ni3 hao3')).status).toBe(400);
+    expect(await used()).toBe(before);
+    expect((await check(wav([rising, low]), '你好', 'ni3 hao3')).status).toBe(200);
+    expect(await used()).toBe(before + 1);
   });
 
   it('rejects audio that is not WAV', async () => {

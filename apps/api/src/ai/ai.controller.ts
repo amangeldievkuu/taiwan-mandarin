@@ -89,7 +89,17 @@ export class AiController {
     // Checked before the stream starts, so these still come back as plain HTTP errors.
     this.requireAi();
     await this.quota.consume(user.id, 'ai');
-    await writeNdjson(res, (signal) => this.explainer.explainStream(body, signal));
+    const { explainer, quota } = this;
+    await writeNdjson(res, async function* (signal) {
+      try {
+        yield* explainer.explainStream(body, signal);
+      } catch (error) {
+        // As on /explain, an answer that failed costs nothing. One the learner walked away from
+        // was still paid for.
+        if (!signal.aborted) await quota.refund(user.id, 'ai').catch(() => undefined);
+        throw error;
+      }
+    });
   }
 
   @Post('talk')
@@ -131,7 +141,7 @@ export class AiController {
     @Query('lang', new ZodPipe(LangSchema.default('en'))) lang: Lang,
   ): Promise<TalkEndResponse> {
     // The goodbye uses one AI message when there is one left today; without it the chat still ends.
-    const mayClose = () =>
+    const allowed = () =>
       this.quota.consume(user.id, 'ai').then(
         () => true,
         (error: unknown) => {
@@ -140,7 +150,9 @@ export class AiController {
           throw error;
         },
       );
-    return this.talker.end(user.id, id, mayClose, lang);
+    // A goodbye that failed is given back, like any AI answer that did.
+    const failed = () => this.quota.refund(user.id, 'ai').catch(() => undefined);
+    return this.talker.end(user.id, id, { allowed, failed }, lang);
   }
 
   @Delete('talk/:id')
