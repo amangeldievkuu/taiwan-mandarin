@@ -127,9 +127,7 @@ losing the machine: also copy `./backups` somewhere else, e.g. with a nightly `r
 CI (`.github/workflows/ci.yml`) runs content build, type checks, lint, formatting, all tests (with a
 PostgreSQL service), the production builds and the Docker images. `npm install` also sets up a
 pre-push hook (`.githooks/pre-push`) that runs the Taiwan-standard guard, so a word it rejects stops
-the push instead of turning CI red. Pushes to `main` that pass then upload
-`package-lock.json` to [Smoke](https://smoke.aircraft.tw), which tracks vulnerabilities in the
-dependencies; this needs the `SMOKE_TOKEN` secret and the `SMOKE_ASSET_ID` variable in the repo.
+the push instead of turning CI red.
 
 **More example sentences.** `npm run examples -w @taiwan-mandarin/content -- --levels L3,L4`
 writes Taiwan-style sentences for words without one, with OpenAI (`OPENAI_API_KEY` from
