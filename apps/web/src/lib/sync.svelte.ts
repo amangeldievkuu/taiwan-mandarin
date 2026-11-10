@@ -29,7 +29,11 @@ import { errorText } from './i18n/errors';
 import { reminders } from './reminders.svelte';
 import { t } from './i18n/index.svelte';
 import { store } from './store.svelte';
+import { syncBatches } from './sync-batches';
 import { toasts } from './toast.svelte';
+
+/** How far past this device's clock the cursor of a request that only sends is put. */
+const AHEAD_MS = 10 * 60_000;
 
 const toDto = (wordId: string, r: CardRecord): CardRecordDto => ({
   wordId,
@@ -257,30 +261,52 @@ class Account {
     try {
       await store.useAccount(this.user.id);
       const local = await store.pendingChanges();
-      const request: SyncRequest = {
-        since: store.syncState.cursor,
-        cards: local.cards.map(([id, r]) => toDto(id, r)),
-        reviews: local.reviews.map((r) => ({ ...r, pending: undefined })),
-        practice: local.practice.map((p) => ({ ...p, pending: undefined })),
-        deck: { entries: $state.snapshot(store.deck), updatedAt: store.syncState.deckUpdatedAt },
-        settings: {
-          value: $state.snapshot(store.settings),
-          updatedAt: store.syncState.settingsUpdatedAt,
-        },
-        activity: store.activityRequest(),
-      };
-      const response = await api<SyncResponse>('/v1/sync', { method: 'POST', body: request });
-      await store.applyRemote({
-        cursor: response.cursor,
-        cards: response.cards.map(fromDto),
-        settings: response.settings as { value: Settings; updatedAt: number } | undefined,
-        deck: response.deck,
-        fsrsWeights: response.fsrs?.w,
-        acceptedReviews: response.acceptedReviews,
-        acceptedPractice: response.acceptedPractice ?? [],
-        pushedAt: local.startedAt,
-        activity: response.activity,
-      });
+      // Usually one request. A long history never sent before goes in several (sync-batches.ts).
+      const batches = syncBatches(local);
+      for (const [i, batch] of batches.entries()) {
+        const last = i === batches.length - 1;
+        const sent = {
+          cards: batch.cards.map(([id, r]) => toDto(id, r)),
+          reviews: batch.reviews.map((r) => ({ ...r, pending: undefined })),
+          practice: batch.practice.map((p) => ({ ...p, pending: undefined })),
+        };
+        if (!last) {
+          // Only sending: a cursor ahead of the server's clock asks for nothing back but its
+          // newer copies of these cards. The cursor, deck, settings and totals wait for the last.
+          const stored = await api<SyncResponse>('/v1/sync', {
+            method: 'POST',
+            body: { ...sent, since: Date.now() + AHEAD_MS } satisfies SyncRequest,
+          });
+          await store.applySent({
+            cards: stored.cards.map(fromDto),
+            acceptedReviews: stored.acceptedReviews,
+            acceptedPractice: stored.acceptedPractice ?? [],
+          });
+          continue;
+        }
+        const request: SyncRequest = {
+          ...sent,
+          since: store.syncState.cursor,
+          deck: { entries: $state.snapshot(store.deck), updatedAt: store.syncState.deckUpdatedAt },
+          settings: {
+            value: $state.snapshot(store.settings),
+            updatedAt: store.syncState.settingsUpdatedAt,
+          },
+          activity: store.activityRequest(),
+        };
+        const response = await api<SyncResponse>('/v1/sync', { method: 'POST', body: request });
+        await store.applyRemote({
+          cursor: response.cursor,
+          cards: response.cards.map(fromDto),
+          settings: response.settings as { value: Settings; updatedAt: number } | undefined,
+          deck: response.deck,
+          fsrsWeights: response.fsrs?.w,
+          acceptedReviews: response.acceptedReviews,
+          acceptedPractice: response.acceptedPractice ?? [],
+          pushedAt: local.startedAt,
+          activity: response.activity,
+        });
+      }
       this.lastSync = new Date();
     } catch (e) {
       // A 401 here already signed the learner out (see api.ts); the status line says so.

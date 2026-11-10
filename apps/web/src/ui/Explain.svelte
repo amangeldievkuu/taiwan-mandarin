@@ -33,8 +33,15 @@
   async function pick(event: Event) {
     const file = (event.currentTarget as HTMLInputElement).files?.[0];
     if (!file) return;
-    const { data, mediaType } = await photoToBase64(file);
-    photo = { data, mediaType, preview: `data:${mediaType};base64,${data}` };
+    error = null;
+    try {
+      const { data, mediaType } = await photoToBase64(file);
+      photo = { data, mediaType, preview: `data:${mediaType};base64,${data}` };
+    } catch {
+      // A format this browser can't open (HEIC outside Safari), or a damaged file.
+      photo = null;
+      error = t().errors.codes.photoUnreadable;
+    }
   }
 
   async function explain() {

@@ -50,11 +50,16 @@ import { devLanguage, firstRunLanguage } from './i18n/detect';
 import { locale, t } from './i18n/index.svelte';
 import type { ExportData } from './export';
 import { toasts } from './toast.svelte';
+import { uuid } from './uuid';
 import {
+  adoptSnapshot,
   askToKeepData,
   BrowserStorage,
   mergeSettings,
   migrate,
+  readSaveStamp,
+  SAVE_STAMP_KEY,
+  writeSaveStamp,
   type CardRecord,
   type Daily,
   type PracticeRecord,
@@ -89,16 +94,6 @@ const emptyStats = (): SessionStats => ({
   easy: 0,
 });
 const freshDaily = (): Daily => ({ date: dayKey(new Date()), newCount: 0, reviewCount: 0 });
-
-/** crypto.randomUUID needs a secure context; plain-http LAN testing (an iPad on 192.168.x) has none. */
-export function uuid(): string {
-  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
-  const b = crypto.getRandomValues(new Uint8Array(16));
-  b[6] = ((b[6] ?? 0) & 0x0f) | 0x40;
-  b[8] = ((b[8] ?? 0) & 0x3f) | 0x80;
-  const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
-  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
-}
 
 class Store {
   ready = $state(false);
@@ -164,6 +159,18 @@ class Store {
   private saveTimer: ReturnType<typeof setTimeout> | undefined;
   private storage: StorageAdapter;
   private askedToKeepData = false;
+  /** Names this tab in the save stamp, so two saves in the same millisecond still differ. */
+  private readonly tab = uuid();
+  /** The save stamp this tab last wrote or took in; another one means another tab saved since. */
+  private seenStamp: string | null = null;
+  /** Cards changed here and not saved yet: kept when another tab's save is taken in. */
+  private unsaved = new Set<string>();
+  /** Answers and practice counted here and not saved yet: counted again on top of that save. */
+  private uncounted: { reviews: ReviewRecord[]; practice: PracticeRecord[] } = {
+    reviews: [],
+    practice: [],
+  };
+  private adopting: Promise<void> | null = null;
 
   constructor(storage: StorageAdapter) {
     this.storage = storage;
@@ -172,6 +179,8 @@ class Store {
   async init(): Promise<void> {
     try {
       const manifest = await content.init();
+      // Read before the snapshot: a save that lands in between is then seen as a newer one.
+      this.seenStamp = readSaveStamp();
       const stored = await this.storage.load().catch(() => null);
       if (stored) {
         const snapshot = migrate(stored, manifest.legacyIds);
@@ -310,6 +319,7 @@ class Store {
     if (!record) return;
     record.suspended = suspended || undefined;
     record.updatedAt = Date.now();
+    this.unsaved.add(id);
     this.changed();
     if (!this.revealed) void this.refreshQueue();
   }
@@ -346,6 +356,7 @@ class Store {
       updatedAt: now,
       level: content.word(id)?.level ?? this.cards[id]?.level,
     };
+    this.unsaved.add(id);
     if (isNew && this.inDeck(id)) {
       this.deck = this.deck.filter((d) => d.id !== id);
       this.syncState.deckUpdatedAt = now;
@@ -375,6 +386,7 @@ class Store {
         }),
       );
     this.activity = countReview(this.activity, review);
+    this.uncounted.reviews.push(review);
 
     // Past midnight with the answer open: this answer counts for the new day.
     this.rollDay();
@@ -424,6 +436,7 @@ class Store {
       return false;
     }
     this.activity = countPractice(this.activity, entry);
+    this.uncounted.practice.push(entry);
     this.changed();
     return true;
   }
@@ -485,10 +498,13 @@ class Store {
     this.syncState = sync;
     this.daily = freshDaily();
     this.activity = emptyActivity();
+    this.unsaved.clear();
+    this.uncounted = { reviews: [], practice: [] };
     this.configureFsrs();
     await this.storage.clear();
     await this.startSession();
-    await this.flush();
+    // Over whatever another tab saved meanwhile: starting over is meant for all of them.
+    await this.flush({ overwrite: true });
     this.reviewRevision++;
   }
 
@@ -552,6 +568,31 @@ class Store {
     return { timeZone: a.timeZone, since: a.remoteComplete ? a.cursor : 0 };
   }
 
+  /** The server's cards over this device's, where the server's copy is as new or newer. */
+  private mergeCards(cards: [string, CardRecord][]): void {
+    for (const [id, record] of cards) {
+      const local = this.cards[id];
+      if (!local || local.updatedAt <= record.updatedAt) this.cards[id] = record;
+    }
+  }
+
+  /**
+   * One request of a sync sent in several (a long history never sent before): what the server
+   * stored is no longer waiting, and its newer copies of the cards sent are taken. The cursor and
+   * everything else come with the last request (applyRemote), so a sync that stops halfway sends
+   * the cards again and loses nothing.
+   */
+  async applySent(remote: {
+    cards: [string, CardRecord][];
+    acceptedReviews: string[];
+    acceptedPractice: string[];
+  }): Promise<void> {
+    this.mergeCards(remote.cards);
+    await this.storage.markSynced(remote.acceptedReviews);
+    await this.storage.markPracticeSynced(remote.acceptedPractice);
+    this.persist();
+  }
+
   /** Applies the server's answer: newer cards, settings and deck, personal FSRS weights. */
   async applyRemote(remote: {
     cursor: number;
@@ -564,10 +605,7 @@ class Store {
     pushedAt: number;
     activity?: { timeZone: string; full: boolean; days: DayActivity[] };
   }): Promise<void> {
-    for (const [id, record] of remote.cards) {
-      const local = this.cards[id];
-      if (!local || local.updatedAt <= record.updatedAt) this.cards[id] = record;
-    }
+    this.mergeCards(remote.cards);
     if (remote.settings && remote.settings.updatedAt > this.syncState.settingsUpdatedAt) {
       this.settings = mergeSettings(this.settings, remote.settings.value);
       this.applyLanguage();
@@ -608,21 +646,89 @@ class Store {
     this.saveTimer = setTimeout(() => void this.flush(), 300);
   }
 
-  async flush(): Promise<void> {
+  /**
+   * Saves everything this tab holds. Another tab's save since this one last looked is taken in
+   * first (see catchUp), so saving never puts that tab's progress back; `overwrite` skips that.
+   */
+  async flush(options: { overwrite?: boolean } = {}): Promise<void> {
     clearTimeout(this.saveTimer);
     this.saveTimer = undefined;
-    await this.storage
-      .save({
+    if (!options.overwrite) await this.catchUp();
+    // What is saved now; a card changed while the save is on its way waits for the next one.
+    const saving = { cards: this.unsaved, counted: this.uncounted };
+    this.unsaved = new Set();
+    this.uncounted = { reviews: [], practice: [] };
+    const updatedAt = Date.now();
+    try {
+      await this.storage.save({
         version: 2,
         settings: $state.snapshot(this.settings),
         cards: $state.snapshot(this.cards) as Record<string, CardRecord>,
         deck: $state.snapshot(this.deck),
         daily: $state.snapshot(this.daily),
-        updatedAt: Date.now(),
+        updatedAt,
         sync: $state.snapshot(this.syncState),
         activity: this.activity,
-      })
-      .catch(() => {});
+      });
+      const stamp = `${updatedAt}:${this.tab}`;
+      if (writeSaveStamp(stamp)) this.seenStamp = stamp;
+    } catch {
+      for (const id of saving.cards) this.unsaved.add(id);
+      this.uncounted = {
+        reviews: [...saving.counted.reviews, ...this.uncounted.reviews],
+        practice: [...saving.counted.practice, ...this.uncounted.practice],
+      };
+    }
+  }
+
+  /**
+   * Takes in what another tab (or the installed app beside the browser) saved since this one last
+   * looked. Called before every save, when the browser says another tab saved, and when this tab
+   * comes back. Never fails.
+   */
+  async catchUp(): Promise<void> {
+    const stamp = readSaveStamp();
+    if (stamp === null || stamp === this.seenStamp) return;
+    this.adopting ??= this.adopt(stamp)
+      .catch(() => undefined)
+      .finally(() => (this.adopting = null));
+    await this.adopting;
+  }
+
+  private async adopt(stamp: string): Promise<void> {
+    const stored = await this.storage.load();
+    this.seenStamp = stamp;
+    // Cleared (the other tab is starting over; its save follows) or from an older app.
+    if (!stored || stored.version !== 2) return;
+    const next = adoptSnapshot(
+      {
+        settings: $state.snapshot(this.settings),
+        cards: $state.snapshot(this.cards) as Record<string, CardRecord>,
+        deck: $state.snapshot(this.deck),
+        daily: $state.snapshot(this.daily),
+        sync: $state.snapshot(this.syncState),
+      },
+      stored,
+      this.unsaved,
+    );
+    this.settings = next.settings;
+    this.cards = next.cards;
+    this.deck = next.deck;
+    this.daily = next.daily;
+    this.syncState = next.sync;
+    this.applyLanguage();
+    this.configureFsrs();
+    // The other tab's totals hold everything saved so far; this tab's unsaved answers go on top.
+    const totals = stored.activity;
+    if (totals && totals.timeZone === currentTimeZone()) {
+      this.activity = this.uncounted.practice.reduce(
+        countPractice,
+        this.uncounted.reviews.reduce(countReview, totals),
+      );
+    } else await this.loadActivity(undefined);
+    this.reviewRevision++;
+    // The other tab's answers are no longer due here. An open answer stays as it is.
+    if (!this.revealed) void this.refreshQueue();
   }
 
   /**
@@ -636,8 +742,14 @@ class Store {
       } else {
         this.clock = Date.now();
         this.rollDay();
-        if (!this.revealed) void this.refreshQueue();
+        // A tab that slept may not have heard of another's saves.
+        void this.catchUp().then(() => {
+          if (!this.revealed) void this.refreshQueue();
+        });
       }
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === SAVE_STAMP_KEY) void this.catchUp();
     };
     let midnight: ReturnType<typeof setTimeout> | undefined;
     const atMidnight = () => {
@@ -653,10 +765,12 @@ class Store {
     atMidnight();
     const minute = setInterval(() => (this.clock = Date.now()), 60_000);
     document.addEventListener('visibilitychange', onChange);
+    addEventListener('storage', onStorage);
     return () => {
       clearTimeout(midnight);
       clearInterval(minute);
       document.removeEventListener('visibilitychange', onChange);
+      removeEventListener('storage', onStorage);
     };
   }
 

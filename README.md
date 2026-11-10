@@ -179,7 +179,12 @@ between devices.
   and keyed by client UUIDs, and deck and settings are whole-value last-write-wins. Practice
   totals per day come back for the days that changed (`activity`). It runs on
   start, when the app becomes visible, 5 s after changes, and on sign-in. The first sign-in on a
-  device merges its local progress into the account.
+  device merges its local progress into the account. A long history that was never sent goes up
+  in requests of 5,000 cards, reviews and practice entries (`apps/web/src/lib/sync-batches.ts`).
+- **Several tabs.** Each tab saves everything it holds. Before saving, and when the browser says
+  another tab saved, a tab takes in that save and keeps only what it changed itself, so two tabs
+  (or the installed app beside a browser tab) don't undo each other's answers
+  (`adoptSnapshot` in `apps/web/src/lib/storage.ts`).
 - **Personal FSRS.** Review logs live in PostgreSQL. The fsrs-rs optimizer
   (`@open-spaced-repetition/binding`) fits each learner's weights nightly, once they have 400
   new reviews, or on demand from Me. Clients receive the weights on their next sync.
@@ -277,6 +282,10 @@ app keeps that count up to date itself.
   It won't start with a key that's cut short, a pair that's swapped, or only one key set.
 - **iPhone and iPad** (iOS 16.4 or later). Web Push only works in the app added to the Home
   Screen. In a Safari tab, the section explains how to add it.
+- **Push services.** A device's subscription is accepted only at the browsers' own push services
+  (Chrome and the browsers built on it, Firefox, Safari, Edge: `PUSH_HOSTS` in
+  `packages/shared/src/api/index.ts`), since the API sends a request to the address it is given.
+  An account keeps its ten newest devices, and a push service gets ten seconds to answer.
 - **Signing out** turns the device's reminder off, so the next account on that device starts
   without one.
 

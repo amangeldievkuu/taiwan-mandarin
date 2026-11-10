@@ -5,6 +5,7 @@
 import { flushSync } from 'svelte';
 import { reduced } from './motion';
 import { navKind } from './nav';
+import { uuid } from './uuid';
 
 export type RouteName =
   | 'today'
@@ -101,7 +102,7 @@ const isEntry = (state: unknown): state is EntryState =>
 /** The current page as an in-app path (with its query). */
 const here = (): string => location.pathname.slice(base.length) + location.search || '/';
 
-const newKey = (): string => crypto.randomUUID();
+const newKey = (): string => uuid();
 
 /** Where each history entry was scrolled to, kept for the tab's life (so across a reload too). */
 const POSITIONS_KEY = 'taiwan-mandarin:scroll';

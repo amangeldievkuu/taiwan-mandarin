@@ -33,7 +33,10 @@
     } else {
       result = null;
       error = null;
-      await recorder.start();
+      // At the longest recording the server takes, it stops and is checked as if tapped.
+      await recorder.start(() => {
+        if (recorder.recording) void toggle();
+      });
     }
   }
 

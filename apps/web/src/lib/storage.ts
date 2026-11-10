@@ -159,6 +159,102 @@ export function mergeSettings(local: Settings, incoming: Partial<Settings>): Set
   return { ...DEFAULT_SETTINGS, language: local.language, hanViet: local.hanViet, ...incoming };
 }
 
+/** A snapshot's parts that a tab holds in memory and another tab may have saved since. */
+export interface TabState {
+  settings: Settings;
+  cards: Record<string, CardRecord>;
+  deck: Snapshot['deck'];
+  daily: Daily;
+  sync: SyncState;
+}
+
+/**
+ * What a tab holds after another tab (or the installed app beside the browser) saved: the saved
+ * snapshot, keeping what this tab changed and has not saved yet. Each tab saves everything it
+ * holds, so without this the one that saves last would put the other's progress back to what it
+ * was when that tab last looked.
+ *
+ * `unsaved`: the cards this tab changed since it last saved. Any other card this tab has and the
+ * saved snapshot doesn't was removed there (progress reset), so it goes here too. Deck and
+ * settings carry the time of their last change; the newer one is kept. Another account in the
+ * saved snapshot (signed in, or out, in the other tab) replaces everything.
+ */
+export function adoptSnapshot(
+  mine: TabState,
+  saved: Snapshot,
+  unsaved: ReadonlySet<string> = new Set(),
+): TabState {
+  const settings = { ...DEFAULT_SETTINGS, ...saved.settings };
+  const deck = saved.deck ?? [];
+  if (saved.sync?.userId !== mine.sync.userId) {
+    const none = { cursor: 0, pushedAt: 0, settingsUpdatedAt: 0, deckUpdatedAt: 0 };
+    return {
+      settings,
+      cards: saved.cards,
+      deck,
+      daily: saved.daily ?? mine.daily,
+      sync: saved.sync ?? none,
+    };
+  }
+  const cards = { ...saved.cards };
+  for (const id of unsaved) {
+    const own = mine.cards[id];
+    const theirs = cards[id];
+    if (own && (!theirs || theirs.updatedAt <= own.updatedAt)) cards[id] = own;
+  }
+  const sync = saved.sync ?? mine.sync;
+  const ownDeck = mine.sync.deckUpdatedAt > sync.deckUpdatedAt;
+  const ownSettings = mine.sync.settingsUpdatedAt > sync.settingsUpdatedAt;
+  // The same day in both: neither tab's count goes down (the new-word allowance depends on it).
+  const theirs = saved.daily ?? mine.daily;
+  const daily =
+    theirs.date === mine.daily.date
+      ? {
+          date: mine.daily.date,
+          newCount: Math.max(theirs.newCount, mine.daily.newCount),
+          reviewCount: Math.max(theirs.reviewCount, mine.daily.reviewCount),
+        }
+      : theirs.date > mine.daily.date
+        ? theirs
+        : mine.daily;
+  return {
+    settings: ownSettings ? mine.settings : settings,
+    cards,
+    deck: ownDeck ? mine.deck : deck,
+    daily,
+    sync: {
+      ...sync,
+      ...(ownDeck ? { deckUpdatedAt: mine.sync.deckUpdatedAt } : {}),
+      ...(ownSettings ? { settingsUpdatedAt: mine.sync.settingsUpdatedAt } : {}),
+    },
+  };
+}
+
+/**
+ * Names the last save, in localStorage: every tab reads it before saving, and the browser tells
+ * the other tabs when it changes (a `storage` event), so a tab knows at once, and for almost
+ * nothing, whether another one saved since it last looked.
+ */
+export const SAVE_STAMP_KEY = 'taiwan-mandarin:saved';
+
+export function readSaveStamp(): string | null {
+  try {
+    return localStorage.getItem(SAVE_STAMP_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function writeSaveStamp(stamp: string): boolean {
+  try {
+    localStorage.setItem(SAVE_STAMP_KEY, stamp);
+    return true;
+  } catch {
+    // Storage blocked or full: tabs then don't hear of each other's saves, as before.
+    return false;
+  }
+}
+
 /** Dates come back as strings from JSON; normalize them to Date objects. */
 export function revive<T extends { cards: Record<string, { card: Card }> }>(snapshot: T): T {
   const cards: Record<string, unknown> = {};
