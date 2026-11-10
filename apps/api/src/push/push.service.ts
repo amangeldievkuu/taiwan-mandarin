@@ -1,7 +1,11 @@
 // Devices that turned the daily reminder on, and sending to all of a learner's devices.
 
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import type { PushPayload, PushSubscribeBody } from '@taiwan-mandarin/shared/api';
+import {
+  MAX_PUSH_DEVICES,
+  type PushPayload,
+  type PushSubscribeBody,
+} from '@taiwan-mandarin/shared/api';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { isGone, WebPushSender } from './web-push.sender.js';
 
@@ -26,6 +30,16 @@ export class PushService {
       create: { endpoint, ...data },
       update: data,
     });
+    // More devices than anyone has: the oldest give way, so the list can't grow without end.
+    const extra = await this.db.pushSubscription.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      skip: MAX_PUSH_DEVICES,
+      select: { id: true },
+    });
+    if (extra.length) {
+      await this.db.pushSubscription.deleteMany({ where: { id: { in: extra.map((s) => s.id) } } });
+    }
   }
 
   async unsubscribe(userId: string, endpoint: string): Promise<void> {

@@ -236,9 +236,38 @@ export interface TokenCreatedDto extends TokenDto {
 
 // ---- Reminders (Web Push) ----
 
+/**
+ * The browsers' push services: Chrome and the browsers built on it (FCM), Firefox, Safari, and
+ * Edge on Windows. A leading dot matches any subdomain. The server sends a request to the endpoint
+ * a device gives it, so one anywhere else is refused: it would let a signed-in user aim the
+ * server at any address.
+ */
+export const PUSH_HOSTS = [
+  'fcm.googleapis.com',
+  'updates.push.services.mozilla.com',
+  '.push.apple.com',
+  '.notify.windows.com',
+] as const;
+
+/** Whether `endpoint` is an https address at one of the browsers' push services. */
+export function isPushService(endpoint: string): boolean {
+  // The host and then the path: no port, user or password, only the push service's own address.
+  const hostname = /^https:\/\/([a-z0-9.-]+)\//i.exec(endpoint)?.[1]?.toLowerCase();
+  if (!hostname) return false;
+  return PUSH_HOSTS.some((host) =>
+    host.startsWith('.') ? hostname.endsWith(host) : hostname === host,
+  );
+}
+
+/** Devices one account may have reminders on; the oldest gives way to a new one. */
+export const MAX_PUSH_DEVICES = 10;
+
 /** A browser's push subscription (PushSubscription.toJSON()). */
 export const PushSubscribeSchema = z.object({
-  endpoint: z.url({ protocol: /^https$/ }).max(2048),
+  endpoint: z
+    .url({ protocol: /^https$/ })
+    .max(2048)
+    .refine(isPushService, ERRORS.pushServiceUnknown),
   keys: z.object({ p256dh: z.string().min(1).max(256), auth: z.string().min(1).max(64) }),
 });
 export type PushSubscribeBody = z.infer<typeof PushSubscribeSchema>;

@@ -4,7 +4,7 @@
 import { randomUUID } from 'node:crypto';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import type { PushPayload } from '@taiwan-mandarin/shared/api';
+import { MAX_PUSH_DEVICES, type PushPayload } from '@taiwan-mandarin/shared/api';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { PrismaService } from '../src/prisma/prisma.service.js';
@@ -36,7 +36,7 @@ let db: PrismaService;
 let reminders: ReminderService;
 let token = '';
 let userId = '';
-const endpoint = `https://push.example.com/${randomUUID()}`;
+const endpoint = `https://fcm.googleapis.com/fcm/send/${randomUUID()}`;
 const subscription = { endpoint, keys: { p256dh: 'BKey', auth: 'secret' } };
 
 beforeAll(async () => {
@@ -91,6 +91,55 @@ describe('push subscriptions', () => {
       .expect(400);
   });
 
+  it('takes only the browsers’ push services, so it can’t be aimed at another address', async () => {
+    for (const elsewhere of [
+      'https://push.example.com/x',
+      'https://internal.service/x',
+      'https://fcm.googleapis.com.example.com/x',
+      'https://fcm.googleapis.com:8443/x',
+      'https://user@fcm.googleapis.com/x',
+    ]) {
+      const res = await request(http)
+        .post('/v1/push/subscribe')
+        .set(auth())
+        .send({ ...subscription, endpoint: elsewhere });
+      expect(res.status, elsewhere).toBe(400);
+      expect(res.body.code, elsewhere).toBe('pushServiceUnknown');
+    }
+    for (const service of [
+      'https://updates.push.services.mozilla.com/wpush/v2/x',
+      'https://web.push.apple.com/x',
+      'https://wns2-by3p.notify.windows.com/w/?token=x',
+    ]) {
+      await request(http)
+        .post('/v1/push/subscribe')
+        .set(auth())
+        .send({ ...subscription, endpoint: service })
+        .expect(204);
+    }
+    await db.pushSubscription.deleteMany({ where: { userId } });
+  });
+
+  it('keeps the newest ten devices of an account', async () => {
+    for (let i = 0; i < MAX_PUSH_DEVICES + 2; i++) {
+      await db.pushSubscription.create({
+        data: {
+          userId,
+          endpoint: `https://fcm.googleapis.com/fcm/send/old-${i}-${randomUUID()}`,
+          p256dh: 'BKey',
+          auth: 'secret',
+          createdAt: new Date(Date.UTC(2026, 0, 1 + i)),
+        },
+      });
+    }
+    await request(http).post('/v1/push/subscribe').set(auth()).send(subscription).expect(204);
+    const kept = await db.pushSubscription.findMany({ where: { userId } });
+    expect(kept).toHaveLength(MAX_PUSH_DEVICES);
+    expect(kept.map((s) => s.endpoint)).toContain(endpoint);
+    expect(kept.some((s) => /old-[012]-/.test(s.endpoint))).toBe(false);
+    await db.pushSubscription.deleteMany({ where: { userId } });
+  });
+
   it('subscribes, sends a test, and unsubscribes', async () => {
     await request(http).post('/v1/push/subscribe').set(auth()).send(subscription).expect(204);
     // The same device again: still one.
@@ -124,7 +173,7 @@ describe('push subscriptions', () => {
     const res = await request(http).post('/v1/push/test').set(auth()).expect(200);
     expect(res.body).toEqual({
       sent: 0,
-      errors: ['push.example.com: 403 the VAPID credentials do not match'],
+      errors: ['fcm.googleapis.com: 403 the VAPID credentials do not match'],
     });
     // Not gone: the device stays, for when the server's keys are right again.
     expect(await db.pushSubscription.count({ where: { userId } })).toBe(1);

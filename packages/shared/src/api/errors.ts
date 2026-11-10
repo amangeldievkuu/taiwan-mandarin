@@ -45,6 +45,7 @@ export const ERRORS = {
   speechFailed: 'Speech recognition failed. Try again.',
   // Reminders
   remindersNotSetUp: 'Reminders are not set up on this server (VAPID_PUBLIC_KEY).',
+  pushServiceUnknown: "Reminders don't work with this browser's push service yet.",
   // Anything else
   unexpected: 'Something went wrong. Try again.',
 } as const;

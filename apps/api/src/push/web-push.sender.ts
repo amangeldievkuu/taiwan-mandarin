@@ -10,6 +10,9 @@ export interface PushTarget {
   keys: { p256dh: string; auth: string };
 }
 
+/** How long a push service gets to answer before the send fails. */
+export const SEND_TIMEOUT_MS = 10_000;
+
 /** A push service's answer when the subscription is gone (unsubscribed, app removed, expired). */
 export const isGone = (e: unknown): boolean =>
   typeof e === 'object' &&
@@ -44,6 +47,9 @@ export class WebPushSender {
       TTL: 4 * 60 * 60,
       topic: 'daily-reminder',
       urgency: 'normal',
+      // web-push waits for ever by default, and the reminder job sends one at a time: a push
+      // service that stopped answering would hold up every learner's reminder.
+      timeout: SEND_TIMEOUT_MS,
     });
   }
 }

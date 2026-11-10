@@ -546,6 +546,7 @@ export const vi: Messages = {
       speechBusy: 'Nhận dạng giọng nói đang bận. Hãy thử lại sau một phút.',
       speechFailed: 'Nhận dạng giọng nói gặp lỗi. Hãy thử lại.',
       remindersNotSetUp: 'Máy chủ này chưa bật lời nhắc (VAPID_PUBLIC_KEY).',
+      pushServiceUnknown: 'Lời nhắc chưa hoạt động với dịch vụ push của trình duyệt này.',
       unexpected: 'Đã có lỗi xảy ra. Hãy thử lại.',
       offline: 'Không kết nối được máy chủ.',
       serverTimeout: 'Máy chủ trả lời quá lâu. Hãy thử lại.',
