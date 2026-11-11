@@ -16,6 +16,7 @@ export const DEPTH: Record<RouteName, number> = {
   me: 0,
   welcome: 0,
   level: 1,
+  zhuyin: 1,
   reader: 1,
   'me-account': 1,
   'me-settings': 1,
@@ -40,6 +41,7 @@ const TAB_ORDER: RouteName[] = ['today', 'study', 'path', 'talk', 'read', 'dict'
 const TAB_OF: Partial<Record<RouteName, RouteName>> = {
   welcome: 'today',
   level: 'path',
+  zhuyin: 'path',
   reader: 'read',
   word: 'dict',
   'me-account': 'me',

@@ -3,7 +3,10 @@
 Learn Taiwan Mandarin along Taiwan's official exam path. The app covers TOCFL Novice 1 → Level 6
 (about 15,000 words) with Traditional characters, Zhuyin and Taiwan readings. It has:
 
-- FSRS spaced repetition, with recognition, recall and listening modes
+- a Zhuyin starter course: the 37 letters and the tones in 12 short lessons, each heard, shown in
+  Novice words and practised (`/zhuyin`, at the top of the Path)
+- FSRS spaced repetition, with recognition, recall and listening modes, and Undo for the last
+  answer until it is sent
 - a built-in dictionary (CC-CEDICT with Taiwan readings) where you can tap any character
 - graded reading about Taiwan life
 - example sentences, stroke order and stats

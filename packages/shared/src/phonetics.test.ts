@@ -11,6 +11,7 @@ import {
   toZhuyin,
   zhuyinSentence,
   zhuyinString,
+  ZHUYIN_PINYIN,
 } from './phonetics.ts';
 
 describe('toToneMarked', () => {
@@ -274,5 +275,19 @@ describe('fromZhuyin', () => {
 
   it('rejects letters that are not Zhuyin', () => {
     expect(() => fromZhuyin('abc')).toThrow();
+  });
+});
+
+describe('ZHUYIN_PINYIN', () => {
+  it('has the 37 letters, each once, in the order they are taught', () => {
+    const letters = Object.keys(ZHUYIN_PINYIN);
+    expect(letters).toHaveLength(37);
+    expect(letters.join('')).toBe(
+      'ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙㄧㄨㄩㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥㄦ',
+    );
+    expect(ZHUYIN_PINYIN['ㄅ']).toBe('b');
+    expect(ZHUYIN_PINYIN['ㄓ']).toBe('zh');
+    expect(ZHUYIN_PINYIN['ㄩ']).toBe('ü');
+    expect(ZHUYIN_PINYIN['ㄥ']).toBe('eng');
   });
 });

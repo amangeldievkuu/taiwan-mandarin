@@ -25,6 +25,8 @@ export interface Settings {
   looks: LookChoices;
   /** Time of day ("HH:MM") for the daily reminder, on devices that turned it on. */
   reminderTime: string;
+  /** Lessons of the Zhuyin course finished, by id (apps/web/src/lib/zhuyin/course.ts). */
+  zhuyin: string[];
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -38,4 +40,5 @@ export const DEFAULT_SETTINGS: Settings = {
   retention: 0.9,
   looks: {},
   reminderTime: '20:00',
+  zhuyin: [],
 };

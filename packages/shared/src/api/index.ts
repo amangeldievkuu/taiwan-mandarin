@@ -62,6 +62,8 @@ export const SettingsSchema = z.object({
     )
     .optional(),
   reminderTime: z.string().regex(REMINDER_TIME).optional(),
+  /** Zhuyin course lessons finished. */
+  zhuyin: z.array(z.string().min(1).max(16)).max(32).optional(),
 });
 
 // ---- Auth ----

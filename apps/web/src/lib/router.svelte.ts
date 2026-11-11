@@ -12,6 +12,7 @@ export type RouteName =
   | 'study'
   | 'path'
   | 'level'
+  | 'zhuyin'
   | 'word'
   | 'read'
   | 'reader'
@@ -48,6 +49,7 @@ const PATTERNS: [RouteName, RegExp][] = [
   ['study', /^\/study\/?$/],
   ['path', /^\/path\/?$/],
   ['level', /^\/path\/(?<level>[A-Z]\d)\/?$/],
+  ['zhuyin', /^\/zhuyin\/?$/],
   ['word', /^\/word\/(?<id>[^/]+)\/?$/],
   ['read', /^\/read\/?$/],
   ['reader', /^\/read\/(?<id>[^/]+)\/?$/],

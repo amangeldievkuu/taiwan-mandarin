@@ -15,7 +15,7 @@
 </script>
 
 <script lang="ts">
-  import { LEVEL_IDS, LEVELS } from '@taiwan-mandarin/shared';
+  import { LEVEL_IDS, LEVELS, ZHUYIN_LESSONS } from '@taiwan-mandarin/shared';
   import BackButton from '../ui/BackButton.svelte';
   import Icon from '../ui/Icon.svelte';
   import Seal from '../ui/Seal.svelte';
@@ -36,6 +36,9 @@
     }
     return counts;
   });
+
+  /** Zhuyin lessons finished (the course before the levels). */
+  const zhuyinDone = $derived((store.settings.zhuyin ?? []).length);
 
   function toggle(level: Level) {
     const active = store.settings.levels;
@@ -62,6 +65,36 @@
     </div>
   </header>
   <p class="intro">{t().path.intro}</p>
+
+  <!-- Before the levels: the letters every word is written with. -->
+  <h2 class="section-title">
+    {t().titles.zhuyin} <span class="zh" lang="zh-Hant-TW">注音符號</span>
+  </h2>
+  <ol class="stations">
+    <li class="station sheet enter">
+      <a class="station-main" href={router.href('/zhuyin')} onclick={router.link}>
+        <span class="seal" class:stamped={zhuyinDone > 0}>
+          <Seal text="注音" size={58} outline={zhuyinDone === 0} />
+        </span>
+        <div class="station-body">
+          <div class="station-name"><strong>{t().zhuyin.station}</strong></div>
+          <span class="station-zh" lang="zh-Hant-TW">ㄅㄆㄇㄈ</span>
+          <div class="bar" aria-hidden="true">
+            <span
+              class="started"
+              style:transform="translateX({(zhuyinDone / ZHUYIN_LESSONS.length) * 100 - 100}%)"
+            ></span>
+          </div>
+          <small class="tabular">
+            {zhuyinDone
+              ? t().zhuyin.lessonsDone(zhuyinDone, ZHUYIN_LESSONS.length)
+              : t().zhuyin.stationText}
+          </small>
+        </div>
+        <svg class="chevron" viewBox="0 0 8 14" aria-hidden="true"><path d="M1 1l6 6-6 6" /></svg>
+      </a>
+    </li>
+  </ol>
 
   {#each BANDS as band, b (band.zh)}
     <h2 class="section-title">

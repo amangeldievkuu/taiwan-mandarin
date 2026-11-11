@@ -25,6 +25,7 @@
     study: '加油！',
     path: '一步一步',
     level: '爬山囉',
+    zhuyin: 'ㄅㄆㄇㄈ',
     word: '這個字',
     read: '讀書囉',
     reader: '噓…',

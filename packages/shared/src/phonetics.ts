@@ -55,6 +55,18 @@ const Y_W: Record<string, string> = {
 
 const ZHUYIN_TONES = ['', 'ˊ', 'ˇ', 'ˋ', '˙'];
 
+/** The finals written with one letter, in the order they are taught: the medials first. */
+const LETTER_FINALS = ['i', 'u', 'ü', 'a', 'o', 'e', 'ê', 'ai', 'ei', 'ao', 'ou', 'an', 'en', 'ang', 'eng', 'er']; // prettier-ignore
+
+/**
+ * The 37 Zhuyin letters and what each is in pinyin, in the order they are taught: the 21
+ * initials, the medials ㄧㄨㄩ, then the other finals ("ㄅ" → "b", "ㄩ" → "ü").
+ */
+export const ZHUYIN_PINYIN: Readonly<Record<string, string>> = Object.fromEntries([
+  ...Object.entries(ZHUYIN_INITIALS).map(([pinyin, letter]) => [letter, pinyin]),
+  ...LETTER_FINALS.map((pinyin) => [ZHUYIN_FINALS[pinyin], pinyin]),
+]);
+
 const TONE_MARKS: Record<string, readonly string[]> = {
   a: [...'āáǎà'], e: [...'ēéěè'], i: [...'īíǐì'], o: [...'ōóǒò'], u: [...'ūúǔù'], ü: [...'ǖǘǚǜ'],
   // ê has no precomposed 1st and 3rd tone letters, so those take a combining mark.

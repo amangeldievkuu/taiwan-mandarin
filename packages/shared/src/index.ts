@@ -1,4 +1,5 @@
 export * from './phonetics.ts';
+export * from './zhuyin-course.ts';
 export * from './partial-json.ts';
 export * from './lang.ts';
 export * from './settings.ts';

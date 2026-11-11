@@ -45,6 +45,7 @@ export const en = {
     'me-about': 'About',
     welcome: 'Welcome',
     level: 'Level',
+    zhuyin: 'Zhuyin',
     word: 'Word',
     reader: 'Reading',
   } satisfies Record<RouteName, string>,
@@ -65,6 +66,7 @@ export const en = {
     study: "you've got this",
     path: 'step by step',
     level: 'up we go',
+    zhuyin: 'bo, po, mo, fo',
     word: 'this one',
     read: 'reading time',
     reader: 'shh…',
@@ -246,6 +248,10 @@ export const en = {
       explain: {
         title: 'Explain a sentence',
         text: 'Paste a sign, menu or message and get a word-by-word breakdown.',
+      },
+      zhuyin: {
+        title: 'Learn Zhuyin',
+        text: 'The letters above every word, in 12 short lessons.',
       },
     },
     /** The streak plant card: always an invitation, never a scolding. */
@@ -612,6 +618,121 @@ export const en = {
       'Level 6 (精通, C2) has no TOCFL list; it uses level 7 of the NAER list. Words marked ' +
       '"NAER" fill gaps in lower levels and come after the TOCFL words.',
     levelsFootnote: 'Words started in each level, out of all the words it has.',
+  },
+
+  zhuyin: {
+    eyebrow: 'Bopomofo · 注音符號',
+    intro:
+      'Zhuyin, also called Bopomofo, is how Taiwan writes the sounds of Mandarin, and the app ' +
+      'shows it above every word: 37 letters and the tone marks. Twelve short lessons of a few ' +
+      'minutes each.',
+    station: 'Start here: Zhuyin',
+    stationText: 'The letters above the words, in 12 short lessons.',
+    lessonsDone: (done: number, total: number) =>
+      `${formatNumber(done)} of ${formatNumber(total)} lessons`,
+    lessons: {
+      lips: {
+        name: 'Lips',
+        intro:
+          'ㄅㄆㄇㄈ are made with the lips. ㄅ is like the p in “spin”, with no puff of air; ㄆ is ' +
+          'the p in “pin”, with a puff. ㄇ is m and ㄈ is f. Each letter is named with a vowel ' +
+          'after it: ㄅ is said bo.',
+      },
+      tip: {
+        name: 'Tongue tip',
+        intro:
+          'ㄉㄊㄋㄌ: the tip of the tongue touches just behind the top teeth. ㄉ has no puff of ' +
+          'air and ㄊ has one, as with ㄅ and ㄆ; ㄋ is n and ㄌ is l. Their names end in e: ㄉ is ' +
+          'said de.',
+      },
+      back: {
+        name: 'Back of the mouth',
+        intro:
+          'ㄍㄎㄏ are made at the back of the mouth. ㄍ has no puff of air and ㄎ has one; ㄏ is a ' +
+          'rougher h, close to the ch in Scottish “loch”.',
+      },
+      front: {
+        name: 'Tongue flat and forward',
+        intro:
+          'ㄐㄑㄒ: the tongue lies flat with its tip behind the lower teeth, as in a smile. ㄐ ' +
+          'has no puff of air, ㄑ has one, and ㄒ is a soft hiss. Only ㄧ and ㄩ ever come after ' +
+          'them.',
+      },
+      curled: {
+        name: 'Tongue curled back',
+        intro:
+          'ㄓㄔㄕㄖ: curl the tip of the tongue up behind the ridge above the top teeth. ㄓ has ' +
+          'no puff of air, ㄔ has one, ㄕ is like sh and ㄖ like a soft r. On its own, each is a ' +
+          'whole syllable: 知 is written just ㄓ.',
+      },
+      flat: {
+        name: 'Tongue behind the teeth',
+        intro:
+          'ㄗㄘㄙ are ㄓㄔㄕ with the tongue flat, its tip behind the top teeth: ㄗ like the ds in ' +
+          '“kids”, ㄘ like ts with a puff of air, ㄙ like s. Many people in Taiwan say ㄓ as ㄗ ' +
+          'when they talk; the writing keeps them apart.',
+      },
+      medials: {
+        name: 'The three medials',
+        intro:
+          'ㄧ (i), ㄨ (u) and ㄩ (ü) come between a consonant and a vowel, as in ㄐㄧㄚ, or make ' +
+          'a syllable on their own. For ㄩ, say “ee” with your lips rounded.',
+      },
+      vowels: {
+        name: 'Simple vowels',
+        intro:
+          'ㄚ is the a in “father”, ㄛ an o, ㄜ a “uh” said far back, and ㄝ the e in “yes”. ㄝ ' +
+          'is almost never alone: you hear it in ㄧㄝ and ㄩㄝ.',
+      },
+      pairs: {
+        name: 'Gliding vowels',
+        intro: 'Vowels that glide: ㄞ like “eye”, ㄟ like “hey”, ㄠ like “how”, ㄡ like “oh”.',
+      },
+      nasals: {
+        name: 'Nasals and ㄦ',
+        intro:
+          'ㄢ and ㄣ end in n, ㄤ and ㄥ in ng as in “sing”: ㄣ and ㄥ are easy to mix up. ㄦ is ' +
+          '“er” with the tongue curled back.',
+      },
+      tones: {
+        name: 'Tones',
+        intro:
+          'The tone changes the word: 媽 mother, 麻 hemp, 馬 horse, 罵 scold. The first tone is ' +
+          'high and level, and Zhuyin leaves it unmarked; ˊ rises, ˇ is low (in Taiwan it seldom ' +
+          'rises again), ˋ falls, and ˙, written before the syllable, is the light neutral tone.',
+      },
+      words: {
+        name: 'Reading words',
+        intro:
+          'Put it all together: hear a word and pick how it is written. Watch for the letters ' +
+          'that sound alike: ㄅ and ㄆ, ㄓ and ㄗ, ㄣ and ㄥ.',
+      },
+    },
+    toneNames: ['High and level (no mark)', 'Rising', 'Low', 'Falling', 'Light (neutral)'],
+    hear: 'Hear it',
+    inWords: 'In words',
+    letterOf: (n: number, total: number) => `${n} of ${total}`,
+    next: 'Next',
+    practise: 'Practise',
+    start: 'Start',
+    ask: {
+      letter: 'Which letter did you hear?',
+      pinyin: 'What is this letter in pinyin?',
+      word: 'How is the word you heard written?',
+      tone: 'Which tone did you hear?',
+    },
+    playAgain: 'Play again',
+    right: 'Right!',
+    wrong: (answer: string) => `It's ${answer}.`,
+    comesBack: 'It comes back at the end.',
+    continue: 'Continue',
+    done: 'Lesson done',
+    doneScore: (right: number, total: number) => `${right} of ${total} right the first time.`,
+    nextLesson: 'Next lesson',
+    allLessons: 'All lessons',
+    practiseAgain: 'Practise again',
+    finished: 'You can read Zhuyin now: every word in the app is written in it.',
+    loading: 'Loading words…',
   },
 
   level: {

@@ -2,7 +2,7 @@
   // Home: today's practice in a ring, the streak plant with this week, where the learner is on
   // the path, and the other ways to practise.
   import InkDrop from '../ui/InkDrop.svelte';
-  import { LEVELS } from '@taiwan-mandarin/shared';
+  import { LEVELS, ZHUYIN_LESSONS } from '@taiwan-mandarin/shared';
   import Counter from '../ui/Counter.svelte';
   import Icon, { type IconName } from '../ui/Icon.svelte';
   import StreakPlant from '../ui/StreakPlant.svelte';
@@ -72,7 +72,7 @@
     icon: IconName;
     zh: string;
     /** Its title and text in the catalog. */
-    key: 'read' | 'talk' | 'explain';
+    key: 'read' | 'talk' | 'explain' | 'zhuyin';
     tint: string;
   }
 
@@ -81,6 +81,20 @@
     { href: '/talk', icon: 'talk', zh: '談', key: 'talk', tint: 'var(--jade)' },
     { href: '/dict?explain=1', icon: 'sparkle', zh: '解', key: 'explain', tint: 'var(--gold)' },
   ];
+  const ZHUYIN_TILE: Tile = {
+    href: '/zhuyin',
+    icon: 'speaker',
+    zh: '注',
+    key: 'zhuyin',
+    tint: 'var(--seal)',
+  };
+  /** The Zhuyin course joins them until it is done, for learners who read Zhuyin. */
+  const tiles = $derived(
+    store.settings.phonetics !== 'pinyin' &&
+      (store.settings.zhuyin ?? []).length < ZHUYIN_LESSONS.length
+      ? [ZHUYIN_TILE, ...EXPLORE]
+      : EXPLORE,
+  );
 </script>
 
 <div class="page">
@@ -209,7 +223,7 @@
     {t().today.explore} <span class="zh" lang="zh-Hant-TW">探索</span>
   </h2>
   <div class="explore">
-    {#each EXPLORE as tile, i (tile.href)}
+    {#each tiles as tile, i (tile.href)}
       <a
         class="tile sheet pressable enter"
         style:--i={6 + i}

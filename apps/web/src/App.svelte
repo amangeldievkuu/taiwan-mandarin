@@ -16,6 +16,7 @@
   import Talk from './routes/Talk.svelte';
   import Today from './routes/Today.svelte';
   import Welcome from './routes/Welcome.svelte';
+  import Zhuyin from './routes/Zhuyin.svelte';
   import WordPage from './routes/WordPage.svelte';
   import Celebrations from './ui/Celebrations.svelte';
   import Companion from './ui/companion/Companion.svelte';
@@ -188,6 +189,8 @@
           <Path />
         {:else if router.route.name === 'level'}
           <Level level={router.route.params.level ?? 'N1'} />
+        {:else if router.route.name === 'zhuyin'}
+          <Zhuyin />
         {:else if router.route.name === 'word'}
           <WordPage id={router.route.params.id ?? ''} />
         {:else if router.route.name === 'read'}

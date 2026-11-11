@@ -395,6 +395,25 @@ describe('sync', () => {
     expect(res.body.settings.value.newPerDay).toBe(20);
   });
 
+  it('keeps the Zhuyin lessons finished', async () => {
+    const { token } = await signUp();
+    const value = {
+      phonetics: 'zhuyin',
+      glyphStyle: 'kai',
+      theme: 'auto',
+      newPerDay: 10,
+      levels: ['N1'],
+      retention: 0.9,
+      zhuyin: ['lips', 'tip'],
+    };
+    const res = await request(http)
+      .post('/v1/sync')
+      .set({ authorization: `Bearer ${token}` })
+      .send({ since: 0, cards: [], reviews: [], settings: { value, updatedAt: 100 } });
+    expect(res.status).toBe(200);
+    expect(res.body.settings.value.zhuyin).toEqual(['lips', 'tip']);
+  });
+
   it('syncs the language, and takes settings from apps that predate it', async () => {
     const { token } = await signUp();
     const auth = { authorization: `Bearer ${token}` };

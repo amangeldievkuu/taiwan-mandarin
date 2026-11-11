@@ -33,6 +33,7 @@ export const vi: Messages = {
     'me-about': 'Giới thiệu',
     welcome: 'Chào mừng',
     level: 'Cấp độ',
+    zhuyin: 'Chú âm',
     word: 'Từ',
     reader: 'Bài đọc',
   },
@@ -97,6 +98,7 @@ export const vi: Messages = {
     study: 'cố lên!',
     path: 'từng bước một',
     level: 'leo núi nào',
+    zhuyin: 'bo, po, mo, fo nào',
     word: 'từ này nè',
     read: 'giờ đọc sách',
     reader: 'suỵt…',
@@ -274,6 +276,10 @@ export const vi: Messages = {
       explain: {
         title: 'Giải thích một câu',
         text: 'Dán một biển hiệu, thực đơn hay tin nhắn để xem phân tích từng từ.',
+      },
+      zhuyin: {
+        title: 'Học chú âm',
+        text: 'Các chữ cái trên mỗi từ, trong 12 bài ngắn.',
       },
     },
     bowl: {
@@ -678,6 +684,116 @@ export const vi: Messages = {
       'Cấp 6 (精通, C2) không có danh sách TOCFL; cấp này dùng cấp 7 của danh sách NAER. Những từ ' +
       'có nhãn "NAER" lấp chỗ trống ở các cấp thấp hơn và được học sau các từ TOCFL.',
     levelsFootnote: 'Số từ đã bắt đầu ở mỗi cấp độ, trên tổng số từ của cấp đó.',
+  },
+
+  zhuyin: {
+    eyebrow: 'Chú âm phù hiệu · 注音符號',
+    intro:
+      'Chú âm (còn gọi là Bopomofo) là cách Đài Loan ghi âm tiếng Hoa, và ứng dụng hiển thị nó ' +
+      'trên mỗi từ: 37 chữ cái và các dấu thanh. Mười hai bài ngắn, mỗi bài vài phút.',
+    station: 'Bắt đầu từ đây: Chú âm',
+    stationText: 'Các chữ cái phía trên từ, trong 12 bài ngắn.',
+    lessonsDone: (done, total) => `${formatNumber(done)}/${formatNumber(total)} bài`,
+    lessons: {
+      lips: {
+        name: 'Môi',
+        intro:
+          'ㄅㄆㄇㄈ phát âm bằng môi. ㄅ không bật hơi, ㄆ bật hơi mạnh; ㄇ là m, ㄈ là ph. Tên ' +
+          'của mỗi chữ có thêm một nguyên âm phía sau: ㄅ đọc là bo. Nhấn nút để nghe.',
+      },
+      tip: {
+        name: 'Đầu lưỡi',
+        intro:
+          'ㄉㄊㄋㄌ: đầu lưỡi chạm ngay sau răng trên. ㄉ gần giống t trong tiếng Việt, ㄊ gần ' +
+          'giống th; ㄋ là n, ㄌ là l. Tên của chúng kết thúc bằng e: ㄉ đọc là de.',
+      },
+      back: {
+        name: 'Cuống lưỡi',
+        intro:
+          'ㄍㄎㄏ phát âm ở phía sau miệng. ㄍ gần giống c (k) không bật hơi, ㄎ bật hơi; ㄏ là ' +
+          'h phát ra sâu trong họng, gần với kh.',
+      },
+      front: {
+        name: 'Mặt lưỡi',
+        intro:
+          'ㄐㄑㄒ: lưỡi nằm phẳng, đầu lưỡi chạm sau răng dưới như khi mỉm cười. ㄐ không bật ' +
+          'hơi, ㄑ bật hơi, ㄒ là tiếng xì nhẹ. Sau chúng chỉ có ㄧ hoặc ㄩ.',
+      },
+      curled: {
+        name: 'Uốn lưỡi',
+        intro:
+          'ㄓㄔㄕㄖ: uốn đầu lưỡi lên phía sau lợi trên. ㄓ không bật hơi, ㄔ bật hơi, ㄕ gần ' +
+          'giống s uốn lưỡi, ㄖ gần giống r nhẹ. Đứng một mình, mỗi chữ là cả một âm tiết: 知 ' +
+          'chỉ viết là ㄓ.',
+      },
+      flat: {
+        name: 'Lưỡi phẳng',
+        intro:
+          'ㄗㄘㄙ giống ㄓㄔㄕ nhưng lưỡi để phẳng, đầu lưỡi sau răng trên: ㄗ như ts không bật ' +
+          'hơi, ㄘ như ts có bật hơi, ㄙ là x. Nhiều người Đài Loan nói ㄓ thành ㄗ khi nói ' +
+          'chuyện; chữ viết vẫn phân biệt hai âm này.',
+      },
+      medials: {
+        name: 'Ba âm đệm',
+        intro:
+          'ㄧ (i), ㄨ (u) và ㄩ (ü) đứng giữa phụ âm và nguyên âm, như trong ㄐㄧㄚ, hoặc tự làm ' +
+          'một âm tiết. Để đọc ㄩ, hãy nói “i” với môi tròn.',
+      },
+      vowels: {
+        name: 'Nguyên âm đơn',
+        intro:
+          'ㄚ là a, ㄛ là o, ㄜ gần giống ơ đọc sâu trong họng, ㄝ gần giống ê. ㄝ hầu như không ' +
+          'đứng một mình: bạn nghe nó trong ㄧㄝ và ㄩㄝ.',
+      },
+      pairs: {
+        name: 'Nguyên âm đôi',
+        intro: 'Nguyên âm lướt: ㄞ như “ai”, ㄟ như “ây”, ㄠ như “ao”, ㄡ như “âu”.',
+      },
+      nasals: {
+        name: 'Âm mũi và ㄦ',
+        intro:
+          'ㄢ và ㄣ kết thúc bằng n, ㄤ và ㄥ bằng ng: ㄣ và ㄥ rất dễ lẫn. ㄦ là “ơ” với lưỡi ' +
+          'uốn ra sau.',
+      },
+      tones: {
+        name: 'Thanh điệu',
+        intro:
+          'Thanh điệu đổi nghĩa của từ: 媽 mẹ, 麻 cây gai, 馬 ngựa, 罵 mắng. Thanh một cao và ' +
+          'bằng, chú âm không đánh dấu; ˊ đi lên, ˇ thấp (ở Đài Loan ít khi lên lại), ˋ đi ' +
+          'xuống, còn ˙ viết trước âm tiết là thanh nhẹ.',
+      },
+      words: {
+        name: 'Đọc từ',
+        intro:
+          'Ghép tất cả lại: nghe một từ và chọn cách viết của nó. Chú ý các chữ có âm gần nhau: ' +
+          'ㄅ và ㄆ, ㄓ và ㄗ, ㄣ và ㄥ.',
+      },
+    },
+    toneNames: ['Cao và bằng (không dấu)', 'Đi lên', 'Thấp', 'Đi xuống', 'Nhẹ'],
+    hear: 'Nghe',
+    inWords: 'Trong từ',
+    letterOf: (n, total) => `${n}/${total}`,
+    next: 'Tiếp',
+    practise: 'Luyện tập',
+    start: 'Bắt đầu',
+    ask: {
+      letter: 'Bạn vừa nghe chữ nào?',
+      pinyin: 'Chữ này là gì trong pinyin?',
+      word: 'Từ bạn vừa nghe viết thế nào?',
+      tone: 'Bạn vừa nghe thanh nào?',
+    },
+    playAgain: 'Nghe lại',
+    right: 'Đúng!',
+    wrong: (answer) => `Đáp án là ${answer}.`,
+    comesBack: 'Câu này sẽ quay lại ở cuối.',
+    continue: 'Tiếp tục',
+    done: 'Xong bài',
+    doneScore: (right, total) => `Đúng ${right}/${total} câu ngay lần đầu.`,
+    nextLesson: 'Bài tiếp theo',
+    allLessons: 'Tất cả các bài',
+    practiseAgain: 'Luyện lại',
+    finished: 'Giờ bạn đã đọc được chú âm: mọi từ trong ứng dụng đều được viết bằng nó.',
+    loading: 'Đang tải từ…',
   },
 
   level: {
