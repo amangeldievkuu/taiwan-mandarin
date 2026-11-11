@@ -176,8 +176,10 @@ export interface TabState {
  *
  * `unsaved`: the cards this tab changed since it last saved. Any other card this tab has and the
  * saved snapshot doesn't was removed there (progress reset), so it goes here too. Deck and
- * settings carry the time of their last change; the newer one is kept. Another account in the
- * saved snapshot (signed in, or out, in the other tab) replaces everything.
+ * settings carry the time of their last change; the newer one is kept. Of the two times of the
+ * last push, the older: a card this tab changed just before the other tab's sync began, which that
+ * sync never saw, is then still sent (sending one twice is harmless). Another account in the saved
+ * snapshot (signed in, or out, in the other tab) replaces everything.
  */
 export function adoptSnapshot(
   mine: TabState,
@@ -224,6 +226,7 @@ export function adoptSnapshot(
     daily,
     sync: {
       ...sync,
+      pushedAt: Math.min(sync.pushedAt, mine.sync.pushedAt),
       ...(ownDeck ? { deckUpdatedAt: mine.sync.deckUpdatedAt } : {}),
       ...(ownSettings ? { settingsUpdatedAt: mine.sync.settingsUpdatedAt } : {}),
     },

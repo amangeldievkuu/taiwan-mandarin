@@ -26,9 +26,10 @@ export class WebPushSender {
   private readonly vapid: (webpush.VapidKeys & { subject: string }) | null;
 
   constructor(@Inject(ENV) env: Env) {
+    // WEB_ORIGIN may list several origins; a subject is one address.
+    const origin = env.WEB_ORIGIN.split(',')[0]?.trim() ?? '';
     const subject =
-      env.VAPID_SUBJECT ??
-      (env.WEB_ORIGIN.startsWith('https://') ? env.WEB_ORIGIN : 'mailto:reminders@localhost');
+      env.VAPID_SUBJECT ?? (origin.startsWith('https://') ? origin : 'mailto:reminders@localhost');
     this.vapid =
       env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY
         ? { publicKey: env.VAPID_PUBLIC_KEY, privateKey: env.VAPID_PRIVATE_KEY, subject }

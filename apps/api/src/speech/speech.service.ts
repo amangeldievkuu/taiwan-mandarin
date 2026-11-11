@@ -104,7 +104,7 @@ export class SpeechService {
     const chars = [...request.target].filter((c) => HAN.test(c));
     const pinyin = request.pinyin ?? this.readingOf(request.target);
     if (!chars.length || !pinyin || splitSyllables(pinyin).length !== chars.length) {
-      throw new BadRequestException('Need a reading with one syllable per character');
+      throw new BadRequestException(apiError('noReading'));
     }
     return { chars, pinyin };
   }

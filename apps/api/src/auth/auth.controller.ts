@@ -59,7 +59,8 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(200)
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  // Per address: a class signing in together fits. Each email also gets ten tries a minute.
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @ApiOperation({ summary: 'Sign in' })
   @ApiZodBody(LoginSchema)
   async login(

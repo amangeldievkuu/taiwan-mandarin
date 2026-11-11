@@ -31,6 +31,20 @@ describe('WebPushSender', () => {
     expect(SEND_TIMEOUT_MS).toBeLessThanOrEqual(30_000);
   });
 
+  it('names one origin as the subject when WEB_ORIGIN lists several', async () => {
+    await new WebPushSender({ ...env, WEB_ORIGIN: 'https://a.tw, https://b.tw' }).send(
+      target,
+      '{}',
+    );
+    expect(sendNotification).toHaveBeenCalledWith(
+      target,
+      '{}',
+      expect.objectContaining({
+        vapidDetails: expect.objectContaining({ subject: 'https://a.tw' }),
+      }),
+    );
+  });
+
   it('has no key, and sends nothing, without VAPID keys', async () => {
     const sender = new WebPushSender({ WEB_ORIGIN: 'https://example.tw' } as Env);
     expect(sender.publicKey).toBeNull();

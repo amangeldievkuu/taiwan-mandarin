@@ -95,5 +95,13 @@ describe('loadEnv', () => {
     it('wants both keys or neither', () => {
       expect(() => loadEnv({ ...db, VAPID_PUBLIC_KEY: publicKey })).toThrow(/VAPID_PRIVATE_KEY/);
     });
+
+    it('takes a mailto: or https: subject, and stops at startup on anything else', () => {
+      for (const subject of ['mailto:admin@example.tw', 'https://example.tw']) {
+        expect(loadEnv({ ...db, VAPID_SUBJECT: subject }).VAPID_SUBJECT).toBe(subject);
+      }
+      for (const subject of ['admin@example.tw', 'http://example.tw', 'https://a.tw,https://b.tw'])
+        expect(() => loadEnv({ ...db, VAPID_SUBJECT: subject })).toThrow(/VAPID_SUBJECT/);
+    });
   });
 });

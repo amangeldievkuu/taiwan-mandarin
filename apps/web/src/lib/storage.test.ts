@@ -164,9 +164,10 @@ describe('adoptSnapshot', () => {
     // Their settings are newer; the deck was changed here later.
     expect(next.settings.newPerDay).toBe(20);
     expect(next.deck).toEqual(deck);
+    // The older push of the two (this tab's): see the next test.
     expect(next.sync).toEqual({
       cursor: 7,
-      pushedAt: 8,
+      pushedAt: 0,
       settingsUpdatedAt: 950,
       deckUpdatedAt: 900,
     });
@@ -176,6 +177,17 @@ describe('adoptSnapshot', () => {
     const tomorrow = { date: '2026-11-11', newCount: 1, reviewCount: 1 };
     expect(adoptSnapshot(tab(), saved({ daily: tomorrow })).daily).toEqual(tomorrow);
     expect(adoptSnapshot(tab({ daily: tomorrow }), saved()).daily).toEqual(tomorrow);
+  });
+
+  it('keeps the older push, so a card the other tab’s sync never saw is still sent', () => {
+    // This tab changed 謝謝 at 600; the other tab's sync began at 650 without it.
+    const next = adoptSnapshot(
+      tab({ cards: { 你好: record(100), 謝謝: record(600) }, sync: { ...sync, pushedAt: 400 } }),
+      saved({ sync: { ...sync, cursor: 7, pushedAt: 650 } }),
+      new Set(['謝謝']),
+    );
+    expect(next.sync).toMatchObject({ cursor: 7, pushedAt: 400 });
+    expect(adoptSnapshot(tab({ sync: { ...sync, pushedAt: 900 } }), saved()).sync.pushedAt).toBe(0);
   });
 
   it('takes everything when the other tab signed in to another account', () => {

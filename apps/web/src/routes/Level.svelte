@@ -99,7 +99,7 @@
   }
 
   function addAllShown() {
-    for (const w of filtered.slice(0, 50)) if (!store.cards[w.id]) store.addToDeck(w);
+    store.addToDeck(...filtered.slice(0, 50));
   }
 
   let sentinel = $state<HTMLElement>();

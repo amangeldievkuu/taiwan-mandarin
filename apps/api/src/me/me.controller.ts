@@ -2,6 +2,7 @@
 
 import {
   Body,
+  ConflictException,
   Controller,
   Delete,
   Get,
@@ -29,8 +30,10 @@ import {
   xpForDay,
 } from '@taiwan-mandarin/shared';
 import {
+  apiError,
   DeckEntrySchema,
   LevelSchema,
+  MAX_DECK,
   TimeZoneSchema,
   TokenCreateSchema,
   type CardRecordDto,
@@ -188,6 +191,8 @@ export class MeController {
     });
     const deck = z.array(DeckEntrySchema).catch([]).parse(row.deck);
     if (deck.some((d) => d.id === wordId)) return;
+    if (deck.length >= MAX_DECK)
+      throw new ConflictException(apiError('deckFull', { limit: MAX_DECK }));
     const now = Date.now();
     await this.db.user.update({
       where: { id: user.id },

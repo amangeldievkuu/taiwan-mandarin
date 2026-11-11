@@ -31,3 +31,18 @@ export function syncBatches<C, R, P>(
     practice: pending.practice.slice(i * size, (i + 1) * size),
   }));
 }
+
+/**
+ * How far before the last push's start a sync looks for reviews and practice still to send. A
+ * review's time is when its card was turned over, and an answer can stay open for hours (a phone
+ * locked with it showing), so a day.
+ */
+export const UNSENT_MARGIN_MS = 24 * 3_600_000;
+
+/**
+ * Where to start reading the logs for what is still to send: everything on the first sync of a
+ * run (in case the clock was changed since), then from the last push, so a long history isn't
+ * read in full every few seconds while studying.
+ */
+export const unsentSince = (pushedAt: number, sentAll: boolean): number =>
+  sentAll ? Math.max(0, pushedAt - UNSENT_MARGIN_MS) : 0;

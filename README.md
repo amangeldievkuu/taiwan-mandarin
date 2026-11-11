@@ -184,10 +184,18 @@ between devices.
 - **Several tabs.** Each tab saves everything it holds. Before saving, and when the browser says
   another tab saved, a tab takes in that save and keeps only what it changed itself, so two tabs
   (or the installed app beside a browser tab) don't undo each other's answers
-  (`adoptSnapshot` in `apps/web/src/lib/storage.ts`).
+  (`adoptSnapshot` in `apps/web/src/lib/storage.ts`). Where the browser has Web Locks, one tab
+  at a time does this.
+- **Limits.** One account holds at most 50,000 cards, a million reviews, 200,000 practice
+  entries and a deck of 20,000 words; a sync that would pass them is refused (`accountFull`).
+  Rate limits count per account on signed-in routes, and per address elsewhere: signing in allows
+  30 tries a minute per address and 10 per email, signing up 5 an hour per address
+  (`apps/api/src/common/throttler.guard.ts`).
 - **Personal FSRS.** Review logs live in PostgreSQL. The fsrs-rs optimizer
   (`@open-spaced-repetition/binding`) fits each learner's weights nightly, once they have 400
-  new reviews, or on demand from Me. Clients receive the weights on their next sync.
+  new reviews, or on demand from Me (five times an hour). Clients receive the weights on their
+  next sync. A fit uses reviews of study-path words only, a card's first 64, and at most 2 million
+  steps in all, newest first (`apps/api/src/fsrs/items.ts`).
 - **Public API.** Swagger is at `/docs` (`/api/docs` through the web app). Content routes are
   open: `/v1/levels`, `/v1/words`, `/v1/dict/:q`, `/v1/segment`, `/v1/readers`. Personal routes
   (`/v1/me/stats`, `/cards`, `/reviews`, `POST /v1/me/deck/:wordId`) accept a personal access
@@ -276,10 +284,11 @@ app keeps that count up to date itself.
 
 - **Server.** Make a VAPID key pair once with `npx web-push generate-vapid-keys` and set
   `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` in `.env`. Keep the pair: new keys cut every device
-  off its reminders until the learner turns them on again. `VAPID_SUBJECT` defaults to
-  `WEB_ORIGIN` when that is https. Without keys, the section stays hidden. The API checks the
-  keys when it starts: the public key is 87 characters and the private key 43, each on one line.
-  It won't start with a key that's cut short, a pair that's swapped, or only one key set.
+  off its reminders until the learner turns them on again. `VAPID_SUBJECT` (mailto: or https:)
+  defaults to the first `WEB_ORIGIN` when that is https. Without keys, the section stays hidden.
+  The API checks the keys when it starts: the public key is 87 characters and the private key 43,
+  each on one line. It won't start with a key that's cut short, a pair that's swapped, only one
+  key set, or a subject that isn't mailto: or https:.
 - **iPhone and iPad** (iOS 16.4 or later). Web Push only works in the app added to the Home
   Screen. In a Safari tab, the section explains how to add it.
 - **Push services.** A device's subscription is accepted only at the browsers' own push services

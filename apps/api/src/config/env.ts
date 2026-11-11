@@ -102,8 +102,18 @@ const Env = z.object({
   /** Web Push keys for the daily reminders (npx web-push generate-vapid-keys); unset: no reminders. */
   VAPID_PUBLIC_KEY: vapidKey('public'),
   VAPID_PRIVATE_KEY: vapidKey('private'),
-  /** Who push services can contact: a mailto: or https: URL. Unset: WEB_ORIGIN when it's https. */
-  VAPID_SUBJECT: text(),
+  /**
+   * Who push services can contact: a mailto: or https: URL. Unset: the first WEB_ORIGIN when it's
+   * https. Push services may refuse a reminder with anything else, so it is checked here.
+   */
+  VAPID_SUBJECT: z.preprocess(
+    blank,
+    z
+      .string()
+      .trim()
+      .regex(/^(mailto:[^\s@]+@[^\s@]+|https:\/\/[^\s,]+)$/, 'a mailto: or https: URL')
+      .optional(),
+  ),
 });
 
 export type Env = z.infer<typeof Env> & { JWT_SECRET: string };

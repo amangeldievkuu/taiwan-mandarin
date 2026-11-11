@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AiController } from './ai/ai.controller.js';
 import { LlmService } from './ai/llm.service.js';
 import { ExplainService } from './ai/explain.service.js';
@@ -12,6 +12,7 @@ import { AuthController } from './auth/auth.controller.js';
 import { AuthGuard } from './auth/auth.guard.js';
 import { PrismaErrorFilter } from './common/prisma-error.filter.js';
 import { ThrottlerFilter } from './common/throttler.filter.js';
+import { AccountThrottlerGuard, emailOf } from './common/throttler.guard.js';
 import { AuthService } from './auth/auth.service.js';
 import { ENV, loadEnv, type Env } from './config/env.js';
 import { ContentService } from './content/content.service.js';
@@ -37,10 +38,22 @@ const env = loadEnv();
 @Module({
   imports: [
     JwtModule.register({ secret: env.JWT_SECRET, signOptions: { algorithm: 'HS256' } }),
-    // 120 requests a minute per client by default; auth routes are stricter. The test suite
-    // signs in far more often than a person would.
+    // 120 requests a minute by default, per account where one is signed in, else per address
+    // (common/throttler.guard.ts); auth routes are stricter. The test suite signs in far more often
+    // than a person would.
     ThrottlerModule.forRoot({
-      throttlers: [{ ttl: 60_000, limit: 120 }],
+      throttlers: [
+        { ttl: 60_000, limit: 120 },
+        // Signing in (or up): ten tries a minute for one email, from however many addresses.
+        {
+          name: 'email',
+          ttl: 60_000,
+          limit: 10,
+          getTracker: (req) => emailOf(req) ?? '',
+          skipIf: (context) =>
+            env.NODE_ENV === 'test' || !emailOf(context.switchToHttp().getRequest()),
+        },
+      ],
       skipIf: () => env.NODE_ENV === 'test',
     }),
     ScheduleModule.forRoot(),
@@ -57,7 +70,7 @@ const env = loadEnv();
   ],
   providers: [
     { provide: ENV, useValue: env satisfies Env },
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: AccountThrottlerGuard },
     { provide: APP_FILTER, useClass: PrismaErrorFilter },
     { provide: APP_FILTER, useClass: ThrottlerFilter },
     PrismaService,

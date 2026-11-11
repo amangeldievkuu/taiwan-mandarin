@@ -37,10 +37,16 @@ export const ERRORS = {
   conversationMissing: 'No such conversation',
   conversationEnded: 'This conversation has ended.',
   accountFull: 'This account has reached its storage limit, so this device can no longer sync.',
+  deckFull: 'Your deck is full ({limit} words). Study some of them first.',
+  // Memory model (personal FSRS parameters)
+  fsrsBusy: 'The scheduler is already being fitted to your reviews. Wait for it to finish.',
+  fsrsTooFewReviews: 'Fitting needs {need} reviews; you have {have}.',
+  fsrsFitFailed: 'Your review history is not varied enough to fit the scheduler yet.',
   // Pronunciation
   audioUnreadable: 'Unreadable audio',
   recordingTooLong: 'Keep recordings under 15 seconds',
   noSpeech: "Didn't catch any speech. Try again a little closer to the microphone.",
+  noReading: "This text can't be checked: it needs a reading with one syllable per character.",
   speechTimeout: 'Speech recognition took too long. Try again.',
   speechBusy: 'Speech recognition is busy. Try again in a minute.',
   speechFailed: 'Speech recognition failed. Try again.',

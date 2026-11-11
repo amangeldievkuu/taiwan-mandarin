@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SYNC_BATCH, syncBatches } from './sync-batches';
+import { SYNC_BATCH, syncBatches, UNSENT_MARGIN_MS, unsentSince } from './sync-batches';
 
 const numbers = (n: number) => Array.from({ length: n }, (_, i) => i);
 
@@ -35,5 +35,22 @@ describe('syncBatches', () => {
 
   it('ends exactly at a full request', () => {
     expect(syncBatches({ cards: [], reviews: numbers(10), practice: [] }, 5)).toHaveLength(2);
+  });
+});
+
+describe('where a sync looks for what it has to send', () => {
+  const now = Date.UTC(2026, 10, 11, 9);
+
+  it('reads everything on the first sync of a run', () => {
+    expect(unsentSince(now, false)).toBe(0);
+  });
+
+  it('then reads from a day before the last push', () => {
+    expect(unsentSince(now, true)).toBe(now - UNSENT_MARGIN_MS);
+    expect(UNSENT_MARGIN_MS).toBe(24 * 3_600_000);
+  });
+
+  it('reads everything before any push', () => {
+    expect(unsentSince(0, true)).toBe(0);
   });
 });

@@ -5,6 +5,8 @@
 import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { utcOffsetMinutes } from '@taiwan-mandarin/shared';
+import { apiError } from '@taiwan-mandarin/shared/api';
+import { ContentService } from '../content/content.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { fsrsBinding } from './binding.js';
 import { trainingItems } from './items.js';
@@ -19,7 +21,10 @@ export class FsrsService {
   private readonly logger = new Logger(FsrsService.name);
   private running = new Set<string>();
 
-  constructor(@Inject(PrismaService) private readonly db: PrismaService) {}
+  constructor(
+    @Inject(PrismaService) private readonly db: PrismaService,
+    @Inject(ContentService) private readonly content: ContentService,
+  ) {}
 
   /** `timeoutMs` caps training; fsrs-rs returns the best weights found so far. */
   async optimize(
@@ -27,23 +32,28 @@ export class FsrsService {
     offsetMinutes = 480,
     timeoutMs = 30_000,
   ): Promise<{ w: number[]; reviewCount: number; trainedAt: string }> {
-    if (this.running.has(userId)) throw new BadRequestException('Already optimizing');
+    if (this.running.has(userId)) throw new BadRequestException(apiError('fsrsBusy'));
     this.running.add(userId);
     try {
-      const reviews = await this.db.reviewLog.findMany({
+      const stored = await this.db.reviewLog.findMany({
         where: { userId },
         select: { wordId: true, reviewedAt: true, rating: true },
         orderBy: { reviewedAt: 'asc' },
       });
+      // Only words of the study path: a client can send reviews of any id at all.
+      const reviews = this.content.manifest
+        ? stored.filter((r) => this.content.word(r.wordId))
+        : stored;
       if (reviews.length < MIN_REVIEWS) {
         throw new BadRequestException(
-          `Personal parameters need ${MIN_REVIEWS} reviews; you have ${reviews.length}.`,
+          apiError('fsrsTooFewReviews', { need: MIN_REVIEWS, have: reviews.length }),
         );
       }
-      // Recorded first, so a fit that fails waits for more history instead of every night.
+      // Recorded first, so a fit that fails waits for more history instead of every night. All of
+      // them, as the nightly job counts.
       await this.db.user.update({
         where: { id: userId },
-        data: { fsrsAttemptedCount: reviews.length },
+        data: { fsrsAttemptedCount: stored.length },
       });
       const { computeParameters, FSRSBindingItem, FSRSBindingReview } = await fsrsBinding();
       const items = trainingItems(reviews, offsetMinutes).map(
@@ -63,9 +73,7 @@ export class FsrsService {
       this.logger.warn(
         `FSRS optimization failed for ${userId}: ${e instanceof Error ? e.message : e}`,
       );
-      throw new BadRequestException(
-        'Not enough varied review history to fit personal parameters yet',
-      );
+      throw new BadRequestException(apiError('fsrsFitFailed'));
     } finally {
       this.running.delete(userId);
     }

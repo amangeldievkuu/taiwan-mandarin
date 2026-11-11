@@ -169,6 +169,13 @@ export const PracticeSchema = z.object({
 });
 export type PracticeDto = z.infer<typeof PracticeSchema>;
 
+/**
+ * Words one deck may hold: more than the path has (15,348), since dictionary words can be added
+ * too. The server, the sync request and the app all keep to it, so no deck grows past what a
+ * sync can carry.
+ */
+export const MAX_DECK = 20_000;
+
 export const DeckEntrySchema = z.object({
   id: z.string().min(1).max(64),
   level: LevelSchema.optional(),
@@ -183,7 +190,7 @@ export const SyncRequestSchema = z.object({
   /** Missing from apps older than the practice log. */
   practice: z.array(PracticeSchema).max(20000).default([]),
   deck: z
-    .object({ entries: z.array(DeckEntrySchema).max(5000), updatedAt: z.number().int() })
+    .object({ entries: z.array(DeckEntrySchema).max(MAX_DECK), updatedAt: z.number().int() })
     .optional(),
   settings: z.object({ value: SettingsSchema, updatedAt: z.number().int() }).optional(),
   /**

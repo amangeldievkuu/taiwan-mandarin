@@ -263,10 +263,8 @@
   );
 
   async function addToDeck(ids: string[]) {
-    for (const id of ids) {
-      const word = await content.findWord(id);
-      if (word) store.addToDeck(word);
-    }
+    const words = await Promise.all(ids.map((id) => content.findWord(id)));
+    store.addToDeck(...words.filter((w) => w !== undefined));
   }
 
   const scenarioInfo = $derived(SCENARIOS.find((s) => s.id === scenario));

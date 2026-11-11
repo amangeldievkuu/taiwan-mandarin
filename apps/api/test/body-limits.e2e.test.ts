@@ -5,6 +5,7 @@ import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { MAX_DECK } from '@taiwan-mandarin/shared/api';
 import { applyBodyLimits } from '../src/common/body-limits.js';
 
 let app: NestExpressApplication;
@@ -37,6 +38,28 @@ afterAll(async () => {
 });
 
 describe('body limits', () => {
+  it('carries a full deck in a sync, and the deck route takes no more', async () => {
+    const entries = Array.from({ length: MAX_DECK }, (_, i) => ({
+      id: `詞${i}`,
+      level: 'L6',
+      addedAt: 1_794_000_000_000 + i,
+    }));
+    const full = await request(http)
+      .post('/v1/sync')
+      .set(auth)
+      .send({ since: 0, cards: [], reviews: [], deck: { entries, updatedAt: 100 } });
+    expect(full.status).toBe(200);
+    expect(full.body.deck.entries).toHaveLength(MAX_DECK);
+    // Adding needs a study-path word (content may not be built in this checkout).
+    const word = (await request(http).get('/v1/words').query({ limit: 1 })).body.items?.[0];
+    if (!word) return;
+    const more = await request(http)
+      .post(`/v1/me/deck/${encodeURIComponent(word.id)}`)
+      .set(auth);
+    expect(more.status).toBe(409);
+    expect(more.body.code).toBe('deckFull');
+  });
+
   it('refuses a large body on an ordinary route', async () => {
     const res = await request(http)
       .post('/v1/auth/login')

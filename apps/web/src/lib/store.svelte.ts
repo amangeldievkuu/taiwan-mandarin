@@ -36,6 +36,7 @@ import {
   type Slot,
   type Word,
 } from '@taiwan-mandarin/shared';
+import { fillParams, MAX_DECK } from '@taiwan-mandarin/shared/api';
 import {
   applyDownload,
   countPractice,
@@ -49,6 +50,7 @@ import { content } from './content.svelte';
 import { devLanguage, firstRunLanguage } from './i18n/detect';
 import { locale, t } from './i18n/index.svelte';
 import type { ExportData } from './export';
+import { unsentSince, UNSENT_MARGIN_MS } from './sync-batches';
 import { toasts } from './toast.svelte';
 import { uuid } from './uuid';
 import {
@@ -94,6 +96,8 @@ const emptyStats = (): SessionStats => ({
   easy: 0,
 });
 const freshDaily = (): Daily => ({ date: dayKey(new Date()), newCount: 0, reviewCount: 0 });
+/** Held while a tab takes in the others' saves and saves its own (see flush). */
+const SAVE_LOCK = 'taiwan-mandarin:save';
 
 class Store {
   ready = $state(false);
@@ -171,6 +175,8 @@ class Store {
     practice: [],
   };
   private adopting: Promise<void> | null = null;
+  /** A sync in this run has sent everything the logs held; later ones read only recent entries. */
+  private sentAll = false;
 
   constructor(storage: StorageAdapter) {
     this.storage = storage;
@@ -299,11 +305,28 @@ class Store {
     return this.deck.some((d) => d.id === id);
   }
 
-  /** Adds a word to the learner's deck; it is studied before the path's new words. */
-  addToDeck(word: Pick<Word, 'id' | 'level'>): void {
-    if (this.cards[word.id] || this.inDeck(word.id)) return;
-    this.deck = [...this.deck, { id: word.id, level: word.level, addedAt: Date.now() }];
-    this.syncState.deckUpdatedAt = Date.now();
+  /**
+   * Adds words to the learner's deck, skipping ones already in it or studied; they come before
+   * the path's new words. A full deck (MAX_DECK, what one sync can carry) takes no more.
+   */
+  addToDeck(...words: Pick<Word, 'id' | 'level'>[]): void {
+    const inDeck = new Set(this.deck.map((d) => d.id));
+    // Each word once, and only those not studied or in the deck yet.
+    const fresh = [...new Map(words.map((w) => [w.id, w])).values()].filter(
+      (w) => !this.cards[w.id] && !inDeck.has(w.id),
+    );
+    const room = Math.max(0, MAX_DECK - this.deck.length);
+    if (fresh.length > room) {
+      toasts.show({
+        kind: 'info',
+        title: fillParams(t().errors.codes.deckFull, { limit: MAX_DECK }),
+      });
+    }
+    const now = Date.now();
+    const added = fresh.slice(0, room).map((w) => ({ id: w.id, level: w.level, addedAt: now }));
+    if (!added.length) return;
+    this.deck = [...this.deck, ...added];
+    this.syncState.deckUpdatedAt = now;
     this.changed();
     if (!this.revealed) void this.refreshQueue();
   }
@@ -527,8 +550,9 @@ class Store {
     const cards = Object.entries($state.snapshot(this.cards) as Record<string, CardRecord>).filter(
       ([, r]) => r.updatedAt > this.syncState.pushedAt,
     );
-    const reviews = (await this.storage.reviews(0)).filter((r) => r.pending);
-    const practice = (await this.storage.practice(0)).filter((p) => p.pending);
+    const since = unsentSince(this.syncState.pushedAt, this.sentAll);
+    const reviews = (await this.storage.reviews(since)).filter((r) => r.pending);
+    const practice = (await this.storage.practice(since)).filter((p) => p.pending);
     return { cards, reviews, practice, startedAt };
   }
 
@@ -621,10 +645,11 @@ class Store {
     this.configureFsrs();
     await this.storage.markSynced(remote.acceptedReviews);
     await this.storage.markPracticeSynced(remote.acceptedPractice);
+    this.sentAll = true;
     if (remote.activity) {
       // Everything pending when the sync began was sent; what is pending now came later (its
-      // review time is when the card was turned over, up to ten minutes earlier).
-      const since = remote.pushedAt - 10 * 60_000;
+      // review time is when the card was turned over, which may be hours earlier).
+      const since = remote.pushedAt - UNSENT_MARGIN_MS;
       const unsent = (await this.storage.reviews(since)).filter((r) => r.pending);
       const unsentPractice = (await this.storage.practice(since)).filter((p) => p.pending);
       this.activity = applyDownload(
@@ -653,6 +678,14 @@ class Store {
   async flush(options: { overwrite?: boolean } = {}): Promise<void> {
     clearTimeout(this.saveTimer);
     this.saveTimer = undefined;
+    // One tab at a time: two taking in each other's saves at once would both miss the other's
+    // and the later save would drop the other's cards. Without locks (older browsers), as before.
+    const locks = typeof navigator === 'undefined' ? undefined : navigator.locks;
+    if (locks) await locks.request(SAVE_LOCK, () => this.save(options));
+    else await this.save(options);
+  }
+
+  private async save(options: { overwrite?: boolean }): Promise<void> {
     if (!options.overwrite) await this.catchUp();
     // What is saved now; a card changed while the save is on its way waits for the next one.
     const saving = { cards: this.unsaved, counted: this.uncounted };
