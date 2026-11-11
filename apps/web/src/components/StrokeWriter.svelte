@@ -1,28 +1,4 @@
 <script lang="ts" module>
-  import type { CharacterJson } from 'hanzi-writer';
-
-  /** `tw` is true only when the order is verified against the Taiwan MOE standard. */
-  type StrokeData = CharacterJson & { tw: boolean };
-
-  // Characters checked against the Taiwan MOE standard (scripts/build-strokes.ts). Everything
-  // else comes from hanzi-writer-data on jsDelivr; the service worker keeps it for offline use.
-  const CDN = 'https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0.1/';
-  let overrides: Promise<Record<string, StrokeData>> | undefined;
-  const loadOverrides = () =>
-    (overrides ??= fetch(`${import.meta.env.BASE_URL}strokes-tw.json`)
-      .then((r): Promise<Record<string, StrokeData>> | Record<string, StrokeData> =>
-        r.ok ? r.json() : {},
-      )
-      .catch((): Record<string, StrokeData> => ({})));
-
-  async function loadChar(char: string): Promise<StrokeData> {
-    const verified = (await loadOverrides())[char];
-    if (verified) return verified;
-    const response = await fetch(`${CDN}${encodeURIComponent(char)}.json`);
-    if (!response.ok) throw new Error(`No stroke data for ${char}`);
-    return { ...((await response.json()) as CharacterJson), tw: false };
-  }
-
   // The faint character to trace can be hidden, to write from memory: a per-device choice that
   // stays from one character to the next.
   const OUTLINE_KEY = 'taiwan-mandarin:stroke-outline';
@@ -41,9 +17,11 @@
   import HanziWriter from 'hanzi-writer';
   import { flushSync, untrack } from 'svelte';
   import Icon from '../ui/Icon.svelte';
+  import WritingPaper from '../ui/WritingPaper.svelte';
   import { t } from '../lib/i18n/index.svelte';
   import { reduced } from '../lib/motion';
   import { store } from '../lib/store.svelte';
+  import { loadChar, writerColors } from '../lib/strokes';
 
   interface Props {
     char: string;
@@ -80,32 +58,13 @@
     focused && focusSize > 0 ? { host: 'focus', size: focusSize } : { host: 'page', size: SIZE },
   );
 
-  function cssVar(name: string): string {
-    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  }
-
-  /** Writing paper and brush, from what ink has unlocked. */
-  const GRID = {
-    plain: 'M120 0v240M0 120h240M0 0l240 240M240 0L0 240',
-    nine: 'M80 0v240M160 0v240M0 80h240M0 160h240',
-    xuan: 'M120 0v240M0 120h240M0 0l240 240M240 0L0 240',
-  } as const;
-
   /** The brush look as a plain string: `store.looks` is a fresh object after every sync or
       practice, and depending on it would rebuild the writer (and drop a quiz) each time. */
   const brushLook = $derived(store.looks.brush);
   const placeHost = $derived(place.host);
   const placeSize = $derived(place.size);
 
-  function colors() {
-    const brush = brushLook === 'gold' ? cssVar('--gold') : cssVar('--seal');
-    return {
-      strokeColor: cssVar('--ink'),
-      outlineColor: cssVar('--stroke-outline'),
-      drawingColor: brush,
-      highlightColor: brush,
-    };
-  }
+  const colors = () => writerColors(brushLook);
 
   // A new writer only for a new character. Colors and size change on the running one, so a
   // quiz in progress is never thrown away.
@@ -279,15 +238,11 @@
 </script>
 
 {#snippet board(where: Place, size: number)}
-  <div
-    class="canvas paper-{store.looks.paper}"
-    class:quiz={mode === 'quiz'}
-    style:--size="{size}px"
-    style:view-transition-name={morphing && place.host === where ? 'stroke-sheet' : null}
+  <WritingPaper
+    {size}
+    active={mode === 'quiz'}
+    name={morphing && place.host === where ? 'stroke-sheet' : null}
   >
-    <svg class="grid" viewBox="0 0 240 240" aria-hidden="true">
-      <path d={GRID[store.looks.paper]} vector-effect="non-scaling-stroke" />
-    </svg>
     <div
       class="target"
       bind:this={hosts[where]}
@@ -297,7 +252,7 @@
     {#if missing}
       <p class="missing">{t().strokes.missing} <span lang="zh-Hant-TW">{char}</span></p>
     {/if}
-  </div>
+  </WritingPaper>
 {/snippet}
 
 {#snippet controls(where: Place)}
@@ -397,49 +352,8 @@
     align-items: center;
   }
 
-  .canvas {
-    position: relative;
-    flex: none;
-    width: calc(var(--size) + 2px);
-    height: calc(var(--size) + 2px);
-    border: 1px solid var(--rule);
-    border-radius: var(--radius);
-    overflow: hidden;
-    touch-action: none;
-    transition: border-color var(--dur) var(--ease);
-  }
-
-  .grid {
-    position: absolute;
-    inset: 0;
-    fill: none;
-    stroke: var(--rule);
-    stroke-width: 1;
-  }
-
-  .grid {
-    stroke-dasharray: 4 5;
-  }
-
-  /* 九宮格: nine squares, ruled in faint vermilion like a copybook. */
-  .paper-nine .grid {
-    stroke: color-mix(in srgb, var(--seal) 30%, transparent);
-    stroke-dasharray: none;
-  }
-
-  /* 宣紙: warm rice paper with a few fibres in it. */
-  .paper-xuan {
-    background:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.006 0.05' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.36 0 0 0 0 0.22 0 0 0 0.8 -0.45'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23f)'/%3E%3C/svg%3E"),
-      color-mix(in srgb, #e9d6ad 32%, var(--paper));
-  }
-
   .target {
     position: relative;
-  }
-
-  .canvas.quiz {
-    border-color: color-mix(in srgb, var(--seal) 50%, transparent);
   }
 
   .missing {

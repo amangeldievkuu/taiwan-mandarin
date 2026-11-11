@@ -553,6 +553,8 @@ export const en = {
       recognize: { name: 'Recognise', hint: 'See the word, recall the meaning' },
       recall: { name: 'Recall', hint: 'See the meaning, recall the word' },
       listen: { name: 'Listen', hint: 'Hear the word, recall it' },
+      write: { name: 'Write', hint: 'See the meaning, write the word' },
+      speak: { name: 'Speak', hint: 'See the word, say it aloud' },
     },
     grades: { again: 'Again', hard: 'Hard', good: 'Good', easy: 'Easy' },
     halfway: 'Halfway there',
@@ -572,6 +574,21 @@ export const en = {
     undo: 'Undo',
     undoHint: 'Take back the last answer (U)',
     undone: 'Answer taken back. Grade it again.',
+    suggested: 'Suggested',
+    sheet: (n: number, total: number) =>
+      total > 1 ? `Writing sheet, character ${n} of ${total}` : 'Writing sheet',
+    writeIt: 'Write it from memory',
+    noStrokes: (char: string) =>
+      `The strokes for ${char} aren't on this device. Picture it, then show the answer.`,
+    written: (mistakes: number, hints: number): string =>
+      mistakes === 0
+        ? 'Written with no mistakes'
+        : `Written with ${mistakes} ${mistakes === 1 ? 'mistake' : 'mistakes'}` +
+          (hints ? ` and ${hints} ${hints === 1 ? 'hint' : 'hints'}` : ''),
+    sayIt: 'Say it aloud',
+    recording: 'Recording. Tap to stop.',
+    sayAloud: 'Say it aloud, then show the answer.',
+    compare: 'Play yours and the word, then grade it.',
   },
 
   session: {

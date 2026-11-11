@@ -617,6 +617,8 @@ export const vi: Messages = {
       recognize: { name: 'Nhận mặt chữ', hint: 'Nhìn từ, nhớ lại nghĩa' },
       recall: { name: 'Nhớ lại', hint: 'Nhìn nghĩa, nhớ lại từ' },
       listen: { name: 'Nghe', hint: 'Nghe từ, nhớ lại nó' },
+      write: { name: 'Viết', hint: 'Nhìn nghĩa, viết lại từ' },
+      speak: { name: 'Nói', hint: 'Nhìn từ, đọc to lên' },
     },
     grades: { again: 'Lại', hard: 'Khó', good: 'Nhớ', easy: 'Dễ' },
     halfway: 'Được một nửa rồi',
@@ -636,6 +638,19 @@ export const vi: Messages = {
     undo: 'Hoàn tác',
     undoHint: 'Rút lại câu trả lời vừa rồi (U)',
     undone: 'Đã rút lại câu trả lời. Hãy chấm lại.',
+    suggested: 'Gợi ý',
+    sheet: (n, total) => (total > 1 ? `Giấy tập viết, chữ ${n}/${total}` : 'Giấy tập viết'),
+    writeIt: 'Viết lại theo trí nhớ',
+    noStrokes: (char) =>
+      `Thiết bị này chưa có nét chữ của ${char}. Hãy hình dung chữ, rồi xem đáp án.`,
+    written: (mistakes, hints) =>
+      mistakes === 0
+        ? 'Viết đúng, không lỗi nào'
+        : `Viết xong với ${mistakes} lỗi` + (hints ? `, ${hints} lần gợi ý` : ''),
+    sayIt: 'Đọc to lên',
+    recording: 'Đang ghi âm. Chạm để dừng.',
+    sayAloud: 'Đọc to lên, rồi xem đáp án.',
+    compare: 'Nghe lại giọng bạn và từ mẫu, rồi tự chấm.',
   },
 
   session: {

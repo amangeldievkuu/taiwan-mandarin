@@ -1,14 +1,11 @@
 <script lang="ts" module>
-  type Mode = 'recognize' | 'recall' | 'listen';
+  import { parseMode, type Mode } from '../lib/study-modes';
+
   const MODE_KEY = 'taiwan-mandarin:study-mode';
-  const MODES: Mode[] = ['recognize', 'recall', 'listen'];
-  /** Each mode's Chinese name; its name and what it asks of the learner are in the catalog. */
-  const MODE_ZH: Record<Mode, string> = { recognize: '認字', recall: '回想', listen: '聽力' };
 
   function savedMode(): Mode {
     try {
-      const value = localStorage.getItem(MODE_KEY);
-      return value === 'recall' || value === 'listen' ? value : 'recognize';
+      return parseMode(localStorage.getItem(MODE_KEY));
     } catch {
       return 'recognize';
     }
@@ -19,6 +16,7 @@
   // The study session: one card at a time on a little stack. Reveal it (tap, Space, or the
   // button), grade it, and it flies off (left for Again, right for Good: the direction tells the
   // grade, every grade gets the same energy and ink) while the next card rises from the stack.
+  // Writing the word or saying it also opens the answer, and suggests a grade.
   import InkDrop from '../ui/InkDrop.svelte';
   import { XP } from '@taiwan-mandarin/shared';
   import { tick, untrack } from 'svelte';
@@ -26,11 +24,14 @@
   import Icon from '../ui/Icon.svelte';
   import Reading from '../ui/Reading.svelte';
   import SessionComplete from '../ui/SessionComplete.svelte';
-  import Segmented from '../components/Segmented.svelte';
   import TaiwanNote from '../components/TaiwanNote.svelte';
   import WordGlyphs, { fitSize } from '../components/WordGlyphs.svelte';
+  import ModePicker from '../ui/study/ModePicker.svelte';
+  import SpeakFace from '../ui/study/SpeakFace.svelte';
+  import WriteFace from '../ui/study/WriteFace.svelte';
   import { celebrate } from '../lib/celebrate.svelte';
   import { companion } from '../lib/companion.svelte';
+  import { content } from '../lib/content.svelte';
   import { feedback } from '../lib/feedback.svelte';
   import { glossOf, translationOf } from '../lib/i18n/content';
   import { formatInterval, t } from '../lib/i18n/index.svelte';
@@ -43,6 +44,8 @@
   import { GRADES, Rating, type Grade } from '../lib/srs';
   import { COMBOS } from '../lib/mo';
   import { store } from '../lib/store.svelte';
+  import { prefetchStrokes } from '../lib/strokes';
+  import { isHan, maskOwnChars } from '../lib/study-modes';
   import { toasts } from '../lib/toast.svelte';
   import { cardIn, cardOut, flipIn, rise } from '../lib/transitions';
 
@@ -53,8 +56,6 @@
     [Rating.Good]: { name: 'good', zh: '記得', color: 'var(--good)', key: '3' },
     [Rating.Easy]: { name: 'easy', zh: '簡單', color: 'var(--easy)', key: '4' },
   };
-  const modeInfo = $derived(t().study.modes);
-
   let mode = $state<Mode>(savedMode());
   $effect(() => {
     try {
@@ -69,6 +70,12 @@
   const isNew = $derived(word ? !store.cards[word.id] : false);
   const level = $derived(word ? t().levels[word.level] : undefined);
   const example = $derived(word?.examples?.[0]);
+  /** The meaning as a question, without the word's own characters in it. */
+  const prompt = $derived.by(() => {
+    if (!word) return undefined;
+    const gloss = glossOf(word);
+    return { ...gloss, text: maskOwnChars(gloss.text, word.hanzi) };
+  });
   const size = $derived(
     word
       ? fitSize(
@@ -82,6 +89,18 @@
   /** One card per answer, so a card that comes straight back still animates in. */
   const cardKey = $derived(word ? `${word.id}:${store.stats.reviewed}` : '');
   const remaining = $derived(store.queue.length);
+  /** Tapping the card shows the answer; writing and speaking need the card for themselves. */
+  const tapReveals = $derived(mode !== 'write' && mode !== 'speak');
+
+  /** The grade a written or spoken answer suggests, for this card in this mode only. */
+  let suggestion = $state<{ key: string; grade: Grade } | null>(null);
+  const suggested = $derived(
+    suggestion && suggestion.key === `${cardKey}:${mode}` ? suggestion.grade : undefined,
+  );
+  function suggest(grade: Grade | undefined) {
+    suggestion = grade ? { key: `${cardKey}:${mode}`, grade } : null;
+  }
+  let speakFace = $state<ReturnType<typeof SpeakFace>>();
 
   /** Which way the card just graded leaves; read when its exit starts. */
   let exitGrade = $state<Grade>(Rating.Good);
@@ -99,11 +118,6 @@
   /** Read out by screen readers when an answer is taken back. */
   let announcement = $state('');
 
-  function pickMode(m: Mode) {
-    mode = m;
-    modeOpen = false;
-  }
-
   // A new card is shown: note the time, and in listening mode play it. Only a new card counts:
   // revealing it or switching modes must not restart the clock.
   $effect(() => {
@@ -114,6 +128,14 @@
       store.markShown();
       if (mode === 'listen' && !store.revealed) speak(shown.hanzi);
     });
+  });
+
+  // Writing: the next card's strokes load while this one is written, so its sheet is ready.
+  $effect(() => {
+    if (mode !== 'write') return;
+    const next = store.queue[1];
+    const nextWord = next ? content.word(next) : undefined;
+    if (nextWord) prefetchStrokes([...nextWord.hanzi].filter(isHan));
   });
 
   // Switching to listening mode on a hidden card plays it.
@@ -204,6 +226,11 @@
       void reveal();
       return;
     }
+    if (mode === 'speak' && !store.revealed) {
+      // M records; R would say the reading this card asks for.
+      if (event.key === 'm') void speakFace?.toggle();
+      return;
+    }
     if (event.key === 'r' && word) speak(word.hanzi);
     if (store.revealed) {
       const g = GRADES.find((x) => GRADE_INFO[x].key === event.key);
@@ -246,63 +273,7 @@
 
 <section class="study">
   <header class="top">
-    <div class="modes">
-      <!-- Phones: one chip opens a menu, away from the card's tap target. -->
-      <div class="mode-pick">
-        <button
-          type="button"
-          class="chip mode-chip"
-          aria-haspopup="menu"
-          aria-expanded={modeOpen}
-          aria-label={t().study.modeIs(modeInfo[mode].name)}
-          onclick={() => (modeOpen = !modeOpen)}
-        >
-          <span class="hanzi" lang="zh-Hant-TW">{MODE_ZH[mode]}</span>
-          <span class="mode-name">{modeInfo[mode].name}</span>
-          <svg class="chevron down" viewBox="0 0 8 14" aria-hidden="true"
-            ><path d="M1 5l3 3 3-3" /></svg
-          >
-        </button>
-        {#if modeOpen}
-          <button
-            type="button"
-            class="mode-scrim"
-            aria-label={t().common.close}
-            onclick={() => (modeOpen = false)}
-          ></button>
-          <div class="mode-menu sheet" role="menu" aria-label={t().study.mode} in:rise={{ y: -6 }}>
-            {#each MODES as m (m)}
-              <button
-                type="button"
-                class="mode-item"
-                role="menuitemradio"
-                aria-checked={mode === m}
-                onclick={() => pickMode(m)}
-              >
-                <span class="mode-zh hanzi" lang="zh-Hant-TW">{MODE_ZH[m]}</span>
-                <span class="mode-en">{modeInfo[m].name}<small>{modeInfo[m].hint}</small></span>
-                {#if mode === m}<Icon name="check" size={18} />{/if}
-              </button>
-            {/each}
-          </div>
-        {/if}
-      </div>
-      <!-- Tablets and desktops: the control inline. -->
-      <div class="mode-inline">
-        <Segmented
-          label={t().study.mode}
-          value={mode}
-          onchange={pickMode}
-          options={MODES.map((m) => ({
-            value: m,
-            label: MODE_ZH[m],
-            sub: modeInfo[m].name,
-            lang: 'zh-Hant-TW',
-          }))}
-        />
-      </div>
-      <span class="mode-hint">{modeInfo[mode].hint}</span>
-    </div>
+    <ModePicker bind:mode bind:open={modeOpen} />
     {#if word}
       <div class="counters">
         {@render undoButton()}
@@ -338,7 +309,10 @@
         <article
           class="card sheet"
           class:revealed={store.revealed}
-          onclick={reveal}
+          class:taps={tapReveals}
+          class:plain={!tapReveals}
+          class:writing={mode === 'write'}
+          onclick={tapReveals ? reveal : undefined}
           in:cardIn
           out:cardOut={{ grade: exitGrade }}
         >
@@ -349,8 +323,8 @@
           </div>
 
           <div class="face">
-            {#if mode === 'recall' && !store.revealed}
-              <p class="prompt"><Localized value={glossOf(word)} /></p>
+            {#if mode === 'recall' && !store.revealed && prompt}
+              <p class="prompt"><Localized value={prompt} /></p>
               {#if word.cl}<p class="prompt-sub">
                   {t().study.measureWordInline}
                   <span class="hanzi" lang="zh-Hant-TW">{word.cl}</span>
@@ -369,6 +343,25 @@
                 <Icon name="speaker" size={40} />
               </button>
               <p class="prompt-sub">{t().study.tapToHear}</p>
+            {:else if mode === 'write'}
+              <WriteFace
+                {word}
+                {size}
+                phonetics={settings.phonetics}
+                revealed={store.revealed}
+                onwritten={reveal}
+                onsuggest={suggest}
+              />
+            {:else if mode === 'speak'}
+              <SpeakFace
+                bind:this={speakFace}
+                {word}
+                {size}
+                phonetics={settings.phonetics}
+                revealed={store.revealed}
+                onanswered={reveal}
+                onsuggest={suggest}
+              />
             {:else if mode === 'recognize'}
               <div class="glyphs" bind:this={glyphs}>
                 <WordGlyphs {word} {size} phonetics={settings.phonetics} show={store.revealed} />
@@ -441,6 +434,7 @@
               type="button"
               class="rate enter"
               class:pressed={pressed === GRADE_INFO[g].key}
+              class:suggested={suggested === g}
               style:--c={GRADE_INFO[g].color}
               style:--i={i}
               aria-keyshortcuts={GRADE_INFO[g].key}
@@ -452,6 +446,9 @@
                 >{t().study.grades[GRADE_INFO[g].name]} · {formatInterval(store.intervals[g])}</span
               >
               <kbd class="key">{GRADE_INFO[g].key}</kbd>
+              {#if suggested === g}<span class="suggest-tag" in:rise={{ y: 4 }}
+                  >{t().study.suggested}</span
+                >{/if}
             </button>
           {/each}
         </div>
@@ -508,145 +505,6 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--sp-2) var(--sp-3);
-  }
-
-  .modes {
-    display: flex;
-    flex: 1 1 auto;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    min-width: 0;
-  }
-
-  .mode-inline {
-    display: none;
-  }
-
-  /* Phones: the hint takes the column's width without widening it, so only the mode button
-     decides whether the counters still fit beside it. */
-  @media (max-width: 699px) {
-    .mode-hint {
-      width: 0;
-      min-width: 100%;
-    }
-  }
-
-  .modes :global(.segmented) {
-    width: 270px;
-  }
-
-  .mode-hint {
-    font-size: var(--fs-sm);
-    line-height: 1.3;
-    color: var(--ink-3);
-  }
-
-  @media (min-width: 700px) {
-    .modes {
-      flex-direction: row;
-      align-items: center;
-      gap: var(--sp-3);
-    }
-
-    .mode-pick {
-      display: none;
-    }
-
-    .mode-inline {
-      display: block;
-    }
-  }
-
-  /* The phone's mode menu. On the narrowest phones a long name gives way to the counters. */
-  .mode-pick {
-    position: relative;
-    max-width: 100%;
-  }
-
-  .mode-chip {
-    gap: 6px;
-    max-width: 100%;
-    font-weight: var(--fw-strong);
-  }
-
-  .mode-name {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .mode-chip .hanzi {
-    font-size: var(--fs-base);
-  }
-
-  .mode-chip .chevron {
-    width: 8px;
-    height: 14px;
-    margin-left: 2px;
-    transition: transform var(--dur-2) var(--ease-out);
-  }
-
-  .mode-chip[aria-expanded='true'] .chevron {
-    transform: rotate(180deg);
-  }
-
-  .mode-scrim {
-    position: fixed;
-    inset: 0;
-    z-index: 29;
-    cursor: default;
-  }
-
-  .mode-menu {
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    z-index: 30;
-    width: min(300px, calc(100vw - 2 * var(--gutter)));
-    padding: 6px;
-    box-shadow: var(--shadow-3);
-  }
-
-  .mode-item {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
-    width: 100%;
-    min-height: 54px;
-    padding: var(--sp-2) 10px;
-    border-radius: 12px;
-    text-align: left;
-    color: var(--ink);
-  }
-
-  .mode-item[aria-checked='true'] {
-    background: var(--jade-wash);
-    color: var(--jade-text);
-  }
-
-  .mode-item:active {
-    background: var(--fill);
-  }
-
-  .mode-zh {
-    font-size: var(--fs-xl);
-    flex: none;
-  }
-
-  .mode-en {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    font-size: var(--fs-base);
-    font-weight: var(--fw-strong);
-    line-height: 1.2;
-  }
-
-  .mode-en small {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-text);
-    color: var(--ink-3);
   }
 
   .counters {
@@ -767,7 +625,6 @@
     align-items: center;
     min-height: 380px;
     padding: var(--sp-5) var(--sp-6) var(--sp-6);
-    cursor: pointer;
     box-shadow: var(--shadow-3);
     /* 田字格: a faint practice-paper cross behind the character */
     background-image:
@@ -780,9 +637,19 @@
     background-repeat: no-repeat;
   }
 
-  .card.revealed {
-    cursor: default;
+  .card.taps:not(.revealed) {
+    cursor: pointer;
+  }
+
+  /* The writing sheet has its own ruling, and the spoken word sits above the mic. */
+  .card.revealed,
+  .card.plain {
     background-image: none;
+  }
+
+  /* A writing sheet as wide as the card allows, on a small phone too. */
+  .card.writing:not(.revealed) {
+    padding-inline: var(--sp-4);
   }
 
   .meta {
@@ -1004,6 +871,29 @@
     background: color-mix(in oklab, var(--c) 18%, var(--paper-raised));
     box-shadow: inset 0 1px 2px color-mix(in oklab, var(--c) 20%, transparent);
     transition-duration: 80ms;
+  }
+
+  /* The grade a written or spoken answer suggests: ringed and labelled; the learner still picks. */
+  .rate.suggested {
+    border-color: var(--c);
+    box-shadow:
+      0 0 0 2px color-mix(in oklab, var(--c) 45%, transparent),
+      0 4px 12px -6px color-mix(in oklab, var(--c) 35%, transparent);
+  }
+
+  .suggest-tag {
+    position: absolute;
+    top: -9px;
+    left: 50%;
+    translate: -50% 0;
+    padding: 0 7px;
+    border-radius: var(--radius-pill);
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-heading);
+    line-height: 18px;
+    white-space: nowrap;
+    color: var(--paper-raised);
+    background: var(--c);
   }
 
   .rate-zh {
