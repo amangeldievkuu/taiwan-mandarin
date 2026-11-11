@@ -9,6 +9,7 @@
   import Icon from '../ui/Icon.svelte';
   import Seal from '../ui/Seal.svelte';
   import StreakPlant from '../ui/StreakPlant.svelte';
+  import Tour from '../ui/tour/Tour.svelte';
   import { router } from '../lib/router.svelte';
   import { store } from '../lib/store.svelte';
   import { walk } from '../lib/walk';
@@ -78,6 +79,16 @@
     seams: [{ from: '2026-03-04', to: '2026-03-05', days: 2, mendedOn: '2026-03-06' }],
   };
 
+  // Me › How it works opens /welcome?tour: once the page is drawn (and the router has scrolled
+  // to the top), down to the tour.
+  let tourEl = $state<HTMLElement>();
+  $effect(() => {
+    const el = tourEl;
+    if (!el || !router.route.query.has('tour')) return;
+    const timer = setTimeout(() => el.scrollIntoView({ block: 'start' }), 60);
+    return () => clearTimeout(timer);
+  });
+
   function start(to: string) {
     markWelcomed();
     router.go(to);
@@ -92,16 +103,19 @@
 <div class="landing" use:walk bind:this={road}>
   <section class="hero">
     <div class="hero-text">
-      <div class="languages" role="group" aria-label={t().landing.language}>
-        {#each LANGS as l (l.id)}
-          <button
-            type="button"
-            class="chip"
-            lang={l.id}
-            aria-pressed={store.settings.language === l.id}
-            onclick={() => store.chooseLanguage(l.id)}>{l.name}</button
-          >
-        {/each}
+      <div class="top-row">
+        <Seal text="華" size={40} paste="vermilion" />
+        <div class="languages" role="group" aria-label={t().landing.language}>
+          {#each LANGS as l (l.id)}
+            <button
+              type="button"
+              class="chip"
+              lang={l.id}
+              aria-pressed={store.settings.language === l.id}
+              onclick={() => store.chooseLanguage(l.id)}>{l.name}</button
+            >
+          {/each}
+        </div>
       </div>
       <p class="eyebrow">{t().landing.eyebrow}</p>
       <h1>
@@ -120,9 +134,13 @@
       </div>
       <p class="fine">{t().landing.fine}</p>
     </div>
-    <div class="hero-seal" aria-hidden="true">
-      <Seal text="華" size={132} paste="vermilion" />
-      <p class="hint">
+    <!-- How the app is used, played on a phone; Me › How it works comes back here. -->
+    <div class="hero-tour" id="tour" bind:this={tourEl}>
+      <p class="tour-label">
+        {t().tour.title} <span class="zh" lang="zh-Hant-TW">怎麼用</span>
+      </p>
+      <Tour />
+      <p class="hint" aria-hidden="true">
         <Icon name="back" />
         {t().landing.scroll}
       </p>
@@ -230,7 +248,7 @@
     width: 100%;
     max-width: 1080px;
     margin: 0 auto;
-    padding: calc(var(--safe-top) + 24px) var(--gutter) 0;
+    padding: calc(var(--safe-top) + var(--sp-6)) var(--gutter) 0;
     overflow-x: clip;
   }
 
@@ -243,20 +261,17 @@
     display: grid;
     grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
     align-items: center;
-    gap: 32px;
+    gap: var(--sp-8);
     min-height: calc(100svh - var(--road-h) - var(--safe-top) - 24px);
-    padding-bottom: 24px;
+    padding-bottom: var(--sp-6);
   }
 
   @media (max-width: 760px) {
     .hero {
       grid-template-columns: 1fr;
+      gap: var(--sp-12);
       min-height: auto;
-      padding-top: 8px;
-    }
-
-    .hero-seal {
-      order: -1;
+      padding-top: var(--sp-2);
     }
   }
 
@@ -264,17 +279,28 @@
     animation: enter var(--dur-4) var(--ease-spring-soft) backwards;
   }
 
+  .top-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-6);
+  }
+
+  .top-row :global(.seal) {
+    transform: rotate(-4deg);
+  }
+
   .languages {
     display: flex;
+    flex-wrap: wrap;
     gap: 6px;
-    margin-bottom: 14px;
   }
 
   h1 {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin: 6px 0 16px;
+    gap: var(--sp-2);
+    margin: 6px 0 var(--sp-4);
     line-height: 1.05;
   }
 
@@ -288,14 +314,14 @@
 
   h1 .en {
     font-family: var(--font-display);
-    font-weight: 900;
+    font-weight: var(--fw-heading);
     font-size: clamp(26px, 4.6vw, 44px);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
   }
 
   .lead {
     max-width: 52ch;
-    margin: 0 0 22px;
+    margin: 0 0 var(--sp-6);
     font-size: clamp(16px, 2vw, 19px);
     line-height: 1.55;
     color: var(--ink-2);
@@ -309,27 +335,57 @@
 
   .btn.big {
     min-height: 54px;
-    padding: 0 26px;
-    font-size: 17px;
+    padding: 0 var(--sp-7);
+    font-size: var(--fs-lg);
   }
 
   .fine {
-    margin: 14px 0 0;
-    font-size: 13px;
+    margin: var(--sp-4) 0 0;
+    font-size: var(--fs-sm);
     color: var(--ink-3);
   }
 
-  .hero-seal {
+  .hero-tour {
+    --tour-w: 248px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 18px;
+    gap: var(--sp-4);
+    padding-top: var(--sp-4);
+    scroll-margin-top: var(--sp-4);
     animation: enter var(--dur-4) var(--ease-spring-soft) 120ms backwards;
   }
 
-  .hero-seal :global(.seal) {
-    transform: rotate(-4deg);
-    box-shadow: var(--shadow-3);
+  .tour-label {
+    margin: 0;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-strong);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .tour-label .zh {
+    margin-left: var(--sp-1);
+    font-family: var(--font-kai);
+    font-size: var(--fs-md);
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: none;
+  }
+
+  @media (max-width: 760px) {
+    .hero-tour {
+      --tour-w: 248px;
+    }
+
+    .tour-label {
+      font-size: var(--fs-lg);
+      font-weight: var(--fw-heading);
+      letter-spacing: -0.01em;
+      text-transform: none;
+      color: var(--ink);
+    }
   }
 
   .hint {
@@ -337,8 +393,8 @@
     align-items: center;
     gap: 6px;
     margin: 0;
-    font-size: 13px;
-    font-weight: 700;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-strong);
     color: var(--ink-3);
   }
 
@@ -357,26 +413,26 @@
   .features ul {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 14px;
+    gap: var(--sp-3);
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
   .feature {
-    padding: 20px;
+    padding: var(--sp-5);
   }
 
   .feature h3 {
-    margin: 14px 0 6px;
-    font-size: 18px;
-    font-weight: 800;
+    margin: var(--sp-4) 0 6px;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-heading);
     letter-spacing: -0.01em;
   }
 
   .feature p {
     margin: 0;
-    font-size: 15px;
+    font-size: var(--fs-base);
     line-height: 1.5;
     color: var(--ink-2);
   }
@@ -385,9 +441,9 @@
   .plant {
     display: flex;
     align-items: center;
-    gap: 28px;
-    margin-top: 56px;
-    padding: 26px 30px;
+    gap: var(--sp-7);
+    margin-top: var(--sp-14);
+    padding: var(--sp-7) var(--sp-8);
     border-radius: var(--radius-xl);
     background: var(--jade-wash);
     border-color: transparent;
@@ -398,35 +454,35 @@
     .plant {
       flex-direction: column;
       text-align: center;
-      padding: 24px 20px;
+      padding: var(--sp-6) var(--sp-5);
     }
   }
 
   .plant h2,
   .install h2 {
-    margin: 0 0 8px;
+    margin: 0 0 var(--sp-2);
     font-size: clamp(22px, 3vw, 28px);
-    font-weight: 900;
-    letter-spacing: -0.02em;
+    font-weight: var(--fw-heading);
+    letter-spacing: -0.01em;
   }
 
   .plant p,
   .install p {
     margin: 0;
-    font-size: 16px;
+    font-size: var(--fs-base);
     line-height: 1.55;
     color: var(--ink-2);
   }
 
   /* ---- Steps ---- */
   .steps {
-    margin-top: 40px;
+    margin-top: var(--sp-10);
   }
 
   .steps ol {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 14px;
+    gap: var(--sp-3);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -437,8 +493,8 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 18px 20px 18px 58px;
+    gap: var(--sp-1);
+    padding: var(--sp-5) var(--sp-5) var(--sp-5) 58px;
     border: 1px dashed var(--rule-strong);
     border-radius: var(--radius-lg);
   }
@@ -454,43 +510,43 @@
     border-radius: 50%;
     background: var(--ink);
     color: var(--paper);
-    font-size: 13px;
-    font-weight: 800;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-heading);
   }
 
   .step-zh {
-    font-size: 26px;
+    font-size: var(--fs-3xl);
     color: var(--seal);
     line-height: 1;
   }
 
   .steps strong {
-    font-size: 17px;
+    font-size: var(--fs-lg);
   }
 
   .steps p {
     margin: 0;
-    font-size: 15px;
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
   /* ---- Install ---- */
   .install {
     max-width: 640px;
-    margin-top: 56px;
+    margin-top: var(--sp-14);
     text-align: center;
   }
 
   .install .cta {
     justify-content: center;
-    margin-top: 18px;
+    margin-top: var(--sp-5);
   }
 
   .credits {
     max-width: 640px;
-    margin: 48px auto 0;
-    padding-bottom: calc(var(--road-h) + var(--safe-bottom) + 12px);
-    font-size: 13px;
+    margin: var(--sp-12) auto 0;
+    padding-bottom: calc(var(--road-h) + var(--safe-bottom) + var(--sp-3));
+    font-size: var(--fs-sm);
     line-height: 1.5;
     text-align: center;
     color: var(--ink-3);
@@ -569,8 +625,8 @@
   }
 
   .post span {
-    font-size: 10px;
-    font-weight: 800;
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-heading);
     letter-spacing: 0.02em;
     color: var(--ink-3);
     white-space: nowrap;
@@ -627,7 +683,7 @@
   @media (prefers-reduced-motion: reduce) {
     .hint :global(.icon),
     .hero-text,
-    .hero-seal {
+    .hero-tour {
       animation: none;
     }
   }

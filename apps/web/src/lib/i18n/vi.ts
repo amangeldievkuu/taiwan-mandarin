@@ -42,6 +42,15 @@ export const vi: Messages = {
     main: 'Điều hướng chính',
     home: 'Trang chủ 臺灣華語',
     due: (n) => `${n} thẻ đến hạn`,
+    tabs: {
+      today: 'Hôm nay',
+      study: 'Học',
+      path: 'Lộ trình',
+      talk: 'Nói',
+      read: 'Đọc',
+      dict: 'Từ điển',
+      me: 'Tôi',
+    },
   },
 
   levels: {
@@ -231,6 +240,39 @@ export const vi: Messages = {
     bloomed: 'nở hoa rồi!',
   },
 
+  tour: {
+    title: 'Cách dùng',
+    play: 'Phát',
+    pause: 'Tạm dừng',
+    replay: 'Xem lại',
+    next: 'Bước tiếp',
+    steps: [
+      {
+        title: 'Hôm nay',
+        text: 'Hôm nay cho biết cần luyện gì: các thẻ đến hạn ôn và mười từ mới. Vài phút là đủ.',
+      },
+      {
+        title: 'Học',
+        text: 'Nghĩ xem từ có nghĩa gì, chạm vào thẻ để kiểm tra, rồi tự chấm điểm. Mỗi từ quay lại ngay trước khi bạn sắp quên.',
+      },
+      {
+        title: 'Đọc',
+        text: 'Truyện ngắn về cuộc sống ở Đài Loan. Chạm vào từ chưa biết để tra và thêm vào bộ thẻ.',
+      },
+      {
+        title: 'Vun cây',
+        text: 'Mỗi ngày bạn học là tưới cho cây mai. Lỡ một ngày, chỗ nứt vẫn có thể hàn vàng.',
+      },
+    ],
+    mock: {
+      plantHint: 'Học hôm nay để hạt nảy mầm',
+      thanks: 'cảm ơn',
+      readerTitle: 'Cuối tuần của tôi',
+      drinkTea: 'uống trà',
+      mend: 'Lỡ một ngày? Quay lại trong ba ngày, chậu sẽ được hàn vàng.',
+    },
+  },
+
   common: {
     cancel: 'Hủy',
     close: 'Đóng',
@@ -328,6 +370,8 @@ export const vi: Messages = {
     gardenSub: (plants, earned, total) => `${plants} cây trước đây · ${earned}/${total} con dấu`,
     levelsSub: (words, levels) => `${words} từ trong ${levels} cấp độ`,
     aboutSub: 'Nguồn dữ liệu và giấy phép',
+    tour: 'Cách dùng',
+    tourSub: 'Một phút xem qua ứng dụng',
   },
 
   settings: {
@@ -854,7 +898,7 @@ export const vi: Messages = {
       'Chạm vào từ bất kỳ để xem trong từ điển và thêm vào bộ thẻ.',
     loadFailed: 'Không tải được các bài đọc.',
     none: 'Chưa có bài đọc nào.',
-    draft: 'Bản nháp',
+    draft: 'Bản nháp AI',
     draftTitle: 'Viết bằng AI, chưa được duyệt',
     length: (chars, minutes) => `${chars} 字 · ~${minutes} phút`,
     knownTitle: 'Những từ bạn đã bắt đầu học',

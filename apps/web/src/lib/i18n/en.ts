@@ -54,6 +54,16 @@ export const en = {
     main: 'Main',
     home: '臺灣華語 home',
     due: (n: number) => `${n} due`,
+    /** The phone tab bar: short names, so six fit side by side on a 320 px screen. */
+    tabs: {
+      today: 'Today',
+      study: 'Study',
+      path: 'Path',
+      talk: 'Talk',
+      read: 'Read',
+      dict: 'Dictionary',
+      me: 'Me',
+    },
   },
 
   levels: byId<Level>(LEVELS),
@@ -206,6 +216,41 @@ export const en = {
     bloomed: 'it bloomed',
   },
 
+  /** The welcome page's tour: four steps, one per scene (Today, Study, Read, the plant). */
+  tour: {
+    title: 'How it works',
+    play: 'Play',
+    pause: 'Pause',
+    replay: 'Watch again',
+    next: 'Next step',
+    steps: [
+      {
+        title: 'Today',
+        text: 'Today shows what to practise: the reviews due and ten new words. A few minutes is enough.',
+      },
+      {
+        title: 'Study',
+        text: 'Think of the meaning, tap the card to check, then grade yourself. Each word comes back just before you would forget it.',
+      },
+      {
+        title: 'Read',
+        text: "Short stories about life in Taiwan. Tap a word you don't know to look it up and add it to your deck.",
+      },
+      {
+        title: 'Grow',
+        text: 'Every day you practise waters your plum tree. Miss a day and you can mend it with gold.',
+      },
+    ],
+    /** What the phone in the tour shows, in the learner's language. */
+    mock: {
+      plantHint: 'Practise today and it sprouts',
+      thanks: 'thank you',
+      readerTitle: 'My weekend',
+      drinkTea: 'to drink tea',
+      mend: 'Missed a day? Come back within three days and the pot is mended with gold.',
+    },
+  },
+
   common: {
     cancel: 'Cancel',
     close: 'Close',
@@ -308,6 +353,8 @@ export const en = {
     levelsSub: (words: number, levels: number) =>
       `${words} words across ${levels} ${levels === 1 ? 'level' : 'levels'}`,
     aboutSub: 'Sources and licences',
+    tour: 'How it works',
+    tourSub: 'A one-minute tour of the app',
   },
 
   settings: {
@@ -793,7 +840,7 @@ export const en = {
       'see it in the dictionary and add it to your deck.',
     loadFailed: "Couldn't load the readers.",
     none: 'No readers yet.',
-    draft: 'Draft',
+    draft: 'AI draft',
     draftTitle: 'Written with AI, not yet reviewed',
     length: (chars: number, minutes: number) => `${chars} 字 · ~${minutes} min`,
     knownTitle: "Words you've started studying",

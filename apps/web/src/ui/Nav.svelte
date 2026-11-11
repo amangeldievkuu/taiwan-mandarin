@@ -6,6 +6,7 @@
   import { onMount } from 'svelte';
   import Icon, { type IconName } from './Icon.svelte';
   import Seal from './Seal.svelte';
+  import type { Messages } from '../lib/i18n/en';
   import { t } from '../lib/i18n/index.svelte';
   import { ME_ROUTES, router, type RouteName } from '../lib/router.svelte';
   import { store } from '../lib/store.svelte';
@@ -16,6 +17,8 @@
     zh: string;
     /** Its name in the learner's language. */
     name: RouteName;
+    /** Its short name, for the tab bar and the rail. */
+    tab: keyof Messages['nav']['tabs'];
     /** Routes that highlight this item. */
     match: RouteName[];
     /** Shown in the phone tab bar (six fit, down to a 320px screen). */
@@ -23,27 +26,61 @@
   }
 
   const ITEMS: Item[] = [
-    { path: '/', icon: 'today', zh: '今天', name: 'today', match: ['today'], phone: true },
-    { path: '/study', icon: 'study', zh: '學習', name: 'study', match: ['study'], phone: true },
+    {
+      path: '/',
+      icon: 'today',
+      zh: '今天',
+      name: 'today',
+      tab: 'today',
+      match: ['today'],
+      phone: true,
+    },
+    {
+      path: '/study',
+      icon: 'study',
+      zh: '學習',
+      name: 'study',
+      tab: 'study',
+      match: ['study'],
+      phone: true,
+    },
     {
       path: '/path',
       icon: 'path',
       zh: '路徑',
       name: 'path',
-      match: ['path', 'level', 'word'],
+      tab: 'path',
+      match: ['path', 'level', 'zhuyin', 'word'],
       phone: false,
     },
-    { path: '/talk', icon: 'talk', zh: '對話', name: 'talk', match: ['talk'], phone: true },
+    {
+      path: '/talk',
+      icon: 'talk',
+      zh: '對話',
+      name: 'talk',
+      tab: 'talk',
+      match: ['talk'],
+      phone: true,
+    },
     {
       path: '/read',
       icon: 'read',
       zh: '閱讀',
       name: 'read',
+      tab: 'read',
       match: ['read', 'reader'],
       phone: true,
     },
-    { path: '/dict', icon: 'dict', zh: '字典', name: 'dict', match: ['dict'], phone: true },
-    { path: '/me', icon: 'me', zh: '我', name: 'me', match: ME_ROUTES, phone: true },
+    {
+      path: '/dict',
+      icon: 'dict',
+      zh: '字典',
+      name: 'dict',
+      tab: 'dict',
+      match: ['dict'],
+      phone: true,
+    },
+    { path: '/me', icon: 'me', zh: '我', name: 'me', tab: 'me', match: ME_ROUTES, phone: true },
   ];
   const PHONE = ITEMS.filter((i) => i.phone);
 
@@ -63,7 +100,7 @@
       ? phoneIndex
       : section >= 0
         ? section
-        : ['path', 'level'].includes(router.route.name)
+        : ['path', 'level', 'zhuyin'].includes(router.route.name)
           ? TODAY
           : -1,
   );
@@ -131,14 +168,16 @@
           class:active={active(item)}
           class:section={phoneIndex < 0 && item.phone && PHONE.indexOf(item) === phoneShown}
           aria-current={active(item) ? 'page' : undefined}
-          title={t().titles[item.name]}
+          title="{item.zh} · {t().titles[item.name]}"
         >
           <span class="glyph">
             <Icon name={item.icon} size={24} />
             {#if item.path === '/study' && due > 0}<span class="dot" aria-label={t().nav.due(due)}
               ></span>{/if}
           </span>
+          <!-- Phone and tablet: the short name in the learner's language. Desktop: both names. -->
           <span class="label">
+            <span class="short">{t().nav.tabs[item.tab]}</span>
             <span class="zh" lang="zh-Hant-TW">{item.zh}</span>
             <span class="en">{t().titles[item.name]}</span>
           </span>
@@ -279,14 +318,27 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    max-width: calc(100% - 4px);
     line-height: 1.1;
+  }
+
+  /* Phone and tablet: the short name, sized down on the narrowest phones so six fit. */
+  .short {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: clamp(10px, 2.9vw, var(--fs-xs));
+    font-weight: var(--fw-strong);
+    letter-spacing: -0.01em;
   }
 
   .zh {
     font-family: var(--font-kai);
-    font-size: 13px;
+    font-size: var(--fs-sm);
   }
 
+  .zh,
   .en,
   .count {
     display: none;
@@ -298,13 +350,13 @@
       --item-h: 62px;
       inset: 0 auto 0 0;
       width: var(--rail-w);
-      padding: calc(var(--safe-top) + 18px) 0 18px;
+      padding: calc(var(--safe-top) + var(--sp-5)) 0 var(--sp-5);
       border-top: 0;
       border-right: 1px solid var(--rule);
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 22px;
+      gap: var(--sp-5);
     }
 
     .brand {
@@ -325,7 +377,7 @@
 
     ul {
       flex-direction: column;
-      gap: 4px;
+      gap: var(--sp-1);
       width: 100%;
       padding: 0 10px;
     }
@@ -379,7 +431,7 @@
     .nav {
       --item-h: 48px;
       align-items: stretch;
-      padding: 28px 16px;
+      padding: var(--sp-7) var(--sp-4);
       gap: 30px;
     }
 
@@ -399,12 +451,12 @@
 
     .brand-zh {
       font-family: var(--font-kai);
-      font-size: 19px;
+      font-size: var(--fs-xl);
     }
 
     .brand-en {
-      font-size: 12px;
-      font-weight: 700;
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-strong);
       color: var(--ink-3);
       letter-spacing: 0.04em;
     }
@@ -421,9 +473,9 @@
     a {
       flex-direction: row;
       justify-content: flex-start;
-      gap: 14px;
+      gap: var(--sp-3);
       height: var(--item-h);
-      padding: 0 12px;
+      padding: 0 var(--sp-3);
       border-radius: 14px;
     }
 
@@ -434,18 +486,23 @@
     .label {
       flex-direction: row;
       align-items: baseline;
-      gap: 8px;
+      gap: var(--sp-2);
+    }
+
+    .short {
+      display: none;
     }
 
     .zh {
-      font-size: 17px;
+      display: inline;
+      font-size: var(--fs-lg);
       width: 2.2em;
     }
 
     .en {
       display: inline;
-      font-size: 15px;
-      font-weight: 700;
+      font-size: var(--fs-base);
+      font-weight: var(--fw-strong);
     }
 
     .dot {
@@ -456,10 +513,10 @@
       display: inline;
       margin-left: auto;
       min-width: 26px;
-      padding: 2px 8px;
+      padding: 2px var(--sp-2);
       border-radius: var(--radius-pill);
-      font-size: 12px;
-      font-weight: 800;
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-heading);
       text-align: center;
       background: var(--seal);
       color: var(--seal-ink);

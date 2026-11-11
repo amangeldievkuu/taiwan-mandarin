@@ -92,6 +92,7 @@
         zh: '等級',
         sub: say.levelsSub(counts.learned, levelsStarted),
       },
+      { path: '/welcome?tour', icon: 'play', label: say.tour, zh: '用法', sub: say.tourSub },
       { path: '/me/about', icon: 'info', label: titles['me-about'], zh: '關於', sub: say.aboutSub },
     ];
   });
@@ -111,6 +112,7 @@
       crack={streak.crack}
       fresh={streak.mendedToday}
       size={150}
+      fit
       label={t().me.plant(streak.count, streak.current?.seams.length ?? 0)}
     />
     <div class="bowl-body">
@@ -186,8 +188,8 @@
   .bowl {
     display: flex;
     align-items: center;
-    gap: 24px;
-    padding: 22px 26px;
+    gap: var(--sp-6);
+    padding: var(--sp-6) var(--sp-7);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-3);
   }
@@ -196,8 +198,8 @@
     .bowl {
       flex-direction: column;
       text-align: center;
-      gap: 12px;
-      padding: 22px 18px;
+      gap: var(--sp-3);
+      padding: var(--sp-6) var(--sp-5);
     }
   }
 
@@ -206,33 +208,33 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: var(--sp-1);
   }
 
   .bowl-meta {
     margin-bottom: 10px;
     color: var(--ink-2);
-    font-size: 14px;
+    font-size: var(--fs-md);
   }
 
   .big {
     font-family: var(--font-display);
     font-size: 36px;
-    font-weight: 800;
+    font-weight: var(--fw-heading);
     line-height: 1.05;
   }
 
   .big small {
-    font-size: 16px;
-    font-weight: 700;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-strong);
     color: var(--ink-2);
   }
 
   .headline {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-top: 12px;
+    gap: var(--sp-3);
+    margin-top: var(--sp-3);
   }
 
   @media (max-width: 560px) {
@@ -248,12 +250,12 @@
   .stat {
     display: flex;
     flex-direction: column;
-    padding: 16px 18px;
+    padding: var(--sp-4) var(--sp-5);
   }
 
   .stat span {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-label);
   }
 
   .xp {
@@ -284,12 +286,12 @@
   .ink-card .ink-open {
     align-self: flex-start;
     margin-top: 10px;
-    padding: 4px 10px;
+    padding: var(--sp-1) 10px;
     border-radius: 999px;
     background: var(--gold-wash);
     color: var(--gold-deep);
-    font-size: 13px;
-    font-weight: 700;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-strong);
   }
 
   .ink-card .ink-open span {
@@ -298,17 +300,17 @@
 
   .ink-next {
     margin-top: 2px;
-    font-weight: 700;
+    font-weight: var(--fw-strong);
     color: var(--gold-deep);
   }
 
   small {
-    font-size: 12px;
+    font-size: var(--fs-xs);
     color: var(--ink-2);
   }
 
   .chart-card {
-    padding: 18px 18px 12px;
+    padding: var(--sp-5) var(--sp-5) var(--sp-3);
   }
 
   .row {
@@ -328,11 +330,11 @@
 
   .row-label {
     display: block;
-    font-weight: 700;
+    font-weight: var(--fw-strong);
   }
 
   .row-zh {
-    margin-left: 4px;
+    margin-left: var(--sp-1);
     font-family: var(--font-kai);
     font-weight: 400;
     color: var(--ink-3);
