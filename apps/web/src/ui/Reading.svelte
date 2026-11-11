@@ -75,6 +75,13 @@
     letter-spacing: 0.04em;
   }
 
+  /* Bopomofo breaks like Chinese, between any two letters, so a syllable could lose its tone
+     mark to the next line (ㄇㄞ | ˇ). Lines break only at the spaces between words. */
+  .sentence .zhuyin {
+    word-break: keep-all;
+    overflow-wrap: normal;
+  }
+
   .dot {
     color: var(--ink-3);
   }

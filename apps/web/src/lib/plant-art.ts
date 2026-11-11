@@ -13,6 +13,19 @@ export const POT_RIM = { x: 28, y: 72, width: 64, height: 11 };
 /** Where the plant comes out of the soil. */
 export const SOIL = { cx: 60, cy: 72.5, rx: 29, ry: 2.6 };
 
+/**
+ * The top of what is drawn for a plant `days` old, in the 120-unit picture: a card showing one
+ * plant can start its picture there instead of at 0 and leave out the empty sky. An empty pot
+ * starts just above its rim; a seedling above its top leaves; a tree uses the whole height.
+ */
+export function skyTop(days: number): number {
+  if (days <= 0) return 60;
+  if (days >= 7) return 0;
+  // seedling(): the stem is 8 + 5 a day tall, its top leaves 6 + days long.
+  const stem = 8 + Math.min(6, days) * 5;
+  return Math.max(0, Math.floor(SOIL.cy - stem - (6 + days) - 6));
+}
+
 /** Growth stages by days practiced. */
 export const STAGES = [
   { from: 0, name: '種子', en: 'Seed' },

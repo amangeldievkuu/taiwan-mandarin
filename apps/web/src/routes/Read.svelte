@@ -65,10 +65,10 @@
             <div class="story-top">
               <Seal text={LEVEL_SEAL[reader.level]} size={34} outline />
               <span class="topic">
-                {#if reader.draft}<span class="draft" title={t().read.draftTitle}
-                    >{t().read.draft}</span
+                {t().topics[reader.topic]}{#if reader.draft}<span
+                    class="draft"
+                    title={t().read.draftTitle}>{t().read.draft}</span
                   >{/if}
-                {t().topics[reader.topic]}
               </span>
             </div>
             <h3 class="story-zh hanzi" lang="zh-Hant-TW">{reader.title}</h3>
@@ -95,7 +95,7 @@
 
 <style>
   .intro {
-    margin: -8px 0 8px;
+    margin: -8px 0 var(--sp-2);
     max-width: 60ch;
     color: var(--ink-2);
   }
@@ -103,13 +103,13 @@
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 12px;
+    gap: var(--sp-3);
   }
 
   .story {
     display: flex;
     flex-direction: column;
-    padding: 18px;
+    padding: var(--sp-5);
     text-decoration: none;
   }
 
@@ -120,26 +120,27 @@
   }
 
   .topic {
-    font-size: 12px;
+    font-size: var(--fs-xs);
     color: var(--ink-3);
     letter-spacing: 0.04em;
   }
 
+  /* Honest but quiet: an AI-written text is a note on the card, not a warning sign. */
   .draft {
-    margin-right: 6px;
-    padding: 1px 6px;
-    border: 1px solid var(--ochre);
-    border-radius: 4px;
     color: var(--ochre);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font-weight: var(--fw-strong);
+  }
+
+  .draft::before {
+    content: ' · ';
+    white-space: pre;
+    color: var(--ink-3);
+    font-weight: var(--fw-text);
   }
 
   .story-zh {
-    margin: 14px 0 0;
-    font-size: 30px;
+    margin: var(--sp-4) 0 0;
+    font-size: var(--fs-3xl);
     font-weight: 400;
     line-height: 1.2;
   }
@@ -147,13 +148,13 @@
   .story-en {
     margin: 2px 0 0;
     font-family: var(--font-display);
-    font-size: 17px;
+    font-size: var(--fs-lg);
   }
 
   .summary {
     flex: 1;
-    margin: 8px 0 14px;
-    font-size: 14px;
+    margin: var(--sp-2) 0 var(--sp-4);
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
@@ -161,8 +162,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    font-size: 12px;
+    gap: var(--sp-2);
+    font-size: var(--fs-xs);
     color: var(--ink-2);
   }
 

@@ -14,6 +14,7 @@
     plantShape,
     seamKey,
     seamPath,
+    skyTop,
     visibleSeams,
   } from '../lib/plant-art';
 
@@ -30,9 +31,22 @@
     lively?: boolean;
     /** The pot's glaze; the learner's own by default. */
     glaze?: LookOf<'pot'>;
+    /** Leave out the empty sky above a young plant (a card that shows one plant). */
+    fit?: boolean;
   }
 
-  let { bowl, crack = 0, fresh = null, size = 120, label, lively = false, glaze }: Props = $props();
+  let {
+    bowl,
+    crack = 0,
+    fresh = null,
+    size = 120,
+    label,
+    lively = false,
+    glaze,
+    fit = false,
+  }: Props = $props();
+  /** Where the picture starts: the top of the plant when fitted, else the whole 120 units. */
+  const top = $derived(fit ? skyTop(bowl?.days ?? 0) : 0);
   const pot = $derived(glaze ?? store.looks.pot);
   const id = $props.id();
   const plant = $derived(plantShape(bowl?.start ?? '', bowl?.days ?? 0));
@@ -89,9 +103,9 @@
   class="plant-art glaze-{pot}"
   class:clay={!bowl}
   class:wilt={crack > 0}
-  viewBox="0 0 120 120"
+  viewBox="0 {top} 120 {120 - top}"
   width={size}
-  height={size}
+  height={(size * (120 - top)) / 120}
   role="img"
   aria-label={label}
 >

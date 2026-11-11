@@ -6,7 +6,6 @@
     LEVEL_IDS,
     LEVELS,
     looksVietnamese,
-    pinyinWord,
     plainPinyin,
     TOPICS,
     type Level,
@@ -17,6 +16,7 @@
   import Icon from '../ui/Icon.svelte';
   import Seal from '../ui/Seal.svelte';
   import Localized from '../ui/Localized.svelte';
+  import Reading from '../ui/Reading.svelte';
   import WordDetail from '../ui/WordDetail.svelte';
   import { content } from '../lib/content.svelte';
   import { glossOf } from '../lib/i18n/content';
@@ -140,8 +140,6 @@
     );
   });
 
-  const pinyinLine = (w: Word) => pinyinWord(w.pinyin);
-
   // Moving between levels replaces this page in history, so back still returns to where the
   // learner came from (Today, the path, a word) rather than through every level they looked at.
   const index = $derived(LEVEL_IDS.indexOf(level));
@@ -180,7 +178,8 @@
     </div>
     <button
       type="button"
-      class="btn small {store.settings.levels.includes(level) ? 'seal' : 'quiet'}"
+      class="btn small {store.settings.levels.includes(level) ? 'primary' : 'quiet'}"
+      aria-pressed={store.settings.levels.includes(level)}
       onclick={() => {
         const on = store.settings.levels.includes(level);
         const next = on
@@ -189,7 +188,13 @@
         if (next.length) void store.updateSettings({ levels: next });
       }}
     >
-      {store.settings.levels.includes(level) ? t().word.studying : t().level.study}
+      {#if store.settings.levels.includes(level)}
+        <Icon name="check" size={16} />
+        {t().word.studying}
+      {:else}
+        <Icon name="plus" size={16} />
+        {t().level.study}
+      {/if}
     </button>
   </header>
 
@@ -286,7 +291,7 @@
               >
                 <span class="w-hanzi hanzi" lang="zh-Hant-TW">{w.hanzi}</span>
                 <span class="row-main">
-                  <span class="w-pinyin">{pinyinLine(w)}</span>
+                  <span class="w-pinyin"><Reading pinyin={w.pinyin} /></span>
                   <span class="row-sub"><Localized value={glossOf(w)} /></span>
                 </span>
                 {#if card}
@@ -348,15 +353,15 @@
   .head {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: var(--sp-3);
   }
 
   /* Every level, one tap away; the current one is filled in. */
   .levels {
     display: flex;
-    gap: 8px;
-    margin: -8px calc(-1 * var(--gutter)) 18px;
-    padding: 4px var(--gutter) 8px;
+    gap: var(--sp-2);
+    margin: -8px calc(-1 * var(--gutter)) var(--sp-5);
+    padding: var(--sp-1) var(--gutter) var(--sp-2);
     overflow-x: auto;
     scroll-snap-type: x proximity;
     scrollbar-width: none;
@@ -370,8 +375,8 @@
   @media (min-width: 900px) {
     .levels {
       flex-wrap: wrap;
-      margin: -8px 0 18px;
-      padding: 4px 0 8px;
+      margin: -8px 0 var(--sp-5);
+      padding: var(--sp-1) 0 var(--sp-2);
       overflow: visible;
     }
   }
@@ -380,15 +385,15 @@
     flex: none;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--sp-2);
     min-height: 44px;
-    padding: 0 14px 0 8px;
+    padding: 0 var(--sp-4) 0 var(--sp-2);
     border: 1px solid var(--rule-strong);
     border-radius: var(--radius-pill);
     background: var(--paper-raised);
     color: var(--ink-2);
-    font-size: 14px;
-    font-weight: 700;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-strong);
     white-space: nowrap;
     text-decoration: none;
     scroll-snap-align: center;
@@ -399,7 +404,7 @@
   }
 
   .lv.all {
-    padding-left: 12px;
+    padding-left: var(--sp-3);
     color: var(--jade-text);
   }
 
@@ -425,7 +430,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
-    margin-top: 16px;
+    margin-top: var(--sp-4);
   }
 
   .pager-link {
@@ -433,7 +438,7 @@
     align-items: center;
     gap: 10px;
     min-height: 64px;
-    padding: 10px 14px;
+    padding: 10px var(--sp-4);
     text-decoration: none;
     color: var(--ink);
   }
@@ -451,13 +456,13 @@
   }
 
   .pager-link small {
-    font-size: 12px;
-    font-weight: 700;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-strong);
     color: var(--ink-3);
   }
 
   .pager-link strong {
-    font-size: 16px;
+    font-size: var(--fs-base);
   }
 
   .pager-link :global(.icon) {
@@ -468,7 +473,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-bottom: 16px;
+    margin-bottom: var(--sp-4);
   }
 
   .chips {
@@ -480,7 +485,7 @@
   }
 
   .chips .hanzi {
-    font-size: 15px;
+    font-size: var(--fs-base);
   }
 
   .split {
@@ -490,7 +495,7 @@
   .split.with-detail {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-    gap: 20px;
+    gap: var(--sp-5);
     align-items: start;
   }
 
@@ -499,20 +504,20 @@
     top: 20px;
     max-height: calc(100dvh - 40px);
     overflow-y: auto;
-    padding: 24px;
+    padding: var(--sp-6);
   }
 
   .count {
     display: flex;
     justify-content: space-between;
-    margin: 0 4px 8px;
-    font-size: 13px;
+    margin: 0 var(--sp-1) var(--sp-2);
+    font-size: var(--fs-sm);
     color: var(--ink-2);
   }
 
   .link {
     color: var(--seal);
-    font-weight: 600;
+    font-weight: var(--fw-label);
   }
 
   .words .row {
@@ -531,18 +536,18 @@
 
   .w-hanzi {
     min-width: 2.6em;
-    font-size: 24px;
+    font-size: var(--fs-2xl);
     line-height: 1.2;
   }
 
   .w-pinyin {
-    font-size: 14px;
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
   .row-sub {
     color: var(--ink) !important;
-    font-size: 15px !important;
+    font-size: var(--fs-base) !important;
   }
 
   .dot {
@@ -563,8 +568,8 @@
   }
 
   .src {
-    font-size: 10px;
-    font-weight: 700;
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-strong);
     letter-spacing: 0.06em;
     color: var(--ink-3);
   }

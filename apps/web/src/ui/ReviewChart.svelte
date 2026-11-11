@@ -11,10 +11,13 @@
 
   let { days }: Props = $props();
 
-  const W = 600;
+  // Drawn at the width it is shown at, so one unit is one pixel and the labels keep their size
+  // on a phone.
+  let width = $state(600);
+  const W = $derived(Math.max(240, Math.round(width)));
   const H = 160;
   const PAD = { top: 12, right: 8, bottom: 22, left: 30 };
-  const plotW = W - PAD.left - PAD.right;
+  const plotW = $derived(W - PAD.left - PAD.right);
   const plotH = H - PAD.top - PAD.bottom;
 
   const max = $derived(Math.max(4, ...days.map((d) => d.total)));
@@ -46,7 +49,7 @@
   }
 </script>
 
-<div class="chart">
+<div class="chart" bind:clientWidth={width}>
   <svg
     viewBox="0 0 {W} {H}"
     role="img"
@@ -156,7 +159,7 @@
   }
 
   .axis {
-    font-size: 10px;
+    font-size: var(--fs-2xs);
     fill: var(--ink-3);
     font-variant-numeric: tabular-nums;
   }
@@ -196,23 +199,23 @@
     flex-direction: column;
     gap: 2px;
     min-width: 140px;
-    padding: 8px 10px;
-    border-radius: 10px;
-    font-size: 13px;
+    padding: var(--sp-2) 10px;
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-sm);
     pointer-events: none;
     z-index: 2;
   }
 
   .tip strong {
-    font-size: 13px;
+    font-size: var(--fs-sm);
   }
 
   .breakdown {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2px 10px;
-    margin-top: 4px;
-    font-size: 12px;
+    margin-top: var(--sp-1);
+    font-size: var(--fs-xs);
     color: var(--ink-2);
   }
 
@@ -220,7 +223,7 @@
     display: inline-block;
     width: 8px;
     height: 8px;
-    margin-right: 4px;
+    margin-right: var(--sp-1);
     border-radius: 2px;
   }
 </style>

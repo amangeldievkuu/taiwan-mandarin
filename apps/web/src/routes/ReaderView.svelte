@@ -226,20 +226,20 @@
 
 <style>
   .head {
-    margin: 10px 0 24px;
+    margin: 10px 0 var(--sp-6);
   }
 
   .r-title {
-    margin: 4px 0 0;
+    margin: var(--sp-1) 0 0;
     font-size: clamp(36px, 6vw, 52px);
     font-weight: 400;
     line-height: 1.15;
   }
 
   .r-sub {
-    margin: 4px 0 0;
+    margin: var(--sp-1) 0 0;
     font-family: var(--font-display);
-    font-size: 19px;
+    font-size: var(--fs-lg);
     color: var(--ink-2);
   }
 
@@ -247,8 +247,8 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
-    margin-top: 16px;
+    gap: var(--sp-2);
+    margin-top: var(--sp-4);
   }
 
   .legend {
@@ -256,7 +256,7 @@
     align-items: center;
     gap: 6px;
     margin-left: auto;
-    font-size: 13px;
+    font-size: var(--fs-sm);
     color: var(--ink-2);
   }
 
@@ -264,7 +264,7 @@
     display: inline-block;
     width: 18px;
     height: 0;
-    border-bottom: 2px dotted var(--seal);
+    border-bottom: 2px dotted var(--new-mark);
   }
 
   .draft {
@@ -277,7 +277,7 @@
     margin-left: 10px;
     border: 0;
     font-family: var(--font-kai);
-    font-size: 16px;
+    font-size: var(--fs-base);
     line-height: 1;
     color: var(--sky-text);
   }
@@ -294,8 +294,8 @@
 
   .para {
     position: relative;
-    margin: 0 0 22px;
-    padding-left: 14px;
+    margin: 0 0 var(--sp-6);
+    padding-left: var(--sp-4);
     border-left: 2px solid transparent;
     transition: border-color var(--dur) var(--ease);
   }
@@ -321,8 +321,9 @@
     }
   }
 
+  /* New words: dotted, light enough that a page where most words are new still reads calmly. */
   .tok.new {
-    text-decoration: underline dotted var(--seal);
+    text-decoration: underline dotted var(--new-mark);
     text-decoration-thickness: 2px;
     text-underline-offset: 0.28em;
   }
@@ -346,7 +347,7 @@
 
   .para-tools {
     display: flex;
-    gap: 4px;
+    gap: var(--sp-1);
     margin-top: 2px;
     font-family: var(--font-ui);
     opacity: 0.75;
@@ -356,9 +357,9 @@
     display: inline-flex;
     align-items: center;
     min-height: 28px;
-    padding: 0 8px;
+    padding: 0 var(--sp-2);
     border-radius: 6px;
-    font-size: 13px;
+    font-size: var(--fs-sm);
     color: var(--ink-2);
   }
 
@@ -373,34 +374,34 @@
     justify-content: center;
     gap: 6px 10px;
     min-height: 32px;
-    margin: 8px 0 24px;
+    margin: var(--sp-2) 0 var(--sp-6);
   }
 
   .end .hanzi {
     font-family: var(--font-kai);
-    font-size: 20px;
+    font-size: var(--fs-xl);
     color: var(--ink);
   }
 
   .end .sub {
-    font-size: 14px;
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
   .end .xp {
-    padding: 4px 10px;
+    padding: var(--sp-1) 10px;
     border-radius: var(--radius-pill);
     background: var(--gold-wash);
     color: var(--gold-deep);
-    font-size: 13px;
-    font-weight: 800;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-heading);
   }
 
   .translation {
     margin: 6px 0 0 !important;
     text-indent: 0 !important;
     font-family: var(--font-display);
-    font-size: 17px;
+    font-size: var(--fs-lg);
     line-height: 1.55;
     color: var(--ink-2);
   }

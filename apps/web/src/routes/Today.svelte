@@ -153,6 +153,7 @@
       crack={streak.crack}
       fresh={streak.mendedToday}
       size={104}
+      fit
       label={t().today.plant(streak.count)}
     />
     <div class="bowl-body">
@@ -249,8 +250,8 @@
   .hero {
     display: flex;
     align-items: center;
-    gap: 28px;
-    padding: 26px;
+    gap: var(--sp-7);
+    padding: var(--sp-7);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-3);
   }
@@ -259,8 +260,8 @@
     .hero {
       flex-direction: column;
       text-align: center;
-      gap: 18px;
-      padding: 24px 20px;
+      gap: var(--sp-4);
+      padding: var(--sp-6) var(--sp-5);
     }
 
     .hero-sub {
@@ -282,7 +283,7 @@
   .ring-center strong {
     font-family: var(--font-display);
     font-size: 42px;
-    font-weight: 800;
+    font-weight: var(--fw-heading);
   }
 
   .ring-done {
@@ -298,8 +299,8 @@
 
   .ring-center small {
     margin-top: 2px;
-    font-size: 12px;
-    font-weight: 700;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-strong);
     color: var(--ink-2);
   }
 
@@ -318,12 +319,12 @@
   .hero-body h2 {
     margin: 0;
     font-family: var(--font-display);
-    font-size: 24px;
-    font-weight: 800;
+    font-size: var(--fs-2xl);
+    font-weight: var(--fw-heading);
   }
 
   .done-zh {
-    font-size: 30px !important;
+    font-size: var(--fs-3xl) !important;
     font-weight: 400 !important;
     color: var(--jade-text);
   }
@@ -331,8 +332,8 @@
   .hero-sub {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px 16px;
-    margin: 6px 0 18px;
+    gap: var(--sp-1) var(--sp-4);
+    margin: 6px 0 var(--sp-5);
     color: var(--ink-2);
   }
 
@@ -342,13 +343,13 @@
 
   .xp-today {
     align-self: flex-start;
-    margin-top: 14px;
-    padding: 4px 10px;
+    margin-top: var(--sp-4);
+    padding: var(--sp-1) 10px;
     border-radius: var(--radius-pill);
     background: var(--gold-wash);
     color: var(--gold-deep);
-    font-size: 13px;
-    font-weight: 800;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-heading);
   }
 
   @media (max-width: 520px) {
@@ -360,9 +361,9 @@
   .bowl-card {
     display: flex;
     align-items: center;
-    gap: 18px;
-    margin-top: 14px;
-    padding: 16px 20px;
+    gap: var(--sp-4);
+    margin-top: var(--stack-gap);
+    padding: var(--sp-4) var(--card-pad);
     text-decoration: none;
   }
 
@@ -375,13 +376,13 @@
   }
 
   .bowl-body strong {
-    font-size: 18px;
-    font-weight: 800;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-heading);
   }
 
   .bowl-text {
     margin-bottom: 10px;
-    font-size: 14px;
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
@@ -392,7 +393,7 @@
       text-align: center;
     }
 
-    .bowl-card :global(.bowl) {
+    .bowl-card :global(.plant-art) {
       align-self: center;
     }
   }
@@ -400,8 +401,8 @@
   .level {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 18px 20px;
+    gap: var(--sp-4);
+    padding: var(--card-pad);
     text-decoration: none;
   }
 
@@ -414,12 +415,12 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
   .level-name strong {
-    font-size: 17px;
-    font-weight: 800;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-heading);
   }
 
   .level-zh {
@@ -450,14 +451,14 @@
   .facts {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-top: 14px;
+    gap: var(--stack-gap);
+    margin-top: var(--stack-gap);
   }
 
   .fact {
     display: flex;
     flex-direction: column;
-    padding: 14px 16px;
+    padding: var(--sp-3) var(--sp-4);
     border-radius: var(--radius);
     background: var(--paper-raised);
     border: 1px solid var(--rule);
@@ -466,28 +467,29 @@
 
   .fact strong {
     font-family: var(--font-display);
-    font-size: 28px;
-    font-weight: 800;
+    font-size: var(--fs-3xl);
+    font-weight: var(--fw-heading);
     line-height: 1.1;
   }
 
   .fact span {
-    font-size: 13px;
+    font-size: var(--fs-sm);
+    line-height: var(--lh-tight);
     color: var(--ink-2);
   }
 
   .explore {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-    gap: 12px;
+    gap: var(--stack-gap);
   }
 
   .tile {
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 18px;
+    gap: var(--sp-1);
+    padding: var(--card-pad);
     min-height: 160px;
     text-decoration: none;
     overflow: hidden;
@@ -498,8 +500,8 @@
     place-items: center;
     width: 44px;
     height: 44px;
-    margin-bottom: 8px;
-    border-radius: 14px;
+    margin-bottom: var(--sp-2);
+    border-radius: var(--radius-md);
     background: color-mix(in oklab, var(--tint) 16%, var(--paper-raised));
     color: color-mix(in oklab, var(--tint) 80%, var(--ink));
   }
@@ -516,12 +518,12 @@
   }
 
   .tile strong {
-    font-size: 17px;
-    font-weight: 800;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-heading);
   }
 
   .tile-text {
-    font-size: 14px;
+    font-size: var(--fs-md);
     color: var(--ink-2);
     max-width: 24ch;
   }
@@ -538,13 +540,45 @@
     gap: 6px;
     min-height: 36px;
     font-family: var(--font-ui);
-    font-size: 15px;
-    font-weight: 700;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-strong);
     color: var(--jade-text);
     text-decoration: none;
   }
 
   .see-all .chevron {
     stroke: currentColor;
+  }
+
+  /* Two side by side on a phone, so the four fit without a long scroll. */
+  @media (max-width: 520px) {
+    .explore {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .tile {
+      min-height: 0;
+      padding: var(--sp-4);
+    }
+
+    .tile-icon {
+      width: 38px;
+      height: 38px;
+    }
+
+    .tile strong {
+      font-size: var(--fs-base);
+      line-height: var(--lh-tight);
+    }
+
+    .tile-text {
+      font-size: var(--fs-sm);
+      line-height: var(--lh-snug);
+    }
+
+    .tile-zh {
+      font-size: 84px;
+      bottom: -18px;
+    }
   }
 </style>

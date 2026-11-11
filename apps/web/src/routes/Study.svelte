@@ -346,10 +346,6 @@
             {#if isNew}<span class="new">{t().study.new}</span>{/if}
             {#if level}<span class="level-tag">{level}</span>{/if}
             {#if word.tw}<span class="badge-tw" lang="zh-Hant-TW">臺灣</span>{/if}
-            <span class="level-tag mode-tag {mode}" title={modeInfo[mode].hint}>
-              <span class="hanzi" lang="zh-Hant-TW">{MODE_ZH[mode]}</span>
-              {modeInfo[mode].name}
-            </span>
           </div>
 
           <div class="face">
@@ -493,14 +489,14 @@
     max-width: calc(680px + 2 * var(--gutter));
     min-height: 100dvh;
     margin: 0 auto;
-    padding: calc(var(--safe-top) + 14px) var(--gutter)
+    padding: calc(var(--safe-top) + var(--sp-4)) var(--gutter)
       calc(var(--tabbar-h) + var(--safe-bottom) + 12px);
   }
 
   @media (min-width: 700px) {
     .study {
-      padding-top: 28px;
-      padding-bottom: 28px;
+      padding-top: var(--sp-7);
+      padding-bottom: var(--sp-7);
     }
   }
 
@@ -508,7 +504,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: var(--sp-3);
   }
 
   .modes {
@@ -528,7 +524,7 @@
   }
 
   .mode-hint {
-    font-size: 13px;
+    font-size: var(--fs-sm);
     line-height: 1.3;
     color: var(--ink-3);
   }
@@ -537,7 +533,7 @@
     .modes {
       flex-direction: row;
       align-items: center;
-      gap: 14px;
+      gap: var(--sp-3);
     }
 
     .mode-pick {
@@ -556,11 +552,11 @@
 
   .mode-chip {
     gap: 6px;
-    font-weight: 700;
+    font-weight: var(--fw-strong);
   }
 
   .mode-chip .hanzi {
-    font-size: 16px;
+    font-size: var(--fs-base);
   }
 
   .mode-chip .chevron {
@@ -594,10 +590,10 @@
   .mode-item {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--sp-3);
     width: 100%;
     min-height: 54px;
-    padding: 8px 10px;
+    padding: var(--sp-2) 10px;
     border-radius: 12px;
     text-align: left;
     color: var(--ink);
@@ -613,7 +609,7 @@
   }
 
   .mode-zh {
-    font-size: 20px;
+    font-size: var(--fs-xl);
     flex: none;
   }
 
@@ -621,14 +617,14 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    font-size: 15px;
-    font-weight: 700;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-strong);
     line-height: 1.2;
   }
 
   .mode-en small {
-    font-size: 12px;
-    font-weight: 500;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-text);
     color: var(--ink-3);
   }
 
@@ -643,12 +639,12 @@
   .left {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--sp-1);
     height: 32px;
     padding: 0 11px;
     border-radius: var(--radius-pill);
-    font-size: 14px;
-    font-weight: 800;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-heading);
     white-space: nowrap;
   }
 
@@ -656,7 +652,7 @@
   .undo {
     min-height: 32px;
     padding: 0 11px;
-    font-size: 14px;
+    font-size: var(--fs-md);
   }
   .undo.pressed {
     transform: scale(0.97);
@@ -669,7 +665,7 @@
   .undo-row {
     display: flex;
     justify-content: center;
-    margin: 4px 0 8px;
+    margin: var(--sp-1) 0 var(--sp-2);
   }
 
   .session-xp {
@@ -691,7 +687,7 @@
 
   .progress {
     height: 10px;
-    margin: 14px 0 18px;
+    margin: var(--sp-4) 0 var(--sp-5);
     border-radius: var(--radius-pill);
     background: var(--paper-sunken);
     overflow: hidden;
@@ -748,7 +744,7 @@
     flex-direction: column;
     align-items: center;
     min-height: 380px;
-    padding: 18px 24px 22px;
+    padding: var(--sp-5) var(--sp-6) var(--sp-6);
     cursor: pointer;
     box-shadow: var(--shadow-3);
     /* 田字格: a faint practice-paper cross behind the character */
@@ -775,26 +771,6 @@
     min-height: 22px;
   }
 
-  /* Which mode the card is in, so an English front is never a surprise. */
-  .mode-tag {
-    margin-left: auto;
-    gap: 4px;
-  }
-
-  .mode-tag .hanzi {
-    font-size: 13px;
-  }
-
-  .mode-tag.recall {
-    background: var(--sky-wash);
-    color: var(--sky-text);
-  }
-
-  .mode-tag.listen {
-    background: var(--jade-wash);
-    color: var(--jade-text);
-  }
-
   .new {
     display: inline-flex;
     align-items: center;
@@ -803,8 +779,8 @@
     border-radius: var(--radius-pill);
     background: var(--sky);
     color: var(--sky-ink);
-    font-size: 11px;
-    font-weight: 800;
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-heading);
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
@@ -824,7 +800,7 @@
     max-width: 22ch;
     font-family: var(--font-display);
     font-size: clamp(24px, 4vw, 34px);
-    font-weight: 800;
+    font-weight: var(--fw-heading);
     line-height: 1.25;
     text-align: center;
   }
@@ -832,7 +808,7 @@
   .prompt-sub {
     margin: 10px 0 0;
     color: var(--ink-2);
-    font-size: 14px;
+    font-size: var(--fs-md);
   }
 
   .prompt-sub.tap {
@@ -875,27 +851,27 @@
   }
 
   .meaning {
-    margin: 4px 0 0;
+    margin: var(--sp-1) 0 0;
     font-family: var(--font-display);
-    font-size: 22px;
-    font-weight: 700;
+    font-size: var(--fs-2xl);
+    font-weight: var(--fw-strong);
     line-height: 1.35;
   }
 
   .cl {
     margin: 6px 0 0;
-    font-size: 14px;
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
   .cl .hanzi {
-    font-size: 18px;
+    font-size: var(--fs-lg);
     color: var(--ink);
   }
 
   .example {
-    margin: 16px auto 0;
-    padding: 12px 16px;
+    margin: var(--sp-4) auto 0;
+    padding: var(--sp-3) var(--sp-4);
     border-left: 4px solid var(--sky);
     border-radius: 4px var(--radius-sm) var(--radius-sm) 4px;
     background: var(--sky-wash);
@@ -905,17 +881,17 @@
 
   .example :global(.example-zh) {
     display: block;
-    font-size: 22px;
+    font-size: var(--fs-xl);
     line-height: 1.5;
   }
 
   .example :global(.reading) {
-    font-size: 14px;
+    font-size: var(--fs-md);
   }
 
   .example-en {
-    margin: 4px 0 0;
-    font-size: 14px;
+    margin: var(--sp-1) 0 0;
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
@@ -923,7 +899,7 @@
     display: flex;
     justify-content: center;
     gap: 10px;
-    margin-top: 14px;
+    margin-top: var(--sp-4);
   }
 
   .tool {
@@ -948,7 +924,7 @@
     z-index: 2;
     min-height: 92px;
     margin: 0 calc(-1 * var(--gutter));
-    padding: 18px var(--gutter) 8px;
+    padding: var(--sp-5) var(--gutter) var(--sp-2);
     background: linear-gradient(to bottom, transparent, var(--paper) 20px);
   }
 
@@ -961,13 +937,13 @@
   .show {
     width: 100%;
     min-height: 58px;
-    font-size: 17px;
+    font-size: var(--fs-lg);
   }
 
   .ratings {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
   .rate {
@@ -977,7 +953,7 @@
     align-items: center;
     justify-content: center;
     min-height: 66px;
-    padding: 8px 4px;
+    padding: var(--sp-2) var(--sp-1);
     border-radius: var(--radius);
     border: 1px solid color-mix(in oklab, var(--c) 30%, transparent);
     background: color-mix(in oklab, var(--c) 8%, var(--paper-raised));
@@ -1010,13 +986,13 @@
 
   .rate-zh {
     font-family: var(--font-kai);
-    font-size: 21px;
+    font-size: var(--fs-xl);
     line-height: 1.2;
   }
 
   .rate-label {
-    font-size: 12px;
-    font-weight: 700;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-strong);
     color: var(--ink-2);
     font-variant-numeric: tabular-nums;
   }
