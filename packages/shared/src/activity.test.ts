@@ -6,6 +6,7 @@ import {
   dailyFromActivity,
   emptyDay,
   practicedDays,
+  removeFromActivity,
   retentionOf,
   sumActivity,
   totalXp,
@@ -47,6 +48,23 @@ describe('activity', () => {
     const next = addToActivity(map, at('2026-10-21', 3), utc);
     expect(next['2026-10-21']?.reviews).toBe(4);
     expect(map['2026-10-21']?.reviews).toBe(3);
+  });
+
+  it.each([
+    ['Again', at('2026-10-21', 1)],
+    ['Hard', at('2026-10-21', 2)],
+    ['Good', at('2026-10-21', 3)],
+    ['Easy', at('2026-10-21', 4)],
+    ['a new card', at('2026-10-21', 3, 0)],
+    ['a relearning card', at('2026-10-21', 1, 3, 0)],
+  ])('takes back an answer (%s) exactly as it was added', (_, review) => {
+    expect(removeFromActivity(addToActivity(map, review, utc), review, utc)).toEqual(map);
+  });
+
+  it('drops a day that taking back an answer leaves empty', () => {
+    const one = addToActivity({}, at('2026-11-11'), utc);
+    expect(removeFromActivity(one, at('2026-11-11'), utc)).toEqual({});
+    expect(removeFromActivity({}, at('2026-11-11'), utc)).toEqual({});
   });
 
   it('adds two maps day by day', () => {

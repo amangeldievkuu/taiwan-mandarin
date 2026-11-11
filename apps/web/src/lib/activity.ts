@@ -10,6 +10,7 @@ import {
   addToActivity,
   currentTimeZone,
   dayKeyIn,
+  removeFromActivity,
   sumActivity,
   type ActivityMap,
   type DayActivity,
@@ -54,6 +55,11 @@ export function countReview(state: ActivityState, review: ReviewEntry): Activity
     local: addToActivity(state.local, review, dayIn(state.timeZone)),
     countedUpTo: Math.max(state.countedUpTo, review.review),
   };
+}
+
+/** A review taken back before it was sent: still among this device's own (`local`). */
+export function uncountReview(state: ActivityState, review: ReviewEntry): ActivityState {
+  return { ...state, local: removeFromActivity(state.local, review, dayIn(state.timeZone)) };
 }
 
 /** One more story, Talk message or character on this device (the store logs each once a day). */

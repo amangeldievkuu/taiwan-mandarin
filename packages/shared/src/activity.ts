@@ -103,6 +103,33 @@ export function addToActivity(
   return { ...map, [date]: day };
 }
 
+/**
+ * The map without one review that `addToActivity` counted (an answer taken back), dropping a day
+ * it leaves empty; the old map is left as it was.
+ */
+export function removeFromActivity(
+  map: ActivityMap,
+  review: ReviewEntry,
+  dayOf: (ms: number) => string = localDay,
+): ActivityMap {
+  const date = dayOf(review.review);
+  const old = map[date];
+  if (!old) return map;
+  const day = { ...old };
+  const less = (key: (typeof COUNTS)[number], by = 1) => (day[key] = Math.max(0, day[key] - by));
+  less('reviews');
+  const rating = RATING[review.rating as 1 | 2 | 3 | 4];
+  if (rating) less(rating);
+  if (review.state === 0) less('learned');
+  if (review.state === 2) {
+    less('graded');
+    if (review.rating >= 2) less('kept');
+  }
+  less('ms', review.durationMs ?? 0);
+  if (COUNTS.some((key) => day[key])) return { ...map, [date]: day };
+  return Object.fromEntries(Object.entries(map).filter(([key]) => key !== date));
+}
+
 export function activityFromReviews(
   reviews: readonly ReviewEntry[],
   dayOf: (ms: number) => string = localDay,

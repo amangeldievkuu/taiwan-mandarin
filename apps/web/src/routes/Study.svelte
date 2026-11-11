@@ -96,6 +96,8 @@
   let modeOpen = $state(false);
   /** Just graded: the next card's "Show answer" ignores a second tap meant for the rating. */
   let cooling = $state(false);
+  /** Read out by screen readers when an answer is taken back. */
+  let announcement = $state('');
 
   function pickMode(m: Mode) {
     mode = m;
@@ -160,6 +162,17 @@
     }
   }
 
+  /** Takes back the last answer (until it is sent): the card comes back with its answer open. */
+  async function undo() {
+    if (!store.canUndo || !(await store.undo())) return;
+    feedback.play('toggle');
+    feedback.buzz('light');
+    run = Math.max(0, run - 1);
+    announcement = '';
+    await tick();
+    announcement = t().study.undone;
+  }
+
   /** A key press shows on its button too. */
   function press(key: string) {
     pressed = key;
@@ -169,8 +182,18 @@
   }
 
   function onkeydown(event: KeyboardEvent) {
-    if (event.metaKey || event.ctrlKey || event.altKey || lookup.open) return;
+    if (lookup.open) return;
     if (event.target instanceof HTMLElement && event.target.closest('input, textarea')) return;
+    // U, or Ctrl/Cmd+Z as elsewhere.
+    const command = event.metaKey || event.ctrlKey;
+    const undoKey = command ? event.key.toLowerCase() === 'z' : event.key === 'u';
+    if (store.canUndo && !modeOpen && undoKey && !event.altKey && !event.shiftKey) {
+      event.preventDefault();
+      press('undo');
+      void undo();
+      return;
+    }
+    if (command || event.altKey) return;
     if (modeOpen) {
       if (event.key === 'Escape') modeOpen = false;
       return;
@@ -202,6 +225,24 @@
 </script>
 
 <svelte:window {onkeydown} />
+
+{#snippet undoButton()}
+  {#if store.canUndo}
+    <button
+      type="button"
+      class="chip undo"
+      class:pressed={pressed === 'undo'}
+      title={t().study.undoHint}
+      aria-label={t().study.undo}
+      aria-keyshortcuts="U Control+Z Meta+Z"
+      onclick={undo}
+      in:rise={{ y: -4 }}
+    >
+      <Icon name="undo" size={16} />
+      <span class="undo-label">{t().study.undo}</span>
+    </button>
+  {/if}
+{/snippet}
 
 <section class="study">
   <header class="top">
@@ -264,6 +305,7 @@
     </div>
     {#if word}
       <div class="counters">
+        {@render undoButton()}
         {#key store.sessionXp}<span
             class="session-xp"
             aria-label={t().study.sessionXp(store.sessionXp)}
@@ -431,6 +473,7 @@
       {/if}
     </div>
   {:else}
+    {#if store.canUndo}<div class="undo-row">{@render undoButton()}</div>{/if}
     <SessionComplete
       stats={store.stats}
       xp={store.sessionXp}
@@ -439,6 +482,7 @@
       celebrate={studied && store.stats.reviewed > 0}
     />
   {/if}
+  <p class="visually-hidden" aria-live="polite">{announcement}</p>
 </section>
 
 <style>
@@ -606,6 +650,26 @@
     font-size: 14px;
     font-weight: 800;
     white-space: nowrap;
+  }
+
+  /* Taking back the last answer: quiet, beside the counters (icon only on narrow phones). */
+  .undo {
+    min-height: 32px;
+    padding: 0 11px;
+    font-size: 14px;
+  }
+  .undo.pressed {
+    transform: scale(0.97);
+  }
+  @media (max-width: 400px) {
+    .undo-label {
+      display: none;
+    }
+  }
+  .undo-row {
+    display: flex;
+    justify-content: center;
+    margin: 4px 0 8px;
   }
 
   .session-xp {

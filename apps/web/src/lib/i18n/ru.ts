@@ -607,6 +607,9 @@ export const ru: Messages = {
     tapToHear: 'Нажми, чтобы послушать ещё раз',
     showAnswer: 'Показать ответ',
     space: 'Пробел',
+    undo: 'Отменить',
+    undoHint: 'Отменить последний ответ (U)',
+    undone: 'Ответ отменён. Оцени карточку снова.',
   },
 
   session: {

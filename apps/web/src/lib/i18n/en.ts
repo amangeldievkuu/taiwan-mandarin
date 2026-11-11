@@ -516,6 +516,9 @@ export const en = {
     tapToHear: 'Tap to hear it again',
     showAnswer: 'Show answer',
     space: 'Space',
+    undo: 'Undo',
+    undoHint: 'Take back the last answer (U)',
+    undone: 'Answer taken back. Grade it again.',
   },
 
   session: {

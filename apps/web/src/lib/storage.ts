@@ -90,6 +90,8 @@ export interface StorageAdapter {
   load(): Promise<StoredSnapshot | null>;
   save(snapshot: Snapshot): Promise<void>;
   addReview(review: ReviewRecord): Promise<void>;
+  /** Takes back a review not sent yet (an answer undone). */
+  removeReview(id: string): Promise<void>;
   /** Reviews at or after `since` (epoch ms), oldest first. */
   reviews(since?: number): Promise<ReviewRecord[]>;
   /** Marks reviews as stored on the server. */
@@ -347,6 +349,10 @@ export class IndexedDbAdapter implements StorageAdapter {
     await this.run('reviews', 'readwrite', (s) => s.put(review));
   }
 
+  async removeReview(id: string): Promise<void> {
+    await this.run('reviews', 'readwrite', (s) => s.delete(id));
+  }
+
   async reviews(since = 0): Promise<ReviewRecord[]> {
     return this.run<ReviewRecord[]>('reviews', 'readonly', (s) =>
       s.index('review').getAll(IDBKeyRange.lowerBound(since)),
@@ -433,6 +439,14 @@ export class LocalStorageAdapter implements StorageAdapter {
     this.write(REVIEWS_KEY, all);
   }
 
+  async removeReview(id: string): Promise<void> {
+    const all = this.read<ReviewRecord[]>(REVIEWS_KEY) ?? [];
+    this.write(
+      REVIEWS_KEY,
+      all.filter((r) => r.id !== id),
+    );
+  }
+
   async reviews(since = 0): Promise<ReviewRecord[]> {
     return (this.read<ReviewRecord[]>(REVIEWS_KEY) ?? []).filter((r) => r.review >= since);
   }
@@ -503,6 +517,7 @@ export class BrowserStorage implements StorageAdapter {
   load = () => this.attempt((a) => a.load());
   save = (snapshot: Snapshot) => this.attempt((a) => a.save(snapshot));
   addReview = (review: ReviewRecord) => this.attempt((a) => a.addReview(review));
+  removeReview = (id: string) => this.attempt((a) => a.removeReview(id));
   reviews = (since?: number) => this.attempt((a) => a.reviews(since));
   markSynced = (ids: readonly string[]) => this.attempt((a) => a.markSynced(ids));
   addPractice = (entry: PracticeRecord) => this.attempt((a) => a.addPractice(entry));

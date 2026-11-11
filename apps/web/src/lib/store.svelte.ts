@@ -12,7 +12,6 @@ import {
   newCard,
   preview,
   shouldRequeue,
-  Rating,
   type Card,
   type Grade,
 } from './srs';
@@ -42,6 +41,7 @@ import {
   countPractice,
   countReview,
   emptyActivity,
+  uncountReview,
   mergedDays,
   rebuildActivity,
   type ActivityState,
@@ -51,6 +51,7 @@ import { devLanguage, firstRunLanguage } from './i18n/detect';
 import { locale, t } from './i18n/index.svelte';
 import type { ExportData } from './export';
 import { unsentSince, UNSENT_MARGIN_MS } from './sync-batches';
+import { GRADE_KEY, takeBack, type Answer } from './undo';
 import { toasts } from './toast.svelte';
 import { uuid } from './uuid';
 import {
@@ -80,13 +81,6 @@ export interface SessionStats {
   easy: number;
 }
 
-const GRADE_KEY = {
-  [Rating.Again]: 'again',
-  [Rating.Hard]: 'hard',
-  [Rating.Good]: 'good',
-  [Rating.Easy]: 'easy',
-} as const;
-
 const emptyStats = (): SessionStats => ({
   reviewed: 0,
   learned: 0,
@@ -98,6 +92,16 @@ const emptyStats = (): SessionStats => ({
 const freshDaily = (): Daily => ({ date: dayKey(new Date()), newCount: 0, reviewCount: 0 });
 /** Held while a tab takes in the others' saves and saves its own (see flush). */
 const SAVE_LOCK = 'taiwan-mandarin:save';
+
+/** The last answer, and what showing it again takes. */
+interface LastAnswer extends Answer {
+  review: ReviewRecord;
+  /** The review being written to the log. */
+  saved: Promise<unknown>;
+  pending: { preview: IPreview; at: Date };
+  intervals: Record<Grade, number> | null;
+  shownAt: number;
+}
 
 class Store {
   ready = $state(false);
@@ -124,6 +128,11 @@ class Store {
   revealed = $state(false);
   /** Time until each grade's next review, in ms. */
   intervals = $state<Record<Grade, number> | null>(null);
+  /** The last answer, while it can still be taken back: until it is sent or another comes. */
+  private lastAnswer = $state.raw<LastAnswer | null>(null);
+  canUndo = $derived(this.lastAnswer !== null);
+  /** An undo on its way: grading waits, and a sync waits until it is done. */
+  private undoing: Promise<boolean> | null = null;
 
   current: Word | undefined = $derived(this.queue[0] ? content.word(this.queue[0]) : undefined);
   progress = $derived(
@@ -267,6 +276,8 @@ class Store {
   private rollDay(): void {
     this.today = dayKey(new Date());
     if (this.daily.date !== this.today) {
+      // Yesterday's answer counted for yesterday: no taking it back today.
+      this.lastAnswer = null;
       this.daily = freshDaily();
       this.finished = 0;
       this.stats = emptyStats();
@@ -364,7 +375,7 @@ class Store {
 
   rate(grade: Grade): void {
     const id = this.queue[0];
-    if (!id || !this.revealed || !this.pending) return;
+    if (!id || !this.revealed || !this.pending || this.undoing) return;
     if (!this.askedToKeepData) {
       this.askedToKeepData = true;
       void askToKeepData();
@@ -373,6 +384,19 @@ class Store {
     const isNew = !this.cards[id];
     const requeue = shouldRequeue(grade, card, this.pending.at);
     const now = Date.now();
+    // What this answer changes, as it was, for undo.
+    const current = this.cards[id];
+    const before = current ? ($state.snapshot(current) as CardRecord) : undefined;
+    const deckIndex = isNew ? this.deck.findIndex((d) => d.id === id) : -1;
+    const deckEntry = this.deck[deckIndex];
+    const fromDeck = deckEntry
+      ? { entry: $state.snapshot(deckEntry), index: deckIndex }
+      : undefined;
+    const shown = {
+      pending: this.pending,
+      intervals: $state.snapshot(this.intervals),
+      shownAt: this.shownAt,
+    };
 
     this.cards[id] = {
       card,
@@ -398,8 +422,8 @@ class Store {
       durationMs: this.shownAt ? Math.min(now - this.shownAt, 10 * 60_000) : 0,
       pending: true,
     };
-    void this.storage
-      .addReview(review)
+    const saved = this.storage.addReview(review);
+    void saved
       .then(() => this.reviewRevision++)
       .catch(() =>
         toasts.show({
@@ -423,7 +447,74 @@ class Store {
     if (!requeue) this.finished++;
     this.queue = advanceQueue(this.queue, requeue);
     this.hideAnswer();
+    this.lastAnswer = {
+      id,
+      grade,
+      isNew,
+      requeued: requeue,
+      before,
+      ...(fromDeck ? { fromDeck } : {}),
+      date: this.daily.date,
+      review,
+      saved: saved.catch(() => undefined),
+      ...shown,
+    };
     this.changed();
+  }
+
+  /**
+   * Takes back the last answer, if it hasn't been sent yet: the card, deck, counts and queue as
+   * they were, its review gone from the log, and the card shown again with its answer open.
+   * False when there is nothing to take back, or the review couldn't be removed.
+   */
+  undo(): Promise<boolean> {
+    this.undoing ??= this.takeBackAnswer().finally(() => (this.undoing = null));
+    return this.undoing;
+  }
+
+  private async takeBackAnswer(): Promise<boolean> {
+    const answer = this.lastAnswer;
+    if (!answer) return false;
+    await answer.saved;
+    try {
+      await this.storage.removeReview(answer.review.id);
+    } catch {
+      return false; // Still in the log, so it stays answered.
+    }
+    this.lastAnswer = null;
+    const now = Date.now();
+    const next = takeBack(
+      {
+        cards: $state.snapshot(this.cards) as Record<string, CardRecord>,
+        deck: $state.snapshot(this.deck),
+        daily: $state.snapshot(this.daily),
+        stats: $state.snapshot(this.stats),
+        finished: this.finished,
+        queue: $state.snapshot(this.queue),
+      },
+      answer,
+      now,
+    );
+    this.cards = next.cards;
+    this.deck = next.deck;
+    this.daily = next.daily;
+    this.stats = next.stats;
+    this.finished = next.finished;
+    this.queue = next.queue;
+    this.unsaved.add(answer.id);
+    if (answer.fromDeck) this.syncState.deckUpdatedAt = now;
+    this.activity = uncountReview(this.activity, answer.review);
+    this.uncounted.reviews = this.uncounted.reviews.filter((r) => r.id !== answer.review.id);
+    // The same card, its answer open as it was before the grade.
+    this.pending = answer.pending;
+    this.intervals = answer.intervals;
+    this.shownAt = answer.shownAt;
+    this.revealed = true;
+    this.reviewRevision++;
+    this.onLocalChange?.();
+    // Saved at once: another tab saving meanwhile would bring the answered card back.
+    await this.flush();
+    return true;
   }
 
   reviews(since?: number): Promise<ReviewRecord[]> {
@@ -523,6 +614,7 @@ class Store {
     this.activity = emptyActivity();
     this.unsaved.clear();
     this.uncounted = { reviews: [], practice: [] };
+    this.lastAnswer = null;
     this.configureFsrs();
     await this.storage.clear();
     await this.startSession();
@@ -546,6 +638,9 @@ class Store {
     practice: PracticeRecord[];
     startedAt: number;
   }> {
+    // What is sent now can't be taken back; an undo already on its way finishes first.
+    await this.undoing;
+    this.lastAnswer = null;
     const startedAt = Date.now();
     const cards = Object.entries($state.snapshot(this.cards) as Record<string, CardRecord>).filter(
       ([, r]) => r.updatedAt > this.syncState.pushedAt,
@@ -731,6 +826,8 @@ class Store {
   private async adopt(stamp: string): Promise<void> {
     const stored = await this.storage.load();
     this.seenStamp = stamp;
+    // Another tab saved since, maybe with this answer in it: it can't be taken back cleanly now.
+    this.lastAnswer = null;
     // Cleared (the other tab is starting over; its save follows) or from an older app.
     if (!stored || stored.version !== 2) return;
     const next = adoptSnapshot(

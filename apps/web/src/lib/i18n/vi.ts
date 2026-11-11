@@ -583,6 +583,9 @@ export const vi: Messages = {
     tapToHear: 'Chạm để nghe lại',
     showAnswer: 'Xem đáp án',
     space: 'Space',
+    undo: 'Hoàn tác',
+    undoHint: 'Rút lại câu trả lời vừa rồi (U)',
+    undone: 'Đã rút lại câu trả lời. Hãy chấm lại.',
   },
 
   session: {
