@@ -699,6 +699,15 @@ describe('review history', () => {
   });
 });
 
+describe('fitting personal FSRS parameters', () => {
+  it('is limited to a few times an hour, since each fit takes a CPU for up to 30 s', async () => {
+    const { MeController } = await import('../src/me/me.controller.js');
+    const route = MeController.prototype.optimize;
+    expect(Reflect.getMetadata('THROTTLER:LIMITdefault', route)).toBe(5);
+    expect(Reflect.getMetadata('THROTTLER:TTLdefault', route)).toBe(60 * 60_000);
+  });
+});
+
 describe('personal access tokens', () => {
   it('reads data but cannot manage tokens', async () => {
     const { token } = await signIn(account);

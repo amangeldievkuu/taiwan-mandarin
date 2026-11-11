@@ -36,6 +36,7 @@ export const ERRORS = {
   photoUnreadable: "The photo couldn't be read. Try another one.",
   conversationMissing: 'No such conversation',
   conversationEnded: 'This conversation has ended.',
+  accountFull: 'This account has reached its storage limit, so this device can no longer sync.',
   // Pronunciation
   audioUnreadable: 'Unreadable audio',
   recordingTooLong: 'Keep recordings under 15 seconds',

@@ -6,9 +6,9 @@
 // of any card the client sent an older version of, and, when asked, practice totals per day in the
 // client's time zone (so every device shows the same streak).
 
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, PayloadTooLargeException } from '@nestjs/common';
 import type { CardRecordDto, SyncRequest, SyncResponse } from '@taiwan-mandarin/shared/api';
-import { SettingsSchema, DeckEntrySchema } from '@taiwan-mandarin/shared/api';
+import { apiError, SettingsSchema, DeckEntrySchema } from '@taiwan-mandarin/shared/api';
 import { z } from 'zod';
 import type { Card as CardRow } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -63,6 +63,15 @@ const MAX_CLOCK_AHEAD_MS = 5 * 60_000;
  */
 const CURSOR_OVERLAP_MS = 60_000;
 
+/**
+ * The most one account may store. Sign-up is open and sync takes whatever a client sends, so
+ * without these one account could fill the disk. Far beyond any learner: the path has about
+ * 15,000 words, and a million reviews is a hundred a day for 27 years.
+ */
+export const MAX_CARDS = 50_000;
+export const MAX_REVIEWS = 1_000_000;
+export const MAX_PRACTICE = 200_000;
+
 @Injectable()
 export class SyncService {
   constructor(
@@ -71,6 +80,8 @@ export class SyncService {
   ) {}
 
   async sync(userId: string, request: SyncRequest): Promise<SyncResponse> {
+    await this.requireRoom(userId, request);
+
     // Cursor first: anything written from here on is newer than what this response returns.
     const cursor = Date.now();
     // A device whose clock runs ahead would otherwise win every merge for as long as it does.
@@ -226,5 +237,25 @@ export class SyncService {
         ? { activity: { timeZone: asked.timeZone, full: asked.since === 0, days } }
         : {}),
     };
+  }
+
+  /**
+   * Refuses a request that could take the account past its limits, before anything is written.
+   * What is sent counts in full, even entries already stored: that only matters at the limit.
+   */
+  private async requireRoom(userId: string, request: SyncRequest): Promise<void> {
+    const where = { userId };
+    const [cards, reviews, practice] = await Promise.all([
+      request.cards.length ? this.db.card.count({ where }) : 0,
+      request.reviews.length ? this.db.reviewLog.count({ where }) : 0,
+      request.practice.length ? this.db.practiceLog.count({ where }) : 0,
+    ]);
+    if (
+      cards + request.cards.length > MAX_CARDS ||
+      reviews + request.reviews.length > MAX_REVIEWS ||
+      practice + request.practice.length > MAX_PRACTICE
+    ) {
+      throw new PayloadTooLargeException(apiError('accountFull'));
+    }
   }
 }

@@ -539,6 +539,7 @@ export const vi: Messages = {
       photoUnreadable: 'Không đọc được ảnh. Hãy thử ảnh khác.',
       conversationMissing: 'Không có cuộc trò chuyện này',
       conversationEnded: 'Cuộc trò chuyện này đã kết thúc.',
+      accountFull: 'Tài khoản này đã hết dung lượng lưu trữ, nên thiết bị không thể đồng bộ nữa.',
       audioUnreadable: 'Không đọc được bản ghi âm',
       recordingTooLong: 'Hãy ghi âm dưới 15 giây',
       noSpeech: 'Không nghe thấy giọng nói. Hãy thử lại, gần micro hơn một chút.',

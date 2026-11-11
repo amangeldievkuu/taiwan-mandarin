@@ -15,6 +15,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import {
   cardCounts,
   dailyFromActivity,
@@ -252,6 +253,8 @@ export class MeController {
   }
 
   @Post('fsrs/optimize')
+  // Each fit can keep a CPU busy for 30 seconds.
+  @Throttle({ default: { limit: 5, ttl: 60 * 60_000 } })
   @ApiOperation({ summary: 'Fit personal FSRS parameters to this learner’s review history now' })
   @ApiZodBody(OptimizeSchema)
   optimize(

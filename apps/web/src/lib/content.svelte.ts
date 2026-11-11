@@ -199,11 +199,17 @@ class Content {
     this.readersPromise ??= this.init().then((m) =>
       getJson<Reader[]>(this.localized('content/readers.json').path, m),
     );
-    this.readersPromise.then(
-      (list) => (this.readerList = list),
-      () => (this.readersPromise = undefined),
+    const promise = this.readersPromise;
+    // A list still on its way when the language changed is not the one to show.
+    promise.then(
+      (list) => {
+        if (promise === this.readersPromise) this.readerList = list;
+      },
+      () => {
+        if (promise === this.readersPromise) this.readersPromise = undefined;
+      },
     );
-    return this.readersPromise;
+    return promise;
   }
 
   /** A reader's title, once the readers have loaded (for back buttons). */
