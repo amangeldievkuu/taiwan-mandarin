@@ -109,7 +109,7 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 28px 0;
+    padding: var(--sp-7) 0;
   }
 
   .stamp {
@@ -131,7 +131,7 @@
   }
 
   h1 {
-    margin: 20px 0 4px;
+    margin: var(--sp-5) 0 var(--sp-1);
     font-size: 36px;
   }
 
@@ -144,15 +144,15 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    margin: 20px 0 0;
-    padding: 8px 18px;
+    margin: var(--sp-5) 0 0;
+    padding: var(--sp-2) var(--sp-5);
     border-radius: var(--radius-pill);
     background: var(--gold-wash);
     border: 1.5px solid color-mix(in oklab, var(--gold) 50%, transparent);
     color: var(--gold-deep);
     font-family: var(--font-display);
-    font-size: 26px;
-    font-weight: 900;
+    font-size: var(--fs-3xl);
+    font-weight: var(--fw-heading);
   }
 
   .spark {
@@ -164,13 +164,13 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
     width: min(420px, 100%);
-    margin: 16px 0 0;
+    margin: var(--sp-4) 0 0;
   }
 
   .tile {
     display: flex;
     flex-direction: column-reverse;
-    padding: 12px 8px;
+    padding: var(--sp-3) var(--sp-2);
     border-radius: var(--radius);
     background: var(--paper-raised);
     border: 1px solid var(--rule);
@@ -178,24 +178,24 @@
   }
 
   .tile dt {
-    font-size: 13px;
+    font-size: var(--fs-sm);
     color: var(--ink-2);
   }
 
   .tile dd {
     margin: 0;
     font-family: var(--font-display);
-    font-size: 28px;
-    font-weight: 800;
+    font-size: var(--fs-3xl);
+    font-weight: var(--fw-heading);
   }
 
   .bowl {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: var(--sp-4);
     width: min(460px, 100%);
-    margin-top: 18px;
-    padding: 14px 16px;
+    margin-top: var(--sp-5);
+    padding: var(--sp-4) var(--sp-4);
     text-align: left;
   }
 
@@ -208,18 +208,18 @@
   }
 
   .bowl-body strong {
-    font-size: 17px;
+    font-size: var(--fs-lg);
   }
 
   .bowl-body > span {
-    margin-bottom: 8px;
-    font-size: 14px;
+    margin-bottom: var(--sp-2);
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
   .next {
-    margin: 18px 0 0;
-    font-size: 14px;
+    margin: var(--sp-5) 0 0;
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
@@ -227,7 +227,7 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 12px 10px;
-    margin-top: 22px;
+    gap: var(--sp-3) 10px;
+    margin-top: var(--sp-6);
   }
 </style>

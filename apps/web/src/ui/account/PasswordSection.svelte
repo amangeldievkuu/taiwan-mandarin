@@ -132,12 +132,12 @@
 
 <style>
   .block {
-    padding: 18px;
+    padding: var(--sp-5);
   }
 
   .block p {
-    margin: 0 0 12px;
-    font-size: 14px;
+    margin: 0 0 var(--sp-3);
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
@@ -150,7 +150,7 @@
 
   .error,
   .fine {
-    margin: 12px 0 0 !important;
+    margin: var(--sp-3) 0 0 !important;
   }
 
   .error {

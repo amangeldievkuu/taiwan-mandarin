@@ -19,13 +19,13 @@
 <style>
   .hv {
     margin: 0;
-    font-size: 14px;
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
   .label {
     margin-right: 0.3em;
-    font-size: 11px;
-    font-weight: 800;
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-heading);
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--ink-3);

@@ -50,30 +50,30 @@
 
 <style>
   .list {
-    margin-bottom: 14px;
+    margin-bottom: var(--sp-4);
   }
 
   .row-label {
     display: block;
-    font-weight: 700;
+    font-weight: var(--fw-strong);
   }
 
   .about {
-    padding: 16px 18px;
-    font-size: 14px;
+    padding: var(--sp-4) var(--sp-5);
+    font-size: var(--fs-md);
     line-height: 1.55;
     color: var(--ink-2);
   }
 
   h2 {
-    margin: 0 0 8px;
-    font-size: 15px;
-    font-weight: 800;
+    margin: 0 0 var(--sp-2);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-heading);
     color: var(--ink);
   }
 
   p {
-    margin: 0 0 8px;
+    margin: 0 0 var(--sp-2);
   }
 
   a {

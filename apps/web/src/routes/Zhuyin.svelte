@@ -351,10 +351,10 @@
 
 <style>
   .count {
-    margin: 4px 0 14px;
+    margin: var(--sp-1) 0 var(--sp-4);
     color: var(--ink-3);
-    font-size: var(--fs-sm);
-    font-weight: 700;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-strong);
   }
   .lessons {
     display: grid;
@@ -366,9 +366,9 @@
   .lesson {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: var(--sp-3);
     width: 100%;
-    padding: 12px 16px;
+    padding: var(--sp-3) var(--sp-4);
     text-align: start;
   }
   .lesson-body {
@@ -379,7 +379,7 @@
     flex: 1;
   }
   .lesson-letters {
-    font-size: 20px;
+    font-size: var(--fs-xl);
     letter-spacing: 0.08em;
     color: var(--ink-3);
   }
@@ -392,8 +392,8 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-2);
   }
   .lesson-title {
     display: flex;
@@ -414,14 +414,14 @@
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    padding: 20px 18px 22px;
+    padding: var(--sp-5) var(--sp-5) var(--sp-6);
     text-align: center;
   }
   .of {
     margin: 0;
     color: var(--ink-3);
-    font-size: var(--fs-sm);
-    font-weight: 700;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-strong);
   }
   .big {
     font-size: 104px;
@@ -429,8 +429,8 @@
   }
   .pinyin {
     margin: 0;
-    font-size: 26px;
-    font-weight: 800;
+    font-size: var(--fs-2xl);
+    font-weight: var(--fw-heading);
   }
   .hear {
     flex-wrap: wrap;
@@ -455,29 +455,29 @@
     align-items: center;
     gap: 10px;
     width: 100%;
-    padding: 8px 12px;
+    padding: var(--sp-2) var(--sp-3);
     border: 1px solid var(--rule);
     border-radius: var(--radius);
     background: var(--paper-raised);
     text-align: start;
   }
   .ex-hanzi {
-    font-size: 24px;
+    font-size: var(--fs-2xl);
   }
   .ex-zhuyin {
-    font-size: 18px;
+    font-size: var(--fs-lg);
     color: var(--ink-3);
   }
   .ex-zhuyin mark {
     border-radius: 4px;
     background: var(--gold-wash);
     color: var(--gold-deep);
-    font-weight: 700;
+    font-weight: var(--fw-strong);
   }
   .ex-gloss {
     min-width: 0;
     overflow: hidden;
-    font-size: var(--fs-sm);
+    font-size: var(--fs-md);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -485,8 +485,8 @@
   .tones {
     display: grid;
     gap: 2px;
-    margin: 0 0 14px;
-    padding: 8px;
+    margin: 0 0 var(--sp-4);
+    padding: var(--sp-2);
     list-style: none;
   }
   .tone {
@@ -495,24 +495,24 @@
     align-items: center;
     gap: 10px;
     width: 100%;
-    padding: 8px 10px;
+    padding: var(--sp-2) 10px;
     border-radius: var(--radius-sm);
     text-align: start;
   }
   .tone-mark {
-    font-size: 30px;
+    font-size: var(--fs-3xl);
     color: var(--seal);
     text-align: center;
   }
   .tone-char {
-    font-size: 28px;
+    font-size: var(--fs-3xl);
   }
   .tone-zy {
-    font-size: 18px;
+    font-size: var(--fs-lg);
     color: var(--ink-3);
   }
   .tone-name {
-    font-size: var(--fs-sm);
+    font-size: var(--fs-md);
   }
 
   .actions {
@@ -520,13 +520,13 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
-    margin: 16px 0;
+    margin: var(--sp-4) 0;
   }
 
   .bar {
     overflow: hidden;
     height: 6px;
-    margin-bottom: 14px;
+    margin-bottom: var(--sp-4);
     border-radius: var(--radius-pill);
     background: var(--paper-sunken);
   }
@@ -539,7 +539,7 @@
   .prompt {
     margin: 0;
     font-size: var(--fs-lg);
-    font-weight: 700;
+    font-weight: var(--fw-strong);
   }
   .options {
     display: grid;
@@ -553,18 +553,18 @@
   }
   .option {
     min-height: 58px;
-    padding: 8px 12px;
+    padding: var(--sp-2) var(--sp-3);
     border: 1px solid var(--rule-strong);
     border-radius: var(--radius);
     background: var(--paper-raised);
-    font-size: 26px;
-    font-weight: 700;
+    font-size: var(--fs-3xl);
+    font-weight: var(--fw-strong);
     transition:
       background-color var(--dur) var(--ease),
       border-color var(--dur) var(--ease);
   }
   .options.wide .option {
-    font-size: 22px;
+    font-size: var(--fs-2xl);
   }
   .option.right {
     border-color: var(--good);
@@ -582,25 +582,25 @@
     flex-direction: column;
     align-items: center;
     gap: 6px;
-    margin-top: 8px;
+    margin-top: var(--sp-2);
   }
   .feedback p {
     margin: 0;
   }
   .good {
     color: var(--jade-text);
-    font-weight: 800;
+    font-weight: var(--fw-heading);
   }
   .bad {
-    font-weight: 700;
+    font-weight: var(--fw-strong);
   }
   .answer-word {
     display: flex;
     align-items: baseline;
-    gap: 8px;
+    gap: var(--sp-2);
   }
   .answer-word .hanzi {
-    font-size: 24px;
+    font-size: var(--fs-2xl);
   }
   .finished h2 {
     margin: 6px 0 0;

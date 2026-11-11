@@ -31,8 +31,8 @@
     display: grid;
     grid-template-columns: 1fr auto;
     align-items: center;
-    gap: 8px 16px;
-    padding: 12px 16px;
+    gap: var(--sp-2) var(--sp-4);
+    padding: var(--sp-3) var(--sp-4);
   }
 
   .setting.stacked {
@@ -47,17 +47,17 @@
   }
 
   .label {
-    font-weight: 600;
+    font-weight: var(--fw-label);
   }
 
   .label b {
-    margin-left: 8px;
-    font-weight: 800;
+    margin-left: var(--sp-2);
+    font-weight: var(--fw-heading);
     color: var(--jade-text);
   }
 
   small {
-    font-size: 13px;
+    font-size: var(--fs-sm);
     line-height: 1.4;
     color: var(--ink-2);
   }
@@ -72,7 +72,7 @@
 
   .control :global(input[type='range']) {
     width: 100%;
-    margin: 4px 0 2px;
+    margin: var(--sp-1) 0 2px;
     accent-color: var(--jade);
   }
 </style>

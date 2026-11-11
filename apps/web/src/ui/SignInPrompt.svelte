@@ -27,8 +27,8 @@
   .prompt {
     display: flex;
     align-items: center;
-    gap: 18px;
-    padding: 20px;
+    gap: var(--sp-4);
+    padding: var(--sp-5);
   }
 
   p {

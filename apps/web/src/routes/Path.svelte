@@ -163,7 +163,7 @@
 
 <style>
   .intro {
-    margin: -8px 0 8px;
+    margin: -8px 0 var(--sp-2);
     max-width: 60ch;
     color: var(--ink-2);
   }
@@ -172,7 +172,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: var(--sp-3);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -192,8 +192,8 @@
     position: relative;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding-right: 14px;
+    gap: var(--sp-2);
+    padding-right: var(--sp-4);
     transition:
       border-color var(--dur) var(--ease),
       box-shadow var(--dur) var(--ease);
@@ -226,8 +226,8 @@
     min-width: 0;
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 16px 0 16px 18px;
+    gap: var(--sp-4);
+    padding: var(--sp-4) 0 var(--sp-4) var(--sp-5);
     text-decoration: none;
   }
 
@@ -239,11 +239,11 @@
   .station-name {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
   .station-name strong {
-    font-size: 18px;
+    font-size: var(--fs-lg);
   }
 
   .station-zh {
@@ -254,7 +254,7 @@
   .bar {
     position: relative;
     height: 10px;
-    margin: 8px 0 6px;
+    margin: var(--sp-2) 0 6px;
     border-radius: var(--radius-pill);
     background: var(--paper-sunken);
     overflow: hidden;
@@ -278,22 +278,22 @@
 
   small {
     color: var(--ink-2);
-    font-size: 13px;
+    font-size: var(--fs-sm);
   }
 
   .toggle {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--sp-1);
     flex: none;
     min-height: 38px;
-    padding: 0 14px;
+    padding: 0 var(--sp-4);
     border-radius: var(--radius-pill);
     border: 1px solid var(--rule-strong);
     background: var(--paper-raised);
     box-shadow: var(--shadow-1);
-    font-size: 14px;
-    font-weight: 700;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-strong);
     color: var(--ink-2);
     transition:
       transform 160ms var(--ease-out),
@@ -326,7 +326,7 @@
     .station {
       flex-direction: column;
       align-items: stretch;
-      padding: 0 14px 14px 0;
+      padding: 0 var(--sp-4) var(--sp-4) 0;
     }
 
     .toggle {

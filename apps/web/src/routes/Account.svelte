@@ -147,18 +147,18 @@
   }
 
   .block {
-    padding: 18px;
+    padding: var(--sp-5);
   }
 
   .block p {
-    margin: 0 0 12px;
-    font-size: 14px;
+    margin: 0 0 var(--sp-3);
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
   .block .fine,
   .block .error {
-    margin: 12px 0 0;
+    margin: var(--sp-3) 0 0;
   }
 
   .error {
@@ -170,15 +170,15 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 10px;
-    margin-top: 28px;
-    font-size: 14px;
+    margin-top: var(--sp-7);
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
   .delete-form {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--sp-3);
     width: 100%;
     max-width: 420px;
   }
@@ -189,12 +189,12 @@
 
   .buttons {
     display: flex;
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
   .link {
     color: var(--seal);
-    font-weight: 600;
-    font-size: 14px;
+    font-weight: var(--fw-label);
+    font-size: var(--fs-md);
   }
 </style>

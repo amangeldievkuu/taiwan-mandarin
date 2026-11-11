@@ -152,7 +152,7 @@
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    padding: 20px 18px 18px;
+    padding: var(--sp-5) var(--sp-5) var(--sp-5);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-3);
     text-align: center;
@@ -205,22 +205,22 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    font-size: 24px;
-    font-weight: 800;
+    gap: var(--sp-2);
+    font-size: var(--fs-2xl);
+    font-weight: var(--fw-heading);
     color: var(--gold-deep);
   }
 
   .next {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-label);
     color: var(--ink-2);
   }
 
   .how {
     max-width: 34em;
-    margin: 4px 0 0;
-    font-size: 13px;
+    margin: var(--sp-1) 0 0;
+    font-size: var(--fs-sm);
     line-height: 1.5;
     color: var(--ink-2);
   }
@@ -228,7 +228,7 @@
   .looks {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-    gap: 8px;
+    gap: var(--sp-2);
     padding: 10px;
   }
 
@@ -275,14 +275,14 @@
   .look-name {
     display: flex;
     flex-direction: column;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-label);
     line-height: 1.3;
   }
 
   .look-name .hanzi {
     font-family: var(--font-kai);
-    font-size: 16px;
+    font-size: var(--fs-base);
     font-weight: 400;
   }
 
@@ -291,8 +291,8 @@
     align-items: center;
     gap: 3px;
     min-height: 16px;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-strong);
     color: var(--gold-deep);
   }
 

@@ -210,7 +210,7 @@
     inset: auto 0 0;
     max-height: min(72dvh, 620px);
     overflow-y: auto;
-    padding: 8px 20px calc(var(--safe-bottom) + 20px);
+    padding: var(--sp-2) var(--sp-5) calc(var(--safe-bottom) + var(--sp-5));
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     overscroll-behavior: contain;
   }
@@ -218,7 +218,7 @@
   .grip {
     width: 40px;
     height: 5px;
-    margin: 0 auto 8px;
+    margin: 0 auto var(--sp-2);
     border-radius: 3px;
     background: var(--rule-strong);
   }
@@ -234,7 +234,7 @@
       width: 380px;
       max-height: calc(100dvh - 40px);
       border-radius: var(--radius-lg);
-      padding: 18px 22px 22px;
+      padding: var(--sp-5) var(--sp-6) var(--sp-6);
       box-shadow: var(--shadow-3);
     }
 
@@ -247,7 +247,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: var(--sp-3);
   }
 
   .word {
@@ -257,7 +257,7 @@
 
   .tools {
     display: flex;
-    gap: 4px;
+    gap: var(--sp-1);
   }
 
   .tool {
@@ -275,11 +275,11 @@
   }
 
   .note {
-    margin: 4px 0 0;
-    padding: 8px 12px;
+    margin: var(--sp-1) 0 0;
+    padding: var(--sp-2) var(--sp-3);
     border-radius: var(--radius-sm);
     background: var(--seal-wash);
-    font-size: 15px;
+    font-size: var(--fs-md);
   }
 
   .muted {
@@ -287,7 +287,7 @@
   }
 
   .entry {
-    padding: 14px 0;
+    padding: var(--sp-4) 0;
   }
 
   .entry + .entry {
@@ -298,53 +298,53 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 18px;
+    font-size: var(--fs-lg);
   }
 
   ol {
-    margin: 8px 0 0;
-    padding-left: 22px;
-    font-size: 16px;
+    margin: var(--sp-2) 0 0;
+    padding-left: var(--sp-6);
+    font-size: var(--fs-base);
     line-height: 1.45;
   }
 
   li::marker {
     color: var(--ink-3);
-    font-size: 13px;
+    font-size: var(--fs-sm);
   }
 
   .cl {
-    margin: 8px 0 0;
-    font-size: 14px;
+    margin: var(--sp-2) 0 0;
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
   .cl .hanzi {
     color: var(--ink);
-    font-size: 17px;
+    font-size: var(--fs-lg);
   }
 
   .actions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
-    margin-top: 14px;
+    gap: var(--sp-2);
+    margin-top: var(--sp-4);
   }
 
   .state {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 14px;
-    font-weight: 600;
+    gap: var(--sp-1);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-label);
     color: var(--jade);
   }
 
   .loading {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 14px 0;
+    gap: var(--sp-3);
+    padding: var(--sp-4) 0;
   }
 </style>

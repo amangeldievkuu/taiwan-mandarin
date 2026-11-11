@@ -173,28 +173,28 @@
 <style>
   .tabs {
     max-width: 360px;
-    margin-bottom: 16px;
+    margin-bottom: var(--sp-4);
   }
 
   .pasted {
-    margin-top: 16px;
-    padding: 16px 18px;
+    margin-top: var(--sp-4);
+    padding: var(--sp-4) var(--sp-5);
   }
 
   .hint {
     margin: 0 0 6px;
-    font-size: 13px;
+    font-size: var(--fs-sm);
     color: var(--ink-2);
   }
 
   .pasted :global(.pasted-text) {
-    font-size: 26px;
+    font-size: var(--fs-3xl);
     line-height: 1.7;
   }
 
   .w-hanzi {
     min-width: 2.6em;
-    font-size: 24px;
+    font-size: var(--fs-2xl);
   }
 
   .en {
@@ -203,6 +203,6 @@
   }
 
   .row-main :global(.reading) {
-    font-size: 14px;
+    font-size: var(--fs-md);
   }
 </style>

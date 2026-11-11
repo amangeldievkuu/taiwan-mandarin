@@ -24,7 +24,7 @@
     background: var(--paper-sunken);
     color: var(--ink-3);
     font-size: 0.62em;
-    font-weight: 800;
+    font-weight: var(--fw-heading);
     letter-spacing: 0.04em;
     text-decoration: none;
     vertical-align: 0.15em;

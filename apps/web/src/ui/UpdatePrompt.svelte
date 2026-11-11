@@ -33,12 +33,12 @@
     align-items: center;
     gap: 10px;
     width: min(440px, calc(100vw - 24px));
-    padding: 12px 14px;
+    padding: var(--sp-3) var(--sp-4);
     border: 1px solid var(--rule);
     border-radius: var(--radius);
     background: var(--paper-raised);
     box-shadow: var(--shadow-3);
-    font-size: 14px;
+    font-size: var(--fs-md);
   }
 
   .update.top {

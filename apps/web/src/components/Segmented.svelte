@@ -111,10 +111,10 @@
     align-items: center;
     justify-content: center;
     min-height: 40px;
-    padding: 4px 8px;
+    padding: var(--sp-1) var(--sp-2);
     border-radius: 11px;
-    font-size: 15px;
-    font-weight: 700;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-strong);
     white-space: nowrap;
     color: var(--ink-2);
     transition:
@@ -132,8 +132,8 @@
 
   .sub {
     font-family: var(--font-ui);
-    font-size: 11px;
-    font-weight: 700;
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-strong);
     line-height: 1.1;
     color: var(--ink-3);
   }

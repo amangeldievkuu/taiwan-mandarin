@@ -32,16 +32,16 @@
 
 <style>
   .count {
-    margin: 0 0 12px;
-    font-size: 14px;
-    font-weight: 700;
+    margin: 0 0 var(--sp-3);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-strong);
     color: var(--ink-2);
   }
 
   .album {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-    gap: 14px 10px;
+    gap: var(--sp-3) 10px;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -60,8 +60,8 @@
   }
 
   .name {
-    font-size: 12px;
-    font-weight: 600;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-label);
     line-height: 1.3;
     color: var(--ink-2);
   }

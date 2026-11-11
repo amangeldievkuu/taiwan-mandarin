@@ -123,16 +123,16 @@
 
 <style>
   .auth {
-    padding: 18px;
+    padding: var(--sp-5);
   }
 
   .auth :global(.segmented) {
-    margin-bottom: 14px;
+    margin-bottom: var(--sp-4);
   }
 
   .lead {
-    margin: 0 0 16px;
-    font-size: 14px;
+    margin: 0 0 var(--sp-4);
+    font-size: var(--fs-md);
     line-height: 1.5;
     color: var(--ink-2);
   }
@@ -140,24 +140,24 @@
   label {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    margin-bottom: 12px;
-    font-size: 14px;
-    font-weight: 600;
+    gap: var(--sp-1);
+    margin-bottom: var(--sp-3);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-label);
   }
 
   label small {
-    font-weight: 500;
+    font-weight: var(--fw-text);
     color: var(--ink-3);
   }
 
   input {
     height: 46px;
-    padding: 0 14px;
+    padding: 0 var(--sp-4);
     border: 1px solid var(--rule-strong);
     border-radius: var(--radius-sm);
     background: var(--paper-raised);
-    font-size: 16px;
+    font-size: var(--fs-base);
     font-weight: 400;
     outline: none;
   }
@@ -169,29 +169,29 @@
 
   .submit {
     width: 100%;
-    margin-top: 4px;
+    margin-top: var(--sp-1);
   }
 
   .error {
-    margin: 0 0 12px;
-    padding: 10px 12px;
+    margin: 0 0 var(--sp-3);
+    padding: 10px var(--sp-3);
     border-radius: var(--radius-sm);
     background: var(--seal-wash);
     color: var(--seal);
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-label);
   }
 
   .fine {
-    margin: 14px 0 0;
-    font-size: 13px;
+    margin: var(--sp-4) 0 0;
+    font-size: var(--fs-sm);
     line-height: 1.5;
     color: var(--ink-2);
   }
 
   .link {
     color: var(--sky-text);
-    font-weight: 700;
+    font-weight: var(--fw-strong);
     text-decoration: underline;
   }
 </style>

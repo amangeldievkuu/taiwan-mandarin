@@ -50,14 +50,14 @@
 
 <style>
   .shelf-card {
-    padding: 16px 18px;
+    padding: var(--sp-4) var(--sp-5);
   }
 
   .shelf {
     display: flex;
-    gap: 14px;
-    margin: 0 0 14px;
-    padding: 4px 2px 10px;
+    gap: var(--sp-3);
+    margin: 0 0 var(--sp-4);
+    padding: var(--sp-1) 2px 10px;
     list-style: none;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
@@ -78,29 +78,29 @@
   }
 
   .fired strong {
-    margin-top: 4px;
-    font-size: 15px;
+    margin-top: var(--sp-1);
+    font-size: var(--fs-md);
   }
 
   .fired small {
-    font-size: 12px;
+    font-size: var(--fs-xs);
     color: var(--ink-2);
   }
 
   .fired .gold {
     color: var(--gold-deep);
-    font-weight: 700;
+    font-weight: var(--fw-strong);
   }
 
   .how {
     margin: 0;
-    font-size: 14px;
+    font-size: var(--fs-md);
     line-height: 1.55;
     color: var(--ink-2);
   }
 
   .empty-shelf {
-    margin-bottom: 14px;
+    margin-bottom: var(--sp-4);
   }
 
   .how strong {
@@ -108,6 +108,6 @@
   }
 
   .seals-card {
-    padding: 16px 18px 20px;
+    padding: var(--sp-4) var(--sp-5) var(--sp-5);
   }
 </style>

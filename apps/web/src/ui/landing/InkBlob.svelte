@@ -530,7 +530,7 @@
   .notes text {
     fill: var(--ink-2);
     font-family: var(--font-ui);
-    font-weight: 800;
+    font-weight: var(--fw-heading);
     font-size: 6px;
     opacity: 0;
   }
@@ -566,7 +566,7 @@
   .zzz text {
     fill: var(--ink-2);
     font-family: var(--font-ui);
-    font-weight: 800;
+    font-weight: var(--fw-heading);
     font-size: 4.5px;
     opacity: 0;
   }
@@ -641,7 +641,7 @@
     align-items: baseline;
     gap: 6px;
     margin: 0;
-    padding: 5px 12px 6px;
+    padding: 5px var(--sp-3) 6px;
     white-space: nowrap;
     background: var(--paper);
     border: 1.5px solid var(--ink);
@@ -687,14 +687,14 @@
 
   .says .zh {
     font-family: var(--font-kai);
-    font-size: 18px;
+    font-size: var(--fs-lg);
     line-height: 1.1;
     color: var(--ink);
   }
 
   .says small {
-    font-size: 11px;
-    font-weight: 700;
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-strong);
     color: var(--ink-3);
   }
 

@@ -14,7 +14,7 @@
   .loading {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 24px 4px;
+    gap: var(--sp-3);
+    padding: var(--sp-6) var(--sp-1);
   }
 </style>

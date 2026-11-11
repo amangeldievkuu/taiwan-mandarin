@@ -173,7 +173,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
   .recording {
@@ -187,8 +187,8 @@
   }
 
   .hint {
-    margin: 8px 0 0;
-    font-size: 13px;
+    margin: var(--sp-2) 0 0;
+    font-size: var(--fs-sm);
     color: var(--ink-2);
   }
 
@@ -197,13 +197,13 @@
   }
 
   .result {
-    margin-top: 14px;
+    margin-top: var(--sp-4);
   }
 
   .score {
     display: flex;
     align-items: baseline;
-    gap: 12px;
+    gap: var(--sp-3);
   }
 
   .score strong {
@@ -212,13 +212,13 @@
   }
 
   .score .hanzi {
-    font-size: 18px;
+    font-size: var(--fs-lg);
   }
 
   .syllables {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--sp-2);
     margin: 10px 0 0;
     padding: 0;
     list-style: none;
@@ -230,7 +230,7 @@
     align-items: center;
     gap: 2px;
     min-width: 92px;
-    padding: 10px 10px 8px;
+    padding: 10px 10px var(--sp-2);
     border: 1px solid color-mix(in srgb, var(--jade) 45%, transparent);
     border-radius: var(--radius-sm);
     background: color-mix(in srgb, var(--jade) 7%, var(--paper-raised));
@@ -247,12 +247,12 @@
   }
 
   .ch {
-    font-size: 30px;
+    font-size: var(--fs-3xl);
     line-height: 1.1;
   }
 
   .py {
-    font-size: 13px;
+    font-size: var(--fs-sm);
     color: var(--ink-2);
   }
 
@@ -276,7 +276,7 @@
   }
 
   .msg {
-    font-size: 12px;
+    font-size: var(--fs-xs);
     color: var(--ink-2);
     text-align: center;
   }

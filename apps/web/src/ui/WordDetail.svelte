@@ -193,7 +193,7 @@
     position: relative;
     display: flex;
     justify-content: center;
-    padding: 18px 0 10px;
+    padding: var(--sp-5) 0 10px;
   }
 
   .speak {
@@ -218,7 +218,7 @@
   }
 
   .tag {
-    font-size: 12px;
+    font-size: var(--fs-xs);
     color: var(--ink-2);
     padding: 1px 6px;
     border-radius: 4px;
@@ -226,26 +226,26 @@
   }
 
   .meaning {
-    margin: 14px 0 0;
+    margin: var(--sp-4) 0 0;
     font-family: var(--font-display);
-    font-size: 22px;
+    font-size: var(--fs-xl);
     line-height: 1.4;
     text-align: center;
   }
 
   .compact .meaning {
-    font-size: 19px;
+    font-size: var(--fs-lg);
   }
 
   .cl {
     margin: 6px 0 0;
     text-align: center;
-    font-size: 14px;
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
   .cl :global(.hanzi-text) {
-    font-size: 18px;
+    font-size: var(--fs-lg);
     color: var(--ink);
   }
 
@@ -259,29 +259,29 @@
     justify-content: center;
     flex-wrap: wrap;
     gap: 10px;
-    margin-top: 18px;
+    margin-top: var(--sp-5);
   }
 
   .state {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 14px;
-    font-weight: 600;
+    gap: var(--sp-1);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-label);
     color: var(--jade);
   }
 
   .examples {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--sp-4);
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
   .examples li {
-    padding-left: 14px;
+    padding-left: var(--sp-4);
     border-left: 2px solid var(--rule-strong);
   }
 
@@ -289,16 +289,16 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
   .ex-line :global(.ex-zh) {
-    font-size: 21px;
+    font-size: var(--fs-xl);
     line-height: 1.5;
   }
 
   .examples :global(.reading) {
-    font-size: 14px;
+    font-size: var(--fs-md);
   }
 
   .ex-en {
@@ -308,7 +308,7 @@
 
   .ex-src {
     margin: 2px 0 0;
-    font-size: 11px;
+    font-size: var(--fs-2xs);
     color: var(--ink-3);
   }
 
@@ -333,8 +333,8 @@
   .chars {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 14px;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-4);
   }
 
   .char {
@@ -344,7 +344,7 @@
     height: 56px;
     border: 1px solid var(--rule-strong);
     border-radius: var(--radius-sm);
-    font-size: 30px;
+    font-size: var(--fs-3xl);
     background: var(--paper-raised);
   }
 

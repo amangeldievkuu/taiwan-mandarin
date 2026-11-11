@@ -271,7 +271,7 @@
 
 <style>
   .input {
-    padding: 12px;
+    padding: var(--sp-3);
   }
 
   /* The textarea has no outline of its own; the card shows where typing goes. */
@@ -282,10 +282,10 @@
 
   textarea {
     width: 100%;
-    padding: 6px 8px;
+    padding: 6px var(--sp-2);
     border: 0;
     background: transparent;
-    font-size: 20px;
+    font-size: var(--fs-xl);
     line-height: 1.6;
     resize: vertical;
     outline: none;
@@ -294,7 +294,7 @@
   .photo {
     position: relative;
     display: inline-block;
-    margin: 4px 8px;
+    margin: var(--sp-1) var(--sp-2);
   }
 
   .photo img {
@@ -318,13 +318,13 @@
   .bar {
     display: flex;
     justify-content: space-between;
-    gap: 8px;
-    padding-top: 8px;
+    gap: var(--sp-2);
+    padding-top: var(--sp-2);
     border-top: 1px solid var(--rule);
   }
 
   .explain > :global(.prompt) {
-    margin-top: 14px;
+    margin-top: var(--sp-4);
   }
 
   .error {
@@ -332,7 +332,7 @@
   }
 
   .result {
-    margin-top: 18px;
+    margin-top: var(--sp-5);
     animation: rise 300ms var(--ease);
   }
 
@@ -344,7 +344,7 @@
   }
 
   .source {
-    padding: 18px 20px;
+    padding: var(--sp-5) var(--sp-5);
   }
 
   .source-line {
@@ -354,14 +354,14 @@
   }
 
   .source :global(.source-zh) {
-    font-size: 28px;
+    font-size: var(--fs-3xl);
     line-height: 1.6;
   }
 
   .translation {
-    margin: 8px 0 0;
+    margin: var(--sp-2) 0 0;
     font-family: var(--font-display);
-    font-size: 19px;
+    font-size: var(--fs-xl);
     line-height: 1.45;
   }
 
@@ -389,7 +389,7 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding: 12px 14px;
+    padding: var(--sp-3) var(--sp-4);
     animation: rise 300ms var(--ease) both;
   }
 
@@ -412,20 +412,20 @@
   }
 
   .t-zh {
-    font-size: 28px;
+    font-size: var(--fs-3xl);
     line-height: 1.2;
   }
 
   .token :global(.reading) {
-    font-size: 13px;
+    font-size: var(--fs-sm);
   }
 
   .t-gloss {
-    font-size: 14px;
+    font-size: var(--fs-md);
   }
 
   .t-note {
-    font-size: 12px;
+    font-size: var(--fs-xs);
     color: var(--ink-2);
   }
 
@@ -442,12 +442,12 @@
     display: inline-flex;
     align-items: center;
     gap: 2px;
-    padding: 2px 8px;
+    padding: 2px var(--sp-2);
     border-radius: 999px;
     background: var(--seal-wash);
     color: var(--seal);
-    font-size: 12px;
-    font-weight: 700;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-strong);
   }
 
   .have {
@@ -455,7 +455,7 @@
   }
 
   .notes .row {
-    font-size: 15px;
+    font-size: var(--fs-base);
   }
 
   .wrap {
@@ -463,18 +463,18 @@
   }
 
   .tap {
-    margin-top: 16px;
-    padding: 16px 18px;
+    margin-top: var(--sp-4);
+    padding: var(--sp-4) var(--sp-5);
   }
 
   .hint {
     margin: 0 0 6px;
-    font-size: 13px;
+    font-size: var(--fs-sm);
     color: var(--ink-2);
   }
 
   .tap :global(.tap-text) {
-    font-size: 26px;
+    font-size: var(--fs-3xl);
     line-height: 1.7;
   }
 </style>

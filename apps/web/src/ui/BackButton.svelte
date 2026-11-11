@@ -42,12 +42,12 @@
     gap: 2px;
     min-height: 44px;
     max-width: min(70vw, 360px);
-    margin: -8px 0 4px -10px;
-    padding: 0 12px 0 4px;
+    margin: -8px 0 var(--sp-1) -10px;
+    padding: 0 var(--sp-3) 0 var(--sp-1);
     border-radius: var(--radius-pill);
     color: var(--jade-text);
-    font-size: 16px;
-    font-weight: 700;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-strong);
     text-decoration: none;
     transition: background-color var(--dur) var(--ease);
   }
@@ -69,6 +69,6 @@
   }
 
   .label.hanzi {
-    font-size: 18px;
+    font-size: var(--fs-lg);
   }
 </style>

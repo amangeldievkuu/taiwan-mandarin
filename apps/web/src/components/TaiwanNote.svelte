@@ -31,11 +31,11 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-    margin-top: 14px;
-    padding: 10px 14px;
+    margin-top: var(--sp-4);
+    padding: 10px var(--sp-4);
     border-radius: var(--radius-sm);
     background: var(--seal-wash);
-    font-size: 15px;
+    font-size: var(--fs-md);
     line-height: 1.45;
     color: var(--ink-2);
     text-align: left;
@@ -47,7 +47,7 @@
 
   .tw {
     display: flex;
-    gap: 8px;
+    gap: var(--sp-2);
     align-items: baseline;
   }
 
@@ -56,6 +56,6 @@
   }
 
   .mainland {
-    font-size: 13px;
+    font-size: var(--fs-sm);
   }
 </style>

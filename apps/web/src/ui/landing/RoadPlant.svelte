@@ -674,8 +674,8 @@
 
   .count {
     margin: 0;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-strong);
     color: var(--ink-3);
     white-space: nowrap;
   }

@@ -42,7 +42,7 @@
   .week {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 4px;
+    gap: var(--sp-1);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -57,13 +57,13 @@
 
   .name {
     font-family: var(--font-kai);
-    font-size: 13px;
+    font-size: var(--fs-sm);
     color: var(--ink-3);
   }
 
   .current .name {
     color: var(--ink);
-    font-weight: 700;
+    font-weight: var(--fw-strong);
   }
 
   .mark {

@@ -42,7 +42,7 @@
 
 <style>
   .level-row {
-    gap: 14px;
+    gap: var(--sp-3);
     min-height: 60px;
   }
 
@@ -55,12 +55,12 @@
   }
 
   .lv strong {
-    font-size: 15px;
-    font-weight: 700;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-strong);
   }
 
   .lv small {
-    font-size: 12px;
+    font-size: var(--fs-xs);
     color: var(--ink-3);
   }
 
@@ -83,7 +83,7 @@
   .row-value {
     min-width: 84px;
     text-align: right;
-    font-size: 14px;
+    font-size: var(--fs-md);
   }
 
   @media (max-width: 480px) {

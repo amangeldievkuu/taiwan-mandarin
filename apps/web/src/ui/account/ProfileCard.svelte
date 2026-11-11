@@ -70,14 +70,14 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding: 18px;
+    gap: var(--sp-3);
+    padding: var(--sp-5);
   }
 
   .who {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--sp-3);
     min-width: 0;
   }
 
@@ -110,19 +110,19 @@
     border-radius: 50%;
     background: var(--jade);
     color: var(--jade-ink);
-    font-weight: 800;
+    font-weight: var(--fw-heading);
   }
 
   .actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
   .error {
     flex-basis: 100%;
     margin: 0;
     color: var(--seal);
-    font-size: 14px;
+    font-size: var(--fs-md);
   }
 </style>

@@ -43,10 +43,10 @@
   label {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    margin-bottom: 12px;
-    font-size: 14px;
-    font-weight: 600;
+    gap: var(--sp-1);
+    margin-bottom: var(--sp-3);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-label);
   }
 
   .field {
@@ -58,11 +58,11 @@
     flex: 1;
     width: 100%;
     height: 46px;
-    padding: 0 68px 0 14px;
+    padding: 0 68px 0 var(--sp-4);
     border: 1px solid var(--rule-strong);
     border-radius: var(--radius-sm);
     background: var(--paper-raised);
-    font-size: 16px;
+    font-size: var(--fs-base);
     font-weight: 400;
     outline: none;
   }
@@ -79,14 +79,14 @@
     height: 32px;
     padding: 0 10px;
     border-radius: 8px;
-    font-size: 13px;
-    font-weight: 700;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-strong);
     color: var(--ink-2);
     background: var(--fill);
   }
 
   small {
-    font-weight: 500;
+    font-weight: var(--fw-text);
     color: var(--ink-3);
   }
 </style>

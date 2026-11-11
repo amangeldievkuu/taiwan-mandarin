@@ -618,7 +618,7 @@
 
 <style>
   .intro {
-    margin: -8px 0 8px;
+    margin: -8px 0 var(--sp-2);
     max-width: 60ch;
     color: var(--ink-2);
   }
@@ -633,17 +633,17 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 4px;
-    padding: 16px;
+    gap: var(--sp-1);
+    padding: var(--sp-4);
     text-align: left;
   }
 
   .s-zh {
-    font-size: 24px;
+    font-size: var(--fs-2xl);
   }
 
   .s-en {
-    font-size: 14px;
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
@@ -653,8 +653,8 @@
     z-index: 5;
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin: calc(-1 * var(--safe-top) - 20px) calc(-1 * var(--gutter)) 0;
+    gap: var(--sp-3);
+    margin: calc(-1 * var(--safe-top) - var(--sp-5)) calc(-1 * var(--gutter)) 0;
     padding: calc(var(--safe-top) + 10px) var(--gutter) 10px;
     background: color-mix(in srgb, var(--paper) 90%, transparent);
     backdrop-filter: blur(16px);
@@ -700,7 +700,7 @@
     place-items: center;
     width: 44px;
     height: 44px;
-    margin-right: 4px;
+    margin-right: var(--sp-1);
     border-radius: 50%;
     color: var(--ink-3);
     transition:
@@ -723,7 +723,7 @@
   }
 
   .chat-head strong {
-    font-size: 20px;
+    font-size: var(--fs-xl);
     font-weight: 400;
   }
 
@@ -743,8 +743,8 @@
   .thread {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    margin: 18px 0;
+    gap: var(--sp-3);
+    margin: var(--sp-5) 0;
     padding: 0;
     list-style: none;
   }
@@ -772,9 +772,9 @@
 
   .bubble {
     position: relative;
-    padding: 12px 16px;
+    padding: var(--sp-3) var(--sp-4);
     border-radius: 18px;
-    font-size: 21px;
+    font-size: var(--fs-xl);
     line-height: 1.55;
   }
 
@@ -792,12 +792,12 @@
   }
 
   .bubble :global(.bubble-zh) {
-    font-size: 21px;
+    font-size: var(--fs-xl);
   }
 
   .tools {
     display: flex;
-    gap: 4px;
+    gap: var(--sp-1);
     margin-top: 6px;
   }
 
@@ -805,9 +805,9 @@
     display: inline-flex;
     align-items: center;
     min-height: 28px;
-    padding: 0 8px;
+    padding: 0 var(--sp-2);
     border-radius: 6px;
-    font-size: 13px;
+    font-size: var(--fs-sm);
     color: var(--ink-2);
   }
 
@@ -817,7 +817,7 @@
 
   .reading-line {
     margin: 2px 0 0;
-    font-size: 15px;
+    font-size: var(--fs-md);
     line-height: 1.45;
   }
 
@@ -829,9 +829,9 @@
   }
 
   .translation {
-    margin: 4px 0 0;
+    margin: var(--sp-1) 0 0;
     font-family: var(--font-display);
-    font-size: 16px;
+    font-size: var(--fs-base);
     color: var(--ink-2);
   }
 
@@ -840,8 +840,8 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 6px;
-    margin-top: 8px;
-    font-size: 12px;
+    margin-top: var(--sp-2);
+    font-size: var(--fs-xs);
     color: var(--ink-2);
   }
 
@@ -852,31 +852,31 @@
   }
 
   .fix {
-    margin-left: 8px;
+    margin-left: var(--sp-2);
     padding: 1px 6px;
     border-radius: 4px;
     background: var(--seal);
     color: var(--seal-ink);
     font-family: var(--font-kai);
-    font-size: 13px;
+    font-size: var(--fs-sm);
     vertical-align: middle;
   }
 
   .correction {
     margin-top: 6px;
-    padding: 10px 14px;
+    padding: 10px var(--sp-4);
     border-radius: var(--radius-sm);
     background: var(--seal-wash);
     text-align: left;
   }
 
   .correction :global(.corr-zh) {
-    font-size: 19px;
+    font-size: var(--fs-xl);
   }
 
   .correction p {
-    margin: 4px 0 0;
-    font-size: 14px;
+    margin: var(--sp-1) 0 0;
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
@@ -884,24 +884,24 @@
     display: flex;
     align-self: flex-start;
     gap: 5px;
-    padding: 18px 18px;
+    padding: var(--sp-5) var(--sp-5);
   }
 
   .typing-label {
-    margin: 6px 0 0 4px;
-    font-size: 13px;
+    margin: 6px 0 0 var(--sp-1);
+    font-size: var(--fs-sm);
     color: var(--ink-3);
   }
 
   .history-loading {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: var(--sp-3);
   }
 
   .ghost {
     width: min(420px, 80%);
-    padding: 14px 16px;
+    padding: var(--sp-4) var(--sp-4);
     border: 1px solid var(--rule);
     border-radius: 18px;
     border-bottom-left-radius: 6px;
@@ -941,8 +941,8 @@
     position: sticky;
     bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 8px);
     display: flex;
-    gap: 8px;
-    padding: 8px;
+    gap: var(--sp-2);
+    padding: var(--sp-2);
     border: 1px solid var(--rule-strong);
     border-radius: 999px;
     background: var(--paper-raised);
@@ -964,10 +964,10 @@
   .composer input {
     flex: 1;
     min-width: 0;
-    padding: 0 12px;
+    padding: 0 var(--sp-3);
     border: 0;
     background: transparent;
-    font-size: 18px;
+    font-size: var(--fs-lg);
     outline: none;
   }
 
@@ -1001,7 +1001,7 @@
   .confirm-end {
     position: sticky;
     bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 8px);
-    padding: 14px 16px;
+    padding: var(--sp-4) var(--sp-4);
     box-shadow: var(--shadow-3);
   }
 
@@ -1013,7 +1013,7 @@
 
   .confirm-end p {
     margin: 0;
-    font-size: 15px;
+    font-size: var(--fs-base);
     color: var(--ink-2);
   }
 
@@ -1024,61 +1024,61 @@
   .confirm-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
-    margin-top: 12px;
+    gap: var(--sp-2);
+    margin-top: var(--sp-3);
   }
 
   /* The summary of a finished conversation. */
   .summary {
-    margin-top: 4px;
-    padding: 20px;
+    margin-top: var(--sp-1);
+    padding: var(--sp-5);
   }
 
   .summary-head {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: var(--sp-3);
   }
 
   .summary-head strong {
     font-family: var(--font-display);
-    font-size: 22px;
-    font-weight: 800;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-heading);
     letter-spacing: -0.01em;
   }
 
   .facts {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-    margin: 18px 0 0;
+    gap: var(--sp-2);
+    margin: var(--sp-5) 0 0;
   }
 
   .facts div {
     display: flex;
     flex-direction: column-reverse;
-    padding: 10px 12px;
+    padding: 10px var(--sp-3);
     border-radius: var(--radius-sm);
     background: var(--fill);
   }
 
   .facts dt {
-    font-size: 13px;
+    font-size: var(--fs-sm);
     color: var(--ink-2);
   }
 
   .facts dd {
     margin: 0;
     font-family: var(--font-display);
-    font-size: 26px;
-    font-weight: 800;
+    font-size: var(--fs-3xl);
+    font-weight: var(--fw-heading);
     line-height: 1.15;
     font-variant-numeric: tabular-nums;
   }
 
   .facts small {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-label);
     color: var(--ink-3);
   }
 
@@ -1086,15 +1086,15 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    margin: 20px 0 4px;
+    gap: var(--sp-3);
+    margin: var(--sp-5) 0 var(--sp-1);
   }
 
   .words-head h3 {
     margin: 0;
     font-family: var(--font-display);
-    font-size: 16px;
-    font-weight: 800;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-heading);
   }
 
   .words-head .zh {
@@ -1113,8 +1113,8 @@
   .words li {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 8px 0;
+    gap: var(--sp-3);
+    padding: var(--sp-2) 0;
     border-top: 1px solid var(--rule);
   }
 
@@ -1122,9 +1122,9 @@
     display: flex;
     flex: 1;
     align-items: center;
-    gap: 14px;
+    gap: var(--sp-3);
     min-width: 0;
-    padding: 4px;
+    padding: var(--sp-1);
     margin-left: -4px;
     border-radius: var(--radius-sm);
     text-align: left;
@@ -1139,7 +1139,7 @@
 
   .word-zh {
     flex: none;
-    font-size: 26px;
+    font-size: var(--fs-3xl);
     line-height: 1.2;
   }
 
@@ -1147,7 +1147,7 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
-    font-size: 14px;
+    font-size: var(--fs-md);
   }
 
   .gloss {
@@ -1161,9 +1161,9 @@
     display: inline-flex;
     flex: none;
     align-items: center;
-    gap: 4px;
-    font-size: 13px;
-    font-weight: 700;
+    gap: var(--sp-1);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-strong);
     color: var(--jade-text);
   }
 
@@ -1172,18 +1172,18 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    margin-top: 18px;
+    gap: var(--sp-3);
+    margin-top: var(--sp-5);
   }
 
   .usage {
-    font-size: 13px;
+    font-size: var(--fs-sm);
     color: var(--ink-3);
   }
 
   .hint {
-    margin: 10px 4px 0;
-    font-size: 12px;
+    margin: 10px var(--sp-1) 0;
+    font-size: var(--fs-xs);
     color: var(--ink-3);
   }
 
@@ -1191,7 +1191,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px 12px;
+    gap: var(--sp-2) var(--sp-3);
     color: var(--seal);
   }
 

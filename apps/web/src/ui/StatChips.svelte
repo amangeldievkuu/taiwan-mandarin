@@ -51,13 +51,13 @@
     align-items: center;
     gap: 6px;
     height: 38px;
-    padding: 0 12px 0 9px;
+    padding: 0 var(--sp-3) 0 9px;
     border-radius: var(--radius-pill);
     border: 1px solid var(--rule-strong);
     background: var(--paper-raised);
     box-shadow: var(--shadow-1);
-    font-size: 16px;
-    font-weight: 800;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-heading);
     transition: transform var(--dur-4) var(--ease-spring);
   }
 
@@ -125,7 +125,7 @@
 
   .spark {
     display: inline-block;
-    font-size: 15px;
+    font-size: var(--fs-base);
     color: var(--gold);
     text-shadow: 0 0 1px var(--gold-edge);
     animation: drip var(--dur-4) var(--ease-spring);

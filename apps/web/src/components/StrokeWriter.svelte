@@ -448,7 +448,7 @@
     display: grid;
     place-items: center;
     margin: 0;
-    font-size: 15px;
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
@@ -461,9 +461,9 @@
 
   .unverified {
     margin: 10px 0 0;
-    padding: 2px 8px;
+    padding: 2px var(--sp-2);
     border-radius: 6px;
-    font-size: 12px;
+    font-size: var(--fs-xs);
     line-height: 18px;
     color: var(--hard);
     background: color-mix(in srgb, var(--hard) 12%, transparent);
@@ -473,7 +473,7 @@
   .tools {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--sp-2);
     width: 100%;
     margin: 6px 0;
   }
@@ -509,14 +509,14 @@
     flex: 1;
     min-height: 20px;
     margin: 0;
-    font-size: 15px;
+    font-size: var(--fs-md);
     text-align: center;
     color: var(--ink-2);
   }
 
   .actions {
     display: flex;
-    gap: 8px;
+    gap: var(--sp-2);
     width: 100%;
   }
 
@@ -528,8 +528,8 @@
     gap: 6px;
     min-height: 44px;
     border-radius: var(--radius);
-    font-size: 15px;
-    font-weight: 600;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-label);
     color: var(--seal);
     background: color-mix(in srgb, var(--seal) 10%, transparent);
   }
@@ -557,7 +557,7 @@
     max-width: none;
     max-height: none;
     margin: 0;
-    padding: calc(var(--safe-top) + 16px) calc(env(safe-area-inset-right, 0px) + 16px)
+    padding: calc(var(--safe-top) + var(--sp-4)) calc(env(safe-area-inset-right, 0px) + var(--sp-4))
       calc(var(--safe-bottom) + 16px) calc(env(safe-area-inset-left, 0px) + 16px);
     border: 0;
     color: var(--ink);
@@ -571,7 +571,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: var(--sp-4);
   }
 
   /* Without the View Transitions API, full screen still fades in. */

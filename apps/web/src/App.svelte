@@ -263,7 +263,7 @@
     display: grid;
     place-content: center;
     justify-items: center;
-    gap: 20px;
+    gap: var(--sp-5);
     min-height: 100dvh;
     text-align: center;
     color: var(--ink-2);

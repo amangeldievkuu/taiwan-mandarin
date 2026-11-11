@@ -57,6 +57,8 @@
   --shadow: var(--shadow-2);
   --scrim: rgb(16 18 20 / 0.4);
   --grid-line: rgb(200 16 46 / 0.12);
+  /* A word new to the learner, dotted under it in the reader. */
+  --new-mark: color-mix(in srgb, var(--seal) 50%, transparent);
   /* The faint character to trace in the stroke writer: hex, since hanzi-writer reads no other form */
   --stroke-outline: #cfd3d8;
 
@@ -73,17 +75,49 @@
   --font-kai: 'LXGW WenKai TC', 'Kaiti TC', 'BiauKai', 'Noto Serif TC', serif;
   --font-hanzi: var(--font-kai);
 
+  /* Type: one scale for all text. Hanzi shown as pictures (a card's word, seals, the big glyphs
+     behind tiles) are sized on their own. */
+  --fs-2xs: 11px;
   --fs-xs: 12px;
-  --fs-sm: 14px;
-  --fs-md: 16px;
+  --fs-sm: 13px;
+  --fs-md: 14px;
+  --fs-base: 16px;
   --fs-lg: 18px;
-  --fs-xl: 22px;
-  --fs-2xl: 28px;
-  --fs-3xl: clamp(30px, 4.4vw, 40px);
+  --fs-xl: 20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 28px;
+  --fs-title: clamp(30px, 4.4vw, 40px);
   --fs-hero: clamp(44px, 8vw, 64px);
+
+  --fw-text: 500;
+  --fw-label: 600;
+  --fw-strong: 700;
+  --fw-heading: 800;
+
+  --lh-tight: 1.15;
+  --lh-snug: 1.35;
+  --lh-body: 1.5;
+
+  /* Space: a 4 px grid. Cards pad by --card-pad, stacked cards sit --stack-gap apart and sections
+     --section-gap. */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 28px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-14: 56px;
+  --card-pad: var(--sp-5);
+  --stack-gap: var(--sp-3);
+  --section-gap: var(--sp-8);
 
   --radius-xs: 6px;
   --radius-sm: 10px;
+  --radius-md: 12px;
   --radius: 16px;
   --radius-lg: 20px;
   --radius-xl: 28px;
@@ -295,6 +329,12 @@
   }
 }
 
+@media (max-width: 420px) {
+  :root {
+    --card-pad: var(--sp-4);
+  }
+}
+
 @media (min-width: 700px) {
   :root {
     --rail-w: 84px;
@@ -354,9 +394,9 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-ui);
-  font-size: var(--fs-md);
-  font-weight: 500;
-  line-height: 1.5;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-text);
+  line-height: var(--lh-body);
   -webkit-font-smoothing: antialiased;
   font-feature-settings: 'kern';
   overflow-x: hidden;
@@ -420,14 +460,14 @@ a {
   width: 100%;
   max-width: calc(var(--content-w) + 2 * var(--gutter));
   margin: 0 auto;
-  padding: calc(var(--safe-top) + 20px) var(--gutter)
-    calc(var(--tabbar-h) + var(--safe-bottom) + 32px);
+  padding: calc(var(--safe-top) + var(--sp-5)) var(--gutter)
+    calc(var(--tabbar-h) + var(--safe-bottom) + var(--sp-8));
 }
 
 @media (min-width: 700px) {
   .page {
-    padding-bottom: 48px;
-    padding-top: 36px;
+    padding-bottom: var(--sp-12);
+    padding-top: var(--sp-10);
   }
 }
 
@@ -439,14 +479,14 @@ a {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 22px;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-6);
 }
 
 .eyebrow {
   margin: 0;
   font-size: var(--fs-xs);
-  font-weight: 700;
+  font-weight: var(--fw-strong);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink-3);
@@ -455,10 +495,10 @@ a {
 .title {
   margin: 2px 0 0;
   font-family: var(--font-display);
-  font-size: var(--fs-3xl);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
+  font-size: var(--fs-title);
+  font-weight: var(--fw-heading);
+  letter-spacing: -0.01em;
+  line-height: var(--lh-tight);
 }
 
 .title .zh {
@@ -469,25 +509,32 @@ a {
   margin-right: 0.3em;
 }
 
+/* A section's heading: its name with the Chinese beside it; an action (All levels ›) goes to the
+   right. */
 .section-title {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  justify-content: space-between;
-  margin: 32px 0 12px;
+  margin: var(--section-gap) 0 var(--sp-3);
   font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 800;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-heading);
   letter-spacing: -0.01em;
+  line-height: var(--lh-tight);
   color: var(--ink);
 }
 
 .section-title .zh {
   font-family: var(--font-kai);
-  font-size: 16px;
+  font-size: var(--fs-base);
   font-weight: 400;
   letter-spacing: 0.1em;
   color: var(--ink-3);
-  margin-left: 8px;
+  margin-left: var(--sp-2);
+}
+
+.section-title > :is(a, button):last-child {
+  margin-left: auto;
 }
 
 /* ---------- Surfaces ---------- */
@@ -539,10 +586,10 @@ a {
 .row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
   width: 100%;
   min-height: 52px;
-  padding: 10px 16px;
+  padding: 10px var(--sp-4);
   text-align: left;
   text-decoration: none;
 }
@@ -566,7 +613,7 @@ a.row {
 
 .row-sub {
   display: block;
-  font-size: var(--fs-sm);
+  font-size: var(--fs-md);
   color: var(--ink-2);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -590,9 +637,9 @@ a.row {
 }
 
 .footnote {
-  margin: 8px 4px 0;
-  font-size: 13px;
-  line-height: 1.45;
+  margin: var(--sp-2) var(--sp-1) 0;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-snug);
   color: var(--ink-2);
 }
 
@@ -608,15 +655,15 @@ a.row {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--sp-2);
   min-height: 48px;
-  padding: 0 22px;
-  border-radius: 12px;
+  padding: 0 var(--sp-6);
+  border-radius: var(--radius-md);
   background: linear-gradient(var(--btn-sheen), transparent) var(--btn-face);
   color: var(--btn-ink);
   font-family: var(--font-display);
-  font-size: var(--fs-md);
-  font-weight: 700;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-strong);
   letter-spacing: 0.005em;
   line-height: 1;
   text-decoration: none;
@@ -712,9 +759,9 @@ a.row {
 
 .btn.small {
   min-height: 36px;
-  padding: 0 14px;
-  border-radius: 10px;
-  font-size: var(--fs-sm);
+  padding: 0 var(--sp-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-md);
 }
 
 .icon {
@@ -731,14 +778,14 @@ a.row {
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   min-height: 34px;
-  padding: 0 13px;
+  padding: 0 var(--sp-3);
   border: 1px solid var(--rule-strong);
   border-radius: var(--radius-pill);
   background: var(--paper-raised);
-  font-size: var(--fs-sm);
-  font-weight: 600;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-label);
   white-space: nowrap;
   transition:
     background-color var(--dur) var(--ease),
@@ -779,7 +826,7 @@ a.row {
   background: var(--seal);
   color: var(--seal-ink);
   font-family: var(--font-kai);
-  font-size: 13px;
+  font-size: var(--fs-sm);
   line-height: 1;
 }
 
@@ -790,8 +837,8 @@ a.row {
   padding: 0 8px;
   border-radius: var(--radius-pill);
   background: var(--fill);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-strong);
   letter-spacing: 0.03em;
   color: var(--ink-2);
   white-space: nowrap;
@@ -802,7 +849,7 @@ a.row {
   padding: 1px 8px;
   border-radius: var(--radius-pill);
   font-family: var(--font-kai);
-  font-size: 12px;
+  font-size: var(--fs-xs);
   color: var(--seal);
   background: var(--seal-wash);
 }
@@ -824,11 +871,11 @@ a.row {
 .search input {
   width: 100%;
   height: 50px;
-  padding: 0 16px 0 46px;
+  padding: 0 var(--sp-4) 0 46px;
   border: 1px solid var(--rule-strong);
   border-radius: var(--radius-pill);
   background: var(--paper-raised);
-  font-size: 17px;
+  font-size: var(--fs-lg);
   outline: none;
   box-shadow: var(--shadow-1);
   transition:
@@ -842,7 +889,7 @@ a.row {
 }
 
 .empty {
-  padding: 48px 16px;
+  padding: var(--sp-12) var(--sp-4);
   text-align: center;
   color: var(--ink-2);
 }
@@ -851,7 +898,7 @@ a.row {
   display: block;
   font-size: 44px;
   color: var(--ink-3);
-  margin-bottom: 8px;
+  margin-bottom: var(--sp-2);
 }
 
 kbd {
@@ -864,8 +911,8 @@ kbd {
   border-bottom-width: 2px;
   border-radius: 5px;
   font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-strong);
   color: var(--ink-2);
 }
 

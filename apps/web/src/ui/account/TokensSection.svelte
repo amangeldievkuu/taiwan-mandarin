@@ -115,12 +115,12 @@
 
 <style>
   .block {
-    padding: 18px;
+    padding: var(--sp-5);
   }
 
   .block p {
-    margin: 0 0 12px;
-    font-size: 14px;
+    margin: 0 0 var(--sp-3);
+    font-size: var(--fs-md);
     color: var(--ink-2);
   }
 
@@ -132,34 +132,34 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-    padding: 10px 12px;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-3);
+    padding: 10px var(--sp-3);
     border-radius: var(--radius-sm);
     background: var(--seal-wash);
-    font-size: 14px;
+    font-size: var(--fs-md);
   }
 
   code {
     font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-    font-size: 13px;
+    font-size: var(--fs-sm);
     word-break: break-all;
   }
 
   .token-form {
     display: flex;
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
   .token-form input {
     flex: 1;
     min-width: 0;
     height: 38px;
-    padding: 0 12px;
+    padding: 0 var(--sp-3);
     border: 1px solid var(--rule-strong);
     border-radius: var(--radius-sm);
     background: var(--paper-raised);
-    font-size: 15px;
+    font-size: var(--fs-base);
     outline: none;
   }
 
@@ -168,13 +168,13 @@
   }
 
   .error {
-    margin: 12px 0 0;
+    margin: var(--sp-3) 0 0;
     color: var(--seal);
-    font-size: 14px;
+    font-size: var(--fs-md);
   }
 
   .tokens {
-    margin: 12px 0 0;
+    margin: var(--sp-3) 0 0;
     padding: 0;
     list-style: none;
   }
@@ -183,7 +183,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 8px 0;
+    padding: var(--sp-2) 0;
     border-top: 1px solid var(--rule);
   }
 
