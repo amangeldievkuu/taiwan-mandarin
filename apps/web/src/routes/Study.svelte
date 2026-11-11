@@ -258,7 +258,7 @@
           onclick={() => (modeOpen = !modeOpen)}
         >
           <span class="hanzi" lang="zh-Hant-TW">{MODE_ZH[mode]}</span>
-          {modeInfo[mode].name}
+          <span class="mode-name">{modeInfo[mode].name}</span>
           <svg class="chevron down" viewBox="0 0 8 14" aria-hidden="true"
             ><path d="M1 5l3 3 3-3" /></svg
           >
@@ -500,15 +500,19 @@
     }
   }
 
+  /* The mode and the counters share a row while they fit; when a long mode name (Узнавание)
+     doesn't, the counters drop to a row of their own, on the right. */
   .top {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: var(--sp-3);
+    gap: var(--sp-2) var(--sp-3);
   }
 
   .modes {
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
@@ -517,6 +521,15 @@
 
   .mode-inline {
     display: none;
+  }
+
+  /* Phones: the hint takes the column's width without widening it, so only the mode button
+     decides whether the counters still fit beside it. */
+  @media (max-width: 699px) {
+    .mode-hint {
+      width: 0;
+      min-width: 100%;
+    }
   }
 
   .modes :global(.segmented) {
@@ -545,14 +558,22 @@
     }
   }
 
-  /* The phone's mode menu */
+  /* The phone's mode menu. On the narrowest phones a long name gives way to the counters. */
   .mode-pick {
     position: relative;
+    max-width: 100%;
   }
 
   .mode-chip {
     gap: 6px;
+    max-width: 100%;
     font-weight: var(--fw-strong);
+  }
+
+  .mode-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .mode-chip .hanzi {
@@ -633,6 +654,7 @@
     align-items: center;
     gap: 6px;
     flex: none;
+    margin-left: auto;
   }
 
   .session-xp,
