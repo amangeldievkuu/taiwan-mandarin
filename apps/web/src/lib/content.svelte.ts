@@ -129,8 +129,12 @@ class Content {
         if (!this.loaded.includes(level)) this.loaded = [...this.loaded, level];
         this.revision++;
       })();
-      promise.catch(() => this.pending.delete(level));
-      this.pending.set(level, promise);
+      // Tried again next time; a load started after a language switch is not this one.
+      const mine = promise;
+      mine.catch(() => {
+        if (this.pending.get(level) === mine) this.pending.delete(level);
+      });
+      this.pending.set(level, mine);
     }
     return promise;
   }
@@ -155,8 +159,11 @@ class Content {
         if (!translated) for (const list of Object.values(shard)) for (const e of list) e.en = 1;
         return shard;
       });
-      promise.catch(() => this.shards.delete(index));
-      this.shards.set(index, promise);
+      const mine = promise;
+      mine.catch(() => {
+        if (this.shards.get(index) === mine) this.shards.delete(index);
+      });
+      this.shards.set(index, mine);
     }
     return promise;
   }
@@ -212,12 +219,12 @@ class Content {
     return promise;
   }
 
-  /** A reader's title, once the readers have loaded (for back buttons). */
   /** A reader, once the readers are loaded. */
   reader(id: string): Reader | undefined {
     return this.readerList?.find((r) => r.id === id);
   }
 
+  /** A reader's title, once the readers have loaded (for back buttons). */
   readerTitle(id: string): string | undefined {
     return this.reader(id)?.title;
   }

@@ -83,12 +83,19 @@
   let resetting = $state(false);
   let resetError = $state<string | null>(null);
 
-  /** Signed in, the account's copy goes first, or the next sync would bring everything back. */
+  /**
+   * Signed in, the account's copy goes first, or the next sync would bring everything back. What
+   * this device hasn't sent yet goes before that: a sync due in a few seconds (or one on its way)
+   * would otherwise send it after the delete, and it would come back.
+   */
   async function reset() {
     resetting = true;
     resetError = null;
     try {
-      if (account.user) await api('/v1/me/progress', { method: 'DELETE' });
+      if (account.user) {
+        await account.sync();
+        await api('/v1/me/progress', { method: 'DELETE' });
+      }
       await store.resetProgress();
       confirmReset = false;
     } catch (e) {

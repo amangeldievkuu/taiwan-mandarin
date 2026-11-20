@@ -27,6 +27,8 @@
   import { companion } from './lib/companion.svelte';
   import { locale, t } from './lib/i18n/index.svelte';
   import { feedback } from './lib/feedback.svelte';
+  import { letterOf } from './lib/keys';
+  import { lookup } from './lib/lookup.svelte';
   import { pwa } from './lib/pwa.svelte';
   import { reminders } from './lib/reminders.svelte';
   import { router, viewKey } from './lib/router.svelte';
@@ -134,17 +136,20 @@
     }
   });
 
-  // Keyboard navigation (desktop): g then t/s/p/c/r/d/m.
+  // Keyboard navigation (desktop): g then t/s/p/c/r/d/m, by key so a Russian layout works too.
+  // Heard before the page's own keys (capture), so `g r` on Study doesn't also replay the word.
   let pendingG = false;
   function onKey(e: KeyboardEvent) {
     const target = e.target as HTMLElement | null;
     if (
+      lookup.open ||
       target?.closest('input, textarea, select, [contenteditable]') ||
       e.metaKey ||
       e.ctrlKey ||
       e.altKey
     )
       return;
+    const letter = letterOf(e);
     if (pendingG) {
       pendingG = false;
       const to = {
@@ -155,14 +160,15 @@
         r: '/read',
         d: '/dict',
         m: '/me',
-      }[e.key];
+      }[letter];
       if (to) {
         e.preventDefault();
+        e.stopPropagation();
         router.go(to);
       }
       return;
     }
-    if (e.key === 'g') {
+    if (letter === 'g') {
       pendingG = true;
       setTimeout(() => (pendingG = false), 1200);
     } else if (e.key === '/' && router.route.name !== 'study') {
@@ -172,7 +178,7 @@
   }
 </script>
 
-<svelte:window onkeydown={onKey} />
+<svelte:window onkeydowncapture={onKey} />
 
 {#if store.ready}
   {#if !bare}<Nav />{/if}

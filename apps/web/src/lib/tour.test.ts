@@ -58,4 +58,12 @@ describe('the tour timeline', () => {
       expect(frameAt(sceneStart(i) + f.t)).toEqual(f);
     });
   });
+
+  it('stops on the last scene, not back at the first, a moment before a round ends', () => {
+    const last = SCENES.length - 1;
+    const end = frameAt(TOUR_MS * 2 - 1);
+    expect(end.scene).toBe(last);
+    expect(end.beat).toBe((SCENES[last]?.beats.length ?? 0) - 1);
+    expect(frameAt(TOUR_MS * 2).scene).toBe(0);
+  });
 });

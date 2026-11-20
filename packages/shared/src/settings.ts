@@ -25,7 +25,7 @@ export interface Settings {
   looks: LookChoices;
   /** Time of day ("HH:MM") for the daily reminder, on devices that turned it on. */
   reminderTime: string;
-  /** Lessons of the Zhuyin course finished, by id (apps/web/src/lib/zhuyin/course.ts). */
+  /** Lessons of the Zhuyin course finished, by id (zhuyin-course.ts). */
   zhuyin: string[];
 }
 

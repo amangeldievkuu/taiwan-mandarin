@@ -46,6 +46,7 @@
   import { store } from '../lib/store.svelte';
   import { prefetchStrokes } from '../lib/strokes';
   import { isHan, maskOwnChars } from '../lib/study-modes';
+  import { keyboardFocused, letterOf } from '../lib/keys';
   import { toasts } from '../lib/toast.svelte';
   import { cardIn, cardOut, flipIn, rise } from '../lib/transitions';
 
@@ -109,6 +110,8 @@
   let halfway = false;
   /** Right answers in a row (anything but "again"), for 墨 to cheer. */
   let run = 0;
+  /** The run before the last answer, for Undo. */
+  let runBefore = 0;
   let glyphs = $state<HTMLElement>();
   let pressed = $state<string | null>(null);
   /** The phone's mode menu is open. */
@@ -171,6 +174,7 @@
     feedback.buzz('light');
     store.rate(g);
     if (from) celebrate.float(from, `+${gained}`);
+    runBefore = run;
     run = g === Rating.Again ? 0 : run + 1;
     if (!store.queue.length) companion.say('finished');
     else if (COMBOS.includes(run)) companion.say('combo', run);
@@ -189,7 +193,7 @@
     if (!store.canUndo || !(await store.undo())) return;
     feedback.play('toggle');
     feedback.buzz('light');
-    run = Math.max(0, run - 1);
+    run = runBefore;
     announcement = '';
     await tick();
     announcement = t().study.undone;
@@ -206,9 +210,11 @@
   function onkeydown(event: KeyboardEvent) {
     if (lookup.open) return;
     if (event.target instanceof HTMLElement && event.target.closest('input, textarea')) return;
+    // Letters by key, so they work on a Russian layout too.
+    const letter = letterOf(event);
     // U, or Ctrl/Cmd+Z as elsewhere.
     const command = event.metaKey || event.ctrlKey;
-    const undoKey = command ? event.key.toLowerCase() === 'z' : event.key === 'u';
+    const undoKey = command ? letter === 'z' : letter === 'u';
     if (store.canUndo && !modeOpen && undoKey && !event.altKey && !event.shiftKey) {
       event.preventDefault();
       press('undo');
@@ -221,6 +227,9 @@
       return;
     }
     if (!store.revealed && (event.key === ' ' || event.key === 'Enter')) {
+      // A control reached with the keyboard (Undo, the mic, a mode) does what it says; after a
+      // click, Space still shows the answer.
+      if (keyboardFocused(event.target, '.show')) return;
       event.preventDefault();
       press('show');
       void reveal();
@@ -228,10 +237,10 @@
     }
     if (mode === 'speak' && !store.revealed) {
       // M records; R would say the reading this card asks for.
-      if (event.key === 'm') void speakFace?.toggle();
+      if (letter === 'm') void speakFace?.toggle();
       return;
     }
-    if (event.key === 'r' && word) speak(word.hanzi);
+    if (letter === 'r' && word) speak(word.hanzi);
     if (store.revealed) {
       const g = GRADES.find((x) => GRADE_INFO[x].key === event.key);
       if (g) {

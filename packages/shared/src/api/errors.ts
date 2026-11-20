@@ -38,6 +38,7 @@ export const ERRORS = {
   conversationEnded: 'This conversation has ended.',
   accountFull: 'This account has reached its storage limit, so this device can no longer sync.',
   deckFull: 'Your deck is full ({limit} words). Study some of them first.',
+  tooManyTokens: 'You have {limit} access tokens. Revoke one before creating another.',
   // Memory model (personal FSRS parameters)
   fsrsBusy: 'The scheduler is already being fitted to your reviews. Wait for it to finish.',
   fsrsTooFewReviews: 'Fitting needs {need} reviews; you have {have}.',

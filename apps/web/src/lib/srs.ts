@@ -94,6 +94,19 @@ export function shouldRequeue(grade: Grade, next: Card, now: Date): boolean {
   return isLearning(next) && next.due.getTime() - now.getTime() <= LEARN_AHEAD_MS;
 }
 
+/**
+ * The session's queue after it is built again mid-session (a sync, another tab, the app coming
+ * back): the cards still to study keep their order, so the one on screen stays and a requeued one
+ * keeps its place. Cards no longer due (answered on another device) drop out; ones that became
+ * due, or were added, come after them.
+ */
+export function mergeQueue(current: readonly string[], rebuilt: readonly string[]): string[] {
+  const next = new Set(rebuilt);
+  const kept = current.filter((id) => next.has(id));
+  const known = new Set(kept);
+  return [...kept, ...rebuilt.filter((id) => !known.has(id))];
+}
+
 /** Removes the head of the queue and, if requeued, reinserts it a few cards later. */
 export function advanceQueue(queue: readonly string[], requeue: boolean): string[] {
   const [head, ...rest] = queue;

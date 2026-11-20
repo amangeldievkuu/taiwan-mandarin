@@ -25,14 +25,23 @@
   import { canSpeak, speak, stopSpeaking } from '../lib/speech';
   import { store } from '../lib/store.svelte';
   import { buildQuiz, examplesFor, type Question } from '../lib/zhuyin/quiz';
+  import { keyboardFocused, letterOf } from '../lib/keys';
+  import { lookup } from '../lib/lookup.svelte';
+  import { untrack } from 'svelte';
 
   /** A question, and whether it is the second go at one answered wrong. */
   type Asked = Question & { retry?: boolean };
 
   // Examples and questions come from Novice 1 and 2.
-  $effect(() => void content.ensureLevels(['N1', 'N2']));
   const words: Word[] = $derived([...content.level('N1'), ...content.level('N2')]);
   const wordsReady = $derived(content.isLoaded('N1'));
+  /** The word lists couldn't load (offline before they were ever saved): letters still work. */
+  let wordsFailed = $state(false);
+  function loadWords() {
+    wordsFailed = false;
+    void content.ensureLevels(['N1', 'N2']).then(() => (wordsFailed = !content.isLoaded('N1')));
+  }
+  $effect(() => untrack(loadWords));
 
   const done = $derived(store.settings.zhuyin ?? []);
 
@@ -49,6 +58,8 @@
   let advance: ReturnType<typeof setTimeout> | undefined;
 
   const question = $derived(questions[at]);
+  /** Through the lesson's own questions: the ones missed come back at the end, at a full bar. */
+  const progress = $derived(total ? Math.min(at, total) / total : 0);
   const letters = $derived(lesson?.letters ?? []);
   const letter = $derived(letters[card]);
 
@@ -135,6 +146,28 @@
     }
   }
 
+  /** Desktop keys in the quiz: 1–4 answer, Enter or Space goes on, R plays it again. */
+  function onkeydown(event: KeyboardEvent) {
+    const q = question;
+    if (step !== 'quiz' || !q || lookup.open || event.metaKey || event.ctrlKey || event.altKey)
+      return;
+    const enter = event.key === 'Enter' || event.key === ' ';
+    // A button reached with the keyboard is pressed as usual.
+    if (enter && keyboardFocused(event.target)) return;
+    const n = Number(event.key);
+    if (chosen === null && Number.isInteger(n) && n >= 1) {
+      const option = q.options[n - 1];
+      if (option === undefined) return;
+      event.preventDefault();
+      choose(option);
+    } else if (chosen !== null && enter) {
+      event.preventDefault();
+      next();
+    } else if (letterOf(event) === 'r' && q.kind !== 'pinyin') {
+      play(q);
+    }
+  }
+
   /** A word's Zhuyin, split so the lesson's letter can be marked. */
   const marked = (zhuyin: string, mark: string) =>
     [...zhuyin].map((char) => ({ char, on: char === mark }));
@@ -147,6 +180,8 @@
         ? 'ˉ ˊ ˇ ˋ ˙'
         : 'ㄋㄧˇ ㄏㄠˇ';
 </script>
+
+<svelte:window {onkeydown} />
 
 <div class="page zhuyin">
   {#if !lesson}
@@ -228,7 +263,7 @@
                 {/each}
               </ul>
             {/if}
-          {:else}
+          {:else if !wordsFailed}
             <p class="soft">{t().zhuyin.loading}</p>
           {/if}
         </article>
@@ -244,7 +279,12 @@
               {t().zhuyin.next}
             </button>
           {:else}
-            <button type="button" class="btn primary" disabled={!wordsReady} onclick={practise}>
+            <button
+              type="button"
+              class="btn primary"
+              disabled={!wordsReady && !wordsFailed}
+              onclick={practise}
+            >
               {t().zhuyin.practise}
             </button>
           {/if}
@@ -267,6 +307,11 @@
           <button type="button" class="btn primary" onclick={practise}>{t().zhuyin.practise}</button
           >
         </div>
+      {:else if wordsFailed}
+        <p class="soft" role="alert">{t().level.loadFailed}</p>
+        <div class="actions">
+          <button type="button" class="btn quiet" onclick={loadWords}>{t().app.tryAgain}</button>
+        </div>
       {:else}
         <div class="actions">
           <button type="button" class="btn primary" disabled={!wordsReady} onclick={practise}>
@@ -276,9 +321,10 @@
       {/if}
     {:else if step === 'quiz' && question}
       <div class="bar" aria-hidden="true">
-        <span style:transform="translateX({(at / questions.length) * 100 - 100}%)"></span>
+        <span style:transform="translateX({progress * 100 - 100}%)"></span>
       </div>
       <section class="quiz sheet" aria-live="polite">
+        {#if question.retry}<p class="once-more">{t().zhuyin.onceMore}</p>{/if}
         <p class="prompt">{t().zhuyin.ask[question.kind]}</p>
         {#if question.kind === 'pinyin'}
           <div class="big hanzi" lang="zh-Hant-TW">{question.letter}</div>
@@ -289,7 +335,7 @@
           </button>
         {/if}
         <div class="options" class:wide={question.kind === 'word'}>
-          {#each question.options as option (option)}
+          {#each question.options as option, i (option)}
             <button
               type="button"
               class="option"
@@ -301,6 +347,7 @@
               {#if question.kind === 'pinyin'}{option}{:else}<span class="hanzi" lang="zh-Hant-TW"
                   >{option}</span
                 >{/if}
+              {#if i < 9}<kbd class="key" aria-hidden="true">{i + 1}</kbd>{/if}
             </button>
           {/each}
         </div>
@@ -576,6 +623,31 @@
   }
   .option:disabled {
     cursor: default;
+  }
+  .option {
+    position: relative;
+  }
+  .once-more {
+    margin: 0;
+    padding: 0 9px;
+    border-radius: var(--radius-pill);
+    background: var(--fill);
+    color: var(--ink-2);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-heading);
+    line-height: 22px;
+  }
+  /* Keycaps only where there is a keyboard, as in Study. */
+  .key {
+    display: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .key {
+      display: inline-grid;
+      position: absolute;
+      top: 6px;
+      right: 6px;
+    }
   }
   .feedback {
     display: flex;

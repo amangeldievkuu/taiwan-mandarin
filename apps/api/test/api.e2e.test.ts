@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { MAX_API_TOKENS } from '@taiwan-mandarin/shared/api';
 import { sha256 } from '../src/auth/crypto.js';
 
 let app: INestApplication;
@@ -758,6 +759,29 @@ describe('personal access tokens', () => {
       .set('authorization', `Bearer ${token}`)
       .expect(204);
     expect((await request(http).get('/v1/me/stats').set(pat)).status).toBe(401);
+  });
+
+  it('allows MAX_API_TOKENS at once; revoking one makes room', async () => {
+    const { token } = await signUp();
+    const auth = { authorization: `Bearer ${token}` };
+    const ids: string[] = [];
+    for (let i = 0; i < MAX_API_TOKENS; i++) {
+      const res = await request(http)
+        .post('/v1/me/tokens')
+        .set(auth)
+        .send({ name: `t${i}` });
+      expect(res.status).toBe(201);
+      ids.push(res.body.id);
+    }
+    const full = await request(http).post('/v1/me/tokens').set(auth).send({ name: 'one more' });
+    expect(full.status).toBe(409);
+    expect(full.body.code).toBe('tooManyTokens');
+    await request(http).delete(`/v1/me/tokens/${ids[0]}`).set(auth).expect(204);
+    expect((await request(http).post('/v1/me/tokens').set(auth).send({ name: 'x' })).status).toBe(
+      201,
+    );
+    // Gone, not kept: revoking it again finds nothing.
+    await request(http).delete(`/v1/me/tokens/${ids[0]}`).set(auth).expect(404);
   });
 });
 

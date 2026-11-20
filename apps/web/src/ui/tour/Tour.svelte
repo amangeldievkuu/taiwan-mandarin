@@ -26,6 +26,8 @@
   const SCREEN = { w: 320, h: 660 };
   /** Times round before it stops and offers Replay. */
   const ROUNDS = 2;
+  /** Where it stops: the last moment of the last scene (a full round would wrap to the first). */
+  const END = TOUR_MS * ROUNDS - 1;
 
   const VIEWS: Record<string, Component<{ frame: Frame }>> = {
     today: TodayScene,
@@ -58,7 +60,7 @@
   const frame = $derived(still ? stillFrame(stillScene) : frameAt(elapsed));
   const scene = $derived((SCENES[frame.scene] ?? SCENES[0]) as Scene);
   const View = $derived(VIEWS[scene.id] ?? TodayScene);
-  const finished = $derived(elapsed >= TOUR_MS * ROUNDS);
+  const finished = $derived(elapsed >= END);
   const scale = $derived(width / SCREEN.w);
   const steps = $derived(t().tour.steps);
 
@@ -67,9 +69,9 @@
     if (still || !playing || !inView || pageHidden) return;
     let last = performance.now();
     let raf = requestAnimationFrame(function tick(now) {
-      elapsed = Math.min(elapsed + Math.min(now - last, 100), TOUR_MS * ROUNDS);
+      elapsed = Math.min(elapsed + Math.min(now - last, 100), END);
       last = now;
-      if (elapsed >= TOUR_MS * ROUNDS) {
+      if (elapsed >= END) {
         playing = false;
         return;
       }
@@ -105,7 +107,7 @@
     }
     // Into the round being played, so a jump never ends it early.
     elapsed = Math.floor(elapsed / TOUR_MS) * TOUR_MS + sceneStart(i);
-    if (elapsed >= TOUR_MS * ROUNDS) elapsed = sceneStart(i);
+    if (elapsed >= END) elapsed = sceneStart(i);
     playing = true;
   }
 

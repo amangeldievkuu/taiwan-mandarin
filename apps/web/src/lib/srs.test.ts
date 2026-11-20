@@ -4,6 +4,7 @@ import {
   buildQueue,
   dayKey,
   intervalTimes,
+  mergeQueue,
   newCard,
   preview,
   Rating,
@@ -66,6 +67,27 @@ describe('advanceQueue', () => {
     expect(advanceQueue(['a', 'b', 'c', 'd', 'e'], true)).toEqual(['b', 'c', 'd', 'a', 'e']);
     expect(advanceQueue(['a', 'b'], true)).toEqual(['b', 'a']);
     expect(advanceQueue(['a'], true)).toEqual(['a']);
+  });
+});
+
+describe('mergeQueue', () => {
+  it('keeps the card on screen first, though the rebuilt order puts another before it', () => {
+    // A new word is on screen; the card answered "Again" a moment ago is due first when rebuilt.
+    expect(mergeQueue(['n1', 'n2', 'a', 'n3'], ['a', 'n1', 'n2', 'n3'])).toEqual([
+      'n1',
+      'n2',
+      'a',
+      'n3',
+    ]);
+  });
+
+  it('drops cards no longer due and adds new ones after the rest', () => {
+    expect(mergeQueue(['a', 'b', 'c'], ['d', 'c', 'a', 'e'])).toEqual(['a', 'c', 'd', 'e']);
+  });
+
+  it('is the rebuilt queue when the session has none left', () => {
+    expect(mergeQueue([], ['a', 'b'])).toEqual(['a', 'b']);
+    expect(mergeQueue(['a'], [])).toEqual([]);
   });
 });
 

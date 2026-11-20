@@ -4,6 +4,7 @@
 
 import {
   DEFAULT_SETTINGS,
+  ZHUYIN_LESSONS,
   type Level,
   type PracticeEntry,
   type Settings,
@@ -158,8 +159,28 @@ export function migrate(raw: SnapshotV1 | Snapshot, legacyIds: Record<string, st
  * anything else its default.
  */
 export function mergeSettings(local: Settings, incoming: Partial<Settings>): Settings {
-  return { ...DEFAULT_SETTINGS, language: local.language, hanViet: local.hanViet, ...incoming };
+  const merged = {
+    ...DEFAULT_SETTINGS,
+    language: local.language,
+    hanViet: local.hanViet,
+    ...incoming,
+  };
+  return { ...merged, zhuyin: finishedLessons(local.zhuyin, incoming.zhuyin) };
 }
+
+/**
+ * The Zhuyin lessons finished on either side, in course order (ids this version doesn't know
+ * last). Settings sync as one value, the newest winning; a lesson finished is never taken back.
+ */
+export function finishedLessons(a: readonly string[] = [], b: readonly string[] = []): string[] {
+  const done = new Set([...a, ...b]);
+  const known: string[] = ZHUYIN_LESSONS.map((l) => l.id).filter((id) => done.has(id));
+  return [...known, ...[...done].filter((id) => !known.includes(id))];
+}
+
+/** Whether `merged` has lessons `theirs` lacks, so the merged settings have to go back up. */
+export const moreLessons = (merged: Settings, theirs: Partial<Settings>): boolean =>
+  merged.zhuyin.length > new Set(theirs.zhuyin ?? []).size;
 
 /** A snapshot's parts that a tab holds in memory and another tab may have saved since. */
 export interface TabState {
@@ -221,8 +242,16 @@ export function adoptSnapshot(
       : theirs.date > mine.daily.date
         ? theirs
         : mine.daily;
+  // Lessons finished in either tab stay finished; ones only this tab had make the settings newer.
+  const zhuyin = finishedLessons(mine.settings.zhuyin, settings.zhuyin);
+  const chosen = { ...(ownSettings ? mine.settings : settings), zhuyin };
+  const settingsUpdatedAt = ownSettings
+    ? mine.sync.settingsUpdatedAt
+    : moreLessons(chosen, settings)
+      ? Math.max(sync.settingsUpdatedAt, mine.sync.settingsUpdatedAt) + 1
+      : sync.settingsUpdatedAt;
   return {
-    settings: ownSettings ? mine.settings : settings,
+    settings: chosen,
     cards,
     deck: ownDeck ? mine.deck : deck,
     daily,
@@ -230,7 +259,7 @@ export function adoptSnapshot(
       ...sync,
       pushedAt: Math.min(sync.pushedAt, mine.sync.pushedAt),
       ...(ownDeck ? { deckUpdatedAt: mine.sync.deckUpdatedAt } : {}),
-      ...(ownSettings ? { settingsUpdatedAt: mine.sync.settingsUpdatedAt } : {}),
+      settingsUpdatedAt,
     },
   };
 }

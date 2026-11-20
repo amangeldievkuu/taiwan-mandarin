@@ -13,6 +13,7 @@
   import { content } from '../lib/content.svelte';
   import { GREETING_ZH, partOfDay } from '../lib/greeting';
   import { intlLocale, t } from '../lib/i18n/index.svelte';
+  import { highestLevel } from '../lib/levels';
   import { router } from '../lib/router.svelte';
   import { cardCounts } from '../lib/stats';
   import { store } from '../lib/store.svelte';
@@ -37,7 +38,9 @@
   const fresh = $derived(remaining - dueNow);
 
   const counts = $derived(cardCounts(store.cards));
-  const current = $derived(LEVELS.find((l) => l.id === store.settings.levels.at(-1)) ?? LEVELS[0]);
+  const current = $derived(
+    LEVELS.find((l) => l.id === highestLevel(store.settings.levels)) ?? LEVELS[0],
+  );
   const levelWords = $derived(current ? content.level(current.id) : []);
   const levelLearned = $derived(levelWords.filter((w) => store.cards[w.id]).length);
 

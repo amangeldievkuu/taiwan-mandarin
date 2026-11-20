@@ -41,10 +41,7 @@
   const zhuyinDone = $derived((store.settings.zhuyin ?? []).length);
 
   function toggle(level: Level) {
-    const active = store.settings.levels;
-    const next = active.includes(level) ? active.filter((l) => l !== level) : [...active, level];
-    if (next.length === 0) return;
-    void store.updateSettings({ levels: LEVEL_IDS.filter((l) => next.includes(l)) });
+    void store.toggleLevel(level);
   }
 
   /** The bands, named in the catalog in this order. */

@@ -38,10 +38,14 @@
   $effect(() => {
     const id = level;
     loading = true;
+    let shown = true;
     void content.ensureLevels([id]).then(() => {
+      // Switched to another level meanwhile: that one's load decides.
+      if (!shown) return;
       loading = false;
       failed = !content.isLoaded(id);
     });
+    return () => (shown = false);
   });
 
   type Status = 'all' | 'new' | 'studying' | 'deck';
@@ -180,13 +184,7 @@
       type="button"
       class="btn small {store.settings.levels.includes(level) ? 'primary' : 'quiet'}"
       aria-pressed={store.settings.levels.includes(level)}
-      onclick={() => {
-        const on = store.settings.levels.includes(level);
-        const next = on
-          ? store.settings.levels.filter((l) => l !== level)
-          : [...store.settings.levels, level];
-        if (next.length) void store.updateSettings({ levels: next });
-      }}
+      onclick={() => void store.toggleLevel(level)}
     >
       {#if store.settings.levels.includes(level)}
         <Icon name="check" size={16} />

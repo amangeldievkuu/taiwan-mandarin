@@ -591,6 +591,7 @@ export const vi: Messages = {
       conversationEnded: 'Cuộc trò chuyện này đã kết thúc.',
       accountFull: 'Tài khoản này đã hết dung lượng lưu trữ, nên thiết bị không thể đồng bộ nữa.',
       deckFull: 'Bộ thẻ của bạn đã đầy ({limit} từ). Hãy học bớt một số từ trước.',
+      tooManyTokens: 'Bạn đã có {limit} mã truy cập. Hãy thu hồi một mã trước khi tạo mã mới.',
       fsrsBusy: 'Lịch ôn đang được điều chỉnh theo lượt ôn của bạn. Hãy chờ đến khi xong.',
       fsrsTooFewReviews: 'Cần {need} lượt ôn để điều chỉnh; bạn mới có {have}.',
       fsrsFitFailed: 'Lịch sử ôn tập của bạn chưa đủ đa dạng để điều chỉnh lịch ôn.',
@@ -845,6 +846,7 @@ export const vi: Messages = {
     right: 'Đúng!',
     wrong: (answer) => `Đáp án là ${answer}.`,
     comesBack: 'Câu này sẽ quay lại ở cuối.',
+    onceMore: 'Làm lại',
     continue: 'Tiếp tục',
     done: 'Xong bài',
     doneScore: (right, total) => `Đúng ${right}/${total} câu ngay lần đầu.`,
@@ -857,6 +859,7 @@ export const vi: Messages = {
 
   level: {
     study: 'Học cấp độ này',
+    keepOne: 'Hãy giữ ít nhất một cấp độ để học',
     levels: 'Cấp độ',
     search: 'Tìm trong cấp độ này',
     placeholder: '字, pinyin hoặc tiếng Việt',

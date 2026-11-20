@@ -591,7 +591,8 @@
         class="composer"
         onsubmit={(e) => {
           e.preventDefault();
-          if (draft.trim() && !sending) void send();
+          // Not while a saved conversation loads: its history would land after the reply.
+          if (draft.trim() && !sending && !loading) void send();
         }}
       >
         <input

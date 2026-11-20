@@ -271,6 +271,9 @@ export function isPushService(endpoint: string): boolean {
 /** Devices one account may have reminders on; the oldest gives way to a new one. */
 export const MAX_PUSH_DEVICES = 10;
 
+/** Personal access tokens one account may have at once. */
+export const MAX_API_TOKENS = 20;
+
 /** A browser's push subscription (PushSubscription.toJSON()). */
 export const PushSubscribeSchema = z.object({
   endpoint: z

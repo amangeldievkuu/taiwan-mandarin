@@ -20,11 +20,47 @@
     mode = m;
     open = false;
   }
+
+  let chip = $state<HTMLButtonElement>();
+  let menu = $state<HTMLElement>();
+
+  // A menu for keyboards and screen readers: focus moves to the mode chosen when it opens, and
+  // back to the chip when it closes (Escape, a pick, or a tap outside).
+  $effect(() => {
+    const el = menu;
+    if (!open || !el) return;
+    el.querySelector<HTMLElement>('[aria-checked="true"]')?.focus({ preventScroll: true });
+    return () => {
+      const at = document.activeElement;
+      if (!at || at === document.body || el.contains(at)) chip?.focus({ preventScroll: true });
+    };
+  });
+
+  /** ↑ ↓ Home End move between the modes. */
+  function onMenuKey(event: KeyboardEvent) {
+    if (!menu) return;
+    const items = [...menu.querySelectorAll<HTMLElement>('[role="menuitemradio"]')];
+    const at = items.indexOf(document.activeElement as HTMLElement);
+    const to =
+      event.key === 'ArrowDown'
+        ? (at + 1) % items.length
+        : event.key === 'ArrowUp'
+          ? (at - 1 + items.length) % items.length
+          : event.key === 'Home'
+            ? 0
+            : event.key === 'End'
+              ? items.length - 1
+              : -1;
+    if (to < 0) return;
+    event.preventDefault();
+    items[to]?.focus();
+  }
 </script>
 
 <div class="modes">
   <div class="mode-pick">
     <button
+      bind:this={chip}
       type="button"
       class="chip mode-chip"
       aria-haspopup="menu"
@@ -44,7 +80,15 @@
         aria-label={t().common.close}
         onclick={() => (open = false)}
       ></button>
-      <div class="mode-menu sheet" role="menu" aria-label={t().study.mode} in:rise={{ y: -6 }}>
+      <div
+        bind:this={menu}
+        class="mode-menu sheet"
+        role="menu"
+        tabindex="-1"
+        aria-label={t().study.mode}
+        onkeydown={onMenuKey}
+        in:rise={{ y: -6 }}
+      >
         {#each MODES as m (m)}
           <button
             type="button"

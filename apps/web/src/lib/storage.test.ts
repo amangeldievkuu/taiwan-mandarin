@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { createEmptyCard } from 'ts-fsrs';
 import { DEFAULT_SETTINGS } from '@taiwan-mandarin/shared';
-import { adoptSnapshot, mergeSettings, migrate, type Snapshot, type TabState } from './storage';
+import {
+  adoptSnapshot,
+  finishedLessons,
+  mergeSettings,
+  migrate,
+  moreLessons,
+  type Snapshot,
+  type TabState,
+} from './storage';
 
 describe('migrate', () => {
   it('maps v1 slug ids to TOCFL ids, drops unknown words and the meaning setting', () => {
@@ -70,6 +78,22 @@ describe('mergeSettings', () => {
       phonetics: 'pinyin',
       levels: ['L1'],
     });
+  });
+});
+
+describe('finished Zhuyin lessons', () => {
+  const local = { ...DEFAULT_SETTINGS, zhuyin: ['lips', 'back'] };
+
+  it('keeps lessons finished on either side, in course order', () => {
+    const merged = mergeSettings(local, { ...DEFAULT_SETTINGS, theme: 'dark', zhuyin: ['tip'] });
+    expect(merged.theme).toBe('dark');
+    expect(merged.zhuyin).toEqual(['lips', 'tip', 'back']);
+    expect(moreLessons(merged, { zhuyin: ['tip'] })).toBe(true);
+    expect(moreLessons(merged, { zhuyin: ['back', 'tip', 'lips'] })).toBe(false);
+  });
+
+  it('keeps an id from a newer version, after the known ones', () => {
+    expect(finishedLessons(['later'], ['tones', 'lips'])).toEqual(['lips', 'tones', 'later']);
   });
 });
 
@@ -198,5 +222,34 @@ describe('adoptSnapshot', () => {
     );
     expect(Object.keys(next.cards)).toEqual(['貓']);
     expect(next.sync).toMatchObject({ cursor: 3, userId: 'b' });
+  });
+});
+
+describe('adoptSnapshot and Zhuyin lessons', () => {
+  const sync = { cursor: 0, pushedAt: 0, settingsUpdatedAt: 50, deckUpdatedAt: 0 };
+  const daily = { date: '2026-11-10', newCount: 0, reviewCount: 0 };
+
+  it("keeps a lesson finished in this tab when the other tab's settings are newer", () => {
+    const mine: TabState = {
+      settings: { ...DEFAULT_SETTINGS, zhuyin: ['lips'] },
+      cards: {},
+      deck: [],
+      daily,
+      sync,
+    };
+    const saved: Snapshot = {
+      version: 2,
+      settings: { ...DEFAULT_SETTINGS, theme: 'dark' },
+      cards: {},
+      deck: [],
+      daily,
+      updatedAt: 1000,
+      sync: { ...sync, settingsUpdatedAt: 80 },
+    };
+    const next = adoptSnapshot(mine, saved);
+    expect(next.settings.theme).toBe('dark');
+    expect(next.settings.zhuyin).toEqual(['lips']);
+    // Newer than both, so the next sync sends it.
+    expect(next.sync.settingsUpdatedAt).toBe(81);
   });
 });

@@ -789,6 +789,7 @@ export const en = {
     right: 'Right!',
     wrong: (answer: string) => `It's ${answer}.`,
     comesBack: 'It comes back at the end.',
+    onceMore: 'Once more',
     continue: 'Continue',
     done: 'Lesson done',
     doneScore: (right: number, total: number) => `${right} of ${total} right the first time.`,
@@ -801,6 +802,7 @@ export const en = {
 
   level: {
     study: 'Study this level',
+    keepOne: 'Keep at least one level to study',
     levels: 'Levels',
     search: 'Search this level',
     placeholder: '字, pinyin or English',

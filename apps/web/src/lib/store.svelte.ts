@@ -9,6 +9,7 @@ import {
   configureScheduler,
   dayKey,
   intervalTimes,
+  mergeQueue,
   newCard,
   preview,
   shouldRequeue,
@@ -29,6 +30,7 @@ import {
   xpForDay,
   type DayActivity,
   type Lang,
+  type Level,
   type LookOf,
   type PracticeKind,
   type Settings,
@@ -50,6 +52,7 @@ import { content } from './content.svelte';
 import { devLanguage, firstRunLanguage } from './i18n/detect';
 import { locale, t } from './i18n/index.svelte';
 import type { ExportData } from './export';
+import { toggledLevels } from './levels';
 import { unsentSince, UNSENT_MARGIN_MS } from './sync-batches';
 import { GRADE_KEY, takeBack, type Answer } from './undo';
 import { toasts } from './toast.svelte';
@@ -60,6 +63,7 @@ import {
   BrowserStorage,
   mergeSettings,
   migrate,
+  moreLessons,
   readSaveStamp,
   SAVE_STAMP_KEY,
   writeSaveStamp,
@@ -285,8 +289,9 @@ class Store {
   }
 
   /**
-   * Rebuild the queue (e.g. settings changed or the app resumed) while keeping stats. Unless
-   * `force`d, an answer revealed while the word lists were loading stays open and the queue as it is.
+   * Rebuild the queue (e.g. settings changed, a sync, or the app resumed) while keeping stats.
+   * Unless `force`d, the session keeps its order (the card on screen stays, even half written or
+   * recorded), and an answer revealed while the word lists were loading stays open.
    */
   async refreshQueue(force = false): Promise<void> {
     this.rollDay();
@@ -302,7 +307,8 @@ class Store {
     ]);
     if (this.revealed && !force) return;
     const allowance = this.settings.newPerDay - this.daily.newCount;
-    const queue = buildQueue(this.cards, this.candidates(), now, allowance);
+    const built = buildQueue(this.cards, this.candidates(), now, allowance);
+    const queue = force ? built : mergeQueue(this.queue, built);
     // Drop anything whose word file failed to load, rather than showing a blank card.
     this.queue = queue.filter((id) => content.word(id));
     this.hideAnswer();
@@ -589,6 +595,19 @@ class Store {
     }
   }
 
+  /**
+   * Starts or stops studying a level. The levels stay in path order, and the last one can't be
+   * turned off (there would be no new words): that says so instead.
+   */
+  async toggleLevel(level: Level): Promise<void> {
+    const next = toggledLevels(this.settings.levels, level);
+    if (!next) {
+      toasts.show({ kind: 'info', title: t().level.keepOne });
+      return;
+    }
+    await this.updateSettings({ levels: next });
+  }
+
   /** Uses a look ink has unlocked (it syncs with the settings). */
   async chooseLook<S extends Slot>(slot: S, value: LookOf<S>): Promise<void> {
     await this.updateSettings({ looks: { ...this.settings.looks, [slot]: value } });
@@ -725,10 +744,16 @@ class Store {
     activity?: { timeZone: string; full: boolean; days: DayActivity[] };
   }): Promise<void> {
     this.mergeCards(remote.cards);
+    /** Zhuyin lessons finished here that the account's newer settings lack: sent back up. */
+    let lessonsToSend = false;
     if (remote.settings && remote.settings.updatedAt > this.syncState.settingsUpdatedAt) {
       this.settings = mergeSettings(this.settings, remote.settings.value);
       this.applyLanguage();
-      this.syncState.settingsUpdatedAt = remote.settings.updatedAt;
+      lessonsToSend = moreLessons(this.settings, remote.settings.value);
+      // Newer than the account's copy (whose time may come from another device's clock).
+      this.syncState.settingsUpdatedAt = lessonsToSend
+        ? Math.max(Date.now(), remote.settings.updatedAt + 1)
+        : remote.settings.updatedAt;
     }
     if (remote.deck && remote.deck.updatedAt > this.syncState.deckUpdatedAt) {
       this.deck = remote.deck.entries;
@@ -758,6 +783,7 @@ class Store {
     await this.flush();
     if (!this.revealed) await this.refreshQueue();
     this.reviewRevision++;
+    if (lessonsToSend) this.onLocalChange?.();
   }
 
   /** Debounced save; call after every mutation. */
